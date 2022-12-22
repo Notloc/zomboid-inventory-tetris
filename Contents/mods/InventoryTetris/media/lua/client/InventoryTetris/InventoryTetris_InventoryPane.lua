@@ -3,266 +3,497 @@ require "ISUI/ISButton"
 require "ISUI/ISMouseDrag"
 require "TimedActions/ISTimedActionQueue"
 require "TimedActions/ISEatFoodAction"
-
 require "ISUI/ISInventoryPane"
 
-ISInventoryPane.MAX_ITEMS_IN_STACK_TO_RENDER = 50
+local X_POS = "invt_x"
+local Y_POS = "invt_y"
+local IS_ROTATED = "invt_rotated"
 
-function ISInventoryPane:initialise()
-    ISPanel.initialise(self);
+-- Consider a nil inventory as a ground container as well
+-- This way the base game can code gets to deal with that and our code gets to assume inventroy is never nil
+-- (Which might already be the case, but I'm not certain)
+local function isGroundContainer(inventoryPane)
+    return not inventoryPane.inventory or inventoryPane.inventory:getType() == 'floor'
 end
 
-function ISInventoryPane:createChildren()
-    local fontHgtSmall = getTextManager():getFontHeight(UIFont.Small)
-
-    self.minimumHeight = 50;
-    self.minimumWidth = 256;
-
-    self.expandAll = ISButton:new(0, 0, 15, 17, "", self, ISInventoryPane.expandAll);
-    self.expandAll:initialise();
-    self.expandAll.borderColor.a = 0.0;
-  --  self.expandAll.backgroundColorMouseOver.a = 0;
-    self.expandAll:setImage(self.expandicon);
-
-    self:addChild(self.expandAll);
-
-    self.column2 = 48; --math.ceil(self.column2*self.zoom);
-    self.column3 = math.ceil(self.column3*self.zoom);
-    self.column3 = self.column3 + 100;
-
-    local categoryWid = math.max(100,self.column4-self.column3-1)
-    if self.column3 - 1 + categoryWid > self.width then
-        self.column3 = self.width - categoryWid + 1
+-- Returns RGB values for a color based on the item's type
+local function getItemBackgroundColor(item)
+    local itemType = item:getDisplayCategory()
+    if itemType == "Ammo" then
+        return 0.5, 0.5, 0.5
+    elseif itemType == "Weapon" then
+        return 0.8, 0.2, 0.2
+    elseif itemType == "Clothing" then
+        return 0.8, 0.8, 0.1
+    elseif itemType == "Food" then
+        return 0.1, 0.7, 0.9
+    elseif itemType == "Medical" then
+        return 0.1, 0.7, 0.9
+    else
+        return 0.5, 0.5, 0.5
     end
-
-    self.collapseAll = ISButton:new(15, 0, 15, 17, "", self, ISInventoryPane.collapseAll);
-    self.collapseAll:initialise();
-    self.collapseAll.borderColor.a = 0.0;
-   -- self.collapseAll.backgroundColorMouseOver.a = 0;
-    self.collapseAll:setImage(self.collapseicon);
-    self:addChild(self.collapseAll);
-
-    self.filterMenu = ISButton:new(30, 0, 15, 17, "", self, ISInventoryPane.onFilterMenu);
-    self.filterMenu:initialise();
-    self.filterMenu.borderColor.a = 0.0;
-    -- self.collapseAll.backgroundColorMouseOver.a = 0;
-    self.filterMenu:setImage(self.filtericon);
-    self:addChild(self.filterMenu);
-
-    self.headerHgt = fontHgtSmall + 1
-
-    self.nameHeader = ISResizableButton:new(self.column2, 0, (self.column3 - self.column2), self.headerHgt, getText("IGUI_invpanel_Type"), self, ISInventoryPane.sortByName);
-    self.nameHeader:initialise();
-    self.nameHeader.borderColor.a = 0.2;
-    self.nameHeader.minimumWidth = 100
-    self.nameHeader.onresize = { ISInventoryPane.onResizeColumn, self, self.nameHeader }
-    self:addChild(self.nameHeader);
-
-    self.typeHeader = ISResizableButton:new(self.column3-1, 0, self.column4 - self.column3 + 1, self.headerHgt, getText("IGUI_invpanel_Category"), self, ISInventoryPane.sortByType);
-    self.typeHeader.borderColor.a = 0.2;
-    self.typeHeader.anchorRight = true;
-    self.typeHeader.minimumWidth = 100
-    self.typeHeader.resizeLeft = true
-    self.typeHeader.onresize = { ISInventoryPane.onResizeColumn, self, self.typeHeader }
-    self.typeHeader:initialise();
-    self:addChild(self.typeHeader);
-
-    local btnWid = 10 -- proper width set by setWidthToTitle() later
-    local btnHgt = self.itemHgt
-    self.contextButton1 = ISButton:new(0, 0, btnWid, btnHgt, getText("ContextMenu_Grab"), self, ISInventoryPane.onContext);
-    self.contextButton1:initialise();
-    self:addChild(self.contextButton1);
-    self.contextButton1:setFont(self.font)
-    self.contextButton1:setVisible(false);
-    self.contextButton1.borderColor.a = 0.3;
-
-    self.contextButton2 = ISButton:new(0, 0, btnWid, btnHgt, getText("IGUI_invpanel_Pack"), self, ISInventoryPane.onContext);
-    self.contextButton2:initialise();
-    self:addChild(self.contextButton2);
-    self.contextButton2:setFont(self.font)
-    self.contextButton2:setVisible(false);
-    self.contextButton2.borderColor.a = 0.3;
-
-    self.contextButton3 = ISButton:new(0, 0, btnWid, btnHgt, getText("IGUI_invpanel_Pack"), self, ISInventoryPane.onContext);
-    self.contextButton3:initialise();
-    self:addChild(self.contextButton3);
-    self.contextButton3:setFont(self.font)
-    self.contextButton3:setVisible(false);
-    self.contextButton3.borderColor.a = 0.3;
-
-
-    self:addScrollBars();
 end
 
-function ISInventoryPane:onResize()
-    ISPanel.onResize(self)
-    if self.typeHeader:getWidth() == self.typeHeader.minimumWidth then
-        self.column3 = self.width - self.typeHeader:getWidth() + 1
-        self.nameHeader:setWidth(self.column3 - self.column2)
-        self.typeHeader:setX(self.column3 - 1)
-    end
-    self.column4 = self.width
-end
-
-function ISInventoryPane:onContext(button)
-
-    local playerObj = getSpecificPlayer(self.player)
-    local playerInv = playerObj:getInventory();
-    local lootInv = getPlayerLoot(self.player).inventory;
-
-
-    if button.mode == "unpack" then
-        local k = self.items[self.buttonOption];
-        local items = ISInventoryPane.getActualItems({k})
-        ISInventoryPaneContextMenu.onMoveItemsTo(items, playerInv, self.player)
-    end
-    if button.mode == "grab" then
-        local k = self.items[self.buttonOption];
-        local items = ISInventoryPane.getActualItems({k})
-        if isForceDropHeavyItem(items[1]) then
-            ISInventoryPaneContextMenu.equipHeavyItem(playerObj, items[1])
-            return
-        end
-        ISInventoryPaneContextMenu.onGrabItems(items, self.player)
-    end
-    if button.mode == "grab1" then
-        local k = self.items[self.buttonOption];
-        local items = ISInventoryPane.getActualItems({k})
-        ISInventoryPaneContextMenu.onGrabOneItems(items, self.player)
-    end
-    if button.mode == "drop" then
-        local k = self.items[self.buttonOption];
-        local items = ISInventoryPane.getActualItems({k})
-        ISInventoryPaneContextMenu.onDropItems(items, self.player)
-    end
-    if button.mode == "drop1" then
-        local k = self.items[self.buttonOption];
-        local items = ISInventoryPane.getActualItems({k})
-        ISInventoryPaneContextMenu.onDropItems({items[1]}, self.player)
-    end
-    if button.mode == "place" then
-        local k = self.items[self.buttonOption];
-        local items = ISInventoryPane.getActualItems({k})
-        local mo = ISMoveableCursor:new(getSpecificPlayer(self.player))
-        getCell():setDrag(mo, mo.player)
-        mo:setMoveableMode("place")
-        mo:tryInitialItem(items[1])
-    end
-
-    getPlayerLoot(self.player).inventoryPane.selected = {};
-    getPlayerInventory(self.player).inventoryPane.selected = {};
-end
-
-
+local og_prerender = ISInventoryPane.prerender
 function ISInventoryPane:prerender()
-    local mouseY = self:getMouseY()
-    self:updateSmoothScrolling()
-    if mouseY ~= self:getMouseY() and self:isMouseOver() then
-        self:onMouseMove(0, self:getMouseY() - mouseY)
+    self.mode = isGroundContainer(self) and "details" or "grid"
+    if self.mode == "gridz" then
+        self:renderBackGrid();
     end
-
-    self.nameHeader.maximumWidth = self.width - self.typeHeader.minimumWidth - self.column2
-    self.typeHeader.maximumWidth = self.width - self.nameHeader.minimumWidth - self.column2 + 1
-    --self:drawRectStatic(0, 0, self.width, self.height, self.backgroundColor.a, self.backgroundColor.r, self.backgroundColor.g, self.backgroundColor.b);
---  self:drawRectStatic(0, 0, self.width, 1, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
---  self:drawRectStatic(0, self.height-1, self.width, 1, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
---  self:drawRectStatic(0, 0, 1, self.height, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
---  self:drawRectStatic(0+self.width-1, 0, 1, self.height, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
-    self:setStencilRect(0,0,self.width-1, self.height-1);
-
-    self:renderGrid();
-
-    self:updateScrollbars();
-
+    og_prerender(self);
 end
 
+local og_render = ISInventoryPane.render
 function ISInventoryPane:render()
-    if self.mode == "icons" then
-        self:rendericons();
-    elseif self.mode == "details" then
-        self:renderdetails(true);
+    if self.mode == "gridz" then
+        self:renderGridItems()
+        return
     end
+    og_render(self)
+end
 
-    self:clearStencilRect();
-
-    --self:clearStencilRect();
-
-    local resize = self.nameHeader.resizing or self.nameHeader.mouseOverResize
-    if not resize then
-        resize = self.typeHeader.resizing or self.typeHeader.mouseOverResize
-    end
-    if resize then
-        self:repaintStencilRect(self.nameHeader:getRight() - 1, self.nameHeader.y, 2, self.height)
-        self:drawRectStatic(self.nameHeader:getRight() - 1, self.nameHeader.y, 2, self.height, 0.5, 1, 1, 1)
+local og_refreshContainer = ISInventoryPane.refreshContainer
+function ISInventoryPane:refreshContainer()
+    og_refreshContainer(self)
+    if self.mode == "gridz" then
+        self:updateGridPositions()
     end
 end
+
 
 local cellSize = 48
 local width = 8
 local height = 8
 
-function ISInventoryPane:renderGrid()
+function ISInventoryPane:renderBackGrid()
+    local g = 1
+    local b = 1
+    
+    if self.gridIsOverflowing then
+        g = 0
+        b = 0
+    end
+    
+    self:drawRect(0, 0, cellSize * width, cellSize * height, 0.9, 0, 0, 0)
+
     for y = 0,height-1 do
         for x = 0,width-1 do
-            self:drawRectBorder(cellSize * x, cellSize * y, cellSize, cellSize, 0.5, 1, 1, 1)
+            self:drawRectBorder(cellSize * x, cellSize * y, cellSize, cellSize, 0.25, 1, g, b)
         end
     end
-    self:drawText(tostring(self.inventory["ID"]), 20, 20, 1, 1, 1, 0.5, UIFont.Small);
+
+    --self:drawText("YO", 20, 20, 1, 1, 1, 0.5, UIFont.Small);
 end
 
-ISInventoryPaneX = {}
-function ISInventoryPaneX:new (x, y, width, height, inventory, zoom)
-    local o = {}
-    --o.data = {}
-    o = ISPanel:new(x, y, width, height);
-    setmetatable(o, self)
-    self.__index = self
-    o.x = x;
-    o.y = y;
-    o.borderColor = {r=0.4, g=0.4, b=0.4, a=1};
-    o.backgroundColor = {r=0, g=0, b=0, a=0.5};
-    o.width = width;
-    o.height = height;
-    o.anchorLeft = true;
-    o.anchorRight = false;
-    o.anchorTop = true;
-    o.anchorBottom = false;
-    o.inventory = inventory;
-    o.zoom = zoom;
-    o.mode = "details";
-    o.column2 = 30;
-    o.column3 = 140;
-    o.column4 = o.width;
-    o.items = {}
-    o.selected = {}
-    o.previousMouseUp = nil;
-    local font = getCore():getOptionInventoryFont()
-    if font == "Large" then
-        o.font = UIFont.Large
-    elseif font == "Small" then
-        o.font = UIFont.Small
-    else
-        o.font = UIFont.Medium
-    end
-    if zoom > 1.5 then
-        o.font = UIFont.Large;
-    end
-    o.fontHgt = getTextManager():getFontFromEnum(o.font):getLineHeight()
-    o.itemHgt = math.ceil(math.max(18, o.fontHgt) * o.zoom)
-    o.texScale = math.min(32, (o.itemHgt - 2)) / 32
-    o.draggedItems = DraggedItems:new(o)
+function ISInventoryPane:renderGridItems()
+    local items = self.inventory:getItems();
 
-    o.treeexpicon = getTexture("media/ui/TreeExpanded.png");
-    o.treecolicon = getTexture("media/ui/TreeCollapsed.png");
-    o.expandicon = getTexture("media/ui/TreeExpandAll.png");
-    o.filtericon = getTexture("media/ui/TreeFilter.png");
-    o.collapseicon = getTexture("media/ui/TreeCollapseAll.png");
-    o.equippedItemIcon = getTexture("media/ui/icon.png");
-    o.equippedInHotbar = getTexture("media/ui/iconInHotbar.png");
-    o.brokenItemIcon = getTexture("media/ui/icon_broken.png");
-    o.frozenItemIcon = getTexture("media/ui/icon_frozen.png");
-    o.poisonIcon = getTexture("media/ui/SkullPoison.png");
-    o.itemSortFunc = ISInventoryPane.itemSortByNameInc; -- how to sort the items...
-    o.favoriteStar = getTexture("media/ui/FavoriteStar.png");
-   return o
+    self:redoGridPositions(items) -- Temp code to fix the grid positions until we get things updating properly when items are added/removed
+
+    local iconWidth = 40;
+    local iconHeight = 40;
+
+    local xPad = 4;
+    local yPad = 4;
+
+    for i = 0, items:size()-1 do
+        local item = items:get(i);
+        local x, y = ItemGridUtil.getItemPosition(item)
+        local w, h = ItemGridUtil.getItemSize(item)
+
+        if x and y then
+
+            local minDimension = math.min(w, h)
+
+            self:drawRect(x * cellSize, y * cellSize, w * cellSize, h * cellSize, 0.8, getItemBackgroundColor(item))
+            self:drawRectBorder(x * cellSize, y * cellSize, w * cellSize, h * cellSize, 1, 0, 1, 1)
+            
+
+
+            local x2 = x * cellSize + xPad * w + (w - minDimension) * cellSize / 2
+            local y2 = y * cellSize + yPad * h + (h - minDimension) * cellSize / 2
+            
+            self:drawTextureScaled(item:getTex(), x2, y2, iconWidth * minDimension, iconHeight * minDimension, 1, 1, 1, 1);
+        end
+    end
+end
+
+function ISInventoryPane:redoGridPositions(items)
+    for i = 0, items:size()-1 do
+        local item = items:get(i);
+        ItemGridUtil.clearItemPosition(item)
+    end
+    self:updateGridPositions()
+end
+
+function ISInventoryPane:updateGridPositions()
+    self.gridIsOverflowing = false
+
+    local isEquippedMap = self:getEquippedItemsMap()
+
+    -- Clear the positions of all equipped items
+    for item,_ in pairs(isEquippedMap) do
+        ItemGridUtil.clearItemPosition(item)
+    end
+    
+    local itemGrid, unpositionedItems = self:createItemGrid()
+    
+    -- Sort the unpositioned items by size, so we can place the biggest ones first
+    table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
+
+    -- Place the unpositioned items
+    for i = 1,#unpositionedItems do
+        local item = unpositionedItems[i].item
+        if not self:attemptToInsertItemIntoGrid(item, itemGrid) then
+            self.gridIsOverflowing = true
+            self:insertItemIntoGrid(item, itemGrid, 0,0)
+        end
+    end
+
+    -- In the event that we can't fit an item, we put the inventory in a "overflow" mode
+    -- where items are placed in the top left corner, the grid turns red, and new items can't be placed
+end
+
+function ISInventoryPane:getEquippedItemsMap()
+    local playerObj = getSpecificPlayer(self.player)
+    local isEquipped = {}
+    if self.parent.onCharacter then
+        local wornItems = playerObj:getWornItems()
+        for i=1,wornItems:size() do
+            local wornItem = wornItems:get(i-1):getItem()
+            isEquipped[wornItem] = true
+        end
+        local item = playerObj:getPrimaryHandItem()
+        if item then
+            isEquipped[item] = true
+        end
+        item = playerObj:getSecondaryHandItem()
+        if item then
+            isEquipped[item] = true
+        end
+    end
+    return isEquipped
+end
+
+-- Insert the item into the grid, no checks
+function ISInventoryPane:insertItemIntoGrid(item, itemGrid, xPos, yPos)
+    if not itemGrid then
+        itemGrid = self:createItemGrid()
+    end
+    
+    ItemGridUtil.setItemPosition(item, xPos, yPos)
+    local w, h = ItemGridUtil.getItemSize(item)
+    for y = yPos, yPos+h-1 do
+        for x = xPos, xPos+w-1 do
+            itemGrid[y][x] = item
+        end
+    end
+end
+
+function ISInventoryPane:attemptToInsertItemIntoGrid(item, itemGrid, isRotationAttempt)
+    local height = 8;
+    local width = 8;
+
+    if not itemGrid then
+        itemGrid = self:createItemGrid()
+    end
+
+    local w, h = ItemGridUtil.getItemSize(item)
+    for y = 0,height-h do
+        for x = 0,width-w do
+            local canPlace = true
+            for y2 = y,y+h-1 do
+                for x2 = x,x+w-1 do
+                    if itemGrid[y2][x2] then
+                        canPlace = false
+                        break
+                    end
+                end
+            end
+            if canPlace then
+                ItemGridUtil.setItemPosition(item, x, y)
+                for y2 = y,y+h-1 do
+                    for x2 = x,x+w-1 do
+                        itemGrid[y2][x2] = true
+                    end
+                end
+                return true
+            end
+        end
+    end
+
+    if not isRotationAttempt and w ~= h then
+        -- Try rotating the item
+        ItemGridUtil.rotateItem(item)
+        return self:insertItemIntoGrid(item, itemGrid, true)
+    end
+    
+    if w ~= h then
+        -- Unrotate the item to its original state
+        ItemGridUtil.rotateItem(item)
+    end
+    
+    return false
+end
+
+-- Returns a 2D array of booleans, where true means the cell is occupied
+-- Also returns a list of items that don't have a position in the grid
+function ISInventoryPane:createItemGrid()
+    local height = 8;
+    local width = 8;
+    
+    local itemGrid = {}
+
+    -- Fill the grid with false
+    for y = 0,height-1 do
+        itemGrid[y] = {}
+        for x = 0,width-1 do
+            itemGrid[y][x] = false
+        end
+    end
+
+    local unpositionedItemData = {}
+
+    -- Mark the cells occupied by items
+    local items = self.inventory:getItems();
+    for i = 0, items:size()-1 do
+        local item = items:get(i);
+        local x, y = ItemGridUtil.getItemPosition(item)
+        if x and y then
+            local w, h = ItemGridUtil.getItemSize(item)
+            for y2 = y,y+h-1 do
+                for x2 = x,x+w-1 do
+                    itemGrid[y2][x2] = true
+                end
+            end
+        else
+            local w, h = ItemGridUtil.getItemSize(item)
+            local size = w * h
+            table.insert(unpositionedItemData, {item = item, size = size})
+        end
+    end
+
+    return itemGrid, unpositionedItemData
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ItemGridUtil = {}
+
+ItemGridUtil.itemSizes = {}
+ItemGridUtil.isStackable = {}
+
+ItemGridUtil.getItemPosition = function(item)
+    local x = item:getModData()[X_POS]
+    local y = item:getModData()[Y_POS]
+    return x, y
+end
+
+ItemGridUtil.setItemPosition = function(item, x, y)
+    item:getModData()[X_POS] = x
+    item:getModData()[Y_POS] = y
+end
+
+ItemGridUtil.clearItemPosition = function(item)
+    item:getModData()[X_POS] = nil
+    item:getModData()[Y_POS] = nil
+end
+
+ItemGridUtil.rotateItem = function(item)
+    local isRotated = item:getModData()[IS_ROTATED]
+    if isRotated then
+        item:getModData()[IS_ROTATED] = nil
+    else
+        item:getModData()[IS_ROTATED] = true
+    end
+end
+
+ItemGridUtil.getItemSize = function(item)
+    if not ItemGridUtil.itemSizes[item:getFullType()] then
+        ItemGridUtil.calculateAndCacheItemInfo(item)
+    end
+    
+    local sizeData = ItemGridUtil.itemSizes[item:getFullType()]
+    if item:getModData()[IS_ROTATED] then
+        return sizeData.y, sizeData.x
+    else
+        return sizeData.x, sizeData.y
+    end
+end
+
+ItemGridUtil.calculateAndCacheItemInfo = function(item)
+    ItemGridUtil.calculateItemSize(item)
+    ItemGridUtil.calculateItemStackability(item)
+end
+
+-- Programatically determine the size of an item
+-- I'll manually override the sizes of some items later via a config file or something
+ItemGridUtil.calculateItemSize = function(item)
+    local category = item:getDisplayCategory()
+    if category == "Ammo" then
+        -- determine if its ammo or a magazine by stackability
+        if item:CanStack(item) then
+            ItemGridUtil.calculateItemSizeMagazine(item)
+        else
+            ItemGridUtil.calculateItemSizeAmmo(item)
+        end
+    elseif category == "Weapon" then
+        ItemGridUtil.calculateItemSizeWeapon(item)
+    elseif category == "Clothing" then
+        ItemGridUtil.calculateItemSizeClothing(item)
+    elseif category == "Food" then
+        ItemGridUtil.calculateItemSizeWeightBased(item)
+    elseif category == "FirstAid" then
+        ItemGridUtil.calculateItemSizeWeightBased(item)
+    elseif category == "Container" then
+        ItemGridUtil.calculateItemSizeContainer(item)
+    elseif category == "Book" then
+        ItemGridUtil.calculateItemSizeWeightBased(item)
+    elseif category == "Key" then
+        ItemGridUtil.calculateItemSizeKey(item)
+    elseif category == "Junk" then
+        ItemGridUtil.calculateItemSizeWeightBased(item)
+    else
+        ItemGridUtil.calculateItemSizeWeightBased(item)
+    end
+end
+
+ItemGridUtil.calculateItemSizeMagazine = function(item)
+    local width = 1
+    local height = 1
+
+    local weight = item:getActualWeight()
+    if weight >= 0.25 then
+        height = 2
+    end
+
+    ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
+end
+
+ItemGridUtil.calculateItemSizeAmmo = function(item)
+    ItemGridUtil.itemSizes[item:getFullType()] = {x = 1, y = 1}
+end
+
+ItemGridUtil.calculateItemSizeWeapon = function(item)
+    local width = 2
+    local height = 1
+
+    local weight = item:getActualWeight()
+
+    if weight >= 3 then
+        width = 4
+        height = 2
+    elseif weight >= 2.5 then
+        width = 3
+        height = 2
+    elseif weight >= 2 then
+        width = 3
+        height = 1
+    elseif weight <= 0.4 then
+        width = 1
+        height = 1
+    end
+
+    ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
+end
+
+ItemGridUtil.calculateItemSizeClothing = function(item)
+    local width = 2
+    local height = 2
+
+    -- This shouldn't happen, but just in case a mod does something weird
+    if item:IsClothing() == false then
+        ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
+        return
+    end
+
+    local bulletDef = item:getBulletDefense()
+    if bulletDef >= 50 then
+        width = 3
+        height = 3
+    else
+        local weight = item:getActualWeight()
+        if weight >= 3.0 then
+            width = 3
+            height = 3
+        elseif weight < 0.5 then
+            width = 1
+            height = 1
+        elseif weight <= 1.0 then
+            width = 2
+            height = 1
+        end
+    end
+
+    ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
+end
+
+ItemGridUtil.calculateItemSizeWeightBased = function(item)
+    local width = 1
+    local height = 1
+
+    local weight = item:getActualWeight()
+    if weight >= 10 then
+        width = 4
+        height = 4
+    elseif weight >= 5 then
+        width = 3
+        height = 3
+    elseif weight >= 2 then
+        width = 2
+        height = 2
+    elseif weight >= 1 then
+        width = 2
+        height = 1
+    end
+
+    ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
+end
+
+ItemGridUtil.calculateItemSizeKey = function(item)
+    ItemGridUtil.itemSizes[item:getFullType()] = {x = 1, y = 1}
+end
+
+ItemGridUtil.calculateItemStackability = function(item)
+    local stackable = item:CanStack(item)
+    ItemGridUtil.isStackable[item:getFullType()] = stackable
+end
+
+ItemGridUtil.calculateItemSizeContainer = function(item)
+    local width = 1
+    local height = 1
+
+    -- TODO: Should match the internal size of said container
+
+    ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
+end
+
+local og_createMenu = ISInventoryPaneContextMenu.createMenu
+ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
+
+    local item = items[1].items[1]
+    -- Pull a bunch of fields into local variables so we can view them in the debugger
+
+    local itemCategory = item:getDisplayCategory()
+    local itemDisplayName = item:getDisplayName()
+    local itemFullType = item:getFullType()
+    local itemWeight = item:getActualWeight()
+    local itemType = item:getType()
+    local itemKlass = item:getCat()
+    
+    og_createMenu(player, isInPlayerInventory, items, x, y, origin)
 end
