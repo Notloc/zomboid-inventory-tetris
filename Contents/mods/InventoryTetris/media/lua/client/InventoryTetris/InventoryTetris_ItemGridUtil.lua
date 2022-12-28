@@ -232,3 +232,32 @@ ItemGridUtil.convertItemStackToItem = function(items)
     end
     return nil
 end
+
+-- Determines the number of and size of each item grid for the given inventory type
+ItemGridUtil.determineItemGridData = function(inventory)
+    
+end
+
+ItemGridUtil.determineGridSize = function(inventory)
+    local width = 1
+    local height = 1
+
+    for i = 1, inventory:getItems():size() do
+        local item = inventory:getItems():get(i - 1)
+        local itemX, itemY = ItemGridUtil.getItemPosition(item)
+        local itemWidth, itemHeight = ItemGridUtil.getItemSize(item)
+
+        local itemRight = itemX + itemWidth
+        local itemBottom = itemY + itemHeight
+
+        if itemRight > width then
+            width = itemRight
+        end
+
+        if itemBottom > height then
+            height = itemBottom
+        end
+    end
+
+    return width, height
+end

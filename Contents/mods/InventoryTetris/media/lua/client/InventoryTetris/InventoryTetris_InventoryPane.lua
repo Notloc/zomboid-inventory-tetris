@@ -5,9 +5,6 @@ require "TimedActions/ISTimedActionQueue"
 require "TimedActions/ISEatFoodAction"
 require "ISUI/ISInventoryPane"
 
--- Consider a nil inventory as a ground container as well
--- This way the base game can code gets to deal with that and our code gets to assume inventroy is never nil
--- (Which might already be the case, but I'm not certain)
 local function isGroundContainer(inventoryPane)
     return not inventoryPane.inventory or inventoryPane.inventory:getType() == 'floor'
 end
@@ -22,10 +19,23 @@ function ISInventoryPane:refreshContainer()
     end
 end
 
+function ISInventoryPane:updateActiveGrids()
+    self.activeGrids = {}
+    for i=1,self.inventory:getWidth() do
+        for j=1,self.inventory:getHeight() do
+            local grid = self.inventory:getGrid(i, j)
+            if grid and grid.items and #grid.items > 0 then
+                table.insert(self.activeGrids, grid)
+            end
+        end
+    end
+
+    self.mode = isGroundContainer(self) and "details" or "grid"
+end
+
+
 local og_prerender = ISInventoryPane.prerender
 function ISInventoryPane:prerender()
-    self.mode = isGroundContainer(self) and "details" or "grid"
-    
     og_prerender(self);
     if self.mode == "grid" then
         self:renderBackGrid();
