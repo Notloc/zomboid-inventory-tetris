@@ -1,3 +1,16 @@
+local TETRIS = require "InventoryTetris/Constants"
+
+local X_POS = TETRIS.X_POS
+local Y_POS = TETRIS.Y_POS
+local IS_ROTATED = TETRIS.IS_ROTATED
+local GRID_INDEX = TETRIS.GRID_INDEX
+
+local CELL_SIZE = TETRIS.CELL_SIZE
+local TEXTURE_SIZE = TETRIS.TEXTURE_SIZE
+local TEXTURE_PAD = TETRIS.TEXTURE_PAD
+
+
+
 ItemGridUtil = {}
 
 ItemGridUtil.itemSizes = {}
@@ -5,13 +18,24 @@ ItemGridUtil.isStackable = {}
 
 ItemGridUtil.getItemPosition = function(item)
     local modData = item:getModData()
-    return modData[X_POS], modData[Y_POS]
+    return modData[X_POS], modData[Y_POS], modData[GRID_INDEX]
 end
 
-ItemGridUtil.setItemPosition = function(item, x, y)
+ItemGridUtil.setItemPosition = function(item, x, y, index)
     local modData = item:getModData()
     modData[X_POS] = x
     modData[Y_POS] = y
+    modData[GRID_INDEX] = index
+end
+
+ItemGridUtil.getItemGridIndex = function(item)
+    local modData = item:getModData()
+    return modData[GRID_INDEX]
+end
+
+ItemGridUtil.setItemGridIndex = function(item, index)
+    local modData = item:getModData()
+    modData[GRID_INDEX] = index
 end
 
 ItemGridUtil.clearItemPosition = function(item)
@@ -190,10 +214,33 @@ ItemGridUtil.calculateItemSizeContainer = function(item)
     ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
 end
 
-ItemGridUtil.findItemUnderMouse = function(inventory, x, y)
+ItemGridUtil.findGridUnderMouse = function(inventoryPane, x, y)
+    for _, grid in pairs(inventoryPane.grids) do
+        if grid:isMouseOver(x, y) then
+            return grid
+        end
+    end
+    return nil
+end
+
+ItemGridUtil.findItemUnderMouse = function(inventoryPane, x, y)
+    local grid = ItemGridUtil.findGridUnderMouse(inventoryPane, x, y)
+    return ItemGridUtil.findItemUnderMouseGrid(grid)
+end
+
+ItemGridUtil.findItemUnderMouseGrid = function(grid)
+    if not grid then 
+        return nil 
+    end
+
+    local x = grid:getMouseX()
+    local y = grid:getMouseY()
+
+    local inventory = grid.inventory
     for i = 1, inventory:getItems():size() do
         local item = inventory:getItems():get(i - 1)
-        if ItemGridUtil.isMouseOverItem(item, x, y) then
+        local gridIndex = ItemGridUtil.getItemGridIndex(item)
+        if gridIndex == grid.gridIndex and ItemGridUtil.isMouseOverItem(item, x, y) then
             return item
         end
     end
@@ -204,10 +251,10 @@ ItemGridUtil.isMouseOverItem = function(item, mouseX, mouseY)
     local itemX, itemY = ItemGridUtil.getItemPosition(item)
     local itemWidth, itemHeight = ItemGridUtil.getItemSize(item)
 
-    local x1 = itemX * cellSize
-    local y1 = itemY * cellSize
-    local x2 = x1 + (itemWidth * cellSize)
-    local y2 = y1 + (itemHeight * cellSize)
+    local x1 = itemX * CELL_SIZE
+    local y1 = itemY * CELL_SIZE
+    local x2 = x1 + (itemWidth * CELL_SIZE)
+    local y2 = y1 + (itemHeight * CELL_SIZE)
 
     if mouseX >= x1 and mouseX <= x2 and mouseY >= y1 and mouseY <= y2 then
         return true
@@ -215,13 +262,26 @@ ItemGridUtil.isMouseOverItem = function(item, mouseX, mouseY)
     return false
 end
 
--- Rounds a mouse position to the nearest grid position, for the top left corner of the item
-ItemGridUtil.mousePositionToGridPosition = function(x, y)
-    local gridX = math.floor((x + cellSize / 2) / cellSize)
-    local gridY = math.floor((y + cellSize / 2) / cellSize)
-    return gridX, gridY
+-- Get the mouse position relative to the top left corner of the item being dragged
+ItemGridUtil.findGridPositionOfMouse = function(grid, item)
+    local xOff = 0
+    local yOff = 0
+
+    if item then
+        local w, h = ItemGridUtil.getItemSize(item)
+        xOff = CELL_SIZE * w / 2 - CELL_SIZE / 2
+        yOff = CELL_SIZE * h / 2 - CELL_SIZE / 2
+    end
+
+    return ItemGridUtil.mousePositionToGridPosition(grid:getMouseX() - xOff, grid:getMouseY() - yOff)
 end
 
+-- Rounds a mouse position to the nearest grid position, for the top left corner of the item
+ItemGridUtil.mousePositionToGridPosition = function(x, y)
+    local gridX = math.floor(x / CELL_SIZE)
+    local gridY = math.floor(y / CELL_SIZE)
+    return gridX, gridY
+end
 
 ItemGridUtil.convertItemStackToItem = function(items)
     if instanceof(items, "InventoryItem") then
@@ -233,31 +293,11 @@ ItemGridUtil.convertItemStackToItem = function(items)
     return nil
 end
 
--- Determines the number of and size of each item grid for the given inventory type
-ItemGridUtil.determineItemGridData = function(inventory)
-    
-end
-
-ItemGridUtil.determineGridSize = function(inventory)
-    local width = 1
-    local height = 1
-
-    for i = 1, inventory:getItems():size() do
-        local item = inventory:getItems():get(i - 1)
-        local itemX, itemY = ItemGridUtil.getItemPosition(item)
-        local itemWidth, itemHeight = ItemGridUtil.getItemSize(item)
-
-        local itemRight = itemX + itemWidth
-        local itemBottom = itemY + itemHeight
-
-        if itemRight > width then
-            width = itemRight
-        end
-
-        if itemBottom > height then
-            height = itemBottom
-        end
+function ItemGridUtil.isGridPositionValid(grid, x, y)
+    local width = grid.gridWidth
+    local height = grid.gridHeight
+    if x < 0 or y < 0 or x >= width or y >= height then
+        return false
     end
-
-    return width, height
+    return true
 end

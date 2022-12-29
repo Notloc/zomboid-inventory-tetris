@@ -54,8 +54,8 @@ function ItemGridTransferUtil.shouldUseGridTransfer(sourceGrid, destinationGrid)
 		return false;
     end
 
-    local srcContainer = sourceGrid:getContainer()
-    local destContainer = destinationGrid:getContainer()
+    local srcContainer = sourceGrid.inventory
+    local destContainer = destinationGrid.inventory
 
     if srcContainer:getType() == "TradeUI" or destContainer:getType() == "TradeUI" then
         return false
@@ -124,14 +124,19 @@ function ItemGridTransferUtil.isTransferValid(item, sourceGrid, destinationGrid,
         return false;
     end
 
-    if item:getContainer() == srcContainer and not destContainer:isInside(item) then
-        return true;
-    end
+	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item)
+	if not ItemGridUtil.isGridPositionValid(destinationGrid, x, y) then
+		return false
+	end
 
-    return false;
+	if not destinationGrid:doesItemFit(item, x, y) then
+		return false
+	end
+
+	return item:getContainer() == srcContainer and not destContainer:isInside(item)
 end
 
-function ItemGridTransferUtil.transferGridItem(item, sourceGrid, destinationGrid, character)
+function ItemGridTransferUtil.transferGridItemMouse(item, sourceGrid, destinationGrid, character)
 	if not ItemGridTransferUtil.isTransferValid(item, sourceGrid, destinationGrid, character) then
 		return
 	end
@@ -217,6 +222,10 @@ function ItemGridTransferUtil.transferGridItem(item, sourceGrid, destinationGrid
 		item:setWorker(character:getFullName());
 	end
 	
+	sourceGrid:removeItemFromGrid(item)
+	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item)
+	destinationGrid:insertItemIntoGrid(item, x, y)
+
 	ISInventoryPage.renderDirty = true
 
 	-- do the overlay sprite
@@ -227,5 +236,24 @@ function ItemGridTransferUtil.transferGridItem(item, sourceGrid, destinationGrid
 		if destContainer:getParent() then
 			ItemPicker.updateOverlaySprite(destContainer:getParent())
 		end
+	end
+end
+
+function ItemGridTransferUtil.moveGridItemMouse(item, grid)
+	local x, y = ItemGridUtil.findGridPositionOfMouse(grid, item)
+	if not ItemGridUtil.isGridPositionValid(grid, x, y) then
+		return
+	end
+
+	print("Moving to "..x..", "..y)
+
+	local originalX, originalY = ItemGridUtil.getItemPosition(item)
+
+	grid:removeItemFromGrid(item)
+
+	if not grid:doesItemFit(item, x, y) then
+		grid:insertItemIntoGrid(item, originalX, originalY)
+	else
+		grid:insertItemIntoGrid(item, x, y)
 	end
 end

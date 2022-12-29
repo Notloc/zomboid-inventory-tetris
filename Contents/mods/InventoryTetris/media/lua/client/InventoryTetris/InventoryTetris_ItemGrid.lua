@@ -1,15 +1,11 @@
-require "ISUI/ISPanel"
+local TETRIS = require "InventoryTetris/Constants"
+require "ISUI/ISUIElement"
 
 ItemGrid = ISPanel:derive("ItemGrid")
 
-local X_POS = "invt_x"
-local Y_POS = "invt_y"
-local IS_ROTATED = "invt_rotated"
-
-local CELL_SIZE = 48
-local TEXTURE_SIZE = 40;
-local TEXTURE_PAD = 4;
-
+local CELL_SIZE = TETRIS.CELL_SIZE
+local TEXTURE_SIZE = TETRIS.TEXTURE_SIZE
+local TEXTURE_PAD = TETRIS.TEXTURE_PAD
 
 local function getItemBackgroundColor(item)
     local itemType = item:getDisplayCategory()
@@ -28,12 +24,12 @@ local function getItemBackgroundColor(item)
     end
 end
 
-local function calculateWidth(gridWidth)
-    return gridWidth * (CELL_SIZE + TEXTURE_PAD * 2)
+function ItemGrid:calculateWidth()
+    return self.gridWidth * CELL_SIZE
 end
 
-local function calculateHeight(gridHeight)
-    return gridHeight * (CELL_SIZE + TEXTURE_PAD * 2)
+function ItemGrid:calculateHeight()
+    return self.gridHeight * CELL_SIZE
 end
 
 local function getDraggedItem()
@@ -43,7 +39,7 @@ local function getDraggedItem()
     return ItemGridUtil.convertItemStackToItem(item)
 end
 
-function ISInventoryPane:render()
+function ItemGrid:render()
     self:renderBackGrid()
     self:renderGridItems()
     self:renderDragItemPreview()
@@ -58,6 +54,8 @@ function ItemGrid:renderBackGrid()
         b = 0
     end
     
+    local width = self.gridWidth
+    local height = self.gridHeight
     self:drawRect(0, 0, CELL_SIZE * width, CELL_SIZE * height, 0.9, 0, 0, 0)
 
     for y = 0,height-1 do
@@ -69,11 +67,11 @@ end
 
 function ItemGrid:renderGridItems()
     local items = self.inventory:getItems();
-    self:redoGridPositions(items) -- Temp code to fix the grid positions until we get things updating properly when items are added/removed
+    --self:redoGridPositions(items) -- Temp code to fix the grid positions until we get things updating properly when items are added/removed
     for i = 0, items:size()-1 do
         local item = items:get(i);
-        local x, y = ItemGridUtil.getItemPosition(item)
-        if x and y then
+        local x, y, i = ItemGridUtil.getItemPosition(item)
+        if self.gridIndex == i and x and y then
             self:renderGridItem(item, x * CELL_SIZE, y * CELL_SIZE)
         end
     end
@@ -81,7 +79,7 @@ end
 
 function ItemGrid:renderDragItemPreview()
     local item = getDraggedItem()
-    if not item then
+    if not item or not self:isMouseOver() then
         return
     end
     
@@ -89,14 +87,13 @@ function ItemGrid:renderDragItemPreview()
     local y = self:getMouseY()
     local itemW, itemH = ItemGridUtil.getItemSize(item)
 
-    local xPos = x - itemW * CELL_SIZE / 2
-    local yPos = y - itemH * CELL_SIZE / 2
+    local halfCell = CELL_SIZE / 2
+    local xPos = x + halfCell - itemW * halfCell
+    local yPos = y + halfCell - itemH * halfCell
 
     -- Placement preview
-    if self:isMouseOver() then
-        local gridX, gridY = ItemGridUtil.mousePositionToGridPosition(xPos, yPos)
-        self:drawRect(gridX * CELL_SIZE, gridY * CELL_SIZE, itemW * CELL_SIZE, itemH * CELL_SIZE, 1, 1, 1, 1)
-    end
+    local gridX, gridY = ItemGridUtil.mousePositionToGridPosition(xPos, yPos)
+    self:drawRect(gridX * CELL_SIZE, gridY * CELL_SIZE, itemW * CELL_SIZE, itemH * CELL_SIZE, 1, 1, 1, 1)
 end
 
 function ItemGrid.renderDragItem(drawer)
@@ -163,14 +160,28 @@ function ItemGrid:createItemGrid(width, height)
     return itemGrid
 end
 
+function ItemGrid:refreshGrid()
+    self:clearGrid()
+    self:updateGridPositions()
+end
+
+function ItemGrid:clearGrid()
+    local items = self.inventory:getItems();
+    for y = 0, self.gridHeight-1 do
+        for x = 0, self.gridWidth-1 do
+            self.itemGrid[y][x] = false
+        end
+    end
+end
+
 function ItemGrid:getUnpositionedItems()
     local unpositionedItemData = {}
 
     local items = self.inventory:getItems();
     for i = 0, items:size()-1 do
         local item = items:get(i);
-        local x, y = ItemGridUtil.getItemPosition(item)
-        if not x or not y then
+        local x, y, i = ItemGridUtil.getItemPosition(item)
+        if not x or not y or not i then
             local w, h = ItemGridUtil.getItemSize(item)
             local size = w * h
             table.insert(unpositionedItemData, {item = item, size = size})
@@ -180,9 +191,22 @@ function ItemGrid:getUnpositionedItems()
     return unpositionedItemData
 end
 
+function ItemGrid:removeItemFromGrid(item)
+    local x, y = ItemGridUtil.getItemPosition(item)
+    if x and y then
+        local w, h = ItemGridUtil.getItemSize(item)
+        for y2 = y,y+h-1 do
+            for x2 = x,x+w-1 do
+                self.itemGrid[y2][x2] = false
+            end
+        end
+    end
+    ItemGridUtil.clearItemPosition(item)
+end
+
 -- Insert the item into the grid, no checks
 function ItemGrid:insertItemIntoGrid(item, xPos, yPos) 
-    ItemGridUtil.setItemPosition(item, xPos, yPos)
+    ItemGridUtil.setItemPosition(item, xPos, yPos, self.gridIndex)
     local w, h = ItemGridUtil.getItemSize(item)
     for y = yPos, yPos+h-1 do
         for x = xPos, xPos+w-1 do
@@ -192,21 +216,13 @@ function ItemGrid:insertItemIntoGrid(item, xPos, yPos)
 end
 
 function ItemGrid:attemptToInsertItemIntoGrid(item, isRotationAttempt)
-    local width = self.width
-    local height = self.height
+    local width = self.gridWidth
+    local height = self.gridHeight
 
     local w, h = ItemGridUtil.getItemSize(item)
     for y = 0,height-h do
         for x = 0,width-w do
-            local canPlace = true
-            for y2 = y,y+h-1 do
-                for x2 = x,x+w-1 do
-                    if self.itemGrid[y2][x2] then
-                        canPlace = false
-                        break
-                    end
-                end
-            end
+            local canPlace = self:doesItemFitWH(item, x, y, w, h)
             if canPlace then
                 self:insertItemIntoGrid(item, x, y)
                 return true
@@ -228,8 +244,24 @@ function ItemGrid:attemptToInsertItemIntoGrid(item, isRotationAttempt)
     return false
 end
 
+function ItemGrid:doesItemFit(item, xPos, yPos)
+    local w, h = ItemGridUtil.getItemSize(item)
+    return self:doesItemFitWH(item, xPos, yPos, w, h)
+end
+
+function ItemGrid:doesItemFitWH(item, xPos, yPos, w, h)
+    for y = yPos, yPos+h-1 do
+        for x = xPos, xPos+w-1 do
+            if self.itemGrid[y][x] then
+                return false
+            end
+        end
+    end
+    return true
+end
+
 function ItemGrid:getEquippedItemsMap()
-    local playerObj = getSpecificPlayer(self.player)
+    local playerObj = getSpecificPlayer(self.inventoryPane.player)
     local isEquipped = {}
     if self.parent.onCharacter then
         local wornItems = playerObj:getWornItems()
@@ -253,9 +285,12 @@ function ItemGrid:redoGridPositions()
     local items = self.inventory:getItems()
     for i = 0, items:size()-1 do
         local item = items:get(i);
-        ItemGridUtil.clearItemPosition(item)
+        local gridIndex = ItemGridUtil.getItemGridIndex(item)
+        if gridIndex == self.gridIndex then
+            ItemGridUtil.clearItemPosition(item)
+        end
     end
-    self:updateGridPositions()
+    self:refreshGrid()
 end
 
 function ItemGrid:updateGridPositions()
@@ -268,7 +303,20 @@ function ItemGrid:updateGridPositions()
     --    ItemGridUtil.clearItemPosition(item)
     --end
     
-    local itemGrid, unpositionedItems = self:createItemGrid()
+    for i = 0, self.inventory:getItems():size()-1 do
+        local item = self.inventory:getItems():get(i);
+        local x, y, gridIndex = ItemGridUtil.getItemPosition(item)
+        if gridIndex == self.gridIndex then
+            if x and y then
+                self:insertItemIntoGrid(item, x, y)
+            else
+                self:attemptToInsertItemIntoGrid(item)
+            end
+        end
+    end
+
+
+    local unpositionedItems = self:getUnpositionedItems()
     
     -- Sort the unpositioned items by size, so we can place the biggest ones first
     table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
@@ -276,26 +324,48 @@ function ItemGrid:updateGridPositions()
     -- Place the unpositioned items
     for i = 1,#unpositionedItems do
         local item = unpositionedItems[i].item
-        if not self:attemptToInsertItemIntoGrid(item, itemGrid) then
+        if not self:attemptToInsertItemIntoGrid(item) then
             self.gridIsOverflowing = true
-            self:insertItemIntoGrid(item, itemGrid, 0,0)
+            self:insertItemIntoGrid(item, 0,0)
         end
     end
 
-    -- In the event that we can't fit an item, we put the inventory in a "overflow" mode
+    -- In the event that we can't fit an item, we put the inventory in to "overflow" mode
     -- where items are placed in the top left corner, the grid turns red, and new items can't be placed
 end
 
+function ItemGrid:onMouseDown(x,y)
+    self.inventoryPane:onMouseDown(self.inventoryPane:getMouseX(), self.inventoryPane:getMouseY())
+end
 
+function ItemGrid:onMouseUp(x,y)
+    self.inventoryPane:onMouseUp(self.inventoryPane:getMouseX(), self.inventoryPane:getMouseY())
+end
 
-function ItemGrid.new(x, y, inventory, width, height)
-    local o = ISPanel.new(x, y, calculateWidth(width), calculateHeight(height))
+function ItemGrid:onRightMouseUp(x,y)
+    self.inventoryPane:onRightMouseUp(self.inventoryPane:getMouseX(), self.inventoryPane:getMouseY())
+end
+
+function ItemGrid:setInventory(inventory)
+    self.inventory = inventory
+    self:refreshGrid()
+end
+
+function ItemGrid:new(gridDefinition, gridIndex, inventoryPane)
+    local o = ISPanel:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
-    o.inventory = inventory
-    o.width = width
-    o.height = height
-    o.itemGrid = o:createItemGrid(width, height)
+
+    o.inventoryPane = inventoryPane
+    o.inventory = inventoryPane.inventory
+    o.gridIndex = gridIndex
+    o.gridWidth = gridDefinition.size.width
+    o.gridHeight = gridDefinition.size.height
+    o.gridDefinition = gridDefinition
     o.gridIsOverflowing = false
+    o.itemGrid = o:createItemGrid(o.gridWidth, o.gridHeight)
+
+    o:setWidth(o:calculateWidth())
+    o:setHeight(o:calculateHeight())
     return o
 end
