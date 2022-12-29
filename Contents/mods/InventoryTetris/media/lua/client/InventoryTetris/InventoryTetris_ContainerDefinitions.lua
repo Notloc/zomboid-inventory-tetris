@@ -100,10 +100,13 @@ InventoryTetrisGridDefinitions = {
 }
 
 InventoryTetrisContainerOverloads = {
+    ["crate"] = {
+        [40] = "crate_medium"
+    },
     ["shelves"] = {
         [15] = "shelves_small",
         [30] = "shelves_medium",
-    }
+    },
 }
 
 function getGridContainerTypeByInventory(inventory)
