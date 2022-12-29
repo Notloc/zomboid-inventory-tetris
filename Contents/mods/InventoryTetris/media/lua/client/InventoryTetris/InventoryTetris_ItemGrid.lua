@@ -151,7 +151,9 @@ function ItemGrid:createItemGrid(width, height)
             local w, h = ItemGridUtil.getItemSize(item)
             for y2 = y,y+h-1 do
                 for x2 = x,x+w-1 do
-                    itemGrid[y2][x2] = true
+                    if self:isInBounds(x2, y2) then
+                        itemGrid[y2][x2] = true
+                    end
                 end
             end
         end
@@ -191,13 +193,19 @@ function ItemGrid:getUnpositionedItems()
     return unpositionedItemData
 end
 
+function ItemGrid:isInBounds(x, y)
+    return x >= 0 and x < self.gridWidth and y >= 0 and y < self.gridHeight
+end
+
 function ItemGrid:removeItemFromGrid(item)
     local x, y = ItemGridUtil.getItemPosition(item)
     if x and y then
         local w, h = ItemGridUtil.getItemSize(item)
         for y2 = y,y+h-1 do
             for x2 = x,x+w-1 do
-                self.itemGrid[y2][x2] = false
+                if self:isInBounds(x2, y2) then
+                    self.itemGrid[y2][x2] = false
+                end
             end
         end
     end
@@ -210,7 +218,9 @@ function ItemGrid:insertItemIntoGrid(item, xPos, yPos)
     local w, h = ItemGridUtil.getItemSize(item)
     for y = yPos, yPos+h-1 do
         for x = xPos, xPos+w-1 do
-            self.itemGrid[y][x] = item
+            if self:isInBounds(x, y) then
+                self.itemGrid[y][x] = true
+            end
         end
     end
 end
@@ -250,6 +260,10 @@ function ItemGrid:doesItemFit(item, xPos, yPos)
 end
 
 function ItemGrid:doesItemFitWH(item, xPos, yPos, w, h)
+    if not self:isInBounds(xPos+w-1, yPos+h-1) then
+        return false
+    end
+
     for y = yPos, yPos+h-1 do
         for x = xPos, xPos+w-1 do
             if self.itemGrid[y][x] then

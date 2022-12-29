@@ -239,9 +239,9 @@ function ItemGridTransferUtil.transferGridItemMouse(item, sourceGrid, destinatio
 	end
 end
 
-function ItemGridTransferUtil.moveGridItemMouse(item, grid)
-	local x, y = ItemGridUtil.findGridPositionOfMouse(grid, item)
-	if not ItemGridUtil.isGridPositionValid(grid, x, y) then
+function ItemGridTransferUtil.moveGridItemMouse(item, sourceGrid, destinationGrid)
+	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item)
+	if not ItemGridUtil.isGridPositionValid(destinationGrid, x, y) then
 		return
 	end
 
@@ -249,11 +249,11 @@ function ItemGridTransferUtil.moveGridItemMouse(item, grid)
 
 	local originalX, originalY = ItemGridUtil.getItemPosition(item)
 
-	grid:removeItemFromGrid(item)
+	sourceGrid:removeItemFromGrid(item)
 
-	if not grid:doesItemFit(item, x, y) then
-		grid:insertItemIntoGrid(item, originalX, originalY)
+	if not destinationGrid:doesItemFit(item, x, y) then
+		sourceGrid:insertItemIntoGrid(item, originalX, originalY)
 	else
-		grid:insertItemIntoGrid(item, x, y)
+		destinationGrid:insertItemIntoGrid(item, x, y)
 	end
 end

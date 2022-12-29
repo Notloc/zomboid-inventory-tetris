@@ -1,3 +1,4 @@
+require "InventoryTetris/ItemGridDataDefinitions"
 local TETRIS = require "InventoryTetris/Constants"
 
 local X_POS = TETRIS.X_POS
@@ -9,12 +10,7 @@ local CELL_SIZE = TETRIS.CELL_SIZE
 local TEXTURE_SIZE = TETRIS.TEXTURE_SIZE
 local TEXTURE_PAD = TETRIS.TEXTURE_PAD
 
-
-
 ItemGridUtil = {}
-
-ItemGridUtil.itemSizes = {}
-ItemGridUtil.isStackable = {}
 
 ItemGridUtil.getItemPosition = function(item)
     local modData = item:getModData()
@@ -55,11 +51,11 @@ ItemGridUtil.rotateItem = function(item)
 end
 
 ItemGridUtil.getItemSize = function(item)
-    if not ItemGridUtil.itemSizes[item:getFullType()] then
-        ItemGridUtil.calculateAndCacheItemInfo(item)
+    if not ItemGridDataDefinitions.itemSizes[item:getFullType()] then
+        ItemGridDataDefinitions.calculateAndCacheItemInfo(item)
     end
     
-    local sizeData = ItemGridUtil.itemSizes[item:getFullType()]
+    local sizeData = ItemGridDataDefinitions.itemSizes[item:getFullType()]
     if item:getModData()[IS_ROTATED] then
         return sizeData.y, sizeData.x
     else
@@ -67,154 +63,9 @@ ItemGridUtil.getItemSize = function(item)
     end
 end
 
-ItemGridUtil.calculateAndCacheItemInfo = function(item)
-    ItemGridUtil.calculateItemSize(item)
-    ItemGridUtil.calculateItemStackability(item)
-end
-
--- Programatically determine the size of an item
--- I'll manually override the sizes of some items later via a config file or something
-ItemGridUtil.calculateItemSize = function(item)
-    local category = item:getDisplayCategory()
-    if category == "Ammo" then
-        -- determine if its ammo or a magazine by stackability
-        if item:CanStack(item) then
-            ItemGridUtil.calculateItemSizeMagazine(item)
-        else
-            ItemGridUtil.calculateItemSizeAmmo(item)
-        end
-    elseif category == "Weapon" then
-        ItemGridUtil.calculateItemSizeWeapon(item)
-    elseif category == "Clothing" then
-        ItemGridUtil.calculateItemSizeClothing(item)
-    elseif category == "Food" then
-        ItemGridUtil.calculateItemSizeWeightBased(item)
-    elseif category == "FirstAid" then
-        ItemGridUtil.calculateItemSizeWeightBased(item)
-    elseif category == "Container" then
-        ItemGridUtil.calculateItemSizeContainer(item)
-    elseif category == "Book" then
-        ItemGridUtil.calculateItemSizeWeightBased(item)
-    elseif category == "Key" then
-        ItemGridUtil.calculateItemSizeKey(item)
-    elseif category == "Junk" then
-        ItemGridUtil.calculateItemSizeWeightBased(item)
-    else
-        ItemGridUtil.calculateItemSizeWeightBased(item)
-    end
-end
-
-ItemGridUtil.calculateItemSizeMagazine = function(item)
-    local width = 1
-    local height = 1
-
-    local weight = item:getActualWeight()
-    if weight >= 0.25 then
-        height = 2
-    end
-
-    ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
-end
-
-ItemGridUtil.calculateItemSizeAmmo = function(item)
-    ItemGridUtil.itemSizes[item:getFullType()] = {x = 1, y = 1}
-end
-
-ItemGridUtil.calculateItemSizeWeapon = function(item)
-    local width = 2
-    local height = 1
-
-    local weight = item:getActualWeight()
-
-    if weight >= 3 then
-        width = 4
-        height = 2
-    elseif weight >= 2.5 then
-        width = 3
-        height = 2
-    elseif weight >= 2 then
-        width = 3
-        height = 1
-    elseif weight <= 0.4 then
-        width = 1
-        height = 1
-    end
-
-    ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
-end
-
-ItemGridUtil.calculateItemSizeClothing = function(item)
-    local width = 2
-    local height = 2
-
-    -- This shouldn't happen, but just in case a mod does something weird
-    if item:IsClothing() == false then
-        ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
-        return
-    end
-
-    local bulletDef = item:getBulletDefense()
-    if bulletDef >= 50 then
-        width = 3
-        height = 3
-    else
-        local weight = item:getActualWeight()
-        if weight >= 3.0 then
-            width = 3
-            height = 3
-        elseif weight < 0.5 then
-            width = 1
-            height = 1
-        elseif weight <= 1.0 then
-            width = 2
-            height = 1
-        end
-    end
-
-    ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
-end
-
-ItemGridUtil.calculateItemSizeWeightBased = function(item)
-    local width = 1
-    local height = 1
-
-    local weight = item:getActualWeight()
-    if weight >= 10 then
-        width = 4
-        height = 4
-    elseif weight >= 5 then
-        width = 3
-        height = 3
-    elseif weight >= 2 then
-        width = 2
-        height = 2
-    elseif weight >= 1 then
-        width = 2
-        height = 1
-    end
-
-    ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
-end
-
-ItemGridUtil.calculateItemSizeKey = function(item)
-    ItemGridUtil.itemSizes[item:getFullType()] = {x = 1, y = 1}
-end
-
-ItemGridUtil.calculateItemStackability = function(item)
-    local stackable = item:CanStack(item)
-    ItemGridUtil.isStackable[item:getFullType()] = stackable
-end
-
-ItemGridUtil.calculateItemSizeContainer = function(item)
-    local width = 1
-    local height = 1
-
-    -- TODO: Should match the internal size of said container
-
-    ItemGridUtil.itemSizes[item:getFullType()] = {x = width, y = height}
-end
-
-ItemGridUtil.findGridUnderMouse = function(inventoryPane, x, y)
+ItemGridUtil.findGridUnderMouse = function(inventoryPane)
+    local x = getMouseX()
+    local y = getMouseY()
     for _, grid in pairs(inventoryPane.grids) do
         if grid:isMouseOver(x, y) then
             return grid

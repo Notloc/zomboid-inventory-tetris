@@ -66,7 +66,7 @@ end
 
 function ISInventoryPane:updateItemGridPositions()
     -- Space out the grids
-    local gridSpacing = 20
+    local gridSpacing = 10
     
     local xPos = 0 -- The cursor position
     local maxX = 0 -- Tracks when to update the cursor position
@@ -241,7 +241,7 @@ function ISInventoryPane:onMouseDown(x, y)
         ISMouseDrag.dragging = {}
         table.insert(ISMouseDrag.dragging, item);
         ISMouseDrag.draggingFocus = self;
-        self.dragGrid = ItemGridUtil.findGridUnderMouse(self, x, y)
+        self.dragGrid = ItemGridUtil.findGridUnderMouse(self)
         return;
     end
 
@@ -264,7 +264,7 @@ local og_mouseUp = ISInventoryPane.onMouseUp
 function ISInventoryPane:onMouseUp(x, y)
 	if self.player ~= 0 then return end
     
-    local selfGrid = ItemGridUtil.findGridUnderMouse(self, x, y)
+    local selfGrid = ItemGridUtil.findGridUnderMouse(self)
     if not ISMouseDrag.dragging or #ISMouseDrag.dragging > 1 or 
         not ISMouseDrag.draggingFocus or not ISMouseDrag.draggingFocus.dragGrid 
         or not ItemGridTransferUtil.shouldUseGridTransfer(selfGrid, ISMouseDrag.draggingFocus.dragGrid)
@@ -274,41 +274,20 @@ function ISInventoryPane:onMouseUp(x, y)
 
     local playerObj = getSpecificPlayer(self.player)
 
+    if self:canPutIn() then         
+        local item = ISMouseDrag.dragging[1]
+        item = ItemGridUtil.convertItemStackToItem(item)
+        luautils.walkToContainer(self.inventory, self.player)
 
-    if ISMouseDrag.draggingFocus ~= self then
-        if self:canPutIn() then         
-            local item = ISMouseDrag.dragging[1]
-            item = ItemGridUtil.convertItemStackToItem(item)
-            local transfer = item:getContainer() and not self.inventory:isInside(item)
-            if transfer then
-                luautils.walkToContainer(self.inventory, self.player)
-            end
-
+        if self == ISMouseDrag.draggingFocus then
+            ItemGridTransferUtil.moveGridItemMouse(item, ISMouseDrag.draggingFocus.dragGrid, selfGrid, playerObj)
+        else
             ItemGridTransferUtil.transferGridItemMouse(item, ISMouseDrag.draggingFocus.dragGrid, selfGrid, playerObj)
-            self.selected = {};
-            getPlayerLoot(self.player).inventoryPane.selected = {};
-            getPlayerInventory(self.player).inventoryPane.selected = {};
         end
-    
-        if ISMouseDrag.draggingFocus then
-            ISMouseDrag.draggingFocus:onMouseUp(0,0);
-        end
-        
-        ISMouseDrag.draggingFocus = nil;
-        ISMouseDrag.dragging = nil;
-        return;
-    elseif ISMouseDrag.draggingFocus == self then
-        if self:canPutIn() then
-            local item = ISMouseDrag.dragging[1]
-            item = ItemGridUtil.convertItemStackToItem(item)
-            
-            luautils.walkToContainer(self.inventory, self.player)
 
-            ItemGridTransferUtil.moveGridItemMouse(item, selfGrid, playerObj)
-            self.selected = {};
-            getPlayerLoot(self.player).inventoryPane.selected = {};
-            getPlayerInventory(self.player).inventoryPane.selected = {};
-        end
+        self.selected = {};
+        getPlayerLoot(self.player).inventoryPane.selected = {};
+        getPlayerInventory(self.player).inventoryPane.selected = {};
     end
 
 	self.dragging = nil;
