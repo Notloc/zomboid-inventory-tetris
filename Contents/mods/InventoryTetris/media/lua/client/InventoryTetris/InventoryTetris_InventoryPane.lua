@@ -24,7 +24,16 @@ function ISInventoryPane:refreshItemGrids()
     
     if self.mode == "grid" then
         if self.activeGridType ~= getGridContainerTypeByInventory(self.inventory) then
-            self:createItemGrids()
+            self:clearGrids()
+
+            local grids, gridType = ISInventoryPane.createItemGrids(self.inventory, self.player)
+            self.grids = grids
+            self.activeGridType = gridType
+
+            for _, grid in ipairs(self.grids) do
+                self:addChild(grid)
+            end
+
             self:updateItemGridPositions()
         else
             for _, grid in ipairs(self.grids) do
@@ -51,17 +60,16 @@ function ISInventoryPane:clearGrids()
     self.activeGridType = nil
 end
 
-function ISInventoryPane:createItemGrids()
-    self:clearGrids()
-    
-    self.grids = {}
-    self.activeGridType = getGridContainerTypeByInventory(self.inventory)
-    local gridDefinition = getGridDefinitionByContainerType(self.activeGridType)
+function ISInventoryPane.createItemGrids(inventory, playerNum)
+    local grids = {}
+    local gridType = getGridContainerTypeByInventory(inventory)
+    local gridDefinition = getGridDefinitionByContainerType(gridType)
     for i, definition in ipairs(gridDefinition) do
-        local grid = ItemGrid:new(definition, i, self)
-        self.grids[i] = grid
-        self:addChild(grid)
+        local grid = ItemGrid:new(definition, i, inventory, playerNum) -- AHHHHHH NEED TO REFACTOR THIS TO NOT USE THE PANE
+        grids[i] = grid
     end
+
+    return grids, gridType
 end
 
 function ISInventoryPane:updateItemGridPositions()
@@ -331,7 +339,39 @@ function ISInventoryPane:onRightMouseUp(x, y)
 end
 
 
+local function getGridsByContainer(self, container)
+    if self.inventory == container then
+        return self.grids
+    else
+        return ISInventoryPane.createItemGrids(container, self.player)
+    end
+end
 
+local og_transferItemsByWeight = ISInventoryPane.transferItemsByWeight
+function ISInventoryPane:transferItemsByWeight(items, container)
+	if self.player ~= 0 then return end
+    
+    if #items > 1 then
+        return og_transferItemsByWeight(self, items, container)
+    end
+
+    local item = items[1]
+
+
+
+
+
+
+    local selfGrid = ItemGridUtil.findGridUnderMouse(self)
+    if not ISMouseDrag.dragging or #ISMouseDrag.dragging > 1 or 
+        not ISMouseDrag.draggingFocus or not ISMouseDrag.draggingFocus.dragGrid 
+        or not ItemGridTransferUtil.shouldUseGridTransfer(selfGrid, ISMouseDrag.draggingFocus.dragGrid)
+    then
+        return og_mouseUp(self, x, y)
+    end
+
+
+end
 
 
 

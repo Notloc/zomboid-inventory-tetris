@@ -275,7 +275,7 @@ function ItemGrid:doesItemFitWH(item, xPos, yPos, w, h)
 end
 
 function ItemGrid:getEquippedItemsMap()
-    local playerObj = getSpecificPlayer(self.inventoryPane.player)
+    local playerObj = getSpecificPlayer(self.playerNum)
     local isEquipped = {}
     if self.parent.onCharacter then
         local wornItems = playerObj:getWornItems()
@@ -365,13 +365,13 @@ function ItemGrid:setInventory(inventory)
     self:refreshGrid()
 end
 
-function ItemGrid:new(gridDefinition, gridIndex, inventoryPane)
+function ItemGrid:new(gridDefinition, gridIndex, inventory, playerNum)
     local o = ISPanel:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
 
-    o.inventoryPane = inventoryPane
-    o.inventory = inventoryPane.inventory
+    o.inventory = inventory
+    o.playerNum = playerNum
     o.gridIndex = gridIndex
     o.gridWidth = gridDefinition.size.width
     o.gridHeight = gridDefinition.size.height
@@ -382,4 +382,8 @@ function ItemGrid:new(gridDefinition, gridIndex, inventoryPane)
     o:setWidth(o:calculateWidth())
     o:setHeight(o:calculateHeight())
     return o
+end
+
+function ItemGrid:registerInventoryPane(inventoryPane)
+    self.inventoryPane = inventoryPane
 end
