@@ -31,6 +31,7 @@ function ISInventoryPane:refreshItemGrids()
             self.activeGridType = gridType
 
             for _, grid in ipairs(self.grids) do
+                grid:registerInventoryPane(self)
                 self:addChild(grid)
             end
 
@@ -65,7 +66,7 @@ function ISInventoryPane.createItemGrids(inventory, playerNum)
     local gridType = getGridContainerTypeByInventory(inventory)
     local gridDefinition = getGridDefinitionByContainerType(gridType)
     for i, definition in ipairs(gridDefinition) do
-        local grid = ItemGrid:new(definition, i, inventory, playerNum) -- AHHHHHH NEED TO REFACTOR THIS TO NOT USE THE PANE
+        local grid = ItemGrid:new(definition, i, inventory, playerNum)
         grids[i] = grid
     end
 
