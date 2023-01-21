@@ -26,7 +26,7 @@ function ISInventoryPane:refreshItemGrids()
         if self.activeGridType ~= getGridContainerTypeByInventory(self.inventory) then
             self:clearGrids()
 
-            local grids, gridType = ISInventoryPane.createItemGrids(self.inventory, self.player)
+            local grids, gridType = ItemGrid.Create(self.inventory, self.player)
             self.grids = grids
             self.activeGridType = gridType
 
@@ -59,18 +59,6 @@ function ISInventoryPane:clearGrids()
         end
     end
     self.activeGridType = nil
-end
-
-function ISInventoryPane.createItemGrids(inventory, playerNum)
-    local grids = {}
-    local gridType = getGridContainerTypeByInventory(inventory)
-    local gridDefinition = getGridDefinitionByContainerType(gridType)
-    for i, definition in ipairs(gridDefinition) do
-        local grid = ItemGrid:new(definition, i, inventory, playerNum)
-        grids[i] = grid
-    end
-
-    return grids, gridType
 end
 
 function ISInventoryPane:updateItemGridPositions()
@@ -226,6 +214,8 @@ local og_onMouseDown = ISInventoryPane.onMouseDown
 function ISInventoryPane:onMouseDown(x, y)
 	if self.player ~= 0 then return true end
 
+    ISMouseDrag.rotateDrag = false
+
     if self.mode ~= "grid" then
         return og_onMouseDown(self, x, y)
     end
@@ -283,15 +273,16 @@ function ISInventoryPane:onMouseUp(x, y)
 
     local playerObj = getSpecificPlayer(self.player)
 
-    if self:canPutIn() then         
+    
+    if self:canPutIn() or self == ISMouseDrag.draggingFocus then         
         local item = ISMouseDrag.dragging[1]
         item = ItemGridUtil.convertItemStackToItem(item)
         luautils.walkToContainer(self.inventory, self.player)
 
         if self == ISMouseDrag.draggingFocus then
-            ItemGridTransferUtil.moveGridItemMouse(item, ISMouseDrag.draggingFocus.dragGrid, selfGrid, playerObj)
+            ItemGridTransferUtil.moveGridItemMouse(item, ISMouseDrag.draggingFocus.dragGrid, selfGrid, ISMouseDrag.rotateDrag)
         else
-            ItemGridTransferUtil.transferGridItemMouse(item, ISMouseDrag.draggingFocus.dragGrid, selfGrid, playerObj)
+            ItemGridTransferUtil.transferGridItemMouse(item, ISMouseDrag.draggingFocus.dragGrid, selfGrid, playerObj, ISMouseDrag.rotateDrag)
         end
 
         self.selected = {};
@@ -344,51 +335,9 @@ local function getGridsByContainer(self, container)
     if self.inventory == container then
         return self.grids
     else
-        return ISInventoryPane.createItemGrids(container, self.player)
+        return ItemGrid.Create(container, self.player)
     end
 end
-
-local og_transferItemsByWeight = ISInventoryPane.transferItemsByWeight
-function ISInventoryPane:transferItemsByWeight(items, container)
-	if self.player ~= 0 then return end
-    
-    if #items > 1 then
-        return og_transferItemsByWeight(self, items, container)
-    end
-
-    local item = items[1]
-
-
-
-
-
-
-    local selfGrid = ItemGridUtil.findGridUnderMouse(self)
-    if not ISMouseDrag.dragging or #ISMouseDrag.dragging > 1 or 
-        not ISMouseDrag.draggingFocus or not ISMouseDrag.draggingFocus.dragGrid 
-        or not ItemGridTransferUtil.shouldUseGridTransfer(selfGrid, ISMouseDrag.draggingFocus.dragGrid)
-    then
-        return og_mouseUp(self, x, y)
-    end
-
-
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 local og_createMenu = ISInventoryPaneContextMenu.createMenu
@@ -415,3 +364,16 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
 
     return
 end
+
+
+local function rotateDraggedItem(key)
+    if key == getCore():getKey("Rotate Item") then
+        if ISMouseDrag.rotateDrag then
+            ISMouseDrag.rotateDrag = false
+        else
+            ISMouseDrag.rotateDrag = true
+        end
+    end
+end
+
+Events.OnKeyStartPressed.Add(rotateDraggedItem)

@@ -67,7 +67,7 @@ function ItemGridTransferUtil.shouldUseGridTransfer(sourceGrid, destinationGrid)
     return true
 end
 
-function ItemGridTransferUtil.isTransferValid(item, sourceGrid, destinationGrid, character)
+function ItemGridTransferUtil.isTransferValid(item, sourceGrid, destinationGrid, character, rotate)
 	if not item or not sourceGrid or not destinationGrid or not character then
 		return false;
     end
@@ -124,20 +124,20 @@ function ItemGridTransferUtil.isTransferValid(item, sourceGrid, destinationGrid,
         return false;
     end
 
-	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item)
+	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item, rotate)
 	if not ItemGridUtil.isGridPositionValid(destinationGrid, x, y) then
 		return false
 	end
 
-	if not destinationGrid:doesItemFit(item, x, y) then
+	if not destinationGrid:doesItemFit(item, x, y, rotate) then
 		return false
 	end
 
 	return item:getContainer() == srcContainer and not destContainer:isInside(item)
 end
 
-function ItemGridTransferUtil.transferGridItemMouse(item, sourceGrid, destinationGrid, character)
-	if not ItemGridTransferUtil.isTransferValid(item, sourceGrid, destinationGrid, character) then
+function ItemGridTransferUtil.transferGridItemMouse(item, sourceGrid, destinationGrid, character, rotate)
+	if not ItemGridTransferUtil.isTransferValid(item, sourceGrid, destinationGrid, character, rotate) then
 		return
 	end
 
@@ -223,6 +223,10 @@ function ItemGridTransferUtil.transferGridItemMouse(item, sourceGrid, destinatio
 	end
 	
 	sourceGrid:removeItemFromGrid(item)
+	
+	if rotate then 
+		ItemGridUtil.rotateItem(item)
+	end
 	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item)
 	destinationGrid:insertItemIntoGrid(item, x, y)
 
@@ -239,19 +243,23 @@ function ItemGridTransferUtil.transferGridItemMouse(item, sourceGrid, destinatio
 	end
 end
 
-function ItemGridTransferUtil.moveGridItemMouse(item, sourceGrid, destinationGrid)
-	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item)
+function ItemGridTransferUtil.moveGridItemMouse(item, sourceGrid, destinationGrid, rotate)
+	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item, rotate)
 	if not ItemGridUtil.isGridPositionValid(destinationGrid, x, y) then
 		return
 	end
-
-	print("Moving to "..x..", "..y)
 
 	local originalX, originalY = ItemGridUtil.getItemPosition(item)
 
 	sourceGrid:removeItemFromGrid(item)
 
+	if rotate then
+		ItemGridUtil.rotateItem(item)
+	end
 	if not destinationGrid:doesItemFit(item, x, y) then
+		if rotate then
+			ItemGridUtil.rotateItem(item)
+		end
 		sourceGrid:insertItemIntoGrid(item, originalX, originalY)
 	else
 		destinationGrid:insertItemIntoGrid(item, x, y)

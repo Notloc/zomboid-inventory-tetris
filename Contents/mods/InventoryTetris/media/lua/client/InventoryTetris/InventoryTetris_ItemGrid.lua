@@ -39,6 +39,10 @@ local function getDraggedItem()
     return ItemGridUtil.convertItemStackToItem(item)
 end
 
+local function isDraggedItemRotated()
+    return ISMouseDrag.rotateDrag
+end
+
 function ItemGrid:render()
     self:renderBackGrid()
     self:renderGridItems()
@@ -56,7 +60,8 @@ function ItemGrid:renderBackGrid()
     
     local width = self.gridWidth
     local height = self.gridHeight
-    self:drawRect(0, 0, CELL_SIZE * width, CELL_SIZE * height, 0.9, 0, 0, 0)
+    local grey = 0.125
+    self:drawRect(0, 0, CELL_SIZE * width, CELL_SIZE * height, 0.9, grey, grey, grey)
 
     for y = 0,height-1 do
         for x = 0,width-1 do
@@ -67,7 +72,6 @@ end
 
 function ItemGrid:renderGridItems()
     local items = self.inventory:getItems();
-    --self:redoGridPositions(items) -- Temp code to fix the grid positions until we get things updating properly when items are added/removed
     for i = 0, items:size()-1 do
         local item = items:get(i);
         local x, y, i = ItemGridUtil.getItemPosition(item)
@@ -86,6 +90,9 @@ function ItemGrid:renderDragItemPreview()
     local x = self:getMouseX()
     local y = self:getMouseY()
     local itemW, itemH = ItemGridUtil.getItemSize(item)
+    if isDraggedItemRotated() then
+        itemW, itemH = itemH, itemW
+    end
 
     local halfCell = CELL_SIZE / 2
     local xPos = x + halfCell - itemW * halfCell
@@ -105,18 +112,25 @@ function ItemGrid.renderDragItem(drawer)
     local x = drawer:getMouseX()
     local y = drawer:getMouseY()
     local itemW, itemH = ItemGridUtil.getItemSize(item)
+    if isDraggedItemRotated() then
+        itemW, itemH = itemH, itemW
+    end
 
     local xPos = x - itemW * CELL_SIZE / 2
     local yPos = y - itemH * CELL_SIZE / 2
 
     drawer:suspendStencil()
-    ItemGrid.renderGridItem(drawer, item, xPos, yPos)
+    ItemGrid.renderGridItem(drawer, item, xPos, yPos, isDraggedItemRotated())
     drawer:resumeStencil()
 end
 
-function ItemGrid.renderGridItem(drawer, item, x, y)
+function ItemGrid.renderGridItem(drawer, item, x, y, forceRotate)
 
     local w, h = ItemGridUtil.getItemSize(item)
+    if forceRotate then
+        w, h = h, w
+    end
+
     local minDimension = math.min(w, h)
 
     drawer:drawRect(x, y, w * CELL_SIZE, h * CELL_SIZE, 0.8, getItemBackgroundColor(item))
@@ -146,8 +160,8 @@ function ItemGrid:createItemGrid(width, height)
     local items = self.inventory:getItems();
     for i = 0, items:size()-1 do
         local item = items:get(i);
-        local x, y = ItemGridUtil.getItemPosition(item)
-        if x and y then
+        local x, y, index = ItemGridUtil.getItemPosition(item)
+        if index == self.gridIndex and x and y then
             local w, h = ItemGridUtil.getItemSize(item)
             for y2 = y,y+h-1 do
                 for x2 = x,x+w-1 do
@@ -225,7 +239,21 @@ function ItemGrid:insertItemIntoGrid(item, xPos, yPos)
     end
 end
 
-function ItemGrid:attemptToInsertItemIntoGrid(item, isRotationAttempt)
+function ItemGrid:canAddItem(item)
+    local x, y = self:findPositionForItem(item)
+    return x >= 0 and y >= 0
+end
+
+function ItemGrid:attemptToInsertItemIntoGrid(item)
+    local x, y = self:findPositionForItem(item)
+    if x >= 0 and y >= 0 then
+        self:insertItemIntoGrid(item, x, y)
+        return true
+    end
+    return false
+end
+
+function ItemGrid:findPositionForItem(item, isRotationAttempt)
     local width = self.gridWidth
     local height = self.gridHeight
 
@@ -234,8 +262,7 @@ function ItemGrid:attemptToInsertItemIntoGrid(item, isRotationAttempt)
         for x = 0,width-w do
             local canPlace = self:doesItemFitWH(item, x, y, w, h)
             if canPlace then
-                self:insertItemIntoGrid(item, x, y)
-                return true
+                return x, y
             end
         end
     end
@@ -243,7 +270,7 @@ function ItemGrid:attemptToInsertItemIntoGrid(item, isRotationAttempt)
     if not isRotationAttempt and w ~= h then
         -- Try rotating the item
         ItemGridUtil.rotateItem(item)
-        return self:insertItemIntoGrid(item, true)
+        return self:findPositionForItem(item, true)
     end
     
     if w ~= h then
@@ -251,11 +278,14 @@ function ItemGrid:attemptToInsertItemIntoGrid(item, isRotationAttempt)
         ItemGridUtil.rotateItem(item)
     end
     
-    return false
+    return -1, -1
 end
 
-function ItemGrid:doesItemFit(item, xPos, yPos)
+function ItemGrid:doesItemFit(item, xPos, yPos, rotate)
     local w, h = ItemGridUtil.getItemSize(item)
+    if rotate then
+        w, h = h, w
+    end
     return self:doesItemFitWH(item, xPos, yPos, w, h)
 end
 
@@ -353,7 +383,7 @@ function ItemGrid:onMouseDown(x,y)
 end
 
 function ItemGrid:onMouseUp(x,y)
-    self.inventoryPane:onMouseUp(self.inventoryPane:getMouseX(), self.inventoryPane:getMouseY())
+    self.inventoryPane:onMouseUp(x, y)
 end
 
 function ItemGrid:onRightMouseUp(x,y)
@@ -386,4 +416,17 @@ end
 
 function ItemGrid:registerInventoryPane(inventoryPane)
     self.inventoryPane = inventoryPane
+end
+
+
+function ItemGrid.Create(container, playerNum)
+    local grids = {}
+    local gridType = getGridContainerTypeByInventory(container)
+    local gridDefinition = getGridDefinitionByContainerType(gridType)
+    for i, definition in ipairs(gridDefinition) do
+        local grid = ItemGrid:new(definition, i, container, playerNum)
+        grids[i] = grid
+    end
+
+    return grids, gridType
 end

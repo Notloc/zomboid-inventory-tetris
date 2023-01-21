@@ -38,6 +38,7 @@ ItemGridUtil.clearItemPosition = function(item)
     local modData = item:getModData()
     modData[X_POS] = nil
     modData[Y_POS] = nil
+    modData[GRID_INDEX] = nil
 end
 
 ItemGridUtil.rotateItem = function(item)
@@ -114,12 +115,16 @@ ItemGridUtil.isMouseOverItem = function(item, mouseX, mouseY)
 end
 
 -- Get the mouse position relative to the top left corner of the item being dragged
-ItemGridUtil.findGridPositionOfMouse = function(grid, item)
+ItemGridUtil.findGridPositionOfMouse = function(grid, item, rotate)
     local xOff = 0
     local yOff = 0
 
     if item then
         local w, h = ItemGridUtil.getItemSize(item)
+        if rotate then
+            w, h = h, w
+        end
+
         xOff = CELL_SIZE * w / 2 - CELL_SIZE / 2
         yOff = CELL_SIZE * h / 2 - CELL_SIZE / 2
     end
