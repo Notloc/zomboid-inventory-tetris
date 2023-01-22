@@ -134,8 +134,9 @@ end
 
 -- Rounds a mouse position to the nearest grid position, for the top left corner of the item
 ItemGridUtil.mousePositionToGridPosition = function(x, y)
-    local gridX = math.floor(x / CELL_SIZE)
-    local gridY = math.floor(y / CELL_SIZE)
+    local effectiveCellSize = CELL_SIZE - 1
+    local gridX = math.floor(x / effectiveCellSize)
+    local gridY = math.floor(y / effectiveCellSize)
     return gridX, gridY
 end
 

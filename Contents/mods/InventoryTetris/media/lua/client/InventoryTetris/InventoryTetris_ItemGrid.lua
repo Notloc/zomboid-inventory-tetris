@@ -7,6 +7,8 @@ local CELL_SIZE = TETRIS.CELL_SIZE
 local TEXTURE_SIZE = TETRIS.TEXTURE_SIZE
 local TEXTURE_PAD = TETRIS.TEXTURE_PAD
 
+local backgroundTexture = getTexture("media/textures/InventoryTetris/ItemSlot.png")
+
 local function getItemBackgroundColor(item)
     local itemType = item:getDisplayCategory()
     if itemType == "Ammo" then
@@ -25,11 +27,11 @@ local function getItemBackgroundColor(item)
 end
 
 function ItemGrid:calculateWidth()
-    return self.gridWidth * CELL_SIZE
+    return self.gridWidth * CELL_SIZE - self.gridWidth + 1
 end
 
 function ItemGrid:calculateHeight()
-    return self.gridHeight * CELL_SIZE
+    return self.gridHeight * CELL_SIZE - self.gridHeight + 1
 end
 
 local function getDraggedItem()
@@ -60,12 +62,12 @@ function ItemGrid:renderBackGrid()
     
     local width = self.gridWidth
     local height = self.gridHeight
-    local grey = 0.125
-    self:drawRect(0, 0, CELL_SIZE * width, CELL_SIZE * height, 0.9, grey, grey, grey)
+    local grey = 0.08
+    self:drawRect(0, 0, CELL_SIZE * width - width, CELL_SIZE * height - height, 0.9, grey, grey, grey)
 
     for y = 0,height-1 do
         for x = 0,width-1 do
-            self:drawRectBorder(CELL_SIZE * x, CELL_SIZE * y, CELL_SIZE, CELL_SIZE, 0.25, 1, g, b)
+            self:drawRectBorder(CELL_SIZE * x - x, CELL_SIZE * y - y, CELL_SIZE, CELL_SIZE, 0.25, 1, g, b)
         end
     end
 end
@@ -76,7 +78,7 @@ function ItemGrid:renderGridItems()
         local item = items:get(i);
         local x, y, i = ItemGridUtil.getItemPosition(item)
         if self.gridIndex == i and x and y then
-            self:renderGridItem(item, x * CELL_SIZE, y * CELL_SIZE)
+            self:renderGridItem(item, x * CELL_SIZE - x, y * CELL_SIZE - y)
         end
     end
 end
@@ -100,7 +102,7 @@ function ItemGrid:renderDragItemPreview()
 
     -- Placement preview
     local gridX, gridY = ItemGridUtil.mousePositionToGridPosition(xPos, yPos)
-    self:drawRect(gridX * CELL_SIZE, gridY * CELL_SIZE, itemW * CELL_SIZE, itemH * CELL_SIZE, 1, 1, 1, 1)
+    self:drawRect(gridX * CELL_SIZE - gridX + 1, gridY * CELL_SIZE - gridY + 1, itemW * CELL_SIZE - itemW - 1, itemH * CELL_SIZE - itemH - 1, 1, 1, 1, 1)
 end
 
 function ItemGrid.renderDragItem(drawer)
@@ -133,13 +135,13 @@ function ItemGrid.renderGridItem(drawer, item, x, y, forceRotate)
 
     local minDimension = math.min(w, h)
 
-    drawer:drawRect(x, y, w * CELL_SIZE, h * CELL_SIZE, 0.8, getItemBackgroundColor(item))
-    drawer:drawRectBorder(x, y, w * CELL_SIZE, h * CELL_SIZE, 1, 0, 1, 1)
+    --drawer:drawRect(x, y, w * CELL_SIZE, h * CELL_SIZE, 0.2, getItemBackgroundColor(item))
 
-    local x2 = x + TEXTURE_PAD * w + (w - minDimension) * CELL_SIZE / 2
-    local y2 = y + TEXTURE_PAD * h + (h - minDimension) * CELL_SIZE / 2
-    
-    drawer:drawTextureScaled(item:getTex(), x2, y2, TEXTURE_SIZE * minDimension, TEXTURE_SIZE * minDimension, 1, 1, 1, 1);
+    drawer:drawTextureScaled(backgroundTexture, x + 1, y + 1, w * TEXTURE_SIZE + TEXTURE_PAD * w - 1, h * TEXTURE_SIZE + TEXTURE_PAD * h - 1, 0.75, getItemBackgroundColor(item))
+
+    local x2 = x + TEXTURE_PAD * w + (w - minDimension) * TEXTURE_SIZE / 2
+    local y2 = y + TEXTURE_PAD * h + (h - minDimension) * TEXTURE_SIZE / 2
+    drawer:drawTextureScaledUniform(item:getTex(), x2, y2, minDimension, 1, 1, 1, 1);
 end
 
 
