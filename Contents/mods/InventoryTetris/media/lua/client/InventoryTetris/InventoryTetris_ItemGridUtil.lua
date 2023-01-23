@@ -65,6 +65,8 @@ ItemGridUtil.getItemSize = function(item)
 end
 
 ItemGridUtil.findGridUnderMouse = function(inventoryPane)
+    if not inventoryPane.grids then return nil end
+    
     local x = getMouseX()
     local y = getMouseY()
     for _, grid in pairs(inventoryPane.grids) do

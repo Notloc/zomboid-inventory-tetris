@@ -273,7 +273,7 @@ function ISInventoryPane:onMouseUp(x, y)
 
     local playerObj = getSpecificPlayer(self.player)
 
-    
+
     if self:canPutIn() or self == ISMouseDrag.draggingFocus then         
         local item = ISMouseDrag.dragging[1]
         item = ItemGridUtil.convertItemStackToItem(item)
@@ -361,6 +361,13 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
     local itemWeight = item:getActualWeight()
     local itemType = item:getType()
     local itemKlass = item:getCat()
+
+    print ("itemCategory: " .. itemCategory)
+    print ("itemDisplayName: " .. itemDisplayName)
+    print ("itemFullType: " .. itemFullType)
+    print ("itemWeight: " .. itemWeight)
+    print ("itemType: " .. itemType)
+    print ("itemKlass: " .. tostring(itemKlass))
 
     return
 end
