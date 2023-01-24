@@ -35,7 +35,7 @@ function ISInventoryPane:refreshItemGrids()
                 self:addChild(grid)
             end
 
-            self:updateItemGridPositions()
+            ItemGrid.UpdateItemGridPositions(self.grids)
         else
             for _, grid in ipairs(self.grids) do
                 grid:setInventory(self.inventory)
@@ -58,59 +58,8 @@ function ISInventoryPane:clearGrids()
             self:removeChild(grid)
         end
     end
+
     self.activeGridType = nil
-end
-
-function ISInventoryPane:updateItemGridPositions()
-    -- Space out the grids
-    local gridSpacing = 10
-    
-    local xPos = 0 -- The cursor position
-    local maxX = 0 -- Tracks when to update the cursor position
-    local largestX = self.grids[1]:getWidth() -- The largest grid seen for the current cursor position
-    
-    local yPos = 0
-    local maxY = 0
-    local largestY = self.grids[1]:getHeight()
-    
-    local gridsByX = {}
-    local gridsByY = {}
-
-    for _, grid in ipairs(self.grids) do
-        table.insert(gridsByX, grid)
-        table.insert(gridsByY, grid)
-    end
-
-    table.sort(gridsByX, function(a, b) return a.gridDefinition.position.x < b.gridDefinition.position.x end)
-    table.sort(gridsByY, function(a, b) return a.gridDefinition.position.y < b.gridDefinition.position.y end)
-
-    for _, grid in ipairs(gridsByX) do
-        local x = grid.gridDefinition.position.x
-        if x > maxX then
-            maxX = x
-            xPos = xPos + largestX + gridSpacing
-            largestX = 0
-        end
-        
-        grid:setX(xPos)
-        if grid:getWidth() > largestX then
-            largestX = grid:getWidth()
-        end
-    end
-
-    for _, grid in ipairs(gridsByY) do
-        local y = grid.gridDefinition.position.y
-        if y > maxY then
-            maxY = y
-            yPos = yPos + largestY + gridSpacing
-            largestY = 0
-        end
-        
-        grid:setY(yPos)
-        if grid:getHeight() > largestY then
-            largestY = grid:getHeight()
-        end
-    end
 end
 
 local og_prerender = ISInventoryPane.prerender
@@ -119,18 +68,16 @@ function ISInventoryPane:prerender()
     if self.mode == "grid" then
         self.nameHeader:setVisible(false)
         self.typeHeader:setVisible(false)
+
+        if self.childWindows then
+            for _, child in ipairs(self.childWindows) do
+                child:bringToTop()
+            end
+        end
     else
         self.nameHeader:setVisible(true)
         self.typeHeader:setVisible(true)
     end
-end
-
-local og_render = ISInventoryPane.render
-function ISInventoryPane:render()
-    if self.mode == "grid" then
-        ItemGrid.renderDragItem(self)
-    end
-    og_render(self)
 end
 
 local og_updateTooltip = ISInventoryPane.updateTooltip
@@ -142,6 +89,10 @@ function ISInventoryPane:updateTooltip()
     if not self:isReallyVisible() then
 		return -- in the main menu
 	end
+
+    if ISMouseDrag.dragging then
+        return
+    end
 
 	local item = nil
 
@@ -208,137 +159,45 @@ function ISInventoryPane:updateTooltip()
 		lootTooltip and lootTooltip.javaObject or nil)
 end
 
-
-
 local og_onMouseDown = ISInventoryPane.onMouseDown
 function ISInventoryPane:onMouseDown(x, y)
-	if self.player ~= 0 then return true end
-
-    ISMouseDrag.rotateDrag = false
-
     if self.mode ~= "grid" then
         return og_onMouseDown(self, x, y)
     end
-
-	getSpecificPlayer(self.player):nullifyAiming();
-
-	local count = 0;
-
-    self.downX = x;
-    self.downY = y;
-
-    if self.selected == nil then
-		self.selected = {}
-    end
-
-    local item = ItemGridUtil.findItemUnderMouse(self, x, y)
-    if item then
-        self.dragging = self.mouseOverOption;
-        self.draggingX = x;
-        self.draggingY = y;
-        self.dragStarted = false
-        ISMouseDrag.dragging = {}
-        table.insert(ISMouseDrag.dragging, item);
-        ISMouseDrag.draggingFocus = self;
-        self.dragGrid = ItemGridUtil.findGridUnderMouse(self)
-        return;
-    end
-
-    if self.dragging == nil and x >= 0 and y >= 0 and (x<=self.column3 and y <= self:getScrollHeight() - self.itemHgt) then
-
-	elseif count == 0 then
-		self.draggingMarquis = true;
-		self.draggingMarquisX = x;
-		self.draggingMarquisY = y;
-		self.dragging = nil;
-		self.draggedItems:reset()
-		ISMouseDrag.dragging = nil;
-		ISMouseDrag.draggingFocus = nil;
-	end
-
 	return true;
 end
 
 local og_mouseUp = ISInventoryPane.onMouseUp
 function ISInventoryPane:onMouseUp(x, y)
-	if self.player ~= 0 then return end
-    
-    local selfGrid = ItemGridUtil.findGridUnderMouse(self)
-    if not ISMouseDrag.dragging or #ISMouseDrag.dragging > 1 or 
-        not ISMouseDrag.draggingFocus or not ISMouseDrag.draggingFocus.dragGrid 
-        or not ItemGridTransferUtil.shouldUseGridTransfer(selfGrid, ISMouseDrag.draggingFocus.dragGrid)
-    then
+    if self.mode ~= "grid" then
         return og_mouseUp(self, x, y)
     end
+    return true;
+end
 
-    local playerObj = getSpecificPlayer(self.player)
-
-
-    if self:canPutIn() or self == ISMouseDrag.draggingFocus then         
-        local item = ISMouseDrag.dragging[1]
-        item = ItemGridUtil.convertItemStackToItem(item)
-        luautils.walkToContainer(self.inventory, self.player)
-
-        if self == ISMouseDrag.draggingFocus then
-            ItemGridTransferUtil.moveGridItemMouse(item, ISMouseDrag.draggingFocus.dragGrid, selfGrid, ISMouseDrag.rotateDrag)
-        else
-            ItemGridTransferUtil.transferGridItemMouse(item, ISMouseDrag.draggingFocus.dragGrid, selfGrid, playerObj, ISMouseDrag.rotateDrag)
-        end
-
-        self.selected = {};
-        getPlayerLoot(self.player).inventoryPane.selected = {};
-        getPlayerInventory(self.player).inventoryPane.selected = {};
-    end
-
-	self.dragging = nil;
-	self.draggedItems:reset();
-	ISMouseDrag.dragging = nil;
-    ISMouseDrag.draggingFocus.dragGrid = nil;
-	ISMouseDrag.draggingFocus = nil;
-
-	return true;
+function ISInventoryPane:onMouseUpNoGrid(x, y)
+    return og_mouseUp(self, x, y)
 end
 
 local og_onRightMouseUp = ISInventoryPane.onRightMouseUp
 function ISInventoryPane:onRightMouseUp(x, y)
-    if self.player ~= 0 then return end
     if self.mode ~= "grid" then
         return og_onRightMouseUp(self, x, y)
     end
-
-    if self.selected == nil then
-		self.selected = {}
-	end
-
-    local item = ItemGridUtil.findItemUnderMouse(self, x, y)
-    if not item then 
-        return
-    end
-    
-	if self.toolRender then
-		self.toolRender:setVisible(false)
-	end
-    
-    local isInInv = self.inventory:isInCharacterInventory(getSpecificPlayer(self.player))
-    local menu = ISInventoryPaneContextMenu.createMenu(self.player, isInInv, { item }, self:getAbsoluteX()+x, self:getAbsoluteY()+y+self:getYScroll());
-    if menu and menu.numOptions > 1 and JoypadState.players[self.player+1] then
-        menu.origin = self.inventoryPage
-        menu.mouseOver = 1
-        setJoypadFocus(self.player, menu)
-    end
-
-	return true;
+	return false;
 end
 
+local og_onMouseDoubleClick = ISInventoryPane.onMouseDoubleClick
+function ISInventoryPane:onMouseDoubleClick(x, y)
+	if self.mode ~= "grid" then
+        return og_onMouseDoubleClick(self, x, y)
+    end
 
-local function getGridsByContainer(self, container)
-    if self.inventory == container then
-        return self.grids
-    else
-        return ItemGrid.Create(container, self.player)
+    local grid = ItemGridUtil.findGridUnderMouse(self, x, y)
+    if grid then
+        grid:onMouseDoubleClick(grid:getMouseX(), grid:getMouseY())
     end
 end
-
 
 local og_createMenu = ISInventoryPaneContextMenu.createMenu
 ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
@@ -352,8 +211,6 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
         item = items[1].items[1]
     end
     if not item then return end
-
-    -- Pull a bunch of fields into local variables so we can view them in the debugger
 
     local itemCategory = item:getDisplayCategory()
     local itemDisplayName = item:getDisplayName()
@@ -372,15 +229,13 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
     return
 end
 
-
-local function rotateDraggedItem(key)
-    if key == getCore():getKey("Rotate Item") then
-        if ISMouseDrag.rotateDrag then
-            ISMouseDrag.rotateDrag = false
-        else
-            ISMouseDrag.rotateDrag = true
+local og_close = ISInventoryPage.close
+function ISInventoryPage:close()
+    og_close(self)
+    if self.inventoryPane.childWindows then
+        for _, window in ipairs(self.inventoryPane.childWindows) do
+            window:removeFromUIManager()
         end
+        table.wipe(self.inventoryPane.childWindows)
     end
 end
-
-Events.OnKeyStartPressed.Add(rotateDraggedItem)

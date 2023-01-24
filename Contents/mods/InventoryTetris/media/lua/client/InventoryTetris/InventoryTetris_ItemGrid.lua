@@ -38,7 +38,7 @@ end
 local function getDraggedItem()
     -- Only return the item being dragged if it's the only item being dragged
     -- We can't render a list being dragged from the ground
-    local item = (ISMouseDrag.dragging and #ISMouseDrag.dragging == 1) and ISMouseDrag.dragging[1] or nil
+    local item = (ISMouseDrag.dragging and #ISMouseDrag.dragging == 1 and ISMouseDrag.dragStarted) and ISMouseDrag.dragging[1] or nil
     return ItemGridUtil.convertItemStackToItem(item)
 end
 
@@ -47,9 +47,17 @@ local function isDraggedItemRotated()
 end
 
 function ItemGrid:render()
+    if self.inventory:isDrawDirty() then
+        self.inventoryPane:refreshContainer()
+    end
+
     self:renderBackGrid()
     self:renderGridItems()
     self:renderDragItemPreview()
+    
+    if ISMouseDrag.dragGrid == self then
+        self:renderDragItem()
+    end
 end
 
 function ItemGrid:renderBackGrid()
@@ -273,6 +281,10 @@ end
 
 -- Insert the item into the grid, no checks
 function ItemGrid:insertItemIntoGrid(item, xPos, yPos) 
+    if item:isHidden() then
+        return
+    end
+
     ItemGridUtil.setItemPosition(item, xPos, yPos, self.gridIndex)
     local w, h = ItemGridUtil.getItemSize(item)
     for y = yPos, yPos+h-1 do
@@ -394,12 +406,16 @@ function ItemGrid:updateGridPositions()
     
     for i = 0, self.inventory:getItems():size()-1 do
         local item = self.inventory:getItems():get(i);
-        local x, y, gridIndex = ItemGridUtil.getItemPosition(item)
-        if gridIndex == self.gridIndex then
-            if x and y then
-                self:insertItemIntoGrid(item, x, y)
-            else
-                self:attemptToInsertItemIntoGrid(item)
+        if item:isHidden() then
+            ItemGridUtil.clearItemPosition(item)
+        else
+            local x, y, gridIndex = ItemGridUtil.getItemPosition(item)
+            if gridIndex == self.gridIndex then
+                if x and y then
+                    self:insertItemIntoGrid(item, x, y)
+                else
+                    self:attemptToInsertItemIntoGrid(item)
+                end
             end
         end
     end
@@ -423,21 +439,194 @@ function ItemGrid:updateGridPositions()
     -- where items are placed in the top left corner, the grid turns red, and new items can't be placed
 end
 
-function ItemGrid:onMouseDown(x,y)
-    self.inventoryPane:onMouseDown(self.inventoryPane:getMouseX(), self.inventoryPane:getMouseY())
+function ItemGrid:onMouseDown(x, y)
+	if self.playerNum ~= 0 then return end
+
+    ISMouseDrag.rotateDrag = false
+
+	getSpecificPlayer(self.playerNum):nullifyAiming();
+
+	local count = 0;
+
+    self.downX = x;
+    self.downY = y;
+
+    local item = ItemGridUtil.findItemUnderMouseGrid(self, x, y)
+    if item then
+        self.itemToDrag = item
+
+        ISMouseDrag.dragStarted = false
+        ISMouseDrag.draggingFocus = self.inventoryPane
+        ISMouseDrag.dragGrid = self
+        return;
+    end
+
+	return true;
 end
 
-function ItemGrid:onMouseUp(x,y)
-    self.inventoryPane:onMouseUp(x, y)
+local function isQuickMoveDown()
+    return isKeyDown(getCore():getKey("tetris_quick_move"))
 end
 
-function ItemGrid:onRightMouseUp(x,y)
-    self.inventoryPane:onRightMouseUp(self.inventoryPane:getMouseX(), self.inventoryPane:getMouseY())
+local function isQuickEquipDown()
+    return isKeyDown(getCore():getKey("tetris_quick_equip"))
+end
+
+function ItemGrid:onMouseUp(x, y)
+	if self.playerNum ~= 0 then return end
+    
+    if not ISMouseDrag.dragStarted then
+        local item = ItemGridUtil.findItemUnderMouseGrid(self, x, y)
+        if item then
+            if isQuickMoveDown() then
+                self:quickMoveItem(item)
+            elseif isQuickEquipDown() then
+                self:quickEquipItem(item)
+            end
+        end
+
+        return true
+    end
+
+    if not ISMouseDrag.dragging or #ISMouseDrag.dragging > 1 or not ISMouseDrag.dragGrid 
+        or not ItemGridTransferUtil.shouldUseGridTransfer(self, ISMouseDrag.dragGrid)
+    then
+        return self.inventoryPane:onMouseUpNoGrid(x, y)
+    end
+
+    local playerObj = getSpecificPlayer(self.playerNum)
+
+    local isSameInventory = self.inventory == ISMouseDrag.dragGrid.inventory
+    if isSameInventory or self.inventoryPane:canPutIn() then         
+        local item = ISMouseDrag.dragging[1]
+        item = ItemGridUtil.convertItemStackToItem(item)
+        luautils.walkToContainer(self.inventory, self.playerNum)
+
+        if isSameInventory then
+            ItemGridTransferUtil.moveGridItemMouse(item, ISMouseDrag.dragGrid, self, ISMouseDrag.rotateDrag)
+        else
+            ItemGridTransferUtil.transferGridItemMouse(item, ISMouseDrag.dragGrid, self, playerObj, ISMouseDrag.rotateDrag)
+        end
+    end
+
+    self.itemToDrag = nil
+	ISMouseDrag.dragging = nil;
+	ISMouseDrag.draggingFocus = nil;
+    ISMouseDrag.dragGrid = nil
+    ISMouseDrag.dragStarted = false
+
+	return true;
+end
+
+function ItemGrid:quickMoveItem(item)
+    if not self.inventory:isInCharacterInventory(getSpecificPlayer(self.playerNum)) then
+        local inventoryPage = getPlayerInventory(self.playerNum)
+        local targetContainer = inventoryPage.inventoryPane.inventory
+        self:quickMoveItemToContainer(item, targetContainer)
+    else
+        local lootPage = getPlayerLoot(self.playerNum)
+        local targetContainer = lootPage.inventoryPane.inventory
+        self:quickMoveItemToContainer(item, targetContainer)
+    end
+end
+
+function ItemGrid:quickMoveItemToContainer(item, targetContainer)
+    local playerObj = getSpecificPlayer(self.playerNum)
+    local grids = ItemGrid.Create(targetContainer, self.playerNum)
+    for _, grid in ipairs(grids) do
+        if grid:canAddItem(item) then
+            ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), targetContainer))
+            return
+        end
+    end
+end
+
+
+
+function ItemGrid:onRightMouseUp(x, y)
+    if self.playerNum ~= 0 then return end
+
+    local item = ItemGridUtil.findItemUnderMouseGrid(self, x, y)
+    if not item then 
+        return
+    end
+    
+	if self.inventoryPane and self.inventoryPane.toolRender then
+		self.inventoryPane.toolRender:setVisible(false)
+	end
+    
+    local isInInv = self.inventory:isInCharacterInventory(getSpecificPlayer(self.playerNum))
+    local menu = ISInventoryPaneContextMenu.createMenu(self.playerNum, isInInv, { item }, self:getAbsoluteX()+x, self:getAbsoluteY()+y)
+    --+self:getYScroll());
+    if menu and menu.numOptions > 1 and JoypadState.players[self.player+1] then
+        menu.origin = self.inventoryPage
+        menu.mouseOver = 1
+        setJoypadFocus(self.player, menu)
+    end
+
+	return true;
+end
+
+local function startDragIfMouseMoved(self)
+    if self.playerNum ~= 0 then return end
+
+    if not ISMouseDrag.dragStarted and self.itemToDrag then
+        local x = self:getMouseX()
+        local y = self:getMouseY()
+
+        local dragLimit = 8
+        if math.abs(x - self.downX) > dragLimit or math.abs(y - self.downY) > dragLimit then
+            ISMouseDrag.dragStarted = true
+            ISMouseDrag.dragging = { self.itemToDrag }
+            self.itemToDrag = nil
+        end
+    end
+end
+
+function ItemGrid:onMouseMove(dx, dy)
+    startDragIfMouseMoved(self)
+end
+
+function ItemGrid:onMouseMoveOutside(dx, dy)
+    startDragIfMouseMoved(self)
+end
+
+function ItemGrid:openContainerPopup(container, playerNum)
+    local invPane = self.inventoryPane
+    local itemGridWindow = ItemGridWindow:new(getMouseX(), getMouseY(), invPane, container, playerNum)
+    itemGridWindow:initialise()
+    itemGridWindow:addToUIManager()
+    itemGridWindow:bringToTop()
+
+    if not invPane.childWindows then
+        invPane.childWindows = {}
+    end
+    table.insert(invPane.childWindows, itemGridWindow)
 end
 
 function ItemGrid:setInventory(inventory)
     self.inventory = inventory
     self:refreshGrid()
+end
+
+function ItemGrid:onMouseDoubleClick(x, y)
+    if self.playerNum ~= 0 then return end
+
+    self.itemToDrag = nil
+
+    local item = ItemGridUtil.findItemUnderMouseGrid(self, x, y)
+    if not item then 
+        return
+    end
+
+    if item:IsInventoryContainer() then
+        self:openContainerPopup(item:getInventory(), self.playerNum)
+    end
+end
+
+function ItemGrid:initialise()
+    ISPanel.initialise(self)
+    self:setOnMouseDoubleClick(self, self.onMouseDoubleClick)
 end
 
 function ItemGrid:new(gridDefinition, gridIndex, inventory, playerNum)
@@ -456,6 +645,7 @@ function ItemGrid:new(gridDefinition, gridIndex, inventory, playerNum)
 
     o:setWidth(o:calculateWidth())
     o:setHeight(o:calculateHeight())
+
     return o
 end
 
@@ -470,8 +660,81 @@ function ItemGrid.Create(container, playerNum)
     local gridDefinition = getGridDefinitionByContainerType(gridType)
     for i, definition in ipairs(gridDefinition) do
         local grid = ItemGrid:new(definition, i, container, playerNum)
+        grid:initialise()
         grids[i] = grid
     end
 
     return grids, gridType
+end
+
+local function rotateDraggedItem(key)
+    if key == getCore():getKey("tetris_rotate_item") then
+        if ISMouseDrag.rotateDrag then
+            ISMouseDrag.rotateDrag = false
+        else
+            ISMouseDrag.rotateDrag = true
+        end
+    end
+end
+
+Events.OnKeyStartPressed.Add(rotateDraggedItem)
+
+
+
+-- Positions the grids so they are nicely spaced out
+-- Returns the size of all the grids
+function ItemGrid.UpdateItemGridPositions(grids, offX, offY)
+    -- Space out the grids
+    local gridSpacing = 10
+    
+    local xPos = offX and offX or 0 -- The cursor position
+    local maxX = 0 -- Tracks when to update the cursor position
+    local largestX = grids[1]:getWidth() -- The largest grid seen for the current cursor position
+    
+    local yPos = offY and offY or 0
+    local maxY = 0
+    local largestY = grids[1]:getHeight()
+    
+    local gridsByX = {}
+    local gridsByY = {}
+
+    for _, grid in ipairs(grids) do
+        table.insert(gridsByX, grid)
+        table.insert(gridsByY, grid)
+    end
+
+    table.sort(gridsByX, function(a, b) return a.gridDefinition.position.x < b.gridDefinition.position.x end)
+    table.sort(gridsByY, function(a, b) return a.gridDefinition.position.y < b.gridDefinition.position.y end)
+
+    for _, grid in ipairs(gridsByX) do
+        local x = grid.gridDefinition.position.x
+        if x > maxX then
+            maxX = x
+            xPos = xPos + largestX + gridSpacing
+            largestX = 0
+        end
+        
+        grid:setX(xPos)
+        if grid:getWidth() > largestX then
+            largestX = grid:getWidth()
+        end
+    end
+    xPos = xPos + largestX
+
+    for _, grid in ipairs(gridsByY) do
+        local y = grid.gridDefinition.position.y
+        if y > maxY then
+            maxY = y
+            yPos = yPos + largestY + gridSpacing
+            largestY = 0
+        end
+        
+        grid:setY(yPos)
+        if grid:getHeight() > largestY then
+            largestY = grid:getHeight()
+        end
+    end
+    yPos = yPos + largestY
+
+    return xPos, yPos 
 end

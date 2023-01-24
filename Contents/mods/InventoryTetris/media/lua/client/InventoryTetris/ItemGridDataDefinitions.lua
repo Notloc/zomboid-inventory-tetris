@@ -1,6 +1,34 @@
 ItemGridDataDefinitions = {}
 
-ItemGridDataDefinitions.itemSizes = {}
+ItemGridDataDefinitions.itemSizes = {
+    ["Base.VHS_Retail"] = {x=2, y=1},
+    ["Base.Pot"] = {x=2, y=2},
+    ["Base.KitchenTongs"] = {x=1, y=2},
+    ["Base.GrillBrush"] = {x=1, y=2},
+    ["Base.KitchenKnife"] = {x=1, y=2},
+    ["Base.BakingTray"] = {x=2, y=2},
+    ["Base.Icecream"] = {x=1, y=2},
+
+    -- veggies, peas, corn, 2x1
+    ["Base.MixedVegetables"] = {x=2, y=1},
+    ["Base.Peas"] = {x=2, y=1},
+    ["Base.CornFrozen"] = {x=2, y=1},
+
+    -- bottles, 1x2
+    ["Base.BeerBottle"] = {x=1,y=2},
+    ["Base.WaterBottleFull"] = {x=1,y=2},
+    ["Base.WaterBottleEmpty"] = {x=1, y=2},
+
+    --end
+
+    ["Base.Pillow"] = {x=2,y=2},
+
+
+    ["Base.Crowbar"] = {x=1,y=4},
+
+
+}
+
 ItemGridDataDefinitions.isStackable = {}
 
 ItemGridDataDefinitions.calculateAndCacheItemInfo = function(item)
@@ -8,8 +36,7 @@ ItemGridDataDefinitions.calculateAndCacheItemInfo = function(item)
     ItemGridDataDefinitions.calculateItemStackability(item)
 end
 
--- Programatically determine the size of an item
--- I'll manually override the sizes of some items later via a config file or something
+-- Programatically determine the size of items that are not manually defined
 ItemGridDataDefinitions.calculateItemSize = function(item)
     local category = item:getDisplayCategory()
     local size = {x=1, y=1}

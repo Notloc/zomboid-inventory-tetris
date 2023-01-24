@@ -1,0 +1,33 @@
+
+Fully functional
+Scaling support
+
+
+
+
+TODO:
+	Ability to place items inside containers by dropping an item directly onto the container's icon on the grid.
+	Support for stacking small items (Nails, ammo, money, etc) 
+
+	A Full Equipment UI:
+		So that equipped items can be removed from the inventory grid and not take space.
+		This UI will show all the items currently equipped on your character as well as the empty slots you can drag-n-drop items onto.
+			Zomboid has support for TONS of equipment slots, still not sure how this will have to be done...
+		Hotbar slots will also be shown, hotbarred items will also be removed from the grid, saving even more inventory space.
+
+	Manually adjusting item and backpack sizes
+		(What you see now is a best guess. Any items I don't manually set the size of (i.e. items from other mods), will use this system.)
+
+	Search system:
+		(Sandbox Setting)
+		When enabled, players will need to search a container to see the items inside of it.
+		Traits previously used for item transfer speed will affect search speed.
+		Maybe tie this to a skill? *Not sure yet
+
+	Transfer Speed Options:
+		By default, this mod removes all inventory transfer time.
+		Sandbox options will be included to turn it back on. This can slow down using the inventory quite a bit though.
+
+	MP Testing and bug fixing:
+		I expect I'll see some container desync in the grids that I'll need to iron out.
+		I do not expect any item desync though, so at worst players will be seeing the same items, but in different arrangements.

@@ -3,6 +3,16 @@ bind.value = "[InventoryTetris]";
 table.insert(keyBinding, bind);
 
 bind = {};
-bind.value = "Rotate Item";
+bind.value = "tetris_rotate_item";
 bind.key = Keyboard.KEY_R;
+table.insert(keyBinding, bind);
+
+bind = {};
+bind.value = "tetris_quick_move";
+bind.key = Keyboard.KEY_LCONTROL;
+table.insert(keyBinding, bind);
+
+bind = {};
+bind.value = "tetris_quick_equip";
+bind.key = Keyboard.KEY_LMENU;
 table.insert(keyBinding, bind);

@@ -41,6 +41,11 @@ ItemGridUtil.clearItemPosition = function(item)
     modData[GRID_INDEX] = nil
 end
 
+ItemGridUtil.isItemRotated = function(item)
+    local modData = item:getModData()
+    return modData[IS_ROTATED]
+end
+
 ItemGridUtil.rotateItem = function(item)
     local modData = item:getModData()
     local isRotated = modData[IS_ROTATED]
