@@ -67,13 +67,13 @@ function ItemGridTransferUtil.shouldUseGridTransfer(sourceGrid, destinationGrid)
     return true
 end
 
-function ItemGridTransferUtil.isTransferValid(item, sourceGrid, destinationGrid, character, rotate)
-	if not item or not sourceGrid or not destinationGrid or not character then
+function ItemGridTransferUtil.isTransferValid(item, sourceGridUi, destinationGridUi, character, rotate)
+	if not item or not sourceGridUi or not destinationGridUi or not character then
 		return false;
     end
 
-    local srcContainer = sourceGrid.inventory
-    local destContainer = destinationGrid.inventory
+    local srcContainer = sourceGridUi.grid.inventory
+    local destContainer = destinationGridUi.grid.inventory
 
 	if not destContainer:isExistYet() or not srcContainer:isExistYet() then
 		return false
@@ -124,25 +124,25 @@ function ItemGridTransferUtil.isTransferValid(item, sourceGrid, destinationGrid,
         return false;
     end
 
-	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item, rotate)
-	if not ItemGridUtil.isGridPositionValid(destinationGrid, x, y) then
+	local x, y = ItemGridUiUtil.findGridPositionOfMouse(destinationGridUi, item, rotate)
+	if not ItemGridUtil.isGridPositionValid(destinationGridUi.grid, x, y) then
 		return false
 	end
 
-	if not destinationGrid:doesItemFit(item, x, y, rotate) then
+	if not destinationGridUi.grid:doesItemFit(item, x, y, rotate) then
 		return false
 	end
 
 	return item:getContainer() == srcContainer and not destContainer:isInside(item)
 end
 
-function ItemGridTransferUtil.transferGridItemMouse(item, sourceGrid, destinationGrid, character, rotate)
-	if not ItemGridTransferUtil.isTransferValid(item, sourceGrid, destinationGrid, character, rotate) then
+function ItemGridTransferUtil.transferGridItemMouse(item, sourceGridUi, destinationGridUi, character, rotate)
+	if not ItemGridTransferUtil.isTransferValid(item, sourceGridUi, destinationGridUi, character, rotate) then
 		return
 	end
 
-    local srcContainer = sourceGrid.inventory
-    local destContainer = destinationGrid.inventory
+    local srcContainer = sourceGridUi.grid.inventory
+    local destContainer = destinationGridUi.grid.inventory
 
     -- Validate the transfer (AGAIN), not sure if this works properly without the delay of a timed action
     createItemTransaction(item, srcContainer, destContainer)
@@ -222,13 +222,13 @@ function ItemGridTransferUtil.transferGridItemMouse(item, sourceGrid, destinatio
 		item:setWorker(character:getFullName());
 	end
 	
-	sourceGrid:removeItemFromGrid(item)
+	sourceGridUi.grid:removeItemFromGrid(item)
 	
 	if rotate then 
 		ItemGridUtil.rotateItem(item)
 	end
-	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item)
-	destinationGrid:insertItemIntoGrid(item, x, y)
+	local x, y = ItemGridUiUtil.findGridPositionOfMouse(destinationGridUi, item)
+	destinationGridUi.grid:insertItemIntoGrid(item, x, y)
 
 	ISInventoryPage.renderDirty = true
 
@@ -243,25 +243,25 @@ function ItemGridTransferUtil.transferGridItemMouse(item, sourceGrid, destinatio
 	end
 end
 
-function ItemGridTransferUtil.moveGridItemMouse(item, sourceGrid, destinationGrid, rotate)
-	local x, y = ItemGridUtil.findGridPositionOfMouse(destinationGrid, item, rotate)
-	if not ItemGridUtil.isGridPositionValid(destinationGrid, x, y) then
+function ItemGridTransferUtil.moveGridItemMouse(item, sourceGridUi, destinationGridUi, rotate)
+	local x, y = ItemGridUiUtil.findGridPositionOfMouse(destinationGridUi, item, rotate)
+	if not ItemGridUtil.isGridPositionValid(destinationGridUi, x, y) then
 		return
 	end
 
 	local originalX, originalY = ItemGridUtil.getItemPosition(item)
 
-	sourceGrid:removeItemFromGrid(item)
+	sourceGridUi.grid:removeItemFromGrid(item)
 
 	if rotate then
 		ItemGridUtil.rotateItem(item)
 	end
-	if not destinationGrid:doesItemFit(item, x, y) then
+	if not destinationGridUi.grid:doesItemFit(item, x, y) then
 		if rotate then
 			ItemGridUtil.rotateItem(item)
 		end
-		sourceGrid:insertItemIntoGrid(item, originalX, originalY)
+		sourceGridUi.grid:insertItemIntoGrid(item, originalX, originalY)
 	else
-		destinationGrid:insertItemIntoGrid(item, x, y)
+		destinationGridUi.grid:insertItemIntoGrid(item, x, y)
 	end
 end

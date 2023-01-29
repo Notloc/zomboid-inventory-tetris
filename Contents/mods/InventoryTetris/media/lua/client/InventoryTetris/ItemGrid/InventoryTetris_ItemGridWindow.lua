@@ -11,6 +11,54 @@ require "defines"
 
 ItemGridWindow = ISPanel:derive("ItemGridWindow");
 
+function ItemGridWindow:new (x, y, inventory, inventoryPane, playerNum)
+	local o = ISPanel:new(x, y, 100, 100);
+    setmetatable(o, self)
+    self.__index = self
+
+	o.x = x;
+	o.y = y;
+    o.anchorLeft = true;
+    o.anchorRight = true;
+    o.anchorTop = true;
+    o.anchorBottom = true;
+	o.borderColor = {r=0.4, g=0.4, b=0.4, a=1};
+	o.backgroundColor = {r=0, g=0, b=0, a=0.8};
+	o.width = 100;
+	o.height = 100;
+	o.anchorLeft = true;
+
+	o.inventory = inventory;
+    o.inventoryPane = inventoryPane;
+    o.playerNum = playerNum;
+    o.player = playerNum;
+
+    o.titlebarbkg = getTexture("media/ui/Panel_TitleBar.png");
+    o.infoBtn = getTexture("media/ui/Panel_info_button.png");
+    o.statusbarbkg = getTexture("media/ui/Panel_StatusBar.png");
+    o.resizeimage = getTexture("media/ui/Panel_StatusBar_Resize.png");
+    o.invbasic = getTexture("media/ui/Icon_InventoryBasic.png");
+    o.closebutton = getTexture("media/ui/Dialog_Titlebar_CloseIcon.png");
+    o.collapsebutton = getTexture("media/ui/Panel_Icon_Collapse.png");
+    o.pinbutton = getTexture("media/ui/Panel_Icon_Pin.png");
+
+    o.conDefault = getTexture("media/ui/Container_Shelf.png");
+    o.highlightColors = {r=0.98,g=0.56,b=0.11};
+
+    o.containerIconMaps = ContainerButtonIcons
+    o.capacity = inventory:getCapacity();
+
+    o.pin = true;
+    o.isCollapsed = false;
+    o.collapseCounter = 0;
+	o.title = inventory:getContainingItem():getName();
+	o.titleFont = UIFont.Small
+	o.titleFontHgt = getTextManager():getFontHeight(o.titleFont)
+	local sizes = { 32, 40, 48 }
+	o.buttonSize = sizes[getCore():getOptionInventoryContainerSize()]
+   return o
+end
+
 function ItemGridWindow:initialise()
 	ISPanel.initialise(self);
 end
@@ -27,18 +75,15 @@ function ItemGridWindow:createChildren()
     local closeBtnSize = titleBarHeight
     local lootButtonHeight = titleBarHeight
 
-    local itemGrids = ItemGrid.Create(self.inventory, self.playerNum)
-    for _, grid in ipairs(itemGrids) do
-        grid:registerInventoryPane(self.inventoryPane)
-        grid:initialise();
-        self:addChild(grid)
-    end
-    local w,h = ItemGrid.UpdateItemGridPositions(itemGrids, 1, titleBarHeight+1)
-    self:setWidth(w)
-    self:setHeight(h + 10)
+    local gridContainerUi = ItemGridContainerUI:new(self.inventory, self.inventoryPane, self.playerNum)
+    gridContainerUi:initialise()
+    gridContainerUi:setY(titleBarHeight)
+    self:addChild(gridContainerUi)
+    self.gridContainerUi = gridContainerUi
 
-    self.grids = itemGrids
-	
+    self:setWidth(gridContainerUi:getWidth())
+    self:setHeight(gridContainerUi:getHeight() + 10 + titleBarHeight)
+
     local textWid = getTextManager():MeasureStringX(UIFont.Small, getText("IGUI_invpage_Transfer_all"))
     local weightWid = getTextManager():MeasureStringX(UIFont.Small, "99.99 / 99")
     self.transferAll = ISButton:new(self.width - 3 - closeBtnSize - math.max(90, weightWid + 10) - textWid, 0, textWid, lootButtonHeight, getText("IGUI_invpage_Transfer_all"), self, ISInventoryPage.transferAll);
@@ -172,9 +217,6 @@ function ItemGridWindow:render()
     self:drawRectBorder(0, 0, self:getWidth(), height, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
 end
 
-
-
-
 function ItemGridWindow:onMouseMove(dx, dy)
 	self.mouseOver = true;
 	if self.moving then
@@ -208,54 +250,4 @@ end
 function ItemGridWindow:onMouseUpOutside(x, y)
 	self.moving = false;
 	self:setCapture(false);
-end
-
-
-function ItemGridWindow:new (x, y, inventoryPane, inventory, playerNum)
-	local o = {}
-	--o.data = {}
-	o = ISPanel:new(x, y, 100, 100);
-    setmetatable(o, self)
-    self.__index = self
-	o.x = x;
-	o.y = y;
-    o.anchorLeft = true;
-    o.anchorRight = true;
-    o.anchorTop = true;
-    o.anchorBottom = true;
-	o.borderColor = {r=0.4, g=0.4, b=0.4, a=1};
-	o.backgroundColor = {r=0, g=0, b=0, a=0.8};
-	o.width = 100;
-	o.height = 100;
-	o.anchorLeft = true;
-
-	o.inventory = inventory;
-    o.playerNum = playerNum;
-    o.inventoryPane = inventoryPane;
-    o.player = playerNum;
-
-    o.titlebarbkg = getTexture("media/ui/Panel_TitleBar.png");
-    o.infoBtn = getTexture("media/ui/Panel_info_button.png");
-    o.statusbarbkg = getTexture("media/ui/Panel_StatusBar.png");
-    o.resizeimage = getTexture("media/ui/Panel_StatusBar_Resize.png");
-    o.invbasic = getTexture("media/ui/Icon_InventoryBasic.png");
-    o.closebutton = getTexture("media/ui/Dialog_Titlebar_CloseIcon.png");
-    o.collapsebutton = getTexture("media/ui/Panel_Icon_Collapse.png");
-    o.pinbutton = getTexture("media/ui/Panel_Icon_Pin.png");
-
-    o.conDefault = getTexture("media/ui/Container_Shelf.png");
-    o.highlightColors = {r=0.98,g=0.56,b=0.11};
-
-    o.containerIconMaps = ContainerButtonIcons
-    o.capacity = inventory:getCapacity();
-
-    o.pin = true;
-    o.isCollapsed = false;
-    o.collapseCounter = 0;
-	o.title = inventory:getContainingItem():getName();
-	o.titleFont = UIFont.Small
-	o.titleFontHgt = getTextManager():getFontHeight(o.titleFont)
-	local sizes = { 32, 40, 48 }
-	o.buttonSize = sizes[getCore():getOptionInventoryContainerSize()]
-   return o
 end

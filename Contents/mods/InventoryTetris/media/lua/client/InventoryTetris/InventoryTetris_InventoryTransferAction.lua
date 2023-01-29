@@ -25,7 +25,7 @@ function ISInventoryTransferAction:isValid()
     end
     
     valid = false
-    local grids = ItemGrid.Create(self.destContainer, self.character:getPlayerNum())
+    local grids = ItemGrid.CreateGrids(self.destContainer, self.character:getPlayerNum())
     for _, grid in ipairs(grids) do
         if grid:canAddItem(self.item) then
             valid = true
@@ -44,7 +44,7 @@ function ISInventoryTransferAction:transferItem(item)
     if self:isAlreadyTransferred(item) then
         ItemGridUtil.clearItemPosition(item)
         
-        local grids = ItemGrid.Create(self.destContainer, self.character:getPlayerNum())
+        local grids = ItemGrid.CreateGrids(self.destContainer, self.character:getPlayerNum())
         for _, grid in ipairs(grids) do
             if grid:attemptToInsertItemIntoGrid(item) then
                 return

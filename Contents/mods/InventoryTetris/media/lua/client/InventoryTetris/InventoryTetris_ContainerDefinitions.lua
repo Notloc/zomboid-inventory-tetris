@@ -6,6 +6,13 @@ InventoryTetrisGridDefinitions = {
         }
     },
 
+    ["floor"] = {
+        {
+            size = {width=8, height=8},
+            position = {x=0, y=0},
+        }
+    },
+
     ["overhead"] = {
         {
             size = {width=5, height=2},
@@ -97,6 +104,13 @@ InventoryTetrisGridDefinitions = {
             position = {x=0, y=2},
         },
     },
+
+    ["Guitarcase"] = {
+        {
+            size = {width=2, height=5},
+            position = {x=0, y=0},
+        }
+    }
 }
 
 InventoryTetrisContainerOverloads = {

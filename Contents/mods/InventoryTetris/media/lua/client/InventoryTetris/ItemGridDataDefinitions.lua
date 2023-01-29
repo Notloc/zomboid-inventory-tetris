@@ -21,11 +21,30 @@ ItemGridDataDefinitions.itemSizes = {
 
     --end
 
-    ["Base.Pillow"] = {x=2,y=2},
+    ["Base.Pillow"] = {x=2, y=2},
+    ["Base.Kettle"] = {x=2, y=2},
+    ["Base.BakingPan"] = {x=2, y=2},
+    ["Base.Pan"] = {x=2, y=2},
 
+    ["Base.Crowbar"] = {x=1, y=4},
+    ["Base.LeadPipe"] = {x=1, y=3},
+    ["Base.BaseballBat"] = {x=1, y=4},
 
-    ["Base.Crowbar"] = {x=1,y=4},
+    ["Base.GuitarElectricBassBlue"] = {x=2,y=4},
+    ["Base.GuitarElectricBassRed"] = {x=2,y=4},
+    ["Base.GuitarElectricBassBlack"] = {x=2,y=4},
 
+    ["Base.GuitarElectricBlack"] = {x=2,y=4},
+    ["Base.GuitarElectricBlue"] = {x=2,y=4},
+    ["Base.GuitarElectricRed"] = {x=2,y=4},
+
+    ["Base.GuitarAcoustic"] = {x=2,y=4},
+    ["Base.Guitarcase"] = {x=2,y=5},
+
+    ["Base.Garbagebag"] = {x=4, y=4},
+    ["Base.Corn"] = {x=1, y=2},
+    ["Base.ButterKnife"] = {x=1, y=2},
+    ["Base.CarvingFork"] = {x=1, y=2},
 
 }
 
@@ -53,7 +72,7 @@ ItemGridDataDefinitions.calculateItemSize = function(item)
     elseif category == "Clothing" then
         size = ItemGridDataDefinitions.calculateItemSizeClothing(item)
     elseif category == "Food" then
-        size = ItemGridDataDefinitions.calculateItemSizeWeightBased(item)
+        size = ItemGridDataDefinitions.calculateItemSizeWeightBasedTall(item)
     elseif category == "FirstAid" then
         size = ItemGridDataDefinitions.calculateItemSizeWeightBased(item)
     elseif category == "Container" then
@@ -160,6 +179,28 @@ ItemGridDataDefinitions.calculateItemSizeWeightBased = function(item)
     elseif weight >= 1 then
         width = 2
         height = 1
+    end
+
+    return {x = width, y = height}
+end
+
+ItemGridDataDefinitions.calculateItemSizeWeightBasedTall = function(item)
+    local width = 1
+    local height = 1
+
+    local weight = item:getActualWeight()
+    if weight >= 10 then
+        width = 4
+        height = 4
+    elseif weight >= 5 then
+        width = 3
+        height = 3
+    elseif weight >= 2 then
+        width = 2
+        height = 2
+    elseif weight >= 1 then
+        width = 1
+        height = 2
     end
 
     return {x = width, y = height}

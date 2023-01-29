@@ -6,60 +6,42 @@ require "TimedActions/ISEatFoodAction"
 require "ISUI/ISInventoryPane"
 
 local function isGroundContainer(inventoryPane)
-    return not inventoryPane.inventory or inventoryPane.inventory:getType() == 'floor'
+    return not inventoryPane.inventory or inventoryPane.inventory:getType() == 'floor_disabled'
+end
+
+
+local og_new = ISInventoryPane.new
+function ISInventoryPane:new(x, y, width, height, inventory, player)
+    local o = og_new(self, x, y, width, height, inventory, player)
+    o.tetrisWindowManager = TetrisWindowManager:new(o)
+    return o
 end
 
 local og_refreshContainer = ISInventoryPane.refreshContainer
 function ISInventoryPane:refreshContainer()
+    self.mode = isGroundContainer(self) and "details" or "grid"
+    og_refreshContainer(self) -- TODO: Can I skip this?
     self:refreshItemGrids()
-
-    og_refreshContainer(self)
-    if self.mode == "grid" then
-        self:updateGridPositions()
-    end
 end
 
 function ISInventoryPane:refreshItemGrids()
-    self.mode = isGroundContainer(self) and "details" or "grid"
-    
-    if self.mode == "grid" then
-        if self.activeGridType ~= getGridContainerTypeByInventory(self.inventory) then
-            self:clearGrids()
-
-            local grids, gridType = ItemGrid.Create(self.inventory, self.player)
-            self.grids = grids
-            self.activeGridType = gridType
-
-            for _, grid in ipairs(self.grids) do
-                grid:registerInventoryPane(self)
-                self:addChild(grid)
-            end
-
-            ItemGrid.UpdateItemGridPositions(self.grids)
-        else
-            for _, grid in ipairs(self.grids) do
-                grid:setInventory(self.inventory)
-            end
+    local sameInventory = self.previousGridInventory == self.inventory
+    if self.mode == "grid" and not sameInventory then
+        if self.gridContainerUi then
+            self:removeChild(self.gridContainerUi)
         end
-    else
-        self:clearGrids()
-    end
-end
+        
+        self.gridContainerUi = ItemGridContainerUI:new(self.inventory, self, self.player)
+        self.gridContainerUi:initialise()
+        self:addChild(self.gridContainerUi)
+        
+        self.previousGridInventory = self.inventory
 
-function ISInventoryPane:updateGridPositions()
-    for _, grid in ipairs(self.grids) do
-        grid:updateGridPositions()
+    elseif self.mode ~= "grid" and self.gridContainerUi then
+        self:removeChild(self.gridContainerUi)
+        self.gridContainerUi = nil
+        self.previousGridInventory = nil
     end
-end
-
-function ISInventoryPane:clearGrids()
-    if self.grids then
-        for _, grid in ipairs(self.grids) do
-            self:removeChild(grid)
-        end
-    end
-
-    self.activeGridType = nil
 end
 
 local og_prerender = ISInventoryPane.prerender
@@ -68,12 +50,6 @@ function ISInventoryPane:prerender()
     if self.mode == "grid" then
         self.nameHeader:setVisible(false)
         self.typeHeader:setVisible(false)
-
-        if self.childWindows then
-            for _, child in ipairs(self.childWindows) do
-                child:bringToTop()
-            end
-        end
     else
         self.nameHeader:setVisible(true)
         self.typeHeader:setVisible(true)
@@ -82,7 +58,7 @@ end
 
 local og_updateTooltip = ISInventoryPane.updateTooltip
 function ISInventoryPane:updateTooltip()
-	if self.mode ~= "grid" then
+	if self.mode ~= "grid" or not self.gridContainerUi then
         return og_updateTooltip(self)
     end
 
@@ -99,7 +75,7 @@ function ISInventoryPane:updateTooltip()
 	if not self.doController and not self.dragging and not self.draggingMarquis and self:isMouseOver() then
 		local x = self:getMouseX()
 		local y = self:getMouseY()
-		item = ItemGridUtil.findItemUnderMouse(self, x, y)
+		item = ItemGridUiUtil.findItemUnderMouse(self.gridContainerUi.gridUis, x, y)
 	end
 
 	local weightOfStack = 0.0
@@ -193,15 +169,17 @@ function ISInventoryPane:onMouseDoubleClick(x, y)
         return og_onMouseDoubleClick(self, x, y)
     end
 
-    local grid = ItemGridUtil.findGridUnderMouse(self, x, y)
-    if grid then
-        grid:onMouseDoubleClick(grid:getMouseX(), grid:getMouseY())
+    local gridUi = ItemGridUiUtil.findGridUiUnderMouse(self.gridContainerUi.gridUis, x, y)
+    if gridUi then
+        gridUi:onMouseDoubleClick(gridUi:getMouseX(), gridUi:getMouseY())
     end
 end
 
+
+-- Just for debugging
 local og_createMenu = ISInventoryPaneContextMenu.createMenu
 ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
-    og_createMenu(player, isInPlayerInventory, items, x, y, origin)
+    local menu = og_createMenu(player, isInPlayerInventory, items, x, y, origin)
     
     
     local item = items[1]
@@ -226,16 +204,41 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
     print ("itemType: " .. itemType)
     print ("itemKlass: " .. tostring(itemKlass))
 
-    return
+    TetrisDevTool.insertEditItemOption(menu, item)
+
+    return menu
+end
+
+
+local og_onMouseWheel = ISInventoryPane.onMouseWheel
+function ISInventoryPane:onMouseWheel(del)
+    if ISMouseDrag.dragStarted then
+        if ISMouseDrag.rotateDrag then
+            ISMouseDrag.rotateDrag = false
+        else
+            ISMouseDrag.rotateDrag = true
+        end
+        return true;
+    end
+    return og_onMouseWheel(self, del)
+end
+
+
+
+-- WINDOW MANAGER RELATED
+
+local og_bringToTop = ISInventoryPage.bringToTop
+function ISInventoryPage:bringToTop()
+    og_bringToTop(self)
+    if self.inventoryPane.tetrisWindowManager then
+        self.inventoryPane.tetrisWindowManager:keepChildWindowsOnTop()
+    end
 end
 
 local og_close = ISInventoryPage.close
 function ISInventoryPage:close()
     og_close(self)
-    if self.inventoryPane.childWindows then
-        for _, window in ipairs(self.inventoryPane.childWindows) do
-            window:removeFromUIManager()
-        end
-        table.wipe(self.inventoryPane.childWindows)
+    if self.inventoryPane.tetrisWindowManager then
+        self.inventoryPane.tetrisWindowManager:closeAll()
     end
 end
