@@ -46,9 +46,22 @@ ItemGridDataDefinitions.itemSizes = {
     ["Base.ButterKnife"] = {x=1, y=2},
     ["Base.CarvingFork"] = {x=1, y=2},
 
+    ["Base.CuttingBoardPlastic"] = {x=2, y=2},
+    ["Base.Spatula"] = {x=1, y=2},
+    ["Base.Cereal"] = {x=2, y=2},
+    ["Base.SewingKit"] = {x=2, y=1},
+    ["Base.Headphones"] = {x=2, y=2},
+    ["Base.PipeWrench"] = {x=1, y=3},
+    ["Base.Sheet"] = {x=2, y=1},
+    ["Base.HockeyStick"] = {x=1, y=5},
+    ["Base.Saw"] = {x=2, y=1},
+    ["Base.Shovel2"] = {x=1, y=5},
+    ["Base.ClubHammer"] = {x=1, y=2},
+    ["Base.WoodenMallet"] = {x=1, y=2},
+    ["Base.Wrench"] = {x=1, y=2},
+    ["Base.BucketEmpty"] = {x=2, y=2},
+    ["Base.NailsBox"] = {x=2, y=1},
 }
-
-ItemGridDataDefinitions.isStackable = {}
 
 ItemGridDataDefinitions.calculateAndCacheItemInfo = function(item)
     ItemGridDataDefinitions.calculateItemSize(item)
@@ -207,7 +220,6 @@ ItemGridDataDefinitions.calculateItemSizeWeightBasedTall = function(item)
 end
 
 ItemGridDataDefinitions.calculateItemStackability = function(item)
-    local stackable = item:CanStack(item)
-    ItemGridDataDefinitions.isStackable[item:getFullType()] = stackable
+    ItemGridDataDefinitions.itemSizes[item:getFullType()].maxStackSize = 10
 end
 

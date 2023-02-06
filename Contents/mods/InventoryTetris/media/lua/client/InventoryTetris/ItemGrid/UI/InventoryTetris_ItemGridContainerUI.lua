@@ -11,7 +11,7 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum)
     o.inventoryPane = inventoryPane
     o.playerNum = playerNum
 
-    o.grids = ItemGrid.CreateGrids(inventory, playerNum)
+    o.containerGrid = ItemContainerGrid.Create(inventory, playerNum)
     return o
 end
 
@@ -27,7 +27,7 @@ end
 
 function ItemGridContainerUI:createItemGridUIs()
     local itemGridUIs = {}
-    for i, grid in ipairs(self.grids) do
+    for i, grid in ipairs(self.containerGrid.grids) do
         local itemGridUI = ItemGridUI:new(grid, self.inventoryPane, self.playerNum)
         itemGridUI:initialise()
         self:addChild(itemGridUI)
@@ -96,9 +96,7 @@ end
 
 function ItemGridContainerUI:prerender()
     if self.inventory:isDrawDirty() then
-        for _, grid in ipairs(self.grids) do
-            grid:refreshGrid()
-        end
+        self.containerGrid:refresh()
     end
     ISPanel.prerender(self)
 end

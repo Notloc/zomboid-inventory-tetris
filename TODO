@@ -1,22 +1,25 @@
-
-Fully functional
-Scaling support
-
-
-
-
 TODO:
-	Ability to place items inside containers by dropping an item directly onto the container's icon on the grid.
-	Support for stacking small items (Nails, ammo, money, etc) 
-
 	A Full Equipment UI:
 		So that equipped items can be removed from the inventory grid and not take space.
 		This UI will show all the items currently equipped on your character as well as the empty slots you can drag-n-drop items onto.
 			Zomboid has support for TONS of equipment slots, still not sure how this will have to be done...
 		Hotbar slots will also be shown, hotbarred items will also be removed from the grid, saving even more inventory space.
 
-	Manually adjusting item and backpack sizes
-		(What you see now is a best guess. Any items I don't manually set the size of (i.e. items from other mods), will use this system.)
+	UI for stack splitting
+
+	Dev tool for updating grids
+	Update item dev tool to allow setting stack limit
+	Suppress aiming while mouse is over popups
+
+	Container item type resitrctions
+	Hueristic for stack limits for mod support reasons
+
+	On-Deck:
+		Need a concept to allow the player to pickup something off the ground, even if they lack space, as long as they plan
+		on using it immediately.
+		Only 1 item should be able to be in this state
+		If the action that would use it is interuppted the item is force dropped
+
 
 	Search system:
 		(Sandbox Setting)
@@ -31,3 +34,5 @@ TODO:
 	MP Testing and bug fixing:
 		I expect I'll see some container desync in the grids that I'll need to iron out.
 		I do not expect any item desync though, so at worst players will be seeing the same items, but in different arrangements.
+
+	Mod Options integration

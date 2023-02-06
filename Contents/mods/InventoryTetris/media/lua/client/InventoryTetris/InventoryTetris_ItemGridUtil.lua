@@ -1,5 +1,5 @@
 require "InventoryTetris/ItemGridDataDefinitions"
-local TETRIS = require "InventoryTetris/Constants"
+local TETRIS = require "InventoryTetris/Data/Constants"
 
 local X_POS = TETRIS.X_POS
 local Y_POS = TETRIS.Y_POS
@@ -52,6 +52,15 @@ ItemGridUtil.rotateItem = function(item)
     end
 end
 
+ItemGridUtil.setItemRotation = function(item, isRotated)
+    local modData = item:getModData()
+    if isRotated then
+        modData[IS_ROTATED] = true
+    else
+        modData[IS_ROTATED] = nil
+    end
+end
+
 ItemGridUtil.getItemSize = function(item)
     if TetrisDevTool.itemEdits and TetrisDevTool.itemEdits[item:getFullType()] then
         return TetrisDevTool.itemEdits[item:getFullType()].x, TetrisDevTool.itemEdits[item:getFullType()].y
@@ -69,12 +78,32 @@ ItemGridUtil.getItemSize = function(item)
     end
 end
 
+ItemGridUtil.getMaxStackSize = function(item)
+    local fullType = item:getFullType()
+    if TetrisDevTool.itemEdits and TetrisDevTool.itemEdits[fullType] then
+        return TetrisDevTool.itemEdits[fullType].maxStackSize
+    end
+
+    if not ItemGridDataDefinitions.itemSizes[fullType] then
+        ItemGridDataDefinitions.calculateAndCacheItemInfo(item)
+    end
+
+    local max = ItemGridDataDefinitions.itemSizes[fullType].maxStackSize
+    --return max and max or 1
+    return 10
+end
+
+ItemGridUtil.canStack = function(item)
+    local max = ItemGridUtil.getMaxStackSize(item) 
+    return max and max > 1
+end
+
 ItemGridUtil.convertItemStackToItem = function(items)
     if instanceof(items, "InventoryItem") then
         return items
     -- Converts a vanilla "stack" of items into a single item
     elseif items and items.items then
-        return items.items[1] == items.items[2] and items.items[1] or nil
+        return items.items[1]
     end
     return nil
 end

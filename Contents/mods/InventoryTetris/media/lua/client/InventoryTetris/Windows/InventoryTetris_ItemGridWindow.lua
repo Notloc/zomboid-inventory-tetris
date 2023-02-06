@@ -4,9 +4,6 @@ require "ISUI/ISInventoryPane"
 require "ISUI/ISResizeWidget"
 require "ISUI/ISMouseDrag"
 require "ISUI/ISLayoutManager"
-
-require "Definitions/ContainerButtonIcons"
-
 require "defines"
 
 ItemGridWindow = ISPanel:derive("ItemGridWindow");

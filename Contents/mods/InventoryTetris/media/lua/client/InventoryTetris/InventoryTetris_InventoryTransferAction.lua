@@ -1,8 +1,13 @@
 require "TimedActions/ISInventoryTransferAction"
 
 local og_new = ISInventoryTransferAction.new
-function ISInventoryTransferAction:new (character, item, srcContainer, destContainer, time)
+function ISInventoryTransferAction:new (character, item, srcContainer, destContainer, time, gridX, gridY, gridIndex, rotate)
 	local o = og_new(self, character, item, srcContainer, destContainer, time)
+
+    o.gridX = gridX
+    o.gridY = gridY
+    o.gridIndex = gridIndex
+    o.rotate = rotate
 
     -- Make the transfers instant
     -- The user's personal time spent arranging items in the grid "replaces" the time spent moving the items
@@ -20,17 +25,17 @@ end
 local og_isValid = ISInventoryTransferAction.isValid
 function ISInventoryTransferAction:isValid()
     local valid = og_isValid(self)
-    if not valid then
+    if not valid and (self.srcContainer ~= self.destContainer or not self.gridX or not self.gridY or not self.gridIndex) then
         return valid
     end
-    
     valid = false
-    local grids = ItemGrid.CreateGrids(self.destContainer, self.character:getPlayerNum())
-    for _, grid in ipairs(grids) do
-        if grid:canAddItem(self.item) then
-            valid = true
-            break
-        end
+
+    local containerGrid = ItemContainerGrid.Create(self.destContainer, self.character:getPlayerNum())
+    if self.gridX and self.gridY and self.gridIndex then
+        valid = containerGrid:doesItemFit(self.item, self.gridX, self.gridY, self.gridIndex, self.rotate) or containerGrid:canItemBeStacked(self.item, self.gridX, self.gridY, self.gridIndex)
+    else
+        valid = containerGrid:canAddItem(self.item)
+        self.rotate = false
     end
 
     return valid
@@ -42,17 +47,26 @@ function ISInventoryTransferAction:transferItem(item)
 
     -- The Item made it to the destination container
     if self:isAlreadyTransferred(item) then
-        ItemGridUtil.clearItemPosition(item)
-        
-        local grids = ItemGrid.CreateGrids(self.destContainer, self.character:getPlayerNum())
-        for _, grid in ipairs(grids) do
-            if grid:attemptToInsertItemIntoGrid(item) then
-                return
-            end
+
+        -- Only need to remove the item from the source container if it's actively displayed in the UI
+        local oldContainerGrid = ItemContainerGrid.FindInstance(self.srcContainer, self.character:getPlayerNum())
+        if oldContainerGrid then
+            oldContainerGrid:removeItem(item)
         end
 
-        -- Force the item into the first grid if something went wrong
-        grids[1]:insertItemIntoGrid(item, 0, 0)
+        if self.rotate then
+            ItemGridUtil.rotateItem(item)
+        end
+
+        local destContainerGrid = ItemContainerGrid.Create(self.destContainer, self.character:getPlayerNum())
+        if self.gridX and self.gridY and self.gridIndex then
+            destContainerGrid:insertItem(item, self.gridX, self.gridY, self.gridIndex)
+            return
+        elseif destContainerGrid:attemptToInsertItem(item) then
+            return
+        else
+            destContainerGrid:forceInsertItem(item)
+        end
     end
 end
 

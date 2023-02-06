@@ -2,5 +2,6 @@ UI_EN = {
 
 	UI_optionscreen_binding_tetris_rotate_item = "Rotate Item",
 	UI_optionscreen_binding_tetris_quick_move = "Quick Move Key",
-	UI_optionscreen_binding_tetris_quick_equip = "Quick Equip Key"
+	UI_optionscreen_binding_tetris_quick_equip = "Quick Equip Key",
+	UI_optionscreen_binding_tetris_stack_split = "Split Stacks Key"
 }

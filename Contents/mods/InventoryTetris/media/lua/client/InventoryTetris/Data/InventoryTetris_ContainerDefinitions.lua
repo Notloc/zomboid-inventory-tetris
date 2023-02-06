@@ -122,35 +122,3 @@ InventoryTetrisContainerOverloads = {
         [30] = "shelves_medium",
     },
 }
-
-function getGridContainerTypeByInventory(inventory)
-    local containerType = inventory:getType()
-    local containerOverloads = InventoryTetrisContainerOverloads[containerType]
-    if containerOverloads then
-        local capacity = inventory:getCapacity()
-        if containerOverloads[capacity] then
-            return containerOverloads[capacity]
-        end
-
-        local biggest = 0
-        for overloadCapacity, overloadType in pairs(containerOverloads) do
-            if overloadCapacity > biggest and overloadCapacity <= capacity then
-                biggest = overloadCapacity
-                containerType = overloadType
-            end
-        end
-    end
-    return containerType
-end
-
-function getGridDefinitionByContainerType(containerType)
-    print("containerType: " .. containerType)
-
-    local gridDefinition = InventoryTetrisGridDefinitions[containerType]
-    if not gridDefinition then
-        gridDefinition = InventoryTetrisGridDefinitions["default"]
-    end
-    return gridDefinition
-end
-
-

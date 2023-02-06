@@ -1,5 +1,5 @@
 require "InventoryTetris/ItemGridDataDefinitions"
-local TETRIS = require "InventoryTetris/Constants"
+local TETRIS = require "InventoryTetris/Data/Constants"
 
 local CELL_SIZE = TETRIS.CELL_SIZE
 local TEXTURE_SIZE = TETRIS.TEXTURE_SIZE
@@ -18,12 +18,12 @@ ItemGridUiUtil.findGridUiUnderMouse = function(gridUis)
     return nil
 end
 
-ItemGridUiUtil.findItemUnderMouse = function(gridUis, x, y)
+ItemGridUiUtil.findItemStackUnderMouse = function(gridUis, x, y)
     local gridUi = ItemGridUiUtil.findGridUiUnderMouse(gridUis, x, y)
-    return ItemGridUiUtil.findItemUnderMouseGrid(gridUi)
+    return ItemGridUiUtil.findItemStackUnderMouseGrid(gridUi)
 end
 
-ItemGridUiUtil.findItemUnderMouseGrid = function(gridUi)
+ItemGridUiUtil.findItemStackUnderMouseGrid = function(gridUi)
     if not gridUi then 
         return nil 
     end
@@ -34,9 +34,9 @@ ItemGridUiUtil.findItemUnderMouseGrid = function(gridUi)
     local inventory = gridUi.grid.inventory
     for i = 1, inventory:getItems():size() do
         local item = inventory:getItems():get(i - 1)
-        local gridIndex = ItemGridUtil.getItemGridIndex(item)
+        local itemX, itemY, gridIndex = ItemGridUtil.getItemPosition(item)
         if gridIndex == gridUi.grid.gridIndex and ItemGridUiUtil.isMouseOverItem(item, x, y) then
-            return item
+            return gridUi.grid:getByItem(item)
         end
     end
     return nil

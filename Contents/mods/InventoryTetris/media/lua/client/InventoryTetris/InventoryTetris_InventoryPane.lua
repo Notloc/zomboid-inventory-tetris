@@ -5,11 +5,6 @@ require "TimedActions/ISTimedActionQueue"
 require "TimedActions/ISEatFoodAction"
 require "ISUI/ISInventoryPane"
 
-local function isGroundContainer(inventoryPane)
-    return not inventoryPane.inventory or inventoryPane.inventory:getType() == 'floor_disabled'
-end
-
-
 local og_new = ISInventoryPane.new
 function ISInventoryPane:new(x, y, width, height, inventory, player)
     local o = og_new(self, x, y, width, height, inventory, player)
@@ -19,8 +14,8 @@ end
 
 local og_refreshContainer = ISInventoryPane.refreshContainer
 function ISInventoryPane:refreshContainer()
-    self.mode = isGroundContainer(self) and "details" or "grid"
-    og_refreshContainer(self) -- TODO: Can I skip this?
+    self.mode = "grid"
+    --og_refreshContainer(self) -- TODO: Can I skip this?
     self:refreshItemGrids()
 end
 
@@ -75,7 +70,8 @@ function ISInventoryPane:updateTooltip()
 	if not self.doController and not self.dragging and not self.draggingMarquis and self:isMouseOver() then
 		local x = self:getMouseX()
 		local y = self:getMouseY()
-		item = ItemGridUiUtil.findItemUnderMouse(self.gridContainerUi.gridUis, x, y)
+		local itemStack = ItemGridUiUtil.findItemStackUnderMouse(self.gridContainerUi.gridUis, x, y)
+        item = itemStack and itemStack.items[1] or nil
 	end
 
 	local weightOfStack = 0.0
@@ -151,10 +147,6 @@ function ISInventoryPane:onMouseUp(x, y)
     return true;
 end
 
-function ISInventoryPane:onMouseUpNoGrid(x, y)
-    return og_mouseUp(self, x, y)
-end
-
 local og_onRightMouseUp = ISInventoryPane.onRightMouseUp
 function ISInventoryPane:onRightMouseUp(x, y)
     if self.mode ~= "grid" then
@@ -223,9 +215,43 @@ function ISInventoryPane:onMouseWheel(del)
     return og_onMouseWheel(self, del)
 end
 
+local og_getActualItems = ISInventoryPane.getActualItems
+function ISInventoryPane.getActualItems(items)
+	if items == ISMouseDrag.dragging then
+        return items.items
+    end
+    return og_getActualItems(items)
+end
 
+
+local og_update = ISInventoryPage.update
+function ISInventoryPage:update()
+    og_update(self)
+    if ISMouseDrag.dragging and ISMouseDrag.dragging.items then
+        self.collapseCounter = 0;
+        if isClient() and self.isCollapsed then
+            self.inventoryPane.inventory:requestSync();
+        end
+        self.isCollapsed = false;
+        self:clearMaxDrawHeight();
+        self.collapseCounter = 0;
+    end
+end
 
 -- WINDOW MANAGER RELATED
+
+local og_refreshBackpacks = ISInventoryPage.refreshBackpacks
+function ISInventoryPage:refreshBackpacks()
+    og_refreshBackpacks(self)
+    if self.inventoryPane.tetrisWindowManager then
+        local inventoryMap = {}
+        for _, backpack in ipairs(self.backpacks) do
+            inventoryMap[backpack.inventory] = true
+        end
+
+        self.inventoryPane.tetrisWindowManager:closeIfNotInMap(inventoryMap)
+    end
+end
 
 local og_bringToTop = ISInventoryPage.bringToTop
 function ISInventoryPage:bringToTop()
@@ -241,4 +267,11 @@ function ISInventoryPage:close()
     if self.inventoryPane.tetrisWindowManager then
         self.inventoryPane.tetrisWindowManager:closeAll()
     end
+end
+
+function ISInventoryPane:getChildWindows()
+    if self.tetrisWindowManager then
+        return self.tetrisWindowManager.childWindows
+    end
+    return {}
 end
