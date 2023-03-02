@@ -130,7 +130,7 @@ end
 
 -- Insert the item into the grid, no checks other than stacking/overflow
 function ItemGrid:insertItem(item, xPos, yPos)
-    if item:isHidden() then
+    if item:isHidden() or item:isEquipped() then
         return
     end
 

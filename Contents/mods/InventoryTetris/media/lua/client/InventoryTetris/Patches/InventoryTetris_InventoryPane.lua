@@ -15,7 +15,6 @@ end
 local og_refreshContainer = ISInventoryPane.refreshContainer
 function ISInventoryPane:refreshContainer()
     self.mode = "grid"
-    --og_refreshContainer(self) -- TODO: Can I skip this?
     self:refreshItemGrids()
 end
 
@@ -167,41 +166,6 @@ function ISInventoryPane:onMouseDoubleClick(x, y)
     end
 end
 
-
--- Just for debugging
-local og_createMenu = ISInventoryPaneContextMenu.createMenu
-ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
-    local menu = og_createMenu(player, isInPlayerInventory, items, x, y, origin)
-    
-    
-    local item = items[1]
-    if not item then return end
-
-    if items[1].items then 
-        item = items[1].items[1]
-    end
-    if not item then return end
-
-    local itemCategory = item:getDisplayCategory()
-    local itemDisplayName = item:getDisplayName()
-    local itemFullType = item:getFullType()
-    local itemWeight = item:getActualWeight()
-    local itemType = item:getType()
-    local itemKlass = item:getCat()
-
-    print ("itemCategory: " .. itemCategory)
-    print ("itemDisplayName: " .. itemDisplayName)
-    print ("itemFullType: " .. itemFullType)
-    print ("itemWeight: " .. itemWeight)
-    print ("itemType: " .. itemType)
-    print ("itemKlass: " .. tostring(itemKlass))
-
-    TetrisDevTool.insertEditItemOption(menu, item)
-
-    return menu
-end
-
-
 local og_onMouseWheel = ISInventoryPane.onMouseWheel
 function ISInventoryPane:onMouseWheel(del)
     if ISMouseDrag.dragStarted then
@@ -223,55 +187,33 @@ function ISInventoryPane.getActualItems(items)
     return og_getActualItems(items)
 end
 
-
-local og_update = ISInventoryPage.update
-function ISInventoryPage:update()
-    og_update(self)
-    if ISMouseDrag.dragging and ISMouseDrag.dragging.items then
-        self.collapseCounter = 0;
-        if isClient() and self.isCollapsed then
-            self.inventoryPane.inventory:requestSync();
-        end
-        self.isCollapsed = false;
-        self:clearMaxDrawHeight();
-        self.collapseCounter = 0;
-    end
-end
-
--- WINDOW MANAGER RELATED
-
-local og_refreshBackpacks = ISInventoryPage.refreshBackpacks
-function ISInventoryPage:refreshBackpacks()
-    og_refreshBackpacks(self)
-    if self.inventoryPane.tetrisWindowManager then
-        local inventoryMap = {}
-        for _, backpack in ipairs(self.backpacks) do
-            inventoryMap[backpack.inventory] = true
-        end
-
-        self.inventoryPane.tetrisWindowManager:closeIfNotInMap(inventoryMap)
-    end
-end
-
-local og_bringToTop = ISInventoryPage.bringToTop
-function ISInventoryPage:bringToTop()
-    og_bringToTop(self)
-    if self.inventoryPane.tetrisWindowManager then
-        self.inventoryPane.tetrisWindowManager:keepChildWindowsOnTop()
-    end
-end
-
-local og_close = ISInventoryPage.close
-function ISInventoryPage:close()
-    og_close(self)
-    if self.inventoryPane.tetrisWindowManager then
-        self.inventoryPane.tetrisWindowManager:closeAll()
-    end
-end
-
 function ISInventoryPane:getChildWindows()
     if self.tetrisWindowManager then
         return self.tetrisWindowManager.childWindows
     end
     return {}
+end
+
+-- Just for debugging
+local og_createMenu = ISInventoryPaneContextMenu.createMenu
+ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
+    local menu = og_createMenu(player, isInPlayerInventory, items, x, y, origin)
+    
+    
+    local item = items[1]
+    if not item then return end
+
+    if items[1].items then 
+        item = items[1].items[1]
+    end
+    if not item then return end
+
+    local BodyLocation = item:getBodyLocation()
+
+
+    print ("BodyLocation: " .. BodyLocation)
+
+    TetrisDevTool.insertEditItemOption(menu, item)
+
+    return menu
 end

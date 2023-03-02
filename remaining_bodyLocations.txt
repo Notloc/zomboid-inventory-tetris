@@ -1,0 +1,21 @@
+-- Not gonna bother until a bug report
+"UnderwearInner"
+"EHEPilotVest"
+"Torso1Legs1"
+"Pauldrons"
+"UpperArmRight"
+"UpperArmLeft"
+"RightArmArmor"
+"LeftArmArmor"
+"HandPlateRight"
+"HandPlateLeft"
+"SMUIRightArmPlus"
+"SMUILeftArmPlus"
+
+-- MAKEUP
+"MakeUp_Eyes" 
+"MakeUp_EyesShadow"  
+"SMUICosmeticOne" 
+"SMUICosmeticTwo" 
+"MakeUp_Lips" 
+"MakeUp_FullFace" 

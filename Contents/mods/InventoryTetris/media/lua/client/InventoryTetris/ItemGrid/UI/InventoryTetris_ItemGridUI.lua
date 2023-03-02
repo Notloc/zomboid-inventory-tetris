@@ -97,7 +97,7 @@ function ItemGridUI:render()
     self:renderDragItemPreview()
     
     if ISMouseDrag.dragGridUi == self then
-        self:renderDragItem()
+        --self:renderDragItem()
     end
 end
 
@@ -128,6 +128,7 @@ function ItemGridUI:renderBackGrid()
 end
 
 function ItemGridUI:renderGridItems()
+    local equippedMap = self.grid:getEquippedItemsMap()
     local draggedItem = getDraggedItem()
     local stacks = self.grid.stacks
     for _, stack in pairs(stacks) do
@@ -135,7 +136,7 @@ function ItemGridUI:renderGridItems()
         local x, y, i = ItemGridUtil.getItemPosition(item)
         if self.grid.gridIndex == i and x and y then
             if item ~= draggedItem then
-                self:renderGridStack(stack, x * CELL_SIZE - x, y * CELL_SIZE - y)
+                self:renderGridStack(stack, x * CELL_SIZE - x, y * CELL_SIZE - y, false, equippedMap[item])
             else
                 self:renderGridStackFaded(stack, x * CELL_SIZE - x, y * CELL_SIZE - y)
             end
@@ -214,10 +215,14 @@ local function getItemColor(item)
     return r,g,b
 end
 
-function ItemGridUI._renderGridItem(drawer, item, x, y, forceRotate, alphaMult)
+function ItemGridUI._renderGridItem(drawer, item, x, y, forceRotate, alphaMult, force1x1)
     local w, h = ItemGridUtil.getItemSize(item)
     if forceRotate then
         w, h = h, w
+    end
+
+    if force1x1 then
+        w, h = 1, 1
     end
 
     local minDimension = math.min(w, h)
@@ -250,8 +255,8 @@ function ItemGridUI._renderGridItem(drawer, item, x, y, forceRotate, alphaMult)
     drawer:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
 end
 
-function ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, alphaMult)
-    ItemGridUI._renderGridItem(drawer, stack.items[1], x, y, forceRotate, alphaMult)
+function ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, alphaMult, isEquipped)
+    ItemGridUI._renderGridItem(drawer, stack.items[1], x, y, forceRotate, alphaMult, isEquipped)
     if #stack.items > 1 then
         -- Draw the item count
         local font = UIFont.Small
@@ -260,8 +265,8 @@ function ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, alphaMult
     end
 end
 
-function ItemGridUI.renderGridStack(drawer, stack, x, y, forceRotate)
-    ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, 1)
+function ItemGridUI.renderGridStack(drawer, stack, x, y, forceRotate, isEquipped)
+    ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, 1, isEquipped)
 end
 
 function ItemGridUI.renderGridStackFaded(drawer, stack, x, y, forceRotate)
@@ -323,17 +328,8 @@ function ItemGridUI:onRightMouseUp(x, y)
 		self.inventoryPane.toolRender:setVisible(false)
 	end
     
-
     local item = itemStack.items[1]
-    local isInInv = self.grid.inventory:isInCharacterInventory(getSpecificPlayer(self.playerNum))
-    local menu = ISInventoryPaneContextMenu.createMenu(self.playerNum, isInInv, { item }, self:getAbsoluteX()+x, self:getAbsoluteY()+y)
-    --+self:getYScroll());
-    if menu and menu.numOptions > 1 and JoypadState.players[self.playerNum+1] then
-        menu.origin = self.inventoryPage
-        menu.mouseOver = 1
-        setJoypadFocus(self.playerNum, menu)
-    end
-
+    TetrisUiUtil.openItemContextMenu(self, x, y, item, self.playerNum)
 	return true;
 end
 
@@ -515,4 +511,16 @@ local function rotateDraggedItem(key)
     end
 end
 
+local function debugOpenEquipmentWindow(key)
+    -- open with zero
+    if key == Keyboard.KEY_0 then
+        --local playerObj = getSpecificPlayer(0)
+        local equipmentWindow = EquipmentUIParentWindow:new(0, 0, 0)
+        equipmentWindow:initialise()
+        equipmentWindow:addToUIManager()
+        equipmentWindow:setVisible(true)
+    end
+end
+
 Events.OnKeyStartPressed.Add(rotateDraggedItem)
+Events.OnKeyStartPressed.Add(debugOpenEquipmentWindow)

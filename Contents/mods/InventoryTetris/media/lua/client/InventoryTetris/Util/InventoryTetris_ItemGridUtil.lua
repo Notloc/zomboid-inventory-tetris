@@ -9,6 +9,10 @@ local GRID_INDEX = TETRIS.GRID_INDEX
 ItemGridUtil = {}
 
 ItemGridUtil.getItemPosition = function(item)
+    if item:isEquipped() then
+        return -1, -1, 0
+    end
+
     local modData = item:getModData()
     return modData[X_POS], modData[Y_POS], modData[GRID_INDEX]
 end
