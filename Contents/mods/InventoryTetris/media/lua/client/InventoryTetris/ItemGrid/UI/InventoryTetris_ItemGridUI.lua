@@ -26,17 +26,6 @@ local function getItemBackgroundColor(item)
     end
 end
 
-local function getDraggedItem()
-    -- Only return the item being dragged if it's the only item being dragged
-    -- We can't render a list being dragged from the ground
-    local itemStack = (ISMouseDrag.dragging and ISMouseDrag.dragStarted) and ISMouseDrag.dragging or nil
-    return ItemGridUtil.convertItemStackToItem(itemStack)
-end
-
-local function isDraggedItemRotated()
-    return ISMouseDrag.rotateDrag
-end
-
 local function isQuickMoveDown()
     return isKeyDown(getCore():getKey("tetris_quick_move"))
 end
@@ -95,10 +84,6 @@ function ItemGridUI:render()
     self:renderBackGrid()
     self:renderGridItems()
     self:renderDragItemPreview()
-    
-    if ISMouseDrag.dragGridUi == self then
-        --self:renderDragItem()
-    end
 end
 
 function ItemGridUI:renderBackGrid()
@@ -129,7 +114,7 @@ end
 
 function ItemGridUI:renderGridItems()
     local equippedMap = self.grid:getEquippedItemsMap()
-    local draggedItem = getDraggedItem()
+    local draggedItem = TetrisDragUtil.getDraggedItem()
     local stacks = self.grid.stacks
     for _, stack in pairs(stacks) do
         local item = stack.items[1]
@@ -146,7 +131,7 @@ end
 
 -- TODO: Make this render cell by cell, so we can filter out of bounds cells
 function ItemGridUI:renderDragItemPreview()
-    local item = getDraggedItem()
+    local item = TetrisDragUtil.getDraggedItem()
     if not item or not self:isMouseOver() then
         return
     end
@@ -174,7 +159,7 @@ function ItemGridUI:renderDragItemPreview()
     local y = self:getMouseY()
     
     local itemW, itemH = ItemGridUtil.getItemSize(item)
-    if isDraggedItemRotated() then
+    if TetrisDragUtil.isDraggedItemRotated() then
         itemW, itemH = itemH, itemW
     end
 
@@ -273,32 +258,11 @@ function ItemGridUI.renderGridStackFaded(drawer, stack, x, y, forceRotate)
     ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, 0.4)
 end
 
--- TODO: Move this out of here, we need a dedicated UI for this that keeps itself on-top of everything
-function ItemGridUI.renderDragItem(drawer)
-    local item = getDraggedItem()
-    if not item then
-        return
-    end
-    
-    local x = drawer:getMouseX()
-    local y = drawer:getMouseY()
-    local itemW, itemH = ItemGridUtil.getItemSize(item)
-    if isDraggedItemRotated() then
-        itemW, itemH = itemH, itemW
-    end
-
-    local xPos = x - itemW * CELL_SIZE / 2
-    local yPos = y - itemH * CELL_SIZE / 2
-
-    drawer:suspendStencil()
-    ItemGridUI._renderGridItem(drawer, item, xPos, yPos, isDraggedItemRotated(), 1)
-    drawer:resumeStencil()
-end
-
 function ItemGridUI:onMouseDown(x, y)
 	if self.playerNum ~= 0 then return end
 	getSpecificPlayer(self.playerNum):nullifyAiming();
-    self:prepareDrag(x, y)
+    local itemStack = ItemGridUiUtil.findItemStackUnderMouseGrid(self, x, y)
+    TetrisDragUtil.prepareDrag(self, itemStack, x, y)
 	return true;
 end
 
@@ -311,7 +275,7 @@ function ItemGridUI:onMouseUp(x, y)
     end
 
     self:handleDragAndDrop(x, y)
-    self:endDrag()
+    TetrisDragUtil.endDrag()
 
 	return true;
 end
@@ -339,57 +303,23 @@ function ItemGridUI:onMouseDoubleClick(x, y)
 end
 
 function ItemGridUI:onMouseMove(dx, dy)
-    self:startDrag()
+    if self.playerNum ~= 0 then return end
+    TetrisDragUtil.startDrag(self)
 end
 
 function ItemGridUI:onMouseMoveOutside(dx, dy)
-    self:startDrag()
-end
-
-
-function ItemGridUI:prepareDrag(x, y)
-    ISMouseDrag.rotateDrag = false
-    ISMouseDrag.dragStarted = false
-    self.downX = x;
-    self.downY = y;
-
-    local itemStack = ItemGridUiUtil.findItemStackUnderMouseGrid(self, x, y)
-    if itemStack then
-        self.itemStackToDrag = itemStack
-        ISMouseDrag.draggingFocus = self.inventoryPane
-        ISMouseDrag.dragGridUi = self
-    end
-end
-
-function ItemGridUI:startDrag()
     if self.playerNum ~= 0 then return end
-
-    if not ISMouseDrag.dragStarted and self.itemStackToDrag then
-        local x = self:getMouseX()
-        local y = self:getMouseY()
-
-        local dragLimit = 8
-        if math.abs(x - self.downX) > dragLimit or math.abs(y - self.downY) > dragLimit then
-            ISMouseDrag.dragStarted = true
-            ISMouseDrag.dragging = self.itemStackToDrag
-            self.itemStackToDrag = nil
-        end
-    end
-end
-
-function ItemGridUI:endDrag()
-    self.itemStackToDrag = nil
-	ISMouseDrag.dragging = nil;
-	ISMouseDrag.draggingFocus = nil;
-    ISMouseDrag.dragGridUi = nil
-    ISMouseDrag.dragStarted = false
+    TetrisDragUtil.startDrag(self)
 end
 
 function ItemGridUI:handleDragAndDrop(x, y)
     local playerObj = getSpecificPlayer(self.playerNum)
     local itemStack = ISMouseDrag.dragging
+    if not itemStack or not itemStack.items[1] then return end
 
-    local isSameInventory = self.grid.inventory == ISMouseDrag.dragGridUi.grid.inventory
+    local dragInventory = itemStack.items[1]:getContainer()
+    local isSameInventory = self.grid.inventory == dragInventory
+
     if isSameInventory or self:canPutIn(itemStack.items[1]) then
         luautils.walkToContainer(self.grid.inventory, self.playerNum)
 
@@ -403,12 +333,15 @@ function ItemGridUI:handleDragAndDrop(x, y)
         local container = self:getValidContainerFromStack(stack)
         if container then
             for _, item in ipairs(itemStack.items) do
+                if item:isEquipped() then
+                    ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
+                end
                 ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), container, 1))
             end
             return
         end
 
-        local x, y = ItemGridUiUtil.findGridPositionOfMouse(self, itemStack.items[1], isDraggedItemRotated())
+        local x, y = ItemGridUiUtil.findGridPositionOfMouse(self, itemStack.items[1], TetrisDragUtil.isDraggedItemRotated())
         self:handleDragAndDropTransfer(playerObj, x, y)
     end
 end
@@ -427,13 +360,19 @@ function ItemGridUI:handleDragAndDropTransfer(playerObj, gridX, gridY)
         self:splitStack(itemStack, gridX, gridY)
     else 
         for _, item in ipairs(itemStack.items) do
-            ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1, gridX, gridY, self.grid.gridIndex, isDraggedItemRotated()))
+            if item:isEquipped() then
+                ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
+            end
+            ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1, gridX, gridY, self.grid.gridIndex, TetrisDragUtil.isDraggedItemRotated()))
         end
     end
 end
 
 function ItemGridUI:splitStack(stack, targetX, targetY)
-    local isSameInventory = self.grid.inventory == ISMouseDrag.dragGridUi.grid.inventory
+    if not itemStack or not itemStack.items[1] then return end
+
+    local dragInventory = itemStack.items[1]:getContainer()
+    local isSameInventory = self.grid.inventory == dragInventory
     if isSameInventory and self.grid:willItemOverlapSelf(stack.items[1], targetX, targetY) then
         return
     end
@@ -442,12 +381,12 @@ function ItemGridUI:splitStack(stack, targetX, targetY)
 
     local half = math.ceil(#stack.items / 2)
     for i = 1, half do
-        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, stack.items[i], stack.items[i]:getContainer(), self.grid.inventory, 1, targetX, targetY, self.grid.gridIndex, isDraggedItemRotated()))
+        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, stack.items[i], stack.items[i]:getContainer(), self.grid.inventory, 1, targetX, targetY, self.grid.gridIndex, TetrisDragUtil.isDraggedItemRotated()))
     end
 end
 
 function ItemGridUI:handleClick(x, y)
-    self:endDrag()
+    TetrisDragUtil.endDrag()
 
     local itemStack = ItemGridUiUtil.findItemStackUnderMouseGrid(self, x, y)
     if itemStack then
@@ -486,7 +425,7 @@ end
 
 
 function ItemGridUI:handleDoubleClick(x, y)
-    self:endDrag()
+    TetrisDragUtil.endDrag()
     
     local itemStack = ItemGridUiUtil.findItemStackUnderMouseGrid(self, x, y)
     if not itemStack then 

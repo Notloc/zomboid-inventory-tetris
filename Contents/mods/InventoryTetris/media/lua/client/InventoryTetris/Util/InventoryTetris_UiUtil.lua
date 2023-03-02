@@ -1,7 +1,5 @@
 TetrisUiUtil = {}
 
-
-
 function TetrisUiUtil.openItemContextMenu(uiContext, x, y, item, playerNum)
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
@@ -13,5 +11,3 @@ function TetrisUiUtil.openItemContextMenu(uiContext, x, y, item, playerNum)
         setJoypadFocus(playerNum, menu)
     end
 end
-
-

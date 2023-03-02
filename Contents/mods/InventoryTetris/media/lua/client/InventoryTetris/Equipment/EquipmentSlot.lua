@@ -2,7 +2,7 @@ require "IS/UI/ISPanel"
 
 EquipmentSlot = ISPanel:derive("EquipmentSlot");
 
-function EquipmentSlot:new (x, y, bodyLocation, playerNum)
+function EquipmentSlot:new(x, y, bodyLocation, inventoryPane, playerNum)
 	local o = {}
 	o = ISPanel:new(x, y, 34, 34);
 	setmetatable(o, self)
@@ -14,7 +14,10 @@ function EquipmentSlot:new (x, y, bodyLocation, playerNum)
     o.backgroundColor = {r=0, g=0, b=0, a=0.95};
 
     o.bodyLocation = bodyLocation;
+    o.inventoryPane = inventoryPane;
     o.playerNum = playerNum;
+    
+    o.bodyLocationGroup = getSpecificPlayer(playerNum):getWornItems():getBodyLocationGroup();
 
 	return o;
 end
@@ -33,6 +36,16 @@ end
 
 function EquipmentSlot:prerender()
     ISPanel.prerender(self);
+    
+    local dragItem = TetrisDragUtil.getDraggedItem();
+    if dragItem and dragItem ~= self.item then
+        local bodyLocation = TetrisEquipmentUtil.getBodyLocation(dragItem);
+        local conflicts = self.bodyLocationGroup:isExclusive(bodyLocation, self.bodyLocation)
+        if conflicts then
+            self:drawRect(1, 1, self.width-2, self.height-2, 0.5, 1, 0, 0);
+        end
+    end
+
 end
 
 function EquipmentSlot:render()
@@ -40,10 +53,15 @@ function EquipmentSlot:render()
         return
     end
     
-    -- draw the item texture
+    local alpha = 1
+    if self.item == TetrisDragUtil.getDraggedItem() then
+        alpha = 0.5
+    end
 
-    self:drawTexture(self.item:getTex(), 1, 1, 1, self.getItemColor(self.item));
-
+    self:drawTexture(self.item:getTex(), 1, 1, alpha, self.getItemColor(self.item));
+    if self:isMouseOver() then
+        self.inventoryPane:doTooltipForItem(self.item);
+    end
 end
 
 function EquipmentSlot.getItemColor(item)
@@ -66,9 +84,30 @@ function EquipmentSlot.getItemColor(item)
     return r,g,b
 end
 
-
 function EquipmentSlot:onRightMouseUp(x, y)
     if self.item then
         TetrisUiUtil.openItemContextMenu(self, x, y, self.item, self.playerNum);
     end
+end
+
+function EquipmentSlot:onMouseDown(x, y)
+    if self.item then
+        TetrisDragUtil.prepareDrag(self, ItemGridUtil.itemToNewStack(self.item), x, y);
+    end
+end
+
+function EquipmentSlot:onMouseMove(dx, dy)
+    TetrisDragUtil.startDrag(self);
+end
+
+function EquipmentSlot:onMouseMoveOutside(dx, dy)
+    TetrisDragUtil.startDrag(self);
+end
+
+function EquipmentSlot:onMouseUp(x, y)
+    TetrisDragUtil.endDrag();
+end
+
+function EquipmentSlot:onMouseUpOutside(x, y)
+    TetrisDragUtil.cancelDrag(self);
 end

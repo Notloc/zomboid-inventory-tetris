@@ -26,7 +26,7 @@ local SUPER_SLOT_DEFS = {
     },
     {
         name = "Vest",
-        position = { x = 116, y = 76 },
+        position = { x = 116, y = 82 },
         bodyLocations = { "SMUIJumpsuitPlus", "SMUITorsoRigPlus", "SMUIWebbingPlus", "TorsoRigPlus2", "TorsoRig", "TorsoRig2", "TorsoExtraVest", "TorsoExtraPlus1", "RifleSling", "AmmoStrap", "TorsoExtra"}
     },
     {
@@ -61,15 +61,17 @@ local SUPER_SLOT_DEFS = {
     }
 }
 
-function EquipmentUI:new(x, y, width, height, playerNum)
+function EquipmentUI:new(x, y, width, height, inventoryPane, playerNum)
 	local o = {};
 	o = ISPanelJoypad:new(x, y, width, height);
 	o:noBackground();
 	setmetatable(o, self);
     self.__index = self;
+
+    o.inventoryPane = inventoryPane
     o.playerNum = playerNum
+
 	o.char = getSpecificPlayer(playerNum);
-	o.bFemale = o.char:isFemale()
 	o.borderColor = {r=0.4, g=0.4, b=0.4, a=1};
 	o.backgroundColor = {r=0, g=0, b=0, a=0.8};
 	o.bodyOutline = getTexture("media/ui/defense/" .. (o.char:isFemale() and "female" or "male") .. "_base.png")
@@ -87,7 +89,7 @@ function EquipmentUI:createSlots()
     self.superSlots = {};
 
     for _, superSlotDef in pairs(SUPER_SLOT_DEFS) do
-        local superslot = EquipmentSuperSlot:new(superSlotDef, self.playerNum);
+        local superslot = EquipmentSuperSlot:new(superSlotDef, self.inventoryPane, self.playerNum);
         superslot:initialise();
 
         if superSlotDef.position then
@@ -157,7 +159,7 @@ function EquipmentUI:createDynamicSlot(bodyLocation)
         return slot
     end
 
-    local slot = EquipmentSlot:new(50, 50, bodyLocation, self.playerNum);
+    local slot = EquipmentSlot:new(50, 50, bodyLocation, self.inventoryPane, self.playerNum);
     slot:initialise();
     self:addChild(slot);
     return slot

@@ -60,10 +60,6 @@ function ISInventoryPane:updateTooltip()
 		return -- in the main menu
 	end
 
-    if ISMouseDrag.dragging then
-        return
-    end
-
 	local item = nil
 
 	if not self.doController and not self.dragging and not self.draggingMarquis and self:isMouseOver() then
@@ -73,7 +69,11 @@ function ISInventoryPane:updateTooltip()
         item = itemStack and itemStack.items[1] or nil
 	end
 
-	local weightOfStack = 0.0
+	self:doTooltipForItem(item)
+end
+
+function ISInventoryPane:doTooltipForItem(item)
+    local weightOfStack = 0.0
 	if item and not instanceof(item, "InventoryItem") then
 		if #item.items > 2 then
 			weightOfStack = item.weight
@@ -91,7 +91,7 @@ function ISInventoryPane:updateTooltip()
 		return
 	end
 
-	if item then
+	if item and not ISMouseDrag.dragging then
 		if self.toolRender then
 			self.toolRender:setItem(item)
 			self.toolRender:setVisible(true)

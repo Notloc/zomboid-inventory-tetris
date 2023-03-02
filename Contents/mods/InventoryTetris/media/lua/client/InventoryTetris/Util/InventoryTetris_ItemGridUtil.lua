@@ -120,3 +120,12 @@ ItemGridUtil.isGridPositionValid = function(grid, x, y)
     end
     return true
 end
+
+ItemGridUtil.itemToNewStack = function(item)
+    local stack = {
+        items = {item}, 
+        count = 1,
+        position = {x = -1, y = -1},
+    }
+    return stack
+end
