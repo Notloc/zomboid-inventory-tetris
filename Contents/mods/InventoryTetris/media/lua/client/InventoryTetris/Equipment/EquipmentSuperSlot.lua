@@ -96,7 +96,9 @@ function EquipmentSuperSlot:getItemCount()
 end
 
 function EquipmentSuperSlot:doesItemConflict(item)
-    local bodyLocation = TetrisEquipmentUtil.getBodyLocation(item);
+    local bodyLocation = TetrisEquipmentUtil.getBodyLocationFromItem(item);
+    if not bodyLocation or bodyLocation == '' then return false end
+
     for _, slot in pairs(self.slots) do
         if slot.item and slot.item ~= item and self.bodyLocationGroup:isExclusive(bodyLocation, slot.bodyLocation) then
             return true
@@ -121,7 +123,6 @@ function EquipmentSuperSlot:prerender()
     local itemCount = self:getItemCount();
     if itemCount > 0 then
         local slotWidth = itemCount > 1 and c.SUPER_SLOT_SIZE + SUB_ITEM_WIDTH or c.SUPER_SLOT_SIZE;
-        
         self:drawRect(0, 0, slotWidth, c.SUPER_SLOT_SIZE, 0.85, 0, 0, 0);
         self:drawTextureScaled(BG_TEXTURE, 0, 0, slotWidth, c.SUPER_SLOT_SIZE, 1, 0.4, 0.4, 0.4);
         self:drawRectBorder(0, 0, slotWidth, c.SUPER_SLOT_SIZE, 1, 1, 1, 1);
@@ -133,7 +134,7 @@ function EquipmentSuperSlot:prerender()
     
     local dragItem = TetrisDragUtil.getDraggedItem();
     if dragItem then
-        local bodyLocation = TetrisEquipmentUtil.getBodyLocation(dragItem);
+        local bodyLocation = TetrisEquipmentUtil.getBodyLocationFromItem(dragItem);
         local canAcceptItem = self.slots[bodyLocation] and self.slots[bodyLocation].item ~= dragItem
         local hasConflictingItems = self:doesItemConflict(dragItem)
 
@@ -198,9 +199,10 @@ function EquipmentSuperSlot:render()
     --if the mouse is over the super slot, draw the name of the slot
     if self:isMouseOver() then
         local width = getTextManager():MeasureStringX(UIFont.Small, self.slotDefinition.name);
-        self:drawRect(c.SUPER_SLOT_SIZE / 2 - width / 2 - 3, -15, width + 8, 16, 0.9, 0, 0, 0);
-        self:drawRectBorder(c.SUPER_SLOT_SIZE / 2 - width / 2 - 3, -15, width + 8, 16, 1, 1, 1, 1);
-        self:drawTextCentre(self.slotDefinition.name, c.SUPER_SLOT_SIZE / 2, -15, 1, 1, 1, 1, UIFont.Small);
+        local height = getTextManager():getFontFromEnum(UIFont.Small):getLineHeight();
+        self:drawRect      (c.SUPER_SLOT_SIZE / 2 - width / 2 - 3, -height - 4, width + 8, height + 4, 0.9, 0, 0, 0);
+        self:drawRectBorder(c.SUPER_SLOT_SIZE / 2 - width / 2 - 3, -height - 4, width + 8, height + 4, 1, 1, 1, 1);
+        self:drawTextCentre(self.slotDefinition.name, c.SUPER_SLOT_SIZE / 2, -height - 2, 1, 1, 1, 1, UIFont.Small);
     end
 
     local itemsToDraw = {};
@@ -220,8 +222,8 @@ function EquipmentSuperSlot:render()
         return
     end
 
-    local xOff = (c.SUPER_SLOT_SIZE - c.SLOT_SIZE) / 2;
-    local yOff = (c.SUPER_SLOT_SIZE - c.SLOT_SIZE) / 2;
+    local xOff = (c.SUPER_SLOT_SIZE - c.TEXTURE_SIZE) / 2;
+    local yOff = (c.SUPER_SLOT_SIZE - c.TEXTURE_SIZE) / 2;
     local mainAlpha = 1;
     if itemsToDraw[1] == TetrisDragUtil.getDraggedItem() then
         mainAlpha = 0.5;
@@ -321,7 +323,7 @@ end
 
 function EquipmentSuperSlot:handleDragDrop(x, y)
     local item = TetrisDragUtil.getDraggedItem();
-    local bodyLocation = TetrisEquipmentUtil.getBodyLocation(item)
+    local bodyLocation = TetrisEquipmentUtil.getBodyLocationFromItem(item)
     if bodyLocation then
         self:handleClothingDrop(item, bodyLocation);
     end

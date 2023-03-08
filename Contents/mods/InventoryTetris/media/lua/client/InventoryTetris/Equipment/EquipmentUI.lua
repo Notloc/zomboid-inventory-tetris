@@ -174,10 +174,8 @@ function EquipmentUI:prerender()
 	ISPanelJoypad.prerender(self)
 
     self:drawTexture(self.bodyOutline, 10, 10, 1, 1, 1, 1, 1, 1);
-
     self:updateSlots();
     self:drawRectBorder(self:getWidth() - 16, 0, 0, self:getHeight(), 1,0.5,0.5,0.5);
-
 end
 
 function EquipmentUI:updateSlots()

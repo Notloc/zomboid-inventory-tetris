@@ -39,7 +39,7 @@ function EquipmentSlot:prerender()
     
     local dragItem = TetrisDragUtil.getDraggedItem();
     if dragItem and dragItem ~= self.item then
-        local bodyLocation = TetrisEquipmentUtil.getBodyLocation(dragItem);
+        local bodyLocation = TetrisEquipmentUtil.getBodyLocationFromItem(dragItem);
         local conflicts = self.bodyLocationGroup:isExclusive(bodyLocation, self.bodyLocation)
         if conflicts then
             self:drawRect(1, 1, self.width-2, self.height-2, 0.5, 1, 0, 0);
