@@ -18,9 +18,9 @@ end
 function ItemGridContainerUI:initialise()
     ISPanel.initialise(self)
     local itemGridUis = self:createItemGridUIs()
-    local width, height = ItemGridContainerUI.updateItemGridPositions(itemGridUis)
-    self:setWidth(width)
-    self:setHeight(height)
+    local width, height = ItemGridContainerUI.updateItemGridPositions(itemGridUis, 2, 3)
+    self:setWidth(width + 4)
+    self:setHeight(height + 4)
 
     self.gridUis = itemGridUis
 end
@@ -97,6 +97,7 @@ end
 function ItemGridContainerUI:prerender()
     if self.inventory:isDrawDirty() then
         self.containerGrid:refresh()
+        self.inventory:setDrawDirty(false)
     end
     ISPanel.prerender(self)
 end

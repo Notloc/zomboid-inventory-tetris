@@ -1,17 +1,11 @@
 local og_createChildren = ISInventoryPage.createChildren
 function ISInventoryPage:createChildren()
     og_createChildren(self)
-    
+
     if self.onCharacter then
-        self.equipmentUi = EquipmentUI:new(0, 15, 250, 400, self.inventoryPane, self.player);
-        self.equipmentUi:initialise()
-        self:addChild(self.equipmentUi)
-        
         self.dragItemRenderer = DragItemRenderer:new(self.equipmentUi, self.player);
         self.dragItemRenderer:initialise();
         self.dragItemRenderer:addToUIManager();
-
-        self.inventoryPane:setX(250)
     end
 end
 

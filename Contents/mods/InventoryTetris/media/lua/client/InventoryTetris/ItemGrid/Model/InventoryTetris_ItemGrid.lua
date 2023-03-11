@@ -1,44 +1,5 @@
 ItemGrid = {}
 
-local function stackContainsItem(stack, item)
-    for _, stackItem in ipairs(stack.items) do
-        if stackItem == item then
-            return true
-        end
-    end
-    return false
-end
-
-function ItemGrid.canAddToStack(stack, item)
-    if stack.items[1]:getFullType() ~= item:getFullType() then return false end
-    if stackContainsItem(stack, item) then return false end
-    if #stack.items >= ItemGridUtil.getMaxStackSize(item) then return false end
-    return true
-end
-
-local function removeFromStack(stack, item)
-    for i, stackItem in ipairs(stack.items) do
-        if stackItem == item then
-            table.remove(stack.items, i)
-            return
-        end
-    end
-end
-
-local function getStackRotation(stack)
-    return ItemGridUtil.isItemRotated(stack.items[1])
-end
-
-function ItemGrid:newItemStack(item, x, y)
-    local stack = {
-        items = {item}, 
-        count = 1,
-        position = {x = x, y = y},
-    }
-    table.insert(self.stacks, stack)
-    return stack
-end
-
 function ItemGrid:new(gridDefinition, gridIndex, inventory, playerNum)
     local o = {}
     setmetatable(o, self)
@@ -94,12 +55,11 @@ function ItemGrid:removeItem(item)
     local x, y, index = ItemGridUtil.getItemPosition(item)
     if x and y and index == self.gridIndex then
         local stack = self.dataGrid[y][x]
-        if #stack.items == 1 then
+        stack:removeItem(item)
+        if stack.count <= 0 then
             self:removeStackFromGrid(stack)
-        else
-            removeFromStack(stack, item)
-            ItemGridUtil.clearItemPosition(item)
         end
+        ItemGridUtil.clearItemPosition(item)
     end
 end
 
@@ -135,17 +95,15 @@ function ItemGrid:insertItem(item, xPos, yPos)
     end
 
     local stack = self.dataGrid[yPos][xPos]
-    if stack and ItemGrid.canAddToStack(stack, item) then
-        local rotation = getStackRotation(stack)
-        table.insert(stack.items, item)
-        ItemGridUtil.setItemRotation(item, rotation)
-        ItemGridUtil.setItemPosition(item, stack.position.x, stack.position.y, self.gridIndex)
+    if stack and stack:canAddToStack(item) then
+        stack:addItem(item)
         return
     end
 
+    stack = ItemStack:new(item, xPos, yPos, self.gridIndex)
+    table.insert(self.stacks, stack)
+    
     local w, h = ItemGridUtil.getItemSize(item)
-    stack = self:newItemStack(item, xPos, yPos)
-    ItemGridUtil.setItemPosition(item, xPos, yPos, self.gridIndex)
     for y = yPos, yPos+h-1 do
         for x = xPos, xPos+w-1 do
             if self:isInBounds(x, y) then
@@ -165,7 +123,7 @@ function ItemGrid:findPositionForItem(item, isRotationAttempt)
     for y = 0,self.height-h do
         for x = 0,self.width-w do
             local stack = self.dataGrid[y][x]
-            if stack and ItemGrid.canAddToStack(stack, item) then
+            if stack and stack:canAddToStack(item) then
                 return x, y
             end
 
@@ -206,7 +164,7 @@ function ItemGrid:doesItemFit_WH(item, xPos, yPos, w, h)
     for y = yPos, yPos+h-1 do
         for x = xPos, xPos+w-1 do
             local stack = self.dataGrid[y][x]
-            if stack and not stackContainsItem(stack, item) then
+            if stack and not stack:containsItem(item) then
                 return false
             end
         end
@@ -219,7 +177,7 @@ function ItemGrid:canItemBeStacked(item, xPos, yPos)
         return false
     end
     local stack = self.dataGrid[yPos][xPos]
-    return stack and ItemGrid.canAddToStack(stack, item)
+    return stack and stack:canAddToStack(item)
 end
 
 function ItemGrid:attemptToStackItem(item)
@@ -240,7 +198,7 @@ function ItemGrid:willItemOverlapSelf(item, newX, newY)
         for x = newX, newX+w-1 do
             if self:isInBounds(x, y) then
                 local stack = self.dataGrid[y][x]
-                if stack and stackContainsItem(stack, item) then
+                if stack and stack:containsItem(item) then
                     return true
                 end
             end
@@ -312,7 +270,11 @@ function ItemGrid:updateGridPositions()
         else
             local x, y, gridIndex = ItemGridUtil.getItemPosition(item)
             if x and y and gridIndex == self.gridIndex then
-                self:insertItem(item, x, y)
+                if not self:doesItemFit(item, x, y, ItemGridUtil.isItemRotated(item)) then
+                    ItemGridUtil.clearItemPosition(item)
+                else
+                    self:insertItem(item, x, y)
+                end
             end
         end
     end
@@ -335,8 +297,30 @@ function ItemGrid:claimUnpositionedItems()
     table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
     for i = 1,#unpositionedItems do
         local item = unpositionedItems[i].item
-        self:attemptToInsertItem(item)
+        if not self:attemptToInsertItem(item) then 
+            self:dropUnpositionedItem(item)
+        end
     end
+end
+
+function ItemGrid:dropUnpositionedItem(item)
+    local playerNum = self.playerNum
+    local playerObj = getSpecificPlayer(playerNum)
+    local action = TimedActionSnooper.findUpcomingActionThatHandlesItem(playerObj, item)
+    if action then
+        -- If the player is about to use the item, don't drop it
+        -- Register an auto drop if they cancel the action
+        
+        local og_stop = action.stop
+        action.stop = function(self)
+            og_stop(self)
+            table.insert(ItemGrid.itemsToDrop, {item, playerNum})
+        end
+
+        return
+    end
+
+    ISInventoryPaneContextMenu.onDropItems({item, item}, self.playerNum)
 end
 
 function ItemGrid:claimTooLargeItems()
@@ -381,3 +365,17 @@ function ItemGrid:getByItem(item)
     end
     return nil
 end
+
+ItemGrid.itemsToDrop = {}
+
+function ItemGrid.dropItems()
+    if #ItemGrid.itemsToDrop == 0 then return end
+
+    for _, data in ipairs(ItemGrid.itemsToDrop) do
+        local item, playerNum = data[1], data[2]
+        ISInventoryPaneContextMenu.onDropItems({item, item}, playerNum)
+    end
+    ItemGrid.itemsToDrop = {}
+end
+
+Events.OnTick.Add(ItemGrid.dropItems)

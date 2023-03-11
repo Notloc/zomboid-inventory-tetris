@@ -1,6 +1,6 @@
-ItemGridDataDefinitions = {}
+ItemData = {}
 
-ItemGridDataDefinitions.itemSizes = {
+ItemData.itemSizes = {
     ["Base.VHS_Retail"] = {x=2, y=1},
     ["Base.Pot"] = {x=2, y=2},
     ["Base.KitchenTongs"] = {x=1, y=2},
@@ -9,17 +9,13 @@ ItemGridDataDefinitions.itemSizes = {
     ["Base.BakingTray"] = {x=2, y=2},
     ["Base.Icecream"] = {x=1, y=2},
 
-    -- veggies, peas, corn, 2x1
     ["Base.MixedVegetables"] = {x=2, y=1},
     ["Base.Peas"] = {x=2, y=1},
     ["Base.CornFrozen"] = {x=2, y=1},
 
-    -- bottles, 1x2
     ["Base.BeerBottle"] = {x=1,y=2},
     ["Base.WaterBottleFull"] = {x=1,y=2},
     ["Base.WaterBottleEmpty"] = {x=1, y=2},
-
-    --end
 
     ["Base.Pillow"] = {x=2, y=2},
     ["Base.Kettle"] = {x=2, y=2},
@@ -63,45 +59,45 @@ ItemGridDataDefinitions.itemSizes = {
     ["Base.NailsBox"] = {x=2, y=1},
 }
 
-ItemGridDataDefinitions.calculateAndCacheItemInfo = function(item)
-    ItemGridDataDefinitions.calculateItemSize(item)
-    ItemGridDataDefinitions.calculateItemStackability(item)
+ItemData.calculateAndCacheItemInfo = function(item)
+    ItemData.calculateItemSize(item)
+    ItemData.calculateItemStackability(item)
 end
 
 -- Programatically determine the size of items that are not manually defined
-ItemGridDataDefinitions.calculateItemSize = function(item)
+ItemData.calculateItemSize = function(item)
     local category = item:getDisplayCategory()
     local size = {x=1, y=1}
 
     if category == "Ammo" then
         -- determine if its ammo or a magazine by stackability
         if item:CanStack(item) then
-            size = ItemGridDataDefinitions.calculateItemSizeMagazine(item)
+            size = ItemData.calculateItemSizeMagazine(item)
         else
             size = {x=1, y=1}
         end
     elseif category == "Weapon" then
-        size = ItemGridDataDefinitions.calculateItemSizeWeapon(item)
+        size = ItemData.calculateItemSizeWeapon(item)
     elseif category == "Clothing" then
-        size = ItemGridDataDefinitions.calculateItemSizeClothing(item)
+        size = ItemData.calculateItemSizeClothing(item)
     elseif category == "Food" then
-        size = ItemGridDataDefinitions.calculateItemSizeWeightBasedTall(item)
+        size = ItemData.calculateItemSizeWeightBasedTall(item)
     elseif category == "FirstAid" then
-        size = ItemGridDataDefinitions.calculateItemSizeWeightBased(item)
+        size = ItemData.calculateItemSizeWeightBased(item)
     elseif category == "Container" then
-        size = ItemGridDataDefinitions.calculateItemSizeContainer(item)
+        size = ItemData.calculateItemSizeContainer(item)
     elseif category == "Literature" or category == "SkillBook" then
         size = {x=1, y=2}
     elseif category == "Key" then
         size = {x=1, y=1}
     else
-        size = ItemGridDataDefinitions.calculateItemSizeWeightBased(item)
+        size = ItemData.calculateItemSizeWeightBased(item)
     end
 
-    ItemGridDataDefinitions.itemSizes[item:getFullType()] = size
+    ItemData.itemSizes[item:getFullType()] = size
 end
 
-ItemGridDataDefinitions.calculateItemSizeMagazine = function(item)
+ItemData.calculateItemSizeMagazine = function(item)
     local width = 1
     local height = 1
 
@@ -113,7 +109,7 @@ ItemGridDataDefinitions.calculateItemSizeMagazine = function(item)
     return {x = width, y = height}
 end
 
-ItemGridDataDefinitions.calculateItemSizeWeapon = function(item)
+ItemData.calculateItemSizeWeapon = function(item)
     local width = 2
     local height = 1
 
@@ -136,13 +132,13 @@ ItemGridDataDefinitions.calculateItemSizeWeapon = function(item)
     return {x = width, y = height}
 end
 
-ItemGridDataDefinitions.calculateItemSizeClothing = function(item)
+ItemData.calculateItemSizeClothing = function(item)
     local width = 2
     local height = 2
 
     -- This shouldn't happen, but just in case a mod does something weird
     if item:IsClothing() == false then
-        ItemGridDataDefinitions.itemSizes[item:getFullType()] = {x = width, y = height}
+        ItemData.itemSizes[item:getFullType()] = {x = width, y = height}
         return
     end
 
@@ -167,7 +163,7 @@ ItemGridDataDefinitions.calculateItemSizeClothing = function(item)
     return {x = width, y = height}
 end
 
-ItemGridDataDefinitions.calculateItemSizeContainer = function(item)
+ItemData.calculateItemSizeContainer = function(item)
     local width = 1
     local height = 1
 
@@ -175,7 +171,7 @@ ItemGridDataDefinitions.calculateItemSizeContainer = function(item)
     return {x = width, y = height}
 end
 
-ItemGridDataDefinitions.calculateItemSizeWeightBased = function(item)
+ItemData.calculateItemSizeWeightBased = function(item)
     local width = 1
     local height = 1
 
@@ -197,7 +193,7 @@ ItemGridDataDefinitions.calculateItemSizeWeightBased = function(item)
     return {x = width, y = height}
 end
 
-ItemGridDataDefinitions.calculateItemSizeWeightBasedTall = function(item)
+ItemData.calculateItemSizeWeightBasedTall = function(item)
     local width = 1
     local height = 1
 
@@ -219,7 +215,7 @@ ItemGridDataDefinitions.calculateItemSizeWeightBasedTall = function(item)
     return {x = width, y = height}
 end
 
-ItemGridDataDefinitions.calculateItemStackability = function(item)
-    ItemGridDataDefinitions.itemSizes[item:getFullType()].maxStackSize = 10
+ItemData.calculateItemStackability = function(item)
+    ItemData.itemSizes[item:getFullType()].maxStackSize = 10
 end
 

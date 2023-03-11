@@ -21,9 +21,9 @@ end
 local function getGridDefinitionByContainerType(containerType)
     print("containerType: " .. containerType)
 
-    local gridDefinition = InventoryTetrisGridDefinitions[containerType]
+    local gridDefinition = ContainerData[containerType]
     if not gridDefinition then
-        gridDefinition = InventoryTetrisGridDefinitions["default"]
+        gridDefinition = ContainerData["default"]
     end
     return gridDefinition
 end

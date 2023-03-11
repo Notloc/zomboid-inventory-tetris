@@ -1,5 +1,5 @@
-require "InventoryTetris/ItemGridDataDefinitions"
-local TETRIS = require "InventoryTetris/Data/Constants"
+require "InventoryTetris/ItemData"
+local TETRIS = require "InventoryTetris/Constants"
 
 local X_POS = TETRIS.X_POS
 local Y_POS = TETRIS.Y_POS
@@ -70,11 +70,11 @@ ItemGridUtil.getItemSize = function(item)
         return TetrisDevTool.itemEdits[item:getFullType()].x, TetrisDevTool.itemEdits[item:getFullType()].y
     end
 
-    if not ItemGridDataDefinitions.itemSizes[item:getFullType()] then
-        ItemGridDataDefinitions.calculateAndCacheItemInfo(item)
+    if not ItemData.itemSizes[item:getFullType()] then
+        ItemData.calculateAndCacheItemInfo(item)
     end
     
-    local sizeData = ItemGridDataDefinitions.itemSizes[item:getFullType()]
+    local sizeData = ItemData.itemSizes[item:getFullType()]
     if item:getModData()[IS_ROTATED] then
         return sizeData.y, sizeData.x
     else
@@ -88,11 +88,11 @@ ItemGridUtil.getMaxStackSize = function(item)
         return TetrisDevTool.itemEdits[fullType].maxStackSize
     end
 
-    if not ItemGridDataDefinitions.itemSizes[fullType] then
-        ItemGridDataDefinitions.calculateAndCacheItemInfo(item)
+    if not ItemData.itemSizes[fullType] then
+        ItemData.calculateAndCacheItemInfo(item)
     end
 
-    local max = ItemGridDataDefinitions.itemSizes[fullType].maxStackSize
+    local max = ItemData.itemSizes[fullType].maxStackSize
     --return max and max or 1
     return 10
 end

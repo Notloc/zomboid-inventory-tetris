@@ -168,12 +168,8 @@ end
 
 local og_onMouseWheel = ISInventoryPane.onMouseWheel
 function ISInventoryPane:onMouseWheel(del)
-    if ISMouseDrag.dragStarted then
-        if ISMouseDrag.rotateDrag then
-            ISMouseDrag.rotateDrag = false
-        else
-            ISMouseDrag.rotateDrag = true
-        end
+    if DragAndDrop.isDragging() then
+        DragAndDrop.rotateDraggedItem()
         return true;
     end
     return og_onMouseWheel(self, del)

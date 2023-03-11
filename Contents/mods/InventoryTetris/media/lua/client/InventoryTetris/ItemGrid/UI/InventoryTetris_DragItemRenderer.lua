@@ -1,20 +1,8 @@
 require "ISUI/ISUIElement"
 
 local BG_TEXTURE = getTexture("media/textures/InventoryTetris/ItemSlot.png")
-local CONSTANTS = require "InventoryTetris/Data/Constants"
+local CONSTANTS = require "InventoryTetris/Constants"
 local CELL_SIZE = CONSTANTS.CELL_SIZE
-
-local function getDraggedItem()
-    -- Only return the item being dragged if it's the only item being dragged
-    -- We can't render a list of different items
-    local itemStack = (ISMouseDrag.dragging and ISMouseDrag.dragStarted) and ISMouseDrag.dragging or nil
-    return ItemGridUtil.convertItemStackToItem(itemStack)
-end
-
-local function isDraggedItemRotated()
-    return ISMouseDrag.rotateDrag
-end
-
 
 DragItemRenderer = ISUIElement:derive("DragItemRenderer")
 
@@ -34,7 +22,7 @@ function DragItemRenderer:prerender()
 end
 
 function DragItemRenderer:render() 
-    local item = getDraggedItem()
+    local item = DragAndDrop.getDraggedItem()
     if not item then
         return
     end
@@ -47,7 +35,7 @@ function DragItemRenderer:render()
     local force1x1 = self.equipmentUi:isMouseOver()
     if not force1x1 then
         itemW, itemH = ItemGridUtil.getItemSize(item)
-        if isDraggedItemRotated() then
+        if DragAndDrop.isDraggedItemRotated() then
             itemW, itemH = itemH, itemW
         end
     end
@@ -56,6 +44,6 @@ function DragItemRenderer:render()
     local yPos = y - itemH * CELL_SIZE / 2
 
     self:suspendStencil()
-    ItemGridUI._renderGridItem(self, item, xPos, yPos, isDraggedItemRotated(), 1, force1x1)
+    ItemGridUI._renderGridItem(self, item, xPos, yPos, DragAndDrop.isDraggedItemRotated(), 1, force1x1)
     self:resumeStencil()
 end

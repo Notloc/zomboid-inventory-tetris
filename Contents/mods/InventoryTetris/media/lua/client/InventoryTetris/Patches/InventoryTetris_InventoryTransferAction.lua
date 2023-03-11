@@ -9,6 +9,9 @@ function ISInventoryTransferAction:new (character, item, srcContainer, destConta
     o.gridIndex = gridIndex
     o.rotate = rotate
 
+    o.stopOnRun = false
+    o.stopOnWalk = false
+
     -- Make the transfers instant
     -- The user's personal time spent arranging items in the grid "replaces" the time spent moving the items
     o.maxTime = 0
@@ -28,6 +31,11 @@ function ISInventoryTransferAction:isValid()
     if not valid and (self.srcContainer ~= self.destContainer or not self.gridX or not self.gridY or not self.gridIndex) then
         return valid
     end
+
+    if TimedActionSnooper.findUpcomingActionThatHandlesItem(self.character, self.item) then
+        return true
+    end
+
     valid = false
 
     local containerGrid = ItemContainerGrid.Create(self.destContainer, self.character:getPlayerNum())
@@ -58,14 +66,13 @@ function ISInventoryTransferAction:transferItem(item)
             ItemGridUtil.rotateItem(item)
         end
 
+        ItemGridUtil.clearItemPosition(item)
+
         local destContainerGrid = ItemContainerGrid.Create(self.destContainer, self.character:getPlayerNum())
         if self.gridX and self.gridY and self.gridIndex then
             destContainerGrid:insertItem(item, self.gridX, self.gridY, self.gridIndex)
-            return
-        elseif destContainerGrid:attemptToInsertItem(item) then
-            return
         else
-            destContainerGrid:forceInsertItem(item)
+            destContainerGrid:attemptToInsertItem(item)
         end
     end
 end

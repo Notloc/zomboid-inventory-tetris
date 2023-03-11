@@ -1,5 +1,4 @@
-require "InventoryTetris/ItemGridDataDefinitions"
-local TETRIS = require "InventoryTetris/Data/Constants"
+local TETRIS = require "InventoryTetris/Constants"
 
 local CELL_SIZE = TETRIS.CELL_SIZE
 local TEXTURE_SIZE = TETRIS.TEXTURE_SIZE
