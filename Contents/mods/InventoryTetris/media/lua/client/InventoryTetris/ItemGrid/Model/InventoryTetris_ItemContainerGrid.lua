@@ -111,9 +111,11 @@ function ItemContainerGrid:canAddItem(item)
 end
 
 function ItemContainerGrid:refresh()
+    local success = true
     for _, grid in ipairs(self.grids) do
-        grid:refresh()
+        success = success and grid:refresh()
     end
+    return success
 end
 
 function ItemContainerGrid:attemptToInsertItem(item)

@@ -114,7 +114,6 @@ function ItemGridUI:renderBackGrid()
 end
 
 function ItemGridUI:renderGridItems()
-    local equippedMap = self.grid:getEquippedItemsMap()
     local draggedItem = DragAndDrop.getDraggedItem()
     local stacks = self.grid.stacks
     for _, stack in pairs(stacks) do
@@ -122,7 +121,7 @@ function ItemGridUI:renderGridItems()
         local x, y, i = ItemGridUtil.getItemPosition(item)
         if self.grid.gridIndex == i and x and y then
             if item ~= draggedItem then
-                self:renderGridStack(stack, x * CELL_SIZE - x, y * CELL_SIZE - y, false, equippedMap[item])
+                self:renderGridStack(stack, x * CELL_SIZE - x, y * CELL_SIZE - y, false)
             else
                 self:renderGridStackFaded(stack, x * CELL_SIZE - x, y * CELL_SIZE - y)
             end
@@ -247,8 +246,8 @@ function ItemGridUI._renderGridItem(drawer, item, x, y, forceRotate, alphaMult, 
     drawer:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
 end
 
-function ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, alphaMult, isEquipped)
-    ItemGridUI._renderGridItem(drawer, stack.items[1], x, y, forceRotate, alphaMult, isEquipped)
+function ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, alphaMult)
+    ItemGridUI._renderGridItem(drawer, stack.items[1], x, y, forceRotate, alphaMult)
     if stack.count > 1 then
         -- Draw the item count
         local font = UIFont.Small
@@ -257,8 +256,8 @@ function ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, alphaMult
     end
 end
 
-function ItemGridUI.renderGridStack(drawer, stack, x, y, forceRotate, isEquipped)
-    ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, 1, isEquipped)
+function ItemGridUI.renderGridStack(drawer, stack, x, y, forceRotate)
+    ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, 1)
 end
 
 function ItemGridUI.renderGridStackFaded(drawer, stack, x, y, forceRotate)
@@ -285,6 +284,11 @@ function ItemGridUI:onMouseUp(x, y)
     DragAndDrop.endDrag()
 
 	return true;
+end
+
+function ItemGridUI:onMouseUpOutside(x, y)
+    if self.playerNum ~= 0 then return end
+    DragAndDrop.cancelDrag(self)
 end
 
 function ItemGridUI:onRightMouseUp(x, y)
@@ -436,6 +440,43 @@ function ItemGridUI:quickMoveItemToContainer(itemStack, targetContainer)
     end
 end
 
+function ItemGridUI:quickEquipItem(item)
+    
+    
+    if item:isClothing() then
+        self:quickEquipClothes(item)
+    end
+
+    self:quickEquipWeapon(item)
+end
+
+function ItemGridUI:quickEquipClothes(item)
+    local playerObj = getSpecificPlayer(self.playerNum)
+
+    
+
+end
+
+function ItemGridUI:quickEquipWeapon(item)
+    local playerObj = getSpecificPlayer(self.playerNum)
+    local hasPrimaryHand = playerObj:getPrimaryHandItem()
+    local hasSecondaryHand = playerObj:getSecondaryHandItem()
+    local isTwoHanding = hasPrimaryHand == hasSecondaryHand
+    
+    local requiresBothHands = item:isRequiresEquippedBothHands()
+    if item:IsWeapon() then
+        local useBothHands = requiresBothHands or (item:isTwoHandWeapon() and (not hasSecondaryHand or isTwoHanding))
+        ISInventoryPaneContextMenu.equipWeapon(item, true, useBothHands, self.playerNum)
+    elseif requiresBothHands and not hasPrimaryHand and not hasSecondaryHand then
+            ISInventoryPaneContextMenu.equipWeapon(item, true, true, self.playerNum)
+    elseif not requiresBothHands then
+        if not hasPrimaryHand then
+            ISInventoryPaneContextMenu.equipWeapon(item, true, false, self.playerNum)
+        elseif not hasSecondaryHand then
+            ISInventoryPaneContextMenu.equipWeapon(item, false, false, self.playerNum)
+        end
+    end
+end
 
 function ItemGridUI:handleDoubleClick(x, y)
     DragAndDrop.endDrag()

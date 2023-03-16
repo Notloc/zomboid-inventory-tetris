@@ -10,6 +10,8 @@ function ItemGrid:new(gridDefinition, gridIndex, inventory, playerNum)
     o.inventory = inventory
     o.playerNum = playerNum
 
+    o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
+
     o.width = gridDefinition.size.width
     o.height = gridDefinition.size.height
     o:createDataGrid(o.width, o.height)
@@ -207,27 +209,6 @@ function ItemGrid:willItemOverlapSelf(item, newX, newY)
     return false
 end
 
-function ItemGrid:getEquippedItemsMap()
-    local playerObj = getSpecificPlayer(self.playerNum)
-    local isEquipped = {}
-    if self.inventory == playerObj:getInventory() then
-        local wornItems = playerObj:getWornItems()
-        for i=1,wornItems:size() do
-            local wornItem = wornItems:get(i-1):getItem()
-            isEquipped[wornItem] = true
-        end
-        local item = playerObj:getPrimaryHandItem()
-        if item then
-            isEquipped[item] = true
-        end
-        item = playerObj:getSecondaryHandItem()
-        if item then
-            isEquipped[item] = true
-        end
-    end
-    return isEquipped
-end
-
 function ItemGrid:redoGridPositions()
     local items = self.inventory:getItems()
     for i = 0, items:size()-1 do
@@ -241,8 +222,13 @@ function ItemGrid:redoGridPositions()
 end
 
 function ItemGrid:refresh()
+    if self.isPlayerInventory and not getPlayerHotbar(self.playerNum) then
+        return false
+    end
+
     self:clearGrid()
     self:updateGridPositions()
+    return true
 end
 
 function ItemGrid:clearGrid()
@@ -256,16 +242,11 @@ function ItemGrid:clearGrid()
 end
 
 function ItemGrid:updateGridPositions()
-    local isEquippedMap = self:getEquippedItemsMap()
+    local isInHotbarMap = self:getHotbarItemsMap()
 
-    -- Clear the positions of all equipped items
-    --for item,_ in pairs(isEquippedMap) do
-    --    ItemGridUtil.clearItemPosition(item)
-    --end
-    
     for i = 0, self.inventory:getItems():size()-1 do
         local item = self.inventory:getItems():get(i);
-        if item:isHidden() then
+        if item:isHidden() or item:isEquipped() or isInHotbarMap[item] then
             ItemGridUtil.clearItemPosition(item)
         else
             local x, y, gridIndex = ItemGridUtil.getItemPosition(item)
@@ -280,6 +261,19 @@ function ItemGrid:updateGridPositions()
     end
     
     self:claimUnpositionedItems()
+end
+
+function ItemGrid:getHotbarItemsMap()
+    local hotbar = getPlayerHotbar(self.playerNum);
+
+	local isInHotbar = {}
+    if hotbar and hotbar.attachedItems then
+        for _,item in pairs(hotbar.attachedItems) do
+            isInHotbar[item] = true
+        end
+    end
+
+    return isInHotbar
 end
 
 function ItemGrid:claimUnpositionedItems()
@@ -297,13 +291,19 @@ function ItemGrid:claimUnpositionedItems()
     table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
     for i = 1,#unpositionedItems do
         local item = unpositionedItems[i].item
-        if not self:attemptToInsertItem(item) then 
-            self:dropUnpositionedItem(item)
+        if not self:attemptToInsertItem(item) then
+            if self.isPlayerInventory then
+                self:dropUnpositionedItem(item)
+            end
         end
     end
 end
 
 function ItemGrid:dropUnpositionedItem(item)
+    if ItemGrid.dropProcessing then
+        return
+    end
+
     local playerNum = self.playerNum
     local playerObj = getSpecificPlayer(playerNum)
     local action = TimedActionSnooper.findUpcomingActionThatHandlesItem(playerObj, item)
@@ -320,7 +320,7 @@ function ItemGrid:dropUnpositionedItem(item)
         return
     end
 
-    ISInventoryPaneContextMenu.onDropItems({item, item}, self.playerNum)
+    ItemGrid.handleDroppingItem(item, playerNum)
 end
 
 function ItemGrid:claimTooLargeItems()
@@ -336,15 +336,18 @@ end
 
 function ItemGrid:getUnpositionedItems()
     local unpositionedItemData = {}
+    local hotbarItems = self.isPlayerInventory and self:getHotbarItemsMap() or {}
 
     local items = self.inventory:getItems();
     for i = 0, items:size()-1 do
         local item = items:get(i);
-        local x, y, i = ItemGridUtil.getItemPosition(item)
-        if not x or not y or not i then
-            local w, h = ItemGridUtil.getItemSize(item)
-            local size = w * h
-            table.insert(unpositionedItemData, {item = item, size = size})
+        if not item:isHidden() and not item:isEquipped() and not hotbarItems[item] then
+            local x, y, i = ItemGridUtil.getItemPosition(item)
+            if not x or not y or not i then
+                local w, h = ItemGridUtil.getItemSize(item)
+                local size = w * h
+                table.insert(unpositionedItemData, {item = item, size = size})
+            end
         end
     end
 
@@ -366,6 +369,15 @@ function ItemGrid:getByItem(item)
     return nil
 end
 
+
+
+
+
+
+
+
+
+
 ItemGrid.itemsToDrop = {}
 
 function ItemGrid.dropItems()
@@ -373,9 +385,64 @@ function ItemGrid.dropItems()
 
     for _, data in ipairs(ItemGrid.itemsToDrop) do
         local item, playerNum = data[1], data[2]
+        ItemGrid.handleDroppingItem(item, playerNum)
+    end
+
+    ItemGrid.itemsToDrop = {}
+end
+
+function ItemGrid.handleDroppingItem(item, playerNum)
+    ItemGrid.dropProcessing = true
+
+    if instanceof(item, "Moveable") and item:getSpriteGrid()==nil and not item:CanBeDroppedOnFloor() then
+        -- We have to force this item back into the player's inventory or hand
+        ItemGrid.forceItemIntoInventory(item, playerNum)
+    else
         ISInventoryPaneContextMenu.onDropItems({item, item}, playerNum)
     end
-    ItemGrid.itemsToDrop = {}
+
+    ItemGrid.dropProcessing = false
+end
+
+-- Special handling for moveables that can't be dropped on the floor
+function ItemGrid.forceItemIntoInventory(item, playerNum)
+    local playerObj = getSpecificPlayer(playerNum)
+    local inventory = playerObj:getInventory()
+
+
+    local grid = ItemContainerGrid.Create(inventory, playerNum)
+    if grid:canAddItem(item) then
+        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), inventory))
+        return true
+    end
+
+    local wornItems = playerObj:getWornItems()
+    for i = 0, wornItems:size()-1 do
+        local wornItem = wornItems:get(i):getItem()
+        if wornItem:IsInventoryContainer() then
+            local grid = ItemContainerGrid.Create(wornItem:getInventory(), playerNum)
+            if grid:canAddItem(item) then
+                ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), wornItem:getInventory()))
+                return true
+            end
+        end
+    end
+
+    local primHand = playerObj:getPrimaryHandItem()
+    local secHand = playerObj:getSecondaryHandItem()
+    local requiresBothHands = item:isRequiresEquippedBothHands()
+
+    if not instanceof(primHand, "Moveable") then
+        ISInventoryPaneContextMenu.equipWeapon(item, true, requiresBothHands, playerNum)
+        return true
+    end
+
+    if not requiresBothHands and not instanceof(secHand, "Moveable") then
+        ISInventoryPaneContextMenu.equipWeapon(item, false, false, playerNum)
+        return true
+    end
+
+    return false
 end
 
 Events.OnTick.Add(ItemGrid.dropItems)

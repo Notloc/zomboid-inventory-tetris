@@ -96,8 +96,9 @@ end
 
 function ItemGridContainerUI:prerender()
     if self.inventory:isDrawDirty() then
-        self.containerGrid:refresh()
-        self.inventory:setDrawDirty(false)
+        if self.containerGrid:refresh() then
+            self.inventory:setDrawDirty(false)
+        end
     end
     ISPanel.prerender(self)
 end

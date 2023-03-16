@@ -32,7 +32,7 @@ function ISInventoryTransferAction:isValid()
         return valid
     end
 
-    if TimedActionSnooper.findUpcomingActionThatHandlesItem(self.character, self.item) then
+    if TimedActionSnooper.findUpcomingActionThatHandlesItem(self.character, self.item, self) then
         return true
     end
 
