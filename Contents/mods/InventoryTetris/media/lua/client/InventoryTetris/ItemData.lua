@@ -69,7 +69,9 @@ ItemData.calculateItemSize = function(item)
     local category = item:getDisplayCategory()
     local size = {x=1, y=1}
 
-    if category == "Ammo" then
+    if item:IsInventoryContainer() then
+        size = ItemData.calculateItemSizeContainer(item)
+    elseif category == "Ammo" then
         -- determine if its ammo or a magazine by stackability
         if item:CanStack(item) then
             size = ItemData.calculateItemSizeMagazine(item)
@@ -84,8 +86,6 @@ ItemData.calculateItemSize = function(item)
         size = ItemData.calculateItemSizeWeightBasedTall(item)
     elseif category == "FirstAid" then
         size = ItemData.calculateItemSizeWeightBased(item)
-    elseif category == "Container" then
-        size = ItemData.calculateItemSizeContainer(item)
     elseif category == "Literature" or category == "SkillBook" then
         size = {x=1, y=2}
     elseif category == "Key" then
@@ -164,11 +164,8 @@ ItemData.calculateItemSizeClothing = function(item)
 end
 
 ItemData.calculateItemSizeContainer = function(item)
-    local width = 1
-    local height = 1
-
-    -- TODO: Should match the internal size of said container unless its a TARDIS
-    return {x = width, y = height}
+    local gridDefinition = ContainerData.getGridDefinitionByContainer(item:getItemContainer())[1]
+    return {x = gridDefinition.size.width, y = gridDefinition.size.height}
 end
 
 ItemData.calculateItemSizeWeightBased = function(item)

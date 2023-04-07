@@ -180,7 +180,7 @@ function ItemGridUI:_renderPlacementPreview(gridX, gridY, itemW, itemH, r, g, b)
     self:drawRect(gridX * CELL_SIZE - gridX + 1, gridY * CELL_SIZE - gridY + 1, itemW * CELL_SIZE - itemW - 1, itemH * CELL_SIZE - itemH - 1, 0.55, r, g, b)
 end
 
-local function getItemColor(item)
+function ItemGridUI.getItemColor(item, limit)
     if not item or not item:allowRandomTint() then
         return 1,1,1
     end
@@ -190,12 +190,15 @@ local function getItemColor(item)
     local g = colorInfo:getG()
     local b = colorInfo:getB()
     
+    if not limit then
+        limit = 0.2
+    end
+
     -- Limit how dark the item can appear if all colors are close to 0
-    local limit = 0.1
     while r < limit and g < limit and b < limit do
-        r = r + limit / 3
-        g = g + limit / 3
-        b = b + limit / 3
+        r = r + limit / 4
+        g = g + limit / 4
+        b = b + limit / 4
     end
     return r,g,b
 end
@@ -236,7 +239,7 @@ function ItemGridUI._renderGridItem(drawer, item, x, y, forceRotate, alphaMult, 
     end
     targetScale = targetScale * minDimension
 
-    local r,g,b = getItemColor(item)
+    local r,g,b = ItemGridUI.getItemColor(item)
     drawer:drawTextureScaledUniform(texture, x2, y2, targetScale, alphaMult, r, g, b);
     
     if item:isBroken() then

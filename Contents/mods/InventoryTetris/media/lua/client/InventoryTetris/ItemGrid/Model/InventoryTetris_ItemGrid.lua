@@ -323,17 +323,6 @@ function ItemGrid:dropUnpositionedItem(item)
     ItemGrid.handleDroppingItem(item, playerNum)
 end
 
-function ItemGrid:claimTooLargeItems()
-    local unpositionedItems = self:getUnpositionedItems()
-    for i = 1,#unpositionedItems do
-        -- If the item exceeds the grid size, just put it in the top left corner
-        local w, h = ItemGridUtil.getItemSize(item)
-        if w > self.width or h > self.height then
-            self:insertItem(item, 0, 0)
-        end
-    end
-end
-
 function ItemGrid:getUnpositionedItems()
     local unpositionedItemData = {}
     local hotbarItems = self.isPlayerInventory and self:getHotbarItemsMap() or {}

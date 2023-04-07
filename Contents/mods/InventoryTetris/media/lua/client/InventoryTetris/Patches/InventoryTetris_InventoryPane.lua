@@ -9,7 +9,27 @@ local og_new = ISInventoryPane.new
 function ISInventoryPane:new(x, y, width, height, inventory, player)
     local o = og_new(self, x, y, width, height, inventory, player)
     o.tetrisWindowManager = TetrisWindowManager:new(o)
+    o.gridContainerUis = {}
     return o
+end
+
+local og_createChildren = ISInventoryPane.createChildren
+function ISInventoryPane:createChildren()
+    og_createChildren(self)
+
+    self.scrollView = NotlocScrollView:new(0,0, self.width, self.height)
+    self.scrollView:initialise()
+    self:addChild(self.scrollView)
+    self.scrollView:setAnchorLeft(true)
+    self.scrollView:setAnchorRight(true)
+    self.scrollView:setAnchorTop(true)
+    self.scrollView:setAnchorBottom(true)
+    self.scrollView.scrollSensitivity = 1.75
+
+
+    self.expandAll:setVisible(false)
+    self.collapseAll:setVisible(false)
+    self.filterMenu:setVisible(false)
 end
 
 local og_refreshContainer = ISInventoryPane.refreshContainer
@@ -19,35 +39,55 @@ function ISInventoryPane:refreshContainer()
 end
 
 function ISInventoryPane:refreshItemGrids()
-    local sameInventory = self.previousGridInventory == self.inventory
-    if self.mode == "grid" and not sameInventory then
-        if self.gridContainerUi then
-            self:removeChild(self.gridContainerUi)
-        end
-        
-        self.gridContainerUi = ItemGridContainerUI:new(self.inventory, self, self.player)
-        self.gridContainerUi:initialise()
-        self:addChild(self.gridContainerUi)
-        
-        self.previousGridInventory = self.inventory
-
-    elseif self.mode ~= "grid" and self.gridContainerUi then
-        self:removeChild(self.gridContainerUi)
-        self.gridContainerUi = nil
-        self.previousGridInventory = nil
+    for _, gridContainerUi in ipairs(self.gridContainerUis) do
+        self.scrollView:removeScrollChild(gridContainerUi)
     end
+
+    self.gridContainerUis = {}
+
+    local inventories = {}
+
+    if self.parent.onCharacter then
+        if ISInventoryPage.applyBackpackOrder then
+            self.parent:applyBackpackOrder()
+        end
+
+        local buttonsAndY = {}
+        for _, button in ipairs(self.parent.backpacks) do
+            table.insert(buttonsAndY, {button = button, y = button:getY()})
+        end
+        table.sort(buttonsAndY, function(a, b) return a.y < b.y end)
+
+        for _, buttonAndY in ipairs(buttonsAndY) do
+            local button = buttonAndY.button
+            local inventory = button.inventory
+            table.insert(inventories, inventory)
+        end
+    else
+        inventories[1] = self.inventory
+    end
+
+    local y = 10
+    for _, inventory in ipairs(inventories) do
+        local itemGridContainerUi = ItemGridContainerUI:new(inventory, self, self.player)
+        itemGridContainerUi:initialise()
+        itemGridContainerUi:setY(y)
+        itemGridContainerUi:setX(10)
+        self.scrollView:addScrollChild(itemGridContainerUi)
+
+        y = y + itemGridContainerUi:getHeight() + 20
+
+        table.insert(self.gridContainerUis, itemGridContainerUi)
+    end
+
+    self.scrollView:setScrollHeight(y)
 end
 
 local og_prerender = ISInventoryPane.prerender
 function ISInventoryPane:prerender()
     og_prerender(self);
-    if self.mode == "grid" then
-        self.nameHeader:setVisible(false)
-        self.typeHeader:setVisible(false)
-    else
-        self.nameHeader:setVisible(true)
-        self.typeHeader:setVisible(true)
-    end
+    self.nameHeader:setVisible(false)
+    self.typeHeader:setVisible(false)
 end
 
 local og_updateTooltip = ISInventoryPane.updateTooltip
@@ -160,19 +200,23 @@ function ISInventoryPane:onMouseDoubleClick(x, y)
         return og_onMouseDoubleClick(self, x, y)
     end
 
-    local gridUi = ItemGridUiUtil.findGridUiUnderMouse(self.gridContainerUi.gridUis, x, y)
-    if gridUi then
-        gridUi:onMouseDoubleClick(gridUi:getMouseX(), gridUi:getMouseY())
+    for _, gridContainerUi in ipairs(self.gridContainerUis) do
+        local gridUi = ItemGridUiUtil.findGridUiUnderMouse(gridContainerUi.gridUis, x, y)
+        if gridUi then
+            gridUi:onMouseDoubleClick(gridUi:getMouseX(), gridUi:getMouseY())
+            return
+        end
     end
 end
 
 local og_onMouseWheel = ISInventoryPane.onMouseWheel
 function ISInventoryPane:onMouseWheel(del)
-    if DragAndDrop.isDragging() then
-        DragAndDrop.rotateDraggedItem()
-        return true;
-    end
-    return og_onMouseWheel(self, del)
+    return false
+    --if DragAndDrop.isDragging() then
+     --   DragAndDrop.rotateDraggedItem()
+      --  return true;
+    --end
+    --return og_onMouseWheel(self, del)
 end
 
 local og_getActualItems = ISInventoryPane.getActualItems
@@ -204,10 +248,14 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
     end
     if not item then return end
 
-    local BodyLocation = item:getBodyLocation()
+    print("item category: " .. item:getCategory())
+    print("item cat: " .. item:getCat():toString())
+    print("item full type: " .. item:getFullType())
 
-
-    print ("BodyLocation: " .. BodyLocation)
+    local mediaData = item:getMediaData()
+    if mediaData then
+        print("mediaData: " .. mediaData:getCategory())
+    end
 
     TetrisDevTool.insertEditItemOption(menu, item)
 

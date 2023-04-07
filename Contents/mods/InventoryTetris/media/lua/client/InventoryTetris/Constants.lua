@@ -1,3 +1,5 @@
+InventoryTetris = {}
+
 local constants = {}
 
 constants.X_POS = "it_x"

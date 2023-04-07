@@ -2,6 +2,13 @@ require "ISUI/ISUIElement"
 
 ItemGridContainerUI = ISPanel:derive("ItemGridContainerUI")
 
+local ICON_PADDING = 4
+local ICON_SIZE = 64
+local INFO_SPACING = 6
+
+local CONTAINER_PADDING_X = 4
+local CONTAINER_PADDING_Y = 8
+
 function ItemGridContainerUI:new(inventory, inventoryPane, playerNum)
     local o = ISPanel:new(0, 0, 0, 0)
     setmetatable(o, self)
@@ -11,16 +18,30 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum)
     o.inventoryPane = inventoryPane
     o.playerNum = playerNum
 
+    local containingItem = inventory:getContainingItem()
+    o.invTexture = containingItem and containingItem:getTex() or getTexture("media/ui/Icon_InventoryBasic.png");
+    o.item = inventory:getContainingItem()
     o.containerGrid = ItemContainerGrid.Create(inventory, playerNum)
+    o.keepOnScreen = false -- Keep on screen is a menace inside scroll panes and these are always inside scroll panes or other panels
+
+    local player = getSpecificPlayer(playerNum)
+    if inventory == player:getInventory() then
+        o.isPlayerInventory = true
+    end
+
     return o
 end
 
 function ItemGridContainerUI:initialise()
     ISPanel.initialise(self)
+
+    local lineHeight = getTextManager():getFontHeight(UIFont.Small)
+    self.minimumHeight = ICON_SIZE + 2 * ICON_PADDING + INFO_SPACING + lineHeight
+
     local itemGridUis = self:createItemGridUIs()
-    local width, height = ItemGridContainerUI.updateItemGridPositions(itemGridUis, 2, 3)
-    self:setWidth(width + 4)
-    self:setHeight(height + 4)
+    local width, height = ItemGridContainerUI.updateItemGridPositions(itemGridUis, 2 * ICON_PADDING + ICON_SIZE + CONTAINER_PADDING_X, CONTAINER_PADDING_Y)
+    self:setWidth(width + CONTAINER_PADDING_X + 2)
+    self:setHeight(height + CONTAINER_PADDING_Y)
 
     self.gridUis = itemGridUis
 end
@@ -95,10 +116,33 @@ function ItemGridContainerUI.updateItemGridPositions(gridUis, offX, offY)
 end
 
 function ItemGridContainerUI:prerender()
-    if self.inventory:isDrawDirty() then
+    local inv = self.inventory
+
+    if inv:isDrawDirty() then
         if self.containerGrid:refresh() then
-            self.inventory:setDrawDirty(false)
+            inv:setDrawDirty(false)
         end
     end
     ISPanel.prerender(self)
+
+    local r,g,b = 1,1,1
+    if self.item then
+        r,g,b = ItemGridUI.getItemColor(self.item, 0.5)
+    end
+    
+    local offset = ICON_SIZE/2 + ICON_PADDING
+    self:drawTextureCenteredAndSquare(self.invTexture, offset, offset, ICON_SIZE, 1, r,g,b)
+    
+    local capacity = inv:getCapacity()
+    if self.isPlayerInventory then
+        capacity = getSpecificPlayer(self.playerNum):getMaxWeight()
+    end
+
+    local roundedWeight = round(inv:getCapacityWeight(), 2)
+    self:drawTextCentre(roundedWeight .. " / " .. inv:getCapacity(), ICON_SIZE/2 + ICON_PADDING, ICON_SIZE + INFO_SPACING, 1,1,1,1);
+    local lineHeight = getTextManager():getFontFromEnum(UIFont.Small):getLineHeight()
+
+    local borderSizeX = ICON_PADDING + ICON_SIZE
+    local borderSizeY = borderSizeX + INFO_SPACING + lineHeight
+    self:drawRectBorder(ICON_PADDING/2, ICON_PADDING/2, borderSizeX, borderSizeY, 0.5,1,1,1)    
 end

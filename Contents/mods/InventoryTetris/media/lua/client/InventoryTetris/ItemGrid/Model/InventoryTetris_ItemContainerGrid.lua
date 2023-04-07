@@ -1,33 +1,3 @@
-local function getGridContainerTypeByInventory(inventory)
-    local containerType = inventory:getType()
-    local containerOverloads = InventoryTetrisContainerOverloads[containerType]
-    if containerOverloads then
-        local capacity = inventory:getCapacity()
-        if containerOverloads[capacity] then
-            return containerOverloads[capacity]
-        end
-
-        local biggest = 0
-        for overloadCapacity, overloadType in pairs(containerOverloads) do
-            if overloadCapacity > biggest and overloadCapacity <= capacity then
-                biggest = overloadCapacity
-                containerType = overloadType
-            end
-        end
-    end
-    return containerType
-end
-
-local function getGridDefinitionByContainerType(containerType)
-    print("containerType: " .. containerType)
-
-    local gridDefinition = ContainerData[containerType]
-    if not gridDefinition then
-        gridDefinition = ContainerData["default"]
-    end
-    return gridDefinition
-end
-
 local function searchInventoryPageForContainerGrid(invPage, targetInventory)
     if not invPage then
         return nil
@@ -82,15 +52,14 @@ ItemContainerGrid.FindInstance = function(inventory, playerNum)
 end
 
 function ItemContainerGrid.createGrids(inventory, playerNum)
-    local gridType = getGridContainerTypeByInventory(inventory)
-    local gridDefinition = getGridDefinitionByContainerType(gridType)
+    local gridDefinition = ContainerData.getGridDefinitionByContainer(inventory)
     
     local grids = {}
     for index, definition in ipairs(gridDefinition) do
         local grid = ItemGrid:new(definition, index, inventory, playerNum)
         grids[index] = grid
     end
-    return grids, gridType
+    return grids
 end
 
 function ItemContainerGrid:doesItemFit(item, gridX, gridY, gridIndex, rotate)

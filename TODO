@@ -2,41 +2,101 @@ Key consume stuff
 https://discord.com/channels/136501320340209664/232196827577974784/1081698827637096528
 
 TODO:
-	A Full Equipment UI:
-		Hotbar slots will also be shown, hotbarred items will also be removed from the grid, saving even more inventory space.
+	
+	Fix the grid
+		* Stacking addtion shattered the grid's reliability
+		Rework it to store data in the inventory/object mod data
+		Rebuild completely every refresh, less bug potential this way and more self correction		
+
+	Display all equipped inventories in a scroll view instead of 1 at a time.
+		Occlude and skip rendering if out of view
+		Remove sidebar?
+		Display weight
+		Fix "canAdd" logic, currently tied to the sidebar selected container
 
 	UI for stack splitting
 
 	Dev tool for updating grids
 	Update item dev tool to allow setting stack limit
-	Suppress aiming while mouse is over popups
+	
+	Improve auto container sizes again
+		Its getting decent
+
+	Auto expand world grids for too many items???
+		Red unusable slots by the player
 
 	Container item type resitrctions
-	Hueristic for stack limits for mod support reasons
+		i.e. Medkits can only hold medical items
+
+	Hueristic for stack limits
+		Automatically determine the max stack size of items using item data
+		Automatic mod support!
+			Also need to support manual overrides so anything can be fine tuned
+
+		Default to not stacking
+
+		Bullets stack to 60
+			Override shotgun shells to 15
+
+		Allow light junk to stack to 3
+		Allow oven sheets to stack
+		Ripped cloth to 3
+		Cigs to 20
+
+	Handle auto positioning better
+
+	Look into item replacement
+		i.e. Water bottle -> empty bottle
 
 	Search system:
 		(Sandbox Setting)
 		When enabled, players will need to search a container to see the items inside of it.
 		Traits previously used for item transfer speed will affect search speed.
-		Maybe tie this to a skill? *Not sure yet
+		Maybe tie this to a skill? 
+			*Not sure yet
 
-	Better item distribution in 
-
-	Sync mod data
+	Better item distribution in fresh containers, make it look more interesting by spreading items around the grid corners
 
 	Mod Options integration
 
+	SOUND
+		Record and implement basic interaction sounds, sounds will be per item category
 
 
-Post-Launch
-	Furniture Loot-Bags:
-		Allow any furniture item to be dropped
+	Modding APIs
+		Allow easy changes to data config
+			Change item data
+			New item data
+			New grid data
+
+
+Low Priority - Optional / Ignorable
+
+	Suppress aiming while mouse is over popups
+		This one is proving tough for the CTRL key, I can't figure out how the inventory windows are doing it.
+			Not a huge problem, but I'd like to fix this
 
 	MP Testing and bug fixing:
 		I expect I'll see some container desync in the grids that I'll need to iron out.
-		I do not expect any item desync though, so at worst players will be seeing the same items, but in different arrangements.
+		I do not expect any item desync though, so at worst players will be seeing the same items, but in different arrangements in the item grids.
+		Sync mod data
 
+
+	Furniture Loot-Bags:
+		Create a fake bag that weighs 999999999lbs on the ground when the player tries to drop an undroppable furniture item.
+			Not all furniture can be dropped as an item, some MUST be placed/built
+			This is a big problem with the new grid system
+				(Is there a reason other than lack of textures that this can't be done by default?)
+
+		This will allow the player to drop any piece furniture on the ground if they somehow end up in illegal item situation involving furniture.
+			i.e. if you are carrying a table in your hands, but an action forces different items into your hands and the table has no where valid to go in your inventory.
+
+Post-Launch
 	Mod Option:
 		Transfer Speed Options:
 			By default, this mod removes all inventory transfer time.
+				The time you spend managing the grid "replaces" it
 			Sandbox options will be included to turn it back on. This can slow down using the inventory quite a bit though.
+
+	SOUND
+		Sound overrides for specific "popular" items
