@@ -1,3 +1,6 @@
+local MAX_ITEM_HEIGHT = 9
+local MAX_ITEM_WIDTH = 9
+
 ContainerData = {
     -- Player Inv
     ["none"] = {
@@ -223,10 +226,10 @@ function ContainerData.calculateDimensions(target)
     local bestX = 1
     local bestY = 1
 
-    for x = 1, 7 do
-        for y = 1, 20 do
+    for x = 1, MAX_ITEM_WIDTH do
+        for y = 1, MAX_ITEM_HEIGHT do
             local result = x * y
-            local diff = math.abs(result - target) + y * 0.75 -- Penalize y a bit so we don't get 
+            local diff = math.abs(result - target) + math.pow(x, 0.25) + math.pow(y, 0.25) -- Punish large dimensions, encourage square 
             if diff < best then
                 best = diff 
                 bestX = x

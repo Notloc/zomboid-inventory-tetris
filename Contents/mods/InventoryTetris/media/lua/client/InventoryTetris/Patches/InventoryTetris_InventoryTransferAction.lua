@@ -36,17 +36,15 @@ function ISInventoryTransferAction:isValid()
         return true
     end
 
-    valid = false
-
     local containerGrid = ItemContainerGrid.Create(self.destContainer, self.character:getPlayerNum())
     if self.gridX and self.gridY and self.gridIndex then
-        valid = containerGrid:doesItemFit(self.item, self.gridX, self.gridY, self.gridIndex, self.rotate) or containerGrid:canItemBeStacked(self.item, self.gridX, self.gridY, self.gridIndex)
+        return containerGrid:doesItemFit(self.item, self.gridX, self.gridY, self.gridIndex, self.rotate) or containerGrid:canItemBeStacked(self.item, self.gridX, self.gridY, self.gridIndex)
+    elseif self.destContainer:getType() == "floor" then
+        return true
     else
-        valid = containerGrid:canAddItem(self.item)
         self.rotate = false
+        return containerGrid:canAddItem(self.item)
     end
-
-    return valid
 end
 
 local og_transferItem = ISInventoryTransferAction.transferItem

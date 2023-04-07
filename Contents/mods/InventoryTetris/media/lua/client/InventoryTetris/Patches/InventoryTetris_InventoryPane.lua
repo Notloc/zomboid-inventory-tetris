@@ -24,7 +24,7 @@ function ISInventoryPane:createChildren()
     self.scrollView:setAnchorRight(true)
     self.scrollView:setAnchorTop(true)
     self.scrollView:setAnchorBottom(true)
-    self.scrollView.scrollSensitivity = 1.75
+    self.scrollView.scrollSensitivity = 40
 
 
     self.expandAll:setVisible(false)
@@ -39,8 +39,10 @@ function ISInventoryPane:refreshContainer()
 end
 
 function ISInventoryPane:refreshItemGrids()
+    local oldGridContainerUis = {}
     for _, gridContainerUi in ipairs(self.gridContainerUis) do
         self.scrollView:removeScrollChild(gridContainerUi)
+        oldGridContainerUis[gridContainerUi.inventory] = gridContainerUi
     end
 
     self.gridContainerUis = {}
@@ -69,8 +71,12 @@ function ISInventoryPane:refreshItemGrids()
 
     local y = 10
     for _, inventory in ipairs(inventories) do
-        local itemGridContainerUi = ItemGridContainerUI:new(inventory, self, self.player)
-        itemGridContainerUi:initialise()
+        local itemGridContainerUi = oldGridContainerUis[inventory]
+        if not itemGridContainerUi then
+            itemGridContainerUi = ItemGridContainerUI:new(inventory, self, self.player)
+            itemGridContainerUi:initialise()
+        end
+
         itemGridContainerUi:setY(y)
         itemGridContainerUi:setX(10)
         self.scrollView:addScrollChild(itemGridContainerUi)

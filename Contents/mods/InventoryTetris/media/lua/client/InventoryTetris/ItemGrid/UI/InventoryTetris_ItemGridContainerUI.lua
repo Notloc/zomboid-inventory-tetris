@@ -118,7 +118,7 @@ end
 function ItemGridContainerUI:prerender()
     local inv = self.inventory
 
-    if inv:isDrawDirty() then
+    if true or inv:isDrawDirty() then
         if self.containerGrid:refresh() then
             inv:setDrawDirty(false)
         end
