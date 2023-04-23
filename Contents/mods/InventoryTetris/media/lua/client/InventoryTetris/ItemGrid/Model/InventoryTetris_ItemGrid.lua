@@ -25,7 +25,7 @@ function ItemGrid:new(gridDefinition, gridIndex, inventory, playerNum)
     return o
 end
 
-function ItemGrid:createDataGrid(width, height)
+function ItemGrid:createDataGridOld(width, height)
     self.dataGrid = {}
     self.stacks = {}
     local dataGrid = self.dataGrid
@@ -47,6 +47,43 @@ function ItemGrid:createDataGrid(width, height)
             self:insertItem(item, x, y)
         end
     end
+end
+
+function ItemGrid:createDataGrid(width, height)
+    self.gridData = {}
+    self.gridData.grid = {}
+    self.gridData.idMap = {} -- maps item id to stack
+
+    -- Fill the grid with nil
+    local grid = self.gridData.grid
+    for y = 0,height-1 do
+        grid[y] = {}
+        for x = 0,width-1 do
+            grid[y][x] = nil
+        end
+    end
+end
+
+function ItemGrid:populateDataGrid()
+    local modData = self:getModData()
+    local items = self.inventory:getItems();
+    for i = 0, items:size()-1 do
+        local item = items:get(i);
+        local itemData = modData.stacks[item:getID()]
+        if itemData and itemData.gridIndex == self.gridIndex then
+            self:insertItem(item, itemData.x, itemData.y)
+        end
+    end
+end
+
+function ItemGrid:getGridData()
+    if self.gridData then
+        return self.gridData
+    end
+
+    self:createDataGrid(self.width, self.height)
+    self:populateDataGrid()
+    return self.gridData
 end
 
 function ItemGrid:isInBounds(x, y)
@@ -362,11 +399,6 @@ end
 
 
 
-
-
-
-
-
 ItemGrid.itemsToDrop = {}
 
 function ItemGrid.dropItems()
@@ -435,3 +467,77 @@ function ItemGrid.forceItemIntoInventory(item, playerNum)
 end
 
 Events.OnTick.Add(ItemGrid.dropItems)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- The mod data format is a map of item id to position data
+function ItemGrid:getModData()
+    local modData = self:_getActualModData()
+    if not modData.containers then
+        modData.containers = {}
+    end
+
+    local invType = self.inventory:getType()
+    if not modData.containers[invType] then
+        modData.containers[invType] = {}
+    end
+
+    if not modData.containers[invType][self.gridIndex] then
+        modData.containers[invType][self.gridIndex] = {}
+    end
+
+    return modData.containers[invType][self.gridIndex]
+end
+
+-- Returns the mod data for the owning object
+function ItemGrid:_getActualModData()
+    if self.isPlayerInventory then
+        return getSpecificPlayer(self.playerNum):getModData()
+    else
+        local item = self.inventory:getContainingItem()
+        if item then
+            return item:getModData()
+        end
+
+        local isoObject = self.inventory:getParent()
+        if isoObject then
+            return isoObject:getModData()
+        end
+
+        print("Error: this code should never be reached. ItemGrid:_getActualModData().")
+        print("Whatever this is, it's not a valid container.")
+        return {} -- Return an empty table so we don't error out
+    end
+end
+
+
+function ItemGrid:getItemPosition(item)
+    if item:isEquipped() then
+        return -1, -1, 0
+    end
+
+    local gridData = self:getGridData()
+
+end
+
+
+
+

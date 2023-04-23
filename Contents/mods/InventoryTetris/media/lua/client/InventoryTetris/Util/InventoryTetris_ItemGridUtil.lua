@@ -65,9 +65,14 @@ ItemGridUtil.setItemRotation = function(item, isRotated)
     end
 end
 
-ItemGridUtil.getItemSize = function(item)
+ItemGridUtil.getItemSize = function(item, isRotated)
     if TetrisDevTool.itemEdits and TetrisDevTool.itemEdits[item:getFullType()] then
-        return TetrisDevTool.itemEdits[item:getFullType()].x, TetrisDevTool.itemEdits[item:getFullType()].y
+        local x, y = TetrisDevTool.itemEdits[item:getFullType()].x, TetrisDevTool.itemEdits[item:getFullType()].y
+        if isRotated then
+            return y, x
+        else
+            return x, y
+        end
     end
 
     if not ItemData.itemSizes[item:getFullType()] then
@@ -75,7 +80,7 @@ ItemGridUtil.getItemSize = function(item)
     end
     
     local sizeData = ItemData.itemSizes[item:getFullType()]
-    if item:getModData()[IS_ROTATED] then
+    if isRotated then
         return sizeData.y, sizeData.x
     else
         return sizeData.x, sizeData.y
