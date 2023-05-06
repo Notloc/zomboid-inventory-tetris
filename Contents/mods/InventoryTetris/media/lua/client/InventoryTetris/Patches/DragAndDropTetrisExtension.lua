@@ -9,7 +9,7 @@ function DragAndDrop.rotateDraggedItem()
 end
 
 local og_prepareDrag = DragAndDrop.prepareDrag
-function DragAndDrop.prepareDrag(owner, itemStack, x, y)
-    og_prepareDrag(owner, itemStack, x, y)
-    ISMouseDrag.rotateDrag = false
+function DragAndDrop.prepareDrag(owner, vanillaStack, x, y)
+    og_prepareDrag(owner, vanillaStack, x, y)
+    ISMouseDrag.rotateDrag = vanillaStack.isRotated
 end

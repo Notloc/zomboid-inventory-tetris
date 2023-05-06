@@ -1,13 +1,13 @@
 require "TimedActions/ISInventoryTransferAction"
 
 local og_new = ISInventoryTransferAction.new
-function ISInventoryTransferAction:new (character, item, srcContainer, destContainer, time, gridX, gridY, gridIndex, rotate)
+function ISInventoryTransferAction:new (character, item, srcContainer, destContainer, time, gridX, gridY, gridIndex, isRotated)
 	local o = og_new(self, character, item, srcContainer, destContainer, time)
 
     o.gridX = gridX
     o.gridY = gridY
     o.gridIndex = gridIndex
-    o.rotate = rotate
+    o.isRotated = isRotated
 
     o.stopOnRun = false
     o.stopOnWalk = false
@@ -38,11 +38,10 @@ function ISInventoryTransferAction:isValid()
 
     local containerGrid = ItemContainerGrid.Create(self.destContainer, self.character:getPlayerNum())
     if self.gridX and self.gridY and self.gridIndex then
-        return containerGrid:doesItemFit(self.item, self.gridX, self.gridY, self.gridIndex, self.rotate) or containerGrid:canItemBeStacked(self.item, self.gridX, self.gridY, self.gridIndex)
+        return containerGrid:doesItemFit(self.item, self.gridX, self.gridY, self.gridIndex, self.isRotated) or containerGrid:canItemBeStacked(self.item, self.gridX, self.gridY, self.gridIndex)
     elseif self.destContainer:getType() == "floor" then
         return true
     else
-        self.rotate = false
         return containerGrid:canAddItem(self.item)
     end
 end
@@ -54,23 +53,27 @@ function ISInventoryTransferAction:transferItem(item)
     -- The Item made it to the destination container
     if self:isAlreadyTransferred(item) then
 
-        -- Only need to remove the item from the source container if it's actively displayed in the UI
+        -- Only need to remove the item from the source grid if it's actively displayed in the UI
         local oldContainerGrid = ItemContainerGrid.FindInstance(self.srcContainer, self.character:getPlayerNum())
         if oldContainerGrid then
             oldContainerGrid:removeItem(item)
         end
 
-        if self.rotate then
-            ItemGridUtil.rotateItem(item)
-        end
-
-        ItemGridUtil.clearItemPosition(item)
-
         local destContainerGrid = ItemContainerGrid.Create(self.destContainer, self.character:getPlayerNum())
         if self.gridX and self.gridY and self.gridIndex then
-            destContainerGrid:insertItem(item, self.gridX, self.gridY, self.gridIndex)
+            destContainerGrid:insertItem(item, self.gridX, self.gridY, self.gridIndex, self.isRotated)
         else
-            destContainerGrid:attemptToInsertItem(item)
+            local organized = self.character:HasTrait("Organized")
+            local disorganized = self.character:HasTrait("Disorganized")
+
+            local isDisoraganized = nil -- Nil IS a valid value here, it means the container determines if it is disorganized
+            if organized then
+                isDisoraganized = false
+            elseif disorganized then
+                isDisoraganized = true
+            end
+
+            destContainerGrid:attemptToInsertItem(item, self.isRotated, isDisoraganized)
         end
     end
 end

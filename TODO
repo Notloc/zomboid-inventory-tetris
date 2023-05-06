@@ -1,8 +1,7 @@
 Key consume stuff
 https://discord.com/channels/136501320340209664/232196827577974784/1081698827637096528
 
-TODO:
-	
+DONE:
 	Fix the grid
 		* Stacking addtion shattered the grid's reliability
 		Rework it to store data in the inventory/object mod data
@@ -14,20 +13,25 @@ TODO:
 		Display weight
 		Fix "canAdd" logic, currently tied to the sidebar selected container
 
+	Allow drag and drop out of inventory panel
+	Start drag on container icons
+	Fix ctrl click stacking
+	Organization implementation for container/bags
+
+	Better item distribution in fresh containers, make it look more interesting by spreading items around the grid corners
+
+TODO:
+	Fix building from hands/bags
+	Speed up force equipping
+	Prevent the collection of an undroppable (VIA buildmode picup) if no space is available and 2 undroppables are already present to occupy the hands
+
 	UI for stack splitting
+	Handle auto positioning better
 
-	Dev tool for updating grids
-	Update item dev tool to allow setting stack limit
+	Item Equivelance system
+		i.e. Water bottle <-> empty bottle
+			auto keep position and force same size
 	
-	Improve auto container sizes again
-		Its getting decent
-
-	Auto expand world grids for too many items???
-		Red unusable slots by the player
-
-	Container item type resitrctions
-		i.e. Medkits can only hold medical items
-
 	Hueristic for stack limits
 		Automatically determine the max stack size of items using item data
 		Automatic mod support!
@@ -43,19 +47,19 @@ TODO:
 		Ripped cloth to 3
 		Cigs to 20
 
-	Handle auto positioning better
+	Dev tool for updating grids
+	Update item dev tool to allow setting stack limit
+	
+	Container item type resitrctions
+		i.e. Medkits can only hold medical items
+	
+	Improve auto container sizes again
+		Its getting decent
 
-	Look into item replacement
-		i.e. Water bottle -> empty bottle
+	Auto expand world grids for too many items???
+		Red unusable slots by the player
 
-	Search system:
-		(Sandbox Setting)
-		When enabled, players will need to search a container to see the items inside of it.
-		Traits previously used for item transfer speed will affect search speed.
-		Maybe tie this to a skill? 
-			*Not sure yet
 
-	Better item distribution in fresh containers, make it look more interesting by spreading items around the grid corners
 
 	Mod Options integration
 
@@ -70,7 +74,13 @@ TODO:
 			New grid data
 
 
-Low Priority - Optional / Ignorable
+Low Priority Or Post Launch
+	Search system:
+		(Sandbox Setting)
+		When enabled, players will need to search a container to see the items inside of it.
+		Traits previously used for item transfer speed will affect search speed.
+		Maybe tie this to a skill? 
+			*Not sure yet
 
 	Suppress aiming while mouse is over popups
 		This one is proving tough for the CTRL key, I can't figure out how the inventory windows are doing it.
@@ -82,14 +92,7 @@ Low Priority - Optional / Ignorable
 		Sync mod data
 
 
-	Furniture Loot-Bags:
-		Create a fake bag that weighs 999999999lbs on the ground when the player tries to drop an undroppable furniture item.
-			Not all furniture can be dropped as an item, some MUST be placed/built
-			This is a big problem with the new grid system
-				(Is there a reason other than lack of textures that this can't be done by default?)
 
-		This will allow the player to drop any piece furniture on the ground if they somehow end up in illegal item situation involving furniture.
-			i.e. if you are carrying a table in your hands, but an action forces different items into your hands and the table has no where valid to go in your inventory.
 
 Post-Launch
 	Mod Option:
@@ -100,3 +103,12 @@ Post-Launch
 
 	SOUND
 		Sound overrides for specific "popular" items
+	
+	Furniture Loot-Bags:
+		Create a fake bag that weighs 999999999lbs on the ground when the player tries to drop an undroppable furniture item.
+			Not all furniture can be dropped as an item, some MUST be placed/built
+			This is a big problem with the new grid system
+				(Is there a reason other than lack of textures that this can't be done by default?)
+		
+		This will allow the player to drop any piece furniture on the ground if they somehow end up in illegal item situation involving furniture.
+			i.e. if you are carrying a table in your hands, but an action forces different items into your hands and the table has no where valid to go in your inventory.

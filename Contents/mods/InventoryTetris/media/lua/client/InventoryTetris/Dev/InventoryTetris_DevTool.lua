@@ -2,8 +2,9 @@ TetrisDevTool = {}
 
 TetrisDevTool.itemEdits = {}
 
-function TetrisDevTool.insertEditItemOption(menu, item)
+function TetrisDevTool.insertDebugOptions(menu, item)
     menu:addOptionOnTop("Edit Tetris", item, TetrisDevTool.openEditItem);
+    menu:addOptionOnTop("Recalculate Item Data", item, TetrisDevTool.recalculateItemData);
 end
 
 function TetrisDevTool.openEditItem(item)
@@ -25,10 +26,7 @@ function TetrisDevTool.openEditItem(item)
     editWindow:addChild(nameLabel);
     
 
-    local currentX, currentY = ItemGridUtil.getItemSize(item)
-    if ItemGridUtil.isItemRotated(item) then
-        currentX, currentY = currentY, currentX
-    end
+    local currentX, currentY = GridItemManager.getItemSize(item, false)
 
     local widthLabel = ISLabel:new(10, 25, 10, "X:", 1, 1, 1, 1, UIFont.Small, true);
     widthLabel:initialise();
@@ -122,4 +120,39 @@ function TetrisDevTool.writeItemEdits()
         file:write(line);
     end
     file:close();
+end
+
+
+function TetrisDevTool.recalculateItemData(item)
+    local fType = item:getFullType();
+    GridItemManager._itemData[fType] = nil;
+    -- Recalculation will happen when the item is next rendered
+end
+
+-- Just for debugging
+local og_createMenu = ISInventoryPaneContextMenu.createMenu
+ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
+    local menu = og_createMenu(player, isInPlayerInventory, items, x, y, origin)
+    
+    
+    local item = items[1]
+    if not item then return end
+
+    if items[1].items then 
+        item = items[1].items[1]
+    end
+    if not item then return end
+
+    print("item CLASS: " .. GridItemManager._calculateItemClass(item))
+    print("item full type: " .. item:getFullType())
+    print("item weight: " .. tostring(item:getActualWeight()))
+
+    local mediaData = item:getMediaData()
+    if mediaData then
+        print("mediaData: " .. mediaData:getCategory())
+    end
+
+    TetrisDevTool.insertDebugOptions(menu, item)
+
+    return menu
 end

@@ -64,16 +64,16 @@ function ItemGridUI:calculateHeight()
     return self.grid.height * CELL_SIZE - self.grid.height + 1
 end
 
-function ItemGridUI:findStackUnderMouse()
+function ItemGridUI:findGridStackUnderMouse()
     local rawX, rawY = ItemGridUiUtil.mousePositionToGridPosition(self:getMouseX(), self:getMouseY())
-    return self.grid:get(rawX, rawY)
+    return self.grid:getStack(rawX, rawY)
 end
 
 function ItemGridUI:getValidContainerFromStack(stack)
     if not stack or stack.count > 1 then
         return nil
     end
-    local item = stack.items[1]
+    local item = ItemStack.getFrontItem(stack, self.grid.inventory)
     if not item:IsInventoryContainer() then
         return nil
     end
@@ -115,15 +115,16 @@ end
 
 function ItemGridUI:renderGridItems()
     local draggedItem = DragAndDrop.getDraggedItem()
-    local stacks = self.grid.stacks
+    local stacks = self.grid:getStacks()
+    local inventory = self.grid.inventory
     for _, stack in pairs(stacks) do
-        local item = stack.items[1]
-        local x, y, i = ItemGridUtil.getItemPosition(item)
-        if self.grid.gridIndex == i and x and y then
+        local item = stack.rep
+        local x, y = stack.x, stack.y
+        if x and y then
             if item ~= draggedItem then
-                self:renderGridStack(stack, x * CELL_SIZE - x, y * CELL_SIZE - y, false)
+                self:renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y)
             else
-                self:renderGridStackFaded(stack, x * CELL_SIZE - x, y * CELL_SIZE - y)
+                self:renderGridStackFaded(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y)
             end
         end
     end
@@ -137,38 +138,34 @@ function ItemGridUI:renderDragItemPreview()
     end
     
 
-    local stack = self:findStackUnderMouse()
-    if stack and stack:canAddToStack(item) then
-        local stackItem = stack.items[1]
-        local x, y, i = ItemGridUtil.getItemPosition(stackItem)
-        local w, h = ItemGridUtil.getItemSize(stackItem)
-        self:_renderPlacementPreview(x, y, w, h, 1, 1, 1)
+    local stack = self:findGridStackUnderMouse()
+    if stack and not ItemStack.containsItem(stack, item) and ItemStack.canAddItem(stack, item, self.grid.inventory) then
+        local stackItem = ItemStack.getFrontItem(stack, self.grid.inventory)
+        local w, h = GridItemManager.getItemSize(stackItem, stack.isRotated)
+        self:_renderPlacementPreview(stack.x, stack.y, w, h, 1, 1, 1)
         return
     end
 
     local container = self:getValidContainerFromStack(stack)
     if container then
-        local x, y, i = ItemGridUtil.getItemPosition(stack.items[1])
-        local w, h = ItemGridUtil.getItemSize(stack.items[1])
-        self:_renderPlacementPreview(x, y, w, h, 1, 1, 0)
+        local item = ItemStack.getFrontItem(stack, self.grid.inventory)
+        local w, h = GridItemManager.getItemSize(item)
+        self:_renderPlacementPreview(stack.x, stack.y, w, h, 1, 1, 0)
         return
     end
 
-
     local x = self:getMouseX()
     local y = self:getMouseY()
+    local isRotated = DragAndDrop.isDraggedItemRotated()
     
-    local itemW, itemH = ItemGridUtil.getItemSize(item)
-    if DragAndDrop.isDraggedItemRotated() then
-        itemW, itemH = itemH, itemW
-    end
+    local itemW, itemH = GridItemManager.getItemSize(item, isRotated)
 
     local halfCell = CELL_SIZE / 2
     local xPos = x + halfCell - itemW * halfCell
     local yPos = y + halfCell - itemH * halfCell
 
     local gridX, gridY = ItemGridUiUtil.mousePositionToGridPosition(xPos, yPos)
-    local canPlace = self.grid:doesItemFit_WH(item, gridX, gridY, itemW, itemH)
+    local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated)
     if canPlace then
         self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 0, 1, 0)
     else
@@ -203,18 +200,15 @@ function ItemGridUI.getItemColor(item, limit)
     return r,g,b
 end
 
-function ItemGridUI._renderGridItem(drawer, item, x, y, forceRotate, alphaMult, force1x1)
-    local w, h = ItemGridUtil.getItemSize(item)
-    if forceRotate then
-        w, h = h, w
-    end
+function ItemGridUI._renderGridItem(drawingContext, item, x, y, rotate, alphaMult, force1x1)
+    local w, h = GridItemManager.getItemSize(item, rotate)
 
     if force1x1 then
         w, h = 1, 1
     end
 
     local minDimension = math.min(w, h)
-    drawer:drawRect(x+1, y+1, w * CELL_SIZE - w - 1, h * CELL_SIZE - h - 1, 0.24 * alphaMult, getItemBackgroundColor(item))
+    drawingContext:drawRect(x+1, y+1, w * CELL_SIZE - w - 1, h * CELL_SIZE - h - 1, 0.24 * alphaMult, getItemBackgroundColor(item))
 
     local texture = item:getTex()
     local texW = texture:getWidth()
@@ -240,38 +234,42 @@ function ItemGridUI._renderGridItem(drawer, item, x, y, forceRotate, alphaMult, 
     targetScale = targetScale * minDimension
 
     local r,g,b = ItemGridUI.getItemColor(item)
-    drawer:drawTextureScaledUniform(texture, x2, y2, targetScale, alphaMult, r, g, b);
+    drawingContext:drawTextureScaledUniform(texture, x2, y2, targetScale, alphaMult, r, g, b);
     
     if item:isBroken() then
-        drawer:drawTextureScaledUniform(BROKEN_TEXTURE, x2, y2, targetScale, alphaMult * 0.5, 1, 1, 1);
+        drawingContext:drawTextureScaledUniform(BROKEN_TEXTURE, x2, y2, targetScale, alphaMult * 0.5, 1, 1, 1);
     end
 
-    drawer:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
+    drawingContext:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
 end
 
-function ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, alphaMult)
-    ItemGridUI._renderGridItem(drawer, stack.items[1], x, y, forceRotate, alphaMult)
+function ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, alphaMult)
+    ItemGridUI._renderGridItem(drawingContext, item, x, y, stack.isRotated, alphaMult)
     if stack.count > 1 then
         -- Draw the item count
         local font = UIFont.Small
         local text = tostring(stack.count)
-        drawer:drawText(text, x+2, y, 1, 1, 1, alphaMult, font)
+        drawingContext:drawText(text, x+2, y, 1, 1, 1, alphaMult, font)
     end
 end
 
-function ItemGridUI.renderGridStack(drawer, stack, x, y, forceRotate)
-    ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, 1)
+function ItemGridUI.renderGridStack(drawingContext, stack, item, x, y)
+    ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, 1)
 end
 
-function ItemGridUI.renderGridStackFaded(drawer, stack, x, y, forceRotate)
-    ItemGridUI._renderGridStack(drawer, stack, x, y, forceRotate, 0.4)
+function ItemGridUI.renderGridStackFaded(drawingContext, stack, item, x, y)
+    ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, 0.4)
 end
 
 function ItemGridUI:onMouseDown(x, y)
 	if self.playerNum ~= 0 then return end
 	getSpecificPlayer(self.playerNum):nullifyAiming();
-    local itemStack = ItemGridUiUtil.findItemStackUnderMouseGrid(self, x, y)
-    DragAndDrop.prepareDrag(self, itemStack, x, y)
+    local gridStack = self:findGridStackUnderMouse()
+    if gridStack then 
+        local vanillaStack = ItemStack.convertToVanillaStack(gridStack, self.grid.inventory)
+        DragAndDrop.prepareDrag(self, vanillaStack, x, y)
+    end
+
 	return true;
 end
 
@@ -291,13 +289,37 @@ end
 
 function ItemGridUI:onMouseUpOutside(x, y)
     if self.playerNum ~= 0 then return end
-    DragAndDrop.cancelDrag(self)
+    if not DragAndDrop.isDragOwner(self) then return end
+
+    DragAndDrop.cancelDrag(self, ItemGridUI.cancelDragDropItem)
+end
+
+function ItemGridUI:cancelDragDropItem()
+    local vanillaStack = ISMouseDrag.dragging
+    if not vanillaStack or not vanillaStack.items then return end
+
+    local item = vanillaStack.items[1]
+    local gridStack = self.grid:findStackByItem(item)
+    if gridStack then
+        local playerObj = getSpecificPlayer(self.playerNum)
+        local vehicle = playerObj:getVehicle()
+        if vehicle then
+            return
+        end
+
+        if not ISUIElement.isMouseOverAnyUI() then
+            for itemId, _ in pairs(gridStack.itemIDs) do
+                local itm = self.grid.inventory:getItemById(itemId)
+                ISInventoryPaneContextMenu.dropItem(itm, self.playerNum)
+            end
+        end
+    end
 end
 
 function ItemGridUI:onRightMouseUp(x, y)
     if self.playerNum ~= 0 then return end
 
-    local itemStack = ItemGridUiUtil.findItemStackUnderMouseGrid(self, x, y)
+    local itemStack = self:findGridStackUnderMouse()
     if not itemStack then 
         return
     end
@@ -306,7 +328,7 @@ function ItemGridUI:onRightMouseUp(x, y)
 		self.inventoryPane.toolRender:setVisible(false)
 	end
     
-    local item = itemStack.items[1]
+    local item = ItemStack.getFrontItem(itemStack, self.grid.inventory)
     ItemGridUI.openItemContextMenu(self, x, y, item, self.playerNum)
 	return true;
 end
@@ -328,37 +350,42 @@ end
 
 function ItemGridUI:handleDragAndDrop(x, y)
     local playerObj = getSpecificPlayer(self.playerNum)
-    local itemStack = ISMouseDrag.dragging
-    if not itemStack or not itemStack.items[1] then return end
+    local vanillaStack = ISMouseDrag.dragging
+    if not vanillaStack or not vanillaStack.items[1] then return end
 
-    local dragInventory = itemStack.items[1]:getContainer()
+    local gridStack, grid = self.parent.containerGrid:findGridStackByVanillaStack(vanillaStack)
+    local dragInventory = vanillaStack.items[1]:getContainer()
+
     local isSameInventory = self.grid.inventory == dragInventory
+    local isSameGrid = self.grid == grid
 
-    if isSameInventory or self:canPutIn(itemStack.items[1]) then
+    if isSameInventory or self:canPutIn(vanillaStack.items[1]) then
         luautils.walkToContainer(self.grid.inventory, self.playerNum)
 
-        local stack = self:findStackUnderMouse()
-        if stack and stack:canAddToStack(itemStack.items[1]) then
+        local stackUnderMouse = self:findGridStackUnderMouse()
+        local isSameStack = gridStack == stackUnderMouse
+
+        if not isSameStack and stackUnderMouse and ItemStack.canAddItem(stackUnderMouse, vanillaStack.items[1], self.grid.inventory) then
             local x, y = ItemGridUiUtil.mousePositionToGridPosition(x, y)
             self:handleDragAndDropTransfer(playerObj, x, y)
             return
         end
         
-        local container = self:getValidContainerFromStack(stack)
-        if container then
-            for i, item in ipairs(itemStack.items) do
-                if i > 1 then
-                    if item:isEquipped() then
-                        ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
-                    end
-                    ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), container, 1))
-                end
-            end
-            return
+        local container = self:getValidContainerFromStack(stackUnderMouse)
+        if not isSameStack and container then
+            self:handleDropOnContainer(playerObj, vanillaStack, container)
         end
 
-        local x, y = ItemGridUiUtil.findGridPositionOfMouse(self, itemStack.items[1], DragAndDrop.isDraggedItemRotated())
-        self:handleDragAndDropTransfer(playerObj, x, y)
+        local x, y = ItemGridUiUtil.findGridPositionOfMouse(self, vanillaStack.items[1], DragAndDrop.isDraggedItemRotated())
+        if isSameGrid then
+            if isStackSplitDown() then
+                self:splitStackSameGrid(vanillaStack, x, y)
+            else
+                self.grid:moveStack(gridStack, x, y, DragAndDrop.isDraggedItemRotated())
+            end
+        else
+            self:handleDragAndDropTransfer(playerObj, x, y)
+        end
     end
 end
 
@@ -370,12 +397,24 @@ function ItemGridUI:canPutIn(item)
     return canPutIn --TODO: item type restrictions and anti-TARDIS stacking
 end
 
+function ItemGridUI:handleContainerThing(playerObj, vanillaStack, container)
+    for i, item in ipairs(vanillaStack.items) do
+        if i > 1 then
+            if item:isEquipped() then
+                ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
+            end
+            ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), container, 1))
+        end
+    end
+    return
+end
+
 function ItemGridUI:handleDragAndDropTransfer(playerObj, gridX, gridY)
-    local itemStack = ISMouseDrag.dragging
+    local vanillaStack = ISMouseDrag.dragging
     if isStackSplitDown() then
-        self:splitStack(itemStack, gridX, gridY)
+        self:splitStackDifferentGrid(vanillaStack, gridX, gridY)
     else 
-        for i, item in ipairs(itemStack.items) do
+        for i, item in ipairs(vanillaStack.items) do
             if i > 1 then
                 if item:isEquipped() then
                     ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
@@ -386,46 +425,68 @@ function ItemGridUI:handleDragAndDropTransfer(playerObj, gridX, gridY)
     end
 end
 
-function ItemGridUI:splitStack(stack, targetX, targetY)
-    if not stack or stack.count < 2 then return end
+function ItemGridUI:splitStackDifferentGrid(vanillaStack, targetX, targetY)
+    if not vanillaStack or vanillaStack.count < 2 then return end
 
-    local dragInventory = stack.items[1]:getContainer()
+    local isRotated = DragAndDrop.isDraggedItemRotated()
+    local dragInventory = vanillaStack.items[1]:getContainer()
     local isSameInventory = self.grid.inventory == dragInventory
-    if isSameInventory and self.grid:willItemOverlapSelf(stack.items[1], targetX, targetY) then
+    local gridStack = self.grid:findStackByItem(vanillaStack.items[1])
+
+    local playerObj = getSpecificPlayer(self.playerNum)
+
+    local half = math.ceil(vanillaStack.count / 2)
+    for i = 2, half+1 do
+        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, vanillaStack.items[i], vanillaStack.items[i]:getContainer(), self.grid.inventory, 1, targetX, targetY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated()))
+    end
+end
+
+function ItemGridUI:splitStackSameGrid(vanillaStack, targetX, targetY)
+    if not vanillaStack or vanillaStack.count < 2 then return end
+
+    local isRotated = DragAndDrop.isDraggedItemRotated()
+    local dragInventory = vanillaStack.items[1]:getContainer()
+    local isSameInventory = self.grid.inventory == dragInventory
+    local gridStack = self.grid:findStackByItem(vanillaStack.items[1])
+    if isSameInventory and self.grid:willStackOverlapSelf(gridStack, targetX, targetY, isRotated) then
         return
     end
 
     local playerObj = getSpecificPlayer(self.playerNum)
 
-    local half = math.ceil(stack.count / 2)
+    local half = math.ceil(vanillaStack.count / 2)
     for i = 2, half+1 do
-        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, stack.items[i], stack.items[i]:getContainer(), self.grid.inventory, 1, targetX, targetY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated()))
+        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, vanillaStack.items[i], vanillaStack.items[i]:getContainer(), self.grid.inventory, 1, targetX, targetY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated()))
     end
 end
 
 function ItemGridUI:handleClick(x, y)
     DragAndDrop.endDrag()
 
-    local itemStack = ItemGridUiUtil.findItemStackUnderMouseGrid(self, x, y)
-    if itemStack then
+    local gridStack = self:findGridStackUnderMouse()
+    if gridStack then
         if isQuickMoveDown() then
-            self:quickMoveItems(itemStack)
+            self:quickMoveItems(gridStack)
         elseif isQuickEquipDown() then
-            self:quickEquipItem(itemStack.items[1])
+            local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
+            self:quickEquipItem(item)
         end
     end
 end
 
-function ItemGridUI:quickMoveItems(itemStack)
+function ItemGridUI:quickMoveItems(gridStack)
     local invPage = nil;
     if not self.grid.inventory:isInCharacterInventory(getSpecificPlayer(self.playerNum)) then
         invPage = getPlayerInventory(self.playerNum)
-        local targetContainer = invPage.inventoryPane.inventory
-        self:quickMoveItemToContainer(itemStack, targetContainer)
+        local targetContainers = {}
+        for _, backpack in pairs(invPage.backpacks) do
+            table.insert(targetContainers, backpack.inventory)
+        end
+        self:quickMoveItemToContainer(gridStack, targetContainers)
     else
         invPage = getPlayerLoot(self.playerNum)
-        local targetContainer = invPage.inventoryPane.inventory
-        self:quickMoveItemToContainer(itemStack, targetContainer)
+        local targetContainers = { invPage.inventoryPane.inventory }
+        self:quickMoveItemToContainer(gridStack, targetContainers)
     end
 
     invPage.isCollapsed = false;
@@ -433,19 +494,30 @@ function ItemGridUI:quickMoveItems(itemStack)
     invPage.collapseCounter = 0;
 end
 
-function ItemGridUI:quickMoveItemToContainer(itemStack, targetContainer)
+function ItemGridUI:quickMoveItemToContainer(gridStack, targetContainers)
     local playerObj = getSpecificPlayer(self.playerNum)
-    local gridContainer = ItemContainerGrid.Create(targetContainer, self.playerNum)
-    for i, item in ipairs(itemStack.items) do
-        if i > 1 then 
-            ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), targetContainer))
+    local item = ItemStack.getFrontItem(gridStack)
+    
+    local targetContainer = nil
+    for _, testContainer in ipairs(targetContainers) do
+        local gridContainer = ItemContainerGrid.Create(testContainer, self.playerNum)
+        if gridContainer:canAddItem(item) then
+            targetContainer = testContainer
+            break
         end
+    end
+
+    if not targetContainer then return end
+    
+    for itemId, _ in pairs(gridStack.itemIDs) do
+        local item = self.grid.inventory:getItemById(itemId)
+        local transfer = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), targetContainer)
+        transfer.isRotated = gridStack.isRotated
+        ISTimedActionQueue.add(transfer)
     end
 end
 
 function ItemGridUI:quickEquipItem(item)
-    
-    
     if item:isClothing() then
         self:quickEquipClothes(item)
     end
@@ -455,9 +527,7 @@ end
 
 function ItemGridUI:quickEquipClothes(item)
     local playerObj = getSpecificPlayer(self.playerNum)
-
-    
-
+    -- TODO: equip quick equip clothes
 end
 
 function ItemGridUI:quickEquipWeapon(item)
@@ -484,14 +554,19 @@ end
 function ItemGridUI:handleDoubleClick(x, y)
     DragAndDrop.endDrag()
     
-    local itemStack = ItemGridUiUtil.findItemStackUnderMouseGrid(self, x, y)
+    local itemStack = self:findGridStackUnderMouse()
     if not itemStack then 
         return
     end
 
-    local item = itemStack.items[1]
+    local item = ItemStack.getFrontItem(itemStack, self.grid.inventory)
     if item:IsInventoryContainer() then
         self.inventoryPane.tetrisWindowManager:openContainerPopup(item, self.playerNum, self.inventoryPane)
+    end
+
+    local maxStack = GridItemManager.getMaxStackSize(item)
+    if maxStack > 1 then
+        self.grid:gatherSameItems(itemStack)
     end
 end
 

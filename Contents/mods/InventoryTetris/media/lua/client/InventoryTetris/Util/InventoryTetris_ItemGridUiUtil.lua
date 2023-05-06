@@ -17,56 +17,21 @@ ItemGridUiUtil.findGridUiUnderMouse = function(gridUis)
     return nil
 end
 
-ItemGridUiUtil.findItemStackUnderMouse = function(gridUis, x, y)
+ItemGridUiUtil.findGridStackUnderMouse = function(gridUis, x, y)
     local gridUi = ItemGridUiUtil.findGridUiUnderMouse(gridUis, x, y)
-    return ItemGridUiUtil.findItemStackUnderMouseGrid(gridUi)
-end
-
-ItemGridUiUtil.findItemStackUnderMouseGrid = function(gridUi)
-    if not gridUi then 
-        return nil 
-    end
-
-    local x = gridUi:getMouseX()
-    local y = gridUi:getMouseY()
-
-    local inventory = gridUi.grid.inventory
-    for i = 1, inventory:getItems():size() do
-        local item = inventory:getItems():get(i - 1)
-        local itemX, itemY, gridIndex = ItemGridUtil.getItemPosition(item)
-        if gridIndex == gridUi.grid.gridIndex and ItemGridUiUtil.isMouseOverItem(item, x, y) then
-            return gridUi.grid:getByItem(item)
-        end
+    if gridUi then
+        return gridUi:findGridStackUnderMouse()
     end
     return nil
 end
 
-ItemGridUiUtil.isMouseOverItem = function(item, mouseX, mouseY)
-    local itemX, itemY = ItemGridUtil.getItemPosition(item)
-    local itemWidth, itemHeight = ItemGridUtil.getItemSize(item)
-
-    local x1 = itemX * CELL_SIZE
-    local y1 = itemY * CELL_SIZE
-    local x2 = x1 + (itemWidth * CELL_SIZE)
-    local y2 = y1 + (itemHeight * CELL_SIZE)
-
-    if mouseX >= x1 and mouseX <= x2 and mouseY >= y1 and mouseY <= y2 then
-        return true
-    end
-    return false
-end
-
 -- Get the mouse position relative to the top left corner of the item being dragged
-ItemGridUiUtil.findGridPositionOfMouse = function(gridUi, item, rotate)
+ItemGridUiUtil.findGridPositionOfMouse = function(gridUi, item, isRotated)
     local xOff = 0
     local yOff = 0
 
     if item then
-        local w, h = ItemGridUtil.getItemSize(item)
-        if rotate then
-            w, h = h, w
-        end
-
+        local w, h = GridItemManager.getItemSize(item, isRotated)
         xOff = CELL_SIZE * w / 2 - CELL_SIZE / 2
         yOff = CELL_SIZE * h / 2 - CELL_SIZE / 2
     end

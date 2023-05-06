@@ -89,6 +89,16 @@ function ISInventoryPane:refreshItemGrids()
     self.scrollView:setScrollHeight(y)
 end
 
+function ISInventoryPane:findGridStackUnderMouse()
+    if not self.gridContainerUis then return nil end
+    for _, containerUi in ipairs(self.gridContainerUis) do
+        if containerUi:isMouseOver() then
+            return containerUi:findGridStackUnderMouse()
+        end
+    end
+    return nil
+end
+
 local og_prerender = ISInventoryPane.prerender
 function ISInventoryPane:prerender()
     og_prerender(self);
@@ -98,7 +108,7 @@ end
 
 local og_updateTooltip = ISInventoryPane.updateTooltip
 function ISInventoryPane:updateTooltip()
-	if self.mode ~= "grid" or not self.gridContainerUi then
+	if self.mode ~= "grid" or not self.gridContainerUis then
         return og_updateTooltip(self)
     end
 
@@ -109,10 +119,8 @@ function ISInventoryPane:updateTooltip()
 	local item = nil
 
 	if not self.doController and not self.dragging and not self.draggingMarquis and self:isMouseOver() then
-		local x = self:getMouseX()
-		local y = self:getMouseY()
-		local itemStack = ItemGridUiUtil.findItemStackUnderMouse(self.gridContainerUi.gridUis, x, y)
-        item = itemStack and itemStack.items[1] or nil
+        local stack = self:findGridStackUnderMouse()
+        item = stack and ItemStack.getFrontItem(stack) or nil
 	end
 
 	self:doTooltipForItem(item)
@@ -238,32 +246,4 @@ function ISInventoryPane:getChildWindows()
         return self.tetrisWindowManager.childWindows
     end
     return {}
-end
-
--- Just for debugging
-local og_createMenu = ISInventoryPaneContextMenu.createMenu
-ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
-    local menu = og_createMenu(player, isInPlayerInventory, items, x, y, origin)
-    
-    
-    local item = items[1]
-    if not item then return end
-
-    if items[1].items then 
-        item = items[1].items[1]
-    end
-    if not item then return end
-
-    print("item category: " .. item:getCategory())
-    print("item cat: " .. item:getCat():toString())
-    print("item full type: " .. item:getFullType())
-
-    local mediaData = item:getMediaData()
-    if mediaData then
-        print("mediaData: " .. mediaData:getCategory())
-    end
-
-    TetrisDevTool.insertEditItemOption(menu, item)
-
-    return menu
 end

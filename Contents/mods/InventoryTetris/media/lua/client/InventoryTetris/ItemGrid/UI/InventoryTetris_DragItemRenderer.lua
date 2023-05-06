@@ -34,10 +34,7 @@ function DragItemRenderer:render()
 
     local force1x1 = self.equipmentUi:isMouseOver()
     if not force1x1 then
-        itemW, itemH = ItemGridUtil.getItemSize(item)
-        if DragAndDrop.isDraggedItemRotated() then
-            itemW, itemH = itemH, itemW
-        end
+        itemW, itemH = GridItemManager.getItemSize(item, DragAndDrop.isDraggedItemRotated())
     end
 
     local xPos = x - itemW * CELL_SIZE / 2

@@ -4,177 +4,67 @@ local MAX_ITEM_WIDTH = 9
 ContainerData = {
     -- Player Inv
     ["none"] = {
-        {
-            size = {width=1, height=2},
-            position = {x=0, y=0},
+        gridDefinitions = {
+            {
+                size = {width=1, height=2},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=2},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=2},
+                position = {x=2, y=0},
+            },
+            {
+                size = {width=1, height=2},
+                position = {x=3, y=0},
+            }
         },
-        {
-            size = {width=1, height=2},
-            position = {x=1, y=0},
-        },
-        {
-            size = {width=1, height=2},
-            position = {x=2, y=0},
-        },
-        {
-            size = {width=1, height=2},
-            position = {x=3, y=0},
-        }
+        isOrganized = true,
     },
 
     ["floor"] = {
-        {
-            size = {width=8, height=8},
-            position = {x=0, y=0},
-        }
-    },
-
-    ["overhead"] = {
-        {
-            size = {width=5, height=2},
-            position = {x=0, y=0},
+        gridDefinitions = {
+            {
+                size = {width=8, height=8},
+                position = {x=0, y=0},
+            }
         },
-        {
-            size = {width=5, height=2},
-            position = {x=0, y=1},
-        },
-        {
-            size = {width=5, height=2},
-            position = {x=0, y=2},
-        }
-    },
-
-    ["counter"] = {
-        {
-            size = {width=4, height=3},
-            position = {x=0, y=0},
-        },
-        {
-            size = {width=4, height=3},
-            position = {x=1, y=0},
-        },
-        {
-            size = {width=4, height=3},
-            position = {x=0, y=1},
-        },
-        {
-            size = {width=4, height=3},
-            position = {x=1, y=1},
-        }
-    },
-
-    ["shelves_small"] = {
-        {
-            size = {width=5, height=2},
-            position = {x=0, y=0},
-        },
-        {
-            size = {width=5, height=2},
-            position = {x=0, y=1},
-        },
-    },
-
-    ["shelves_medium"] = {
-        {
-            size = {width=5, height=2},
-            position = {x=0, y=0},
-        },
-        {
-            size = {width=5, height=2},
-            position = {x=0, y=1},
-        },
-        {
-            size = {width=5, height=2},
-            position = {x=0, y=2},
-        },
-    },
-
-    -- 3 small drawers, vertical
-    ["sidetable"] = {
-        {
-            size = {width=3, height=2},
-            position = {x=0, y=0},
-        },
-        {
-            size = {width=3, height=2},
-            position = {x=0, y=1},
-        },
-        {
-            size = {width=3, height=2},
-            position = {x=0, y=2},
-        },
-    },
-
-    -- 3 small drawers, vertical        
-    ["dresser"] = {
-        {
-            size = {width=3, height=2},
-            position = {x=0, y=0},
-        },
-        {
-            size = {width=3, height=2},
-            position = {x=0, y=1},
-        },
-        {
-            size = {width=3, height=2},
-            position = {x=0, y=2},
-        },
-    },
-
-    ["Guitarcase"] = {
-        {
-            size = {width=2, height=5},
-            position = {x=0, y=0},
-        }
+        isOrganized = false,
     },
 }
 
-InventoryTetrisContainerOverloads = {
-    ["crate"] = {
-        [40] = "crate_medium"
-    },
-    ["shelves"] = {
-        [15] = "shelves_small",
-        [30] = "shelves_medium",
-    },
-}
-
-
-ContainerData.calculateContainerItemDefinition = function(container)
-    local containerType = container:getType()
-
-    return itemGrid
+function ContainerData.getContainerDefinition(container)
+    local containerKey = ContainerData._getContainerKey(container)
+    return ContainerData._getContainerDefinitionByKey(container, containerKey)
 end
 
-function ContainerData.getGridKey(container)
+function ContainerData._getContainerKey(container)
     if container:getType() == "none" then
         return "none"
     end
     return container:getType() .. "_" .. container:getCapacity()
 end
 
-function ContainerData.getGridDefinitionByContainer(container)
-    local gridKey = ContainerData.getGridKey(container)
-    return ContainerData.getGridDefinitionByKey(container, gridKey)
-end
-
-function ContainerData.getGridDefinitionByKey(container, gridKey)
-    print("gridKey: " .. gridKey)
-    if not ContainerData[gridKey] then
-        ContainerData[gridKey] = ContainerData.calculateContainerDefinition(container)
+function ContainerData._getContainerDefinitionByKey(container, containerKey)
+    print("containerKey: " .. containerKey)
+    if not ContainerData[containerKey] then
+        ContainerData[containerKey] = ContainerData._calculateContainerDefinition(container)
     end
-    return ContainerData[gridKey]
+    return ContainerData[containerKey]
 end
 
-function ContainerData.calculateContainerDefinition(container)
+function ContainerData._calculateContainerDefinition(container)
     local item = container:getContainingItem()
     if item then
-        return ContainerData.calculateItemContainerDefinition(container, item)
+        return ContainerData._calculateItemContainerDefinition(container, item)
     end
-    return ContainerData.calculateWorldContainerDefinition(container)
+    return ContainerData._calculateWorldContainerDefinition(container)
 end
 
-function ContainerData.calculateItemContainerDefinition(container, item)
+function ContainerData._calculateItemContainerDefinition(container, item)
     local capacity = container:getCapacity()
     local weightReduction = item:getWeightReduction()
 
@@ -186,7 +76,7 @@ function ContainerData.calculateItemContainerDefinition(container, item)
     local slotCount = 4 + capacity + bonus
 
     -- Determine two numbers that multiply close to the slot count
-    local x, y = ContainerData.calculateDimensions(slotCount)
+    local x, y = ContainerData._calculateDimensions(slotCount)
     if x < 2 then
         x = 2
     end
@@ -195,33 +85,26 @@ function ContainerData.calculateItemContainerDefinition(container, item)
     end
 
     return {
-        {
+        gridDefinitions = {{
             size = {width=x, height=y},
             position = {x=0, y=0},
-        }
+        }}
     }
 end
 
-function ContainerData.calculateWorldContainerDefinition(container)
+function ContainerData._calculateWorldContainerDefinition(container)
     local capacity = container:getCapacity()
 
     local size = math.ceil(math.sqrt(capacity) * 1.2)
     return {
-        {
+        gridDefinitions = {{
             size = {width=size, height=size},
             position = {x=0, y=0},
-        }
+        }}
     }
 end
 
-
-
-
-function ContainerData.calculateDimensions(target)
-    -- Find two numbers that multiply close to the target
-    -- x and y are the two numbers
-    -- x max is 6
-
+function ContainerData._calculateDimensions(target)
     local best = 99999999
     local bestX = 1
     local bestY = 1
