@@ -118,7 +118,7 @@ function ItemGridUI:renderGridItems()
     local stacks = self.grid:getStacks()
     local inventory = self.grid.inventory
     for _, stack in pairs(stacks) do
-        local item = stack.rep
+        local item = ItemStack.getFrontItem(stack)
         local x, y = stack.x, stack.y
         if x and y then
             if item ~= draggedItem then

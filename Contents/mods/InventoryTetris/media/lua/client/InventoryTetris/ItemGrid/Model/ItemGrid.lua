@@ -68,7 +68,7 @@ function ItemGrid:removeItem(item)
         if ItemStack.containsItem(stack, item) then
             ItemStack.removeItem(stack, item, self.inventory)
             if stack.count == 0 then
-                self:_removeStack(stack, item)
+                self:_removeStack(stack)
             end
             return true
         end
@@ -84,7 +84,7 @@ function ItemGrid:moveStack(stack, x, y, isRotated)
         return false
     end
     
-    self:_removeStack(stack, item)
+    self:_removeStack(stack)
     self:_insertStack_premade(stack, x, y, isRotated)
     
     return true
@@ -118,7 +118,7 @@ function ItemGrid:gatherSameItems(stack)
             ItemStack.addItem(stack, item)
 
             if s.count == 0 then
-                self:_removeStack(s, item)
+                self:_removeStack(s)
             end
         end
     end
@@ -128,8 +128,7 @@ function ItemGrid:_insertStack(xPos, yPos, item, isRotated)
     local stack = ItemStack.create(xPos, yPos, isRotated, self.inventory)
     ItemStack.addItem(stack, item)
     table.insert(self.persistentData.stacks, stack)
-    local w, h = GridItemManager.getItemSize(item, isRotated)
-    self:_updateStackMap(xPos, yPos, w, h, stack)
+    self:_rebuildStackMap()
 end
 
 function ItemGrid:_insertStack_premade(stack, x, y, isRotated)
@@ -138,28 +137,16 @@ function ItemGrid:_insertStack_premade(stack, x, y, isRotated)
     stack.isRotated = isRotated
     stack.inventory = self.inventory
 
-    local item = ItemStack.getFrontItem(stack)
-    local w, h = GridItemManager.getItemSize(item, isRotated)
-
     table.insert(self.persistentData.stacks, stack)
-    self:_updateStackMap(x, y, w, h, stack)
+    self:_rebuildStackMap()
 end
 
-function ItemGrid:_removeStack(stack, item)
+function ItemGrid:_removeStack(stack)
     for i, s in ipairs(self.persistentData.stacks) do
         if s == stack then
             table.remove(self.persistentData.stacks, i)
-            local w, h = GridItemManager.getItemSize(item, stack.isRotated)
-            self:_updateStackMap(stack.x, stack.y, w, h, nil)
+            self:_rebuildStackMap()
             return
-        end
-    end
-end
-
-function ItemGrid:_updateStackMap(xIn, yIn, w, h, val)
-    for x=xIn,xIn+w-1 do
-        for y=yIn,yIn+h-1 do
-            self.stackMap[x][y] = val
         end
     end
 end
@@ -255,6 +242,16 @@ function ItemGrid:willStackOverlapSelf(stack, newX, newY, isRotated)
     return false
 end
 
+function ItemGrid:hasFreeSlot()
+    for x=0,self.width-1 do
+        for y=0,self.height-1 do
+            if not self.stackMap[x][y] then
+                return true
+            end
+        end
+    end
+    return false
+end
 
 function ItemGrid:_attemptToStackItem(item)
     for _, stack in ipairs(self.persistentData.stacks) do
@@ -335,23 +332,22 @@ function ItemGrid:_attemptToInsertItem_innerLoop(item, w, h, xPos, yPos, isRotat
 end
 
 function ItemGrid:refresh()
-    local time = getTimestampMs()
-    print("REFRESH START")
-    self:_loadData()
+    self:_validateAndCleanStacks(self.persistentData)
     self:_updateGridPositions(self.firstRefresh or not self.containerDefinition.isOrganized)
     self.firstRefresh = false
-    print("REFRESH END")
-    print("REFRESH TIME: "..(getTimestampMs() - time .. "ms"))
 end
 
 function ItemGrid:_loadData()
-    print("LOAD START")
     local time = getTimestampMs()
-    self.persistentData = self:_getSavedData()
+    self.persistentData = self:_getSavedGridData()
+    if self.persistentData.stacks then
+        for _, stack in ipairs(self.persistentData.stacks) do
+            stack.inventory = self.inventory
+        end
+    end
+
     self:_validateAndCleanStacks(self.persistentData)
     self:_rebuildStackMap()
-    print("LOAD END")
-    print("LOAD TIME: "..(getTimestampMs() - time))
 end
 
 function ItemGrid:_validateAndCleanStacks(persistentGridData)
@@ -360,25 +356,39 @@ function ItemGrid:_validateAndCleanStacks(persistentGridData)
         return
     end
 
-    local itemMap = self:_buildItemMap()
-    local validatedStacks = {}
-    
+    local badStacks = {}
     for _,stack in ipairs(persistentGridData.stacks) do
-        local newStack = ItemStack.copyWithoutItems(stack, self.inventory)
-
         for itemID, _ in pairs(stack.itemIDs) do
-            local item = itemMap[itemID]
-            if item and self:_isItemValid(item) and self:_isItemInBounds(item, newStack) then
-                ItemStack.addItem(newStack, item)
+            local item = self.inventory:getItemById(itemID)
+            if not item or not self:_isItemValid(item) then
+                badStacks[stack] = true
+                break
             end
         end
+    end
 
-        if newStack.count > 0 then
-            table.insert(validatedStacks, newStack)
+    local validatedStacks = {}
+    for _,stack in ipairs(persistentGridData.stacks) do
+        if not badStacks[stack] then
+            table.insert(validatedStacks, stack)
+        else
+            local newStack = ItemStack.copyWithoutItems(stack, self.inventory)
+
+            for itemID, _ in pairs(stack.itemIDs) do
+                local item = self.inventory:getItemById(itemID)
+                if item and self:_isItemValid(item) and self:_isItemInBounds(item, newStack) then
+                    ItemStack.addItem(newStack, item)
+                end
+            end
+
+            if newStack.count > 0 then
+                table.insert(validatedStacks, newStack)
+            end
         end
     end
 
     persistentGridData.stacks = validatedStacks
+    self:_rebuildStackMap()
 end
 
 function ItemGrid:_rebuildStackMap()
@@ -405,15 +415,6 @@ function ItemGrid:_rebuildStackMap()
     self.stackMap = stackMap
 end
 
-function ItemGrid:_buildItemMap()
-    local itemMap = {}
-    for i=0,self.inventory:getItems():size()-1 do
-        local item = self.inventory:getItems():get(i)
-        itemMap[item:getID()] = item
-    end
-    return itemMap
-end
-
 function ItemGrid:_updateGridPositions(useShuffle)
     local unpositionedItems = self:_getUnpositionedItems()
     self:_processUnpositionedItems(unpositionedItems, useShuffle)
@@ -436,14 +437,11 @@ function ItemGrid:_getUnpositionedItems()
 end
 
 function ItemGrid:_getPositionedItems()
-    local modData = self:_getParentModData()
-    if not modData.gridContainers then return {} end
-
-    local grid = modData.gridContainers[self.inventory:getType()]
+    local containerData = self:_getSavedContainerData()
 
     local positionedItems = {}
-    for _, subGrid in pairs(grid) do
-        for _, stack in pairs(subGrid.stacks) do
+    for _, grid in pairs(containerData) do
+        for _, stack in pairs(grid.stacks) do
             for itemID, _ in pairs(stack.itemIDs) do
                 positionedItems[itemID] = true
             end
@@ -452,22 +450,30 @@ function ItemGrid:_getPositionedItems()
     return positionedItems
 end
 
-function ItemGrid:_processUnpositionedItems(unpositionedItems, useShuffle)
+function ItemGrid:_processUnpositionedItems(unpositionedItems, useShuffle)    
+    local hasStackType = {}
+    for _,stack in ipairs(self.persistentData.stacks) do
+        local item = ItemStack.getFrontItem(stack, self.inventory)
+        hasStackType[item:getFullType()] = true
+    end
+
     -- Try to stack items first, loop backwards so reduce array shuffling
     for i = #unpositionedItems,1,-1 do
         local item = unpositionedItems[i].item
-        if self:_attemptToStackItem(item) then
+        if hasStackType[item:getFullType()] and self:_attemptToStackItem(item) then
             table.remove(unpositionedItems, i)
         end
     end
 
-    -- Sort the remaining unpositioned items by size, so we can place the biggest ones first
-    table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
-    for i = 1,#unpositionedItems do
-        local item = unpositionedItems[i].item
-        if not self:_attemptToInsertItem(item, false, useShuffle) then
-            if self.isPlayerInventory then
-                self:_dropUnpositionedItem(item)
+    if self:hasFreeSlot() then
+        -- Sort the remaining unpositioned items by size, so we can place the biggest ones first
+        table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
+        for i = 1,#unpositionedItems do
+            local item = unpositionedItems[i].item
+            if not self:_attemptToInsertItem(item, false, useShuffle) then
+                if self.isPlayerInventory then
+                    self:_dropUnpositionedItem(item)
+                end
             end
         end
     end
@@ -498,7 +504,17 @@ end
 
 
 
-function ItemGrid:_getSavedData()
+function ItemGrid:_getSavedGridData()
+    local containerData = self:_getSavedContainerData()
+
+    if not containerData[self.gridIndex] then
+        containerData[self.gridIndex] = {}
+    end
+
+    return containerData[self.gridIndex]
+end
+
+function ItemGrid:_getSavedContainerData()
     local modData = self:_getParentModData()
     if not modData.gridContainers then
         modData.gridContainers = {}
@@ -509,11 +525,7 @@ function ItemGrid:_getSavedData()
         modData.gridContainers[invType] = {}
     end
 
-    if not modData.gridContainers[invType][self.gridIndex] then
-        modData.gridContainers[invType][self.gridIndex] = {}
-    end
-
-    return modData.gridContainers[invType][self.gridIndex]
+    return modData.gridContainers[invType]
 end
 
 ItemGrid._floorModData = {} -- No need to save floor grids, but lets allow users to reposition items on the floor

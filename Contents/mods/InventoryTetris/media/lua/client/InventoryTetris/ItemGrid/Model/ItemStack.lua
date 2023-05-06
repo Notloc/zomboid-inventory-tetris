@@ -24,7 +24,7 @@ ItemStack.getFrontItem = function(stack)
         local item = stack.inventory:getItemById(itemID)
         if item then return item end
     end
-    return stack.rep
+    return nil
 end
 
 ItemStack.addItem = function(stack, item)
@@ -33,10 +33,6 @@ ItemStack.addItem = function(stack, item)
     end
     stack.itemIDs[item:getID()] = true
     stack.count = stack.count + 1
-
-    if stack.count == 1 then
-        stack.rep = item
-    end
 end
 
 ItemStack.removeItem = function(stack, item)
@@ -45,11 +41,6 @@ ItemStack.removeItem = function(stack, item)
     end
     stack.itemIDs[item:getID()] = nil
     stack.count = stack.count - 1
-
-    if stack.rep == item then
-        stack.rep = nil
-        stack.rep = ItemStack.getFrontItem(stack)
-    end
 end
 
 ItemStack.containsItem = function(stack, item)
