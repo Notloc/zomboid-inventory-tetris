@@ -424,6 +424,7 @@ function ItemGrid:_getUnpositionedItems()
     local positionedItems = self:_getPositionedItems()
     local unpositionedItemData = {}
 
+    local count = 0
     local items = self.inventory:getItems();
     for i = 0, items:size()-1 do
         local item = items:get(i);
@@ -431,6 +432,10 @@ function ItemGrid:_getUnpositionedItems()
             local w, h = GridItemManager.getItemSize(item)
             local size = w * h
             table.insert(unpositionedItemData, {item = item, size = size})
+            count = count + 1
+            if count >= 50 then -- Don't process too many items at once
+                break
+            end
         end
     end
     return unpositionedItemData
