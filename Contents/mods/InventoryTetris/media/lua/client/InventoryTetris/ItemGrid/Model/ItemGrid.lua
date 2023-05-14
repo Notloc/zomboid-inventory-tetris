@@ -1,12 +1,13 @@
 ItemGrid = {}
 
-function ItemGrid:new(containerDefinition, gridIndex, inventory, playerNum)
+function ItemGrid:new(containerGrid, gridIndex, inventory, playerNum)
     local o = {}
     setmetatable(o, self)
     self.__index = self
 
-    o.containerDefinition = containerDefinition
-    o.gridDefinition = containerDefinition.gridDefinitions[gridIndex]
+    o.containerGrid = containerGrid
+    o.containerDefinition = containerGrid.containerDefinition
+    o.gridDefinition = o.containerDefinition.gridDefinitions[gridIndex]
     o.gridIndex = gridIndex
     o.inventory = inventory
     o.playerNum = playerNum
@@ -48,13 +49,14 @@ end
 function ItemGrid:insertItem(item, xPos, yPos, isRotated)
     local stack = self.stackMap[xPos][yPos]
     if stack then
-        if not ItemStack.canAddItem(stack, item, self.inventory) then 
+        if not ItemStack.canAddItem(stack, item) then 
             return false 
         end
         ItemStack.addItem(stack, item)
+        self:_sendModData()
         return true
     else
-        local w, h = GridItemManager.getItemSize(item, isRotated)
+        local w, h = TetrisItemData.getItemSize(item, isRotated)
         if not self:_isAreaFree(xPos, yPos, w, h) then
             return false
         end
@@ -70,6 +72,8 @@ function ItemGrid:removeItem(item)
             if stack.count == 0 then
                 self:_removeStack(stack)
             end
+
+            self:_sendModData()
             return true
         end
     end
@@ -77,9 +81,9 @@ function ItemGrid:removeItem(item)
 end
 
 function ItemGrid:moveStack(stack, x, y, isRotated)
-    local item = ItemStack.getFrontItem(stack)
+    local item = ItemStack.getFrontItem(stack, self.inventory)
     
-    local w, h = GridItemManager.getItemSize(item, isRotated)
+    local w, h = TetrisItemData.getItemSize(item, isRotated)
     if not self:_isAreaFree(x, y, w, h, stack) then
         return false
     end
@@ -87,12 +91,13 @@ function ItemGrid:moveStack(stack, x, y, isRotated)
     self:_removeStack(stack)
     self:_insertStack_premade(stack, x, y, isRotated)
     
+    self:_sendModData()
     return true
 end
 
 function ItemGrid:gatherSameItems(stack)
     -- Pull all the items from other stacks into this one
-    local targetItem = ItemStack.getFrontItem(stack)
+    local targetItem = ItemStack.getFrontItem(stack, self.inventory)
 
     -- Compile a list of all stacks of the same item
     local stacksToGather = {}
@@ -122,13 +127,16 @@ function ItemGrid:gatherSameItems(stack)
             end
         end
     end
+
+    self:_sendModData()
 end
 
 function ItemGrid:_insertStack(xPos, yPos, item, isRotated)
-    local stack = ItemStack.create(xPos, yPos, isRotated, self.inventory)
+    local stack = ItemStack.create(xPos, yPos, isRotated, item:getFullType())
     ItemStack.addItem(stack, item)
     table.insert(self.persistentData.stacks, stack)
     self:_rebuildStackMap()
+    self:_sendModData()
 end
 
 function ItemGrid:_insertStack_premade(stack, x, y, isRotated)
@@ -139,6 +147,7 @@ function ItemGrid:_insertStack_premade(stack, x, y, isRotated)
 
     table.insert(self.persistentData.stacks, stack)
     self:_rebuildStackMap()
+    self:_sendModData()
 end
 
 function ItemGrid:_removeStack(stack)
@@ -146,6 +155,7 @@ function ItemGrid:_removeStack(stack)
         if s == stack then
             table.remove(self.persistentData.stacks, i)
             self:_rebuildStackMap()
+            self:_sendModData()
             return
         end
     end
@@ -172,9 +182,8 @@ function ItemGrid:_isInBounds(x, y)
 end
 
 function ItemGrid:_isItemInBounds(item, stack)
-    return true; -- TODO: uncomment this
-    --local w, h = GridItemManager.getItemSize(item, stack.isRotated)
-    --return self:_isInBounds(stack.x, stack.y) and self:_isInBounds(stack.x+w-1, stack.y+h-1)
+    local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
+    return self:_isInBounds(stack.x, stack.y) and self:_isInBounds(stack.x+w-1, stack.y+h-1)
 end
 
 function ItemGrid:_isItemValid(item)
@@ -198,12 +207,12 @@ function ItemGrid:canAddItem(item, isRotated)
     end
 
     for _, stack in ipairs(self.persistentData.stacks) do
-        if ItemStack.canAddItem(stack, item, self.inventory) then
+        if ItemStack.canAddItem(stack, item) then
             return true
         end
     end
 
-    local w, h = GridItemManager.getItemSize(item, isRotated)
+    local w, h = TetrisItemData.getItemSize(item, isRotated)
     for x=0,self.width-w do
         for y=0,self.height-h do
             if self:_isAreaFree(x, y, w, h) then
@@ -218,20 +227,20 @@ end
 function ItemGrid:doesItemFit(item, xPos, yPos, isRotated)
     local stack = self:findStackByItem(item)
 
-    local w, h = GridItemManager.getItemSize(item, isRotated)
+    local w, h = TetrisItemData.getItemSize(item, isRotated)
     return self:_isAreaFree(xPos, yPos, w, h, stack)
 end
 
 function ItemGrid:canItemBeStacked(item, xPos, yPos)
     local stack = self:getStack(xPos, yPos)
     if stack then
-        return ItemStack.canAddItem(stack, item, self.inventory)
+        return ItemStack.canAddItem(stack, item)
     end
     return false
 end
 
 function ItemGrid:willStackOverlapSelf(stack, newX, newY, isRotated)
-    local w, h = GridItemManager.getItemSize(ItemStack.getFrontItem(stack, self.inventory), isRotated)
+    local w, h = TetrisItemData.getItemSize(ItemStack.getFrontItem(stack, self.inventory), isRotated)
     for x=newX, newX+w-1 do
         for y=newY, newY+h-1 do
             if self.stackMap[x][y] == stack then
@@ -255,8 +264,9 @@ end
 
 function ItemGrid:_attemptToStackItem(item)
     for _, stack in ipairs(self.persistentData.stacks) do
-        if ItemStack.canAddItem(stack, item, self.inventory) then
+        if ItemStack.canAddItem(stack, item) then
             ItemStack.addItem(stack, item)
+            self:_sendModData()
             return true
         end
     end
@@ -277,7 +287,7 @@ function ItemGrid:_attemptToInsertItem(item, preferRotated, shuffleMode)
         end
     end
 
-    local w, h = GridItemManager.getItemSize(item, preferRotated)
+    local w, h = TetrisItemData.getItemSize(item, preferRotated)
     if self:_attemptToInsertItem_outerLoop(item, w, h, preferRotated, shuffleMode) then
         return true
     end
@@ -320,32 +330,27 @@ end
 
 function ItemGrid:_attemptToInsertItem_innerLoop(item, w, h, xPos, yPos, isRotated)
     local stack = self:getStack(xPos, yPos)
-    if stack and ItemStack.canAddItem(stack, item, self.inventory) then
+    if stack and ItemStack.canAddItem(stack, item) then
         ItemStack.addItem(stack, item)
+        self:_sendModData()
         return true
     end
 
     if self:_isAreaFree(xPos, yPos, w, h) then
         self:_insertStack(xPos, yPos, item, isRotated)
+        self:_sendModData()
         return true
     end
 end
 
 function ItemGrid:refresh()
-    self:_validateAndCleanStacks(self.persistentData)
+    self:_loadData()
     self:_updateGridPositions(self.firstRefresh or not self.containerDefinition.isOrganized)
     self.firstRefresh = false
 end
 
 function ItemGrid:_loadData()
-    local time = getTimestampMs()
-    self.persistentData = self:_getSavedGridData()
-    if self.persistentData.stacks then
-        for _, stack in ipairs(self.persistentData.stacks) do
-            stack.inventory = self.inventory
-        end
-    end
-
+    self.persistentData, self.isoObject = self:_getSavedGridData()
     self:_validateAndCleanStacks(self.persistentData)
     self:_rebuildStackMap()
 end
@@ -369,10 +374,10 @@ function ItemGrid:_validateAndCleanStacks(persistentGridData)
 
     local validatedStacks = {}
     for _,stack in ipairs(persistentGridData.stacks) do
-        if not badStacks[stack] then
+        if not badStacks[stack] and self:_isInBounds(stack.x, stack.y) then
             table.insert(validatedStacks, stack)
         else
-            local newStack = ItemStack.copyWithoutItems(stack, self.inventory)
+            local newStack = ItemStack.copyWithoutItems(stack)
 
             for itemID, _ in pairs(stack.itemIDs) do
                 local item = self.inventory:getItemById(itemID)
@@ -384,6 +389,7 @@ function ItemGrid:_validateAndCleanStacks(persistentGridData)
             if newStack.count > 0 then
                 table.insert(validatedStacks, newStack)
             end
+            self:_sendModData()
         end
     end
 
@@ -399,16 +405,19 @@ function ItemGrid:_rebuildStackMap()
 
     for _,stack in ipairs(self.persistentData.stacks) do
         local item = ItemStack.getFrontItem(stack, self.inventory)
-        local w, h = GridItemManager.getItemSize(item, stack.isRotated)
-        
-        for x=stack.x,stack.x+w-1 do
-            for y=stack.y,stack.y+h-1 do
-                if self:_isInBounds(x, y) then
-                    stackMap[x][y] = stack
-                else
-                    print("ItemGrid:_rebuildStackMap() - Stack out of bounds: " .. tostring(x) .. ", " .. tostring(y) .. " - " .. tostring(item:getName()))
+        if item then
+            local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
+            for x=stack.x,stack.x+w-1 do
+                for y=stack.y,stack.y+h-1 do
+                    if self:_isInBounds(x, y) then
+                        stackMap[x][y] = stack
+                    else
+                        print("ItemGrid:_rebuildStackMap() - Stack out of bounds: " .. tostring(x) .. ", " .. tostring(y) .. " - " .. tostring(item:getName()))
+                    end
                 end
             end
+        else
+            print("ItemGrid:_rebuildStackMap() - Stack has no items: " .. tostring(stack.x) .. ", " .. tostring(stack.y))
         end
     end
 
@@ -429,7 +438,7 @@ function ItemGrid:_getUnpositionedItems()
     for i = 0, items:size()-1 do
         local item = items:get(i);
         if not positionedItems[item:getID()] and self:_isItemValid(item) then
-            local w, h = GridItemManager.getItemSize(item)
+            local w, h = TetrisItemData.getItemSize(item)
             local size = w * h
             table.insert(unpositionedItemData, {item = item, size = size})
             count = count + 1
@@ -445,10 +454,13 @@ function ItemGrid:_getPositionedItems()
     local containerData = self:_getSavedContainerData()
 
     local positionedItems = {}
-    for _, grid in pairs(containerData) do
-        for _, stack in pairs(grid.stacks) do
-            for itemID, _ in pairs(stack.itemIDs) do
-                positionedItems[itemID] = true
+    for index, grid in pairs(containerData) do
+        if self.containerGrid.grids[index] then
+        
+            for _, stack in pairs(grid.stacks) do
+                for itemID, _ in pairs(stack.itemIDs) do
+                    positionedItems[itemID] = true
+                end
             end
         end
     end
@@ -510,17 +522,17 @@ end
 
 
 function ItemGrid:_getSavedGridData()
-    local containerData = self:_getSavedContainerData()
+    local containerData, parent = self:_getSavedContainerData()
 
     if not containerData[self.gridIndex] then
         containerData[self.gridIndex] = {}
     end
 
-    return containerData[self.gridIndex]
+    return containerData[self.gridIndex], parent
 end
 
 function ItemGrid:_getSavedContainerData()
-    local modData = self:_getParentModData()
+    local modData, parent = self:_getParentModData()
     if not modData.gridContainers then
         modData.gridContainers = {}
     end
@@ -530,10 +542,10 @@ function ItemGrid:_getSavedContainerData()
         modData.gridContainers[invType] = {}
     end
 
-    return modData.gridContainers[invType]
+    return modData.gridContainers[invType], parent
 end
 
-ItemGrid._floorModData = {} -- No need to save floor grids, but lets allow users to reposition items on the floor
+ItemGrid._floorModData = {} -- No need to save floor grids, but we do allow users to reposition items on the floor temporarily
 
 function ItemGrid:_getParentModData()
     if self.isPlayerInventory then
@@ -551,9 +563,27 @@ function ItemGrid:_getParentModData()
 
     local isoObject = self.inventory:getParent()
     if isoObject then
-        return isoObject:getModData()
+        return isoObject:getModData(), isoObject
     end
 
     print("Error: ItemGrid:_getParentModData() An invalid container setup was found. Contact Notloc and tell him what you were doing when this happened.")
     return {} -- Return an empty table so we don't error out
+end
+
+
+ItemGrid._modDataSyncQueue = {}
+
+function ItemGrid:_sendModData()
+    if isClient() and self.isoObject then
+        ItemGrid._modDataSyncQueue[self.isoObject] = true
+    end
+end
+
+if isClient() then
+    Events.OnTick.Add(function()
+        for isoObject,_ in pairs(ItemGrid._modDataSyncQueue) do
+            isoObject:transmitModData()
+        end
+        ItemGrid._modDataSyncQueue = {}
+    end)
 end

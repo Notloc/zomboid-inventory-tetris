@@ -73,6 +73,7 @@ function ItemGridWindow:createChildren()
     local lootButtonHeight = titleBarHeight
 
     local gridContainerUi = ItemGridContainerUI:new(self.inventory, self.inventoryPane, self.playerNum)
+    gridContainerUi.showTitle = false
     gridContainerUi:initialise()
     gridContainerUi:setY(titleBarHeight)
     self:addChild(gridContainerUi)

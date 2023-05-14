@@ -3,25 +3,24 @@
 
 ItemStack = {}
 
-ItemStack.create = function(x, y, isRotated, inventory)
+ItemStack.create = function(x, y, isRotated, itemFullType)
     local stack = {}
     stack.itemIDs = {}
     stack.count = 0
     stack.x = x
     stack.y = y
     stack.isRotated = isRotated and true or false
-    stack.inventory = inventory -- Does not get serialized
+    stack.itemType = itemFullType
     return stack
 end
 
-ItemStack.copyWithoutItems = function(stack, inventory)
-    local newStack = ItemStack.create(stack.x, stack.y, stack.isRotated, inventory)
-    return newStack
+ItemStack.copyWithoutItems = function(stack)
+    return ItemStack.create(stack.x, stack.y, stack.isRotated, stack.itemType)
 end
 
-ItemStack.getFrontItem = function(stack)
+ItemStack.getFrontItem = function(stack, inventory)
     for itemID, _ in pairs(stack.itemIDs) do
-        local item = stack.inventory:getItemById(itemID)
+        local item = inventory:getItemById(itemID)
         if item then return item end
     end
     return nil
@@ -50,23 +49,14 @@ end
 ItemStack.canAddItem = function(stack, item)
     if stack.count == 0 then return true end
     
-    local frontItem = ItemStack.getFrontItem(stack)
-    if frontItem:getFullType() ~= item:getFullType() then return false end
-    if stack.count >= GridItemManager.getMaxStackSize(item) then return false end
+    if not ItemStack.isSameType(stack, item) then return false end
+    if stack.count >= TetrisItemData.getMaxStackSize(item) then return false end
     
     return true
 end
 
 ItemStack.isSameType = function(stack, item)
-    if stack.count == 0 then return false end
-    local frontItem = ItemStack.getFrontItem(stack)
-    local fullType = item:getFullType()
-    local fullType2 = frontItem:getFullType()
-    return fullType == fullType2
-end
-
-ItemStack.isRotated = function(stack)
-    return stack.isRotated
+    return stack.itemType == item:getFullType()
 end
 
 ItemStack.convertToVanillaStack = function(stack, inventory)

@@ -61,12 +61,12 @@ function GridAutoDropSystem._attemptToForceEquipItem(item, playerObj, playerNum)
     local requiresBothHands = item:isRequiresEquippedBothHands()
 
     if not instanceof(primHand, "Moveable") then
-        ISInventoryPaneContextMenu.equipWeapon(item, true, requiresBothHands, playerNum)
+        ISTimedActionQueue.add(ISEquipWeaponAction:new(playerObj, item, 0, true, requiresBothHands));
         return true
     end
 
     if not requiresBothHands and not instanceof(secHand, "Moveable") then
-        ISInventoryPaneContextMenu.equipWeapon(item, false, false, playerNum)
+        ISTimedActionQueue.add(ISEquipWeaponAction:new(playerObj, item, 0, false, requiresBothHands));
         return true
     end
 

@@ -1,6 +1,9 @@
 require "ISUI/ISUIElement"
 
 local BG_TEXTURE = getTexture("media/textures/InventoryTetris/ItemSlot.png")
+local BG_TEXTURE1X2 = getTexture("media/textures/InventoryTetris/ItemSlot1x2.png")
+local BG_TEXTURE2X1 = getTexture("media/textures/InventoryTetris/ItemSlot2x1.png")
+local BG_TEXTURE2X2 = getTexture("media/textures/InventoryTetris/ItemSlot2x2.png")
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
 local CONSTANTS = require "InventoryTetris/Constants"
 
@@ -41,12 +44,13 @@ end
 
 ItemGridUI = ISPanel:derive("ItemGridUI")
 
-function ItemGridUI:new(grid, inventoryPane, playerNum)
+function ItemGridUI:new(grid, inventoryPane, containerUi, playerNum)
     local o = ISPanel:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
 
     o.grid = grid
+    o.containerUi = containerUi
     o.inventoryPane = inventoryPane
     o.playerNum = playerNum
 
@@ -100,16 +104,59 @@ function ItemGridUI:renderBackGrid()
     local height = self.grid.height
     
     local background = 0.07
-    self:drawRect(0, 0, CELL_SIZE * width - width, CELL_SIZE * height - height, 0.8, background, background, background)
+    local totalWidth = CELL_SIZE * width - width + 1
+    local totalHeight = CELL_SIZE * height - height + 1
+    self:drawRect(0, 0, totalWidth, totalHeight, 0.8, background, background, background)
 
     local gridLines = 0.2
-    for y = 0,height-1 do
-        for x = 0,width-1 do
+
+    local x = 0
+    local y = 0
+    while y <= height-1 do
+        local posY = CELL_SIZE * y - y
+        local doubleRenderY = y < height-2
+        local yTex = doubleRenderY and BG_TEXTURE1X2 or BG_TEXTURE
+        while x <= width-1 do
             local posX = CELL_SIZE * x - x
-            local posY = CELL_SIZE * y - y
-            self:drawTextureScaled(BG_TEXTURE, posX, posY, CELL_SIZE, CELL_SIZE, 0.25, 1, g, b)
-            self:drawRectBorder(posX, posY, CELL_SIZE, CELL_SIZE, 1, gridLines, gridLines, gridLines)
+            local doubleRenderX = x < width-2
+
+            if doubleRenderX and doubleRenderY then
+                local size = CELL_SIZE * 2 - 1
+                self:drawTextureScaled(BG_TEXTURE2X2, posX, posY, size, size, 0.25, 1, g, b)
+            elseif doubleRenderX then
+                local size = CELL_SIZE * 2 - 1
+                self:drawTextureScaled(BG_TEXTURE2X1, posX, posY, size, CELL_SIZE, 0.25, 1, g, b)
+            elseif doubleRenderY then
+                local size = CELL_SIZE * 2 - 1
+                self:drawTextureScaled(BG_TEXTURE1X2, posX, posY, CELL_SIZE, size, 0.25, 1, g, b)
+            else
+                self:drawTextureScaled(BG_TEXTURE, posX, posY, CELL_SIZE, CELL_SIZE, 0.25, 1, g, b)
+            end
+
+            x = x + (doubleRenderX and 2 or 1)
         end
+        
+        y = y + (doubleRenderY and 2 or 1)
+        x = 0
+    end
+
+    for y = 0,height-1,2 do
+        local posY = CELL_SIZE * y - y
+        self:drawRectBorder(0, posY, totalWidth, CELL_SIZE, 1, gridLines, gridLines, gridLines)
+    end
+
+    for x = 0,width-1,2 do
+        local posX = CELL_SIZE * x - x
+        self:drawRectBorder(posX, 0, CELL_SIZE, totalHeight, 1, gridLines, gridLines, gridLines)
+    end
+end
+
+function updateItem(item)
+    if instanceof(item, 'InventoryItem') then
+        item:updateAge()
+    end
+    if instanceof(item, 'Clothing') then
+        item:updateWetness()
     end
 end
 
@@ -118,19 +165,20 @@ function ItemGridUI:renderGridItems()
     local stacks = self.grid:getStacks()
     local inventory = self.grid.inventory
     for _, stack in pairs(stacks) do
-        local item = ItemStack.getFrontItem(stack)
+        local item = ItemStack.getFrontItem(stack, inventory)
+        updateItem(item);
+
         local x, y = stack.x, stack.y
         if x and y then
             if item ~= draggedItem then
-                self:renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y)
+                self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1)
             else
-                self:renderGridStackFaded(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y)
+                self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4)
             end
         end
     end
 end
 
--- TODO: Make this render cell by cell, so we can filter out of bounds cells
 function ItemGridUI:renderDragItemPreview()
     local item = DragAndDrop.getDraggedItem()
     if not item or not self:isMouseOver() then
@@ -139,9 +187,9 @@ function ItemGridUI:renderDragItemPreview()
     
 
     local stack = self:findGridStackUnderMouse()
-    if stack and not ItemStack.containsItem(stack, item) and ItemStack.canAddItem(stack, item, self.grid.inventory) then
+    if stack and not ItemStack.containsItem(stack, item) and ItemStack.canAddItem(stack, item) then
         local stackItem = ItemStack.getFrontItem(stack, self.grid.inventory)
-        local w, h = GridItemManager.getItemSize(stackItem, stack.isRotated)
+        local w, h = TetrisItemData.getItemSize(stackItem, stack.isRotated)
         self:_renderPlacementPreview(stack.x, stack.y, w, h, 1, 1, 1)
         return
     end
@@ -149,7 +197,7 @@ function ItemGridUI:renderDragItemPreview()
     local container = self:getValidContainerFromStack(stack)
     if container then
         local item = ItemStack.getFrontItem(stack, self.grid.inventory)
-        local w, h = GridItemManager.getItemSize(item)
+        local w, h = TetrisItemData.getItemSize(item)
         self:_renderPlacementPreview(stack.x, stack.y, w, h, 1, 1, 0)
         return
     end
@@ -158,7 +206,7 @@ function ItemGridUI:renderDragItemPreview()
     local y = self:getMouseY()
     local isRotated = DragAndDrop.isDraggedItemRotated()
     
-    local itemW, itemH = GridItemManager.getItemSize(item, isRotated)
+    local itemW, itemH = TetrisItemData.getItemSize(item, isRotated)
 
     local halfCell = CELL_SIZE / 2
     local xPos = x + halfCell - itemW * halfCell
@@ -201,7 +249,7 @@ function ItemGridUI.getItemColor(item, limit)
 end
 
 function ItemGridUI._renderGridItem(drawingContext, item, x, y, rotate, alphaMult, force1x1)
-    local w, h = GridItemManager.getItemSize(item, rotate)
+    local w, h = TetrisItemData.getItemSize(item, rotate)
 
     if force1x1 then
         w, h = 1, 1
@@ -249,16 +297,9 @@ function ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, alphaMul
         -- Draw the item count
         local font = UIFont.Small
         local text = tostring(stack.count)
-        drawingContext:drawText(text, x+2, y, 1, 1, 1, alphaMult, font)
+        drawingContext:drawText(text, x+3, y-3, 0, 0, 0, alphaMult, font)
+        drawingContext:drawText(text, x+2, y-4, 1, 1, 1, alphaMult, font)
     end
-end
-
-function ItemGridUI.renderGridStack(drawingContext, stack, item, x, y)
-    ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, 1)
-end
-
-function ItemGridUI.renderGridStackFaded(drawingContext, stack, item, x, y)
-    ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, 0.4)
 end
 
 function ItemGridUI:onMouseDown(x, y)
@@ -329,8 +370,10 @@ function ItemGridUI:onRightMouseUp(x, y)
 	end
     
     local item = ItemStack.getFrontItem(itemStack, self.grid.inventory)
-    ItemGridUI.openItemContextMenu(self, x, y, item, self.playerNum)
-	return true;
+    local menu = ItemGridUI.openItemContextMenu(self, x, y, item, self.playerNum)
+	TetrisDevTool.insertContainerDebugOptions(menu, self.containerUi.containerGrid)
+    
+    return true;
 end
 
 function ItemGridUI:onMouseDoubleClick(x, y)
@@ -353,7 +396,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
     local vanillaStack = ISMouseDrag.dragging
     if not vanillaStack or not vanillaStack.items[1] then return end
 
-    local gridStack, grid = self.parent.containerGrid:findGridStackByVanillaStack(vanillaStack)
+    local gridStack, grid = self.containerUi.containerGrid:findGridStackByVanillaStack(vanillaStack) -- Might be null if we are dragging from a different inventory
     local dragInventory = vanillaStack.items[1]:getContainer()
 
     local isSameInventory = self.grid.inventory == dragInventory
@@ -365,7 +408,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
         local stackUnderMouse = self:findGridStackUnderMouse()
         local isSameStack = gridStack == stackUnderMouse
 
-        if not isSameStack and stackUnderMouse and ItemStack.canAddItem(stackUnderMouse, vanillaStack.items[1], self.grid.inventory) then
+        if not isSameStack and stackUnderMouse and ItemStack.canAddItem(stackUnderMouse, vanillaStack.items[1]) then
             local x, y = ItemGridUiUtil.mousePositionToGridPosition(x, y)
             self:handleDragAndDropTransfer(playerObj, x, y)
             return
@@ -397,16 +440,14 @@ function ItemGridUI:canPutIn(item)
     return canPutIn --TODO: item type restrictions and anti-TARDIS stacking
 end
 
-function ItemGridUI:handleContainerThing(playerObj, vanillaStack, container)
-    for i, item in ipairs(vanillaStack.items) do
-        if i > 1 then
-            if item:isEquipped() then
-                ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
-            end
-            ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), container, 1))
+function ItemGridUI:handleDropOnContainer(playerObj, vanillaStack, container)
+    for i=2, #vanillaStack.items do
+        local item = vanillaStack.items[i]
+        if item:isEquipped() then
+            ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
         end
+        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), container, 1))
     end
-    return
 end
 
 function ItemGridUI:handleDragAndDropTransfer(playerObj, gridX, gridY)
@@ -478,9 +519,11 @@ function ItemGridUI:quickMoveItems(gridStack)
     local invPage = nil;
     if not self.grid.inventory:isInCharacterInventory(getSpecificPlayer(self.playerNum)) then
         invPage = getPlayerInventory(self.playerNum)
-        local targetContainers = {}
+        local targetContainers = { invPage.inventoryPane.inventory }
         for _, backpack in pairs(invPage.backpacks) do
-            table.insert(targetContainers, backpack.inventory)
+            if backpack.inventory ~= invPage.inventoryPane.inventory then
+                table.insert(targetContainers, backpack.inventory)
+            end
         end
         self:quickMoveItemToContainer(gridStack, targetContainers)
     else
@@ -496,7 +539,7 @@ end
 
 function ItemGridUI:quickMoveItemToContainer(gridStack, targetContainers)
     local playerObj = getSpecificPlayer(self.playerNum)
-    local item = ItemStack.getFrontItem(gridStack)
+    local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
     
     local targetContainer = nil
     for _, testContainer in ipairs(targetContainers) do
@@ -518,7 +561,7 @@ function ItemGridUI:quickMoveItemToContainer(gridStack, targetContainers)
 end
 
 function ItemGridUI:quickEquipItem(item)
-    if item:isClothing() then
+    if item:IsClothing() then
         self:quickEquipClothes(item)
     end
 
@@ -564,7 +607,7 @@ function ItemGridUI:handleDoubleClick(x, y)
         self.inventoryPane.tetrisWindowManager:openContainerPopup(item, self.playerNum, self.inventoryPane)
     end
 
-    local maxStack = GridItemManager.getMaxStackSize(item)
+    local maxStack = TetrisItemData.getMaxStackSize(item)
     if maxStack > 1 then
         self.grid:gatherSameItems(itemStack)
     end
@@ -604,4 +647,5 @@ function ItemGridUI.openItemContextMenu(uiContext, x, y, item, playerNum)
         menu.mouseOver = 1
         setJoypadFocus(playerNum, menu)
     end
+    return menu
 end

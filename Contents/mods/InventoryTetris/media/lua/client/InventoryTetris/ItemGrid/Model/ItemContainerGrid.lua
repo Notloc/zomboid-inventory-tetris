@@ -28,8 +28,8 @@ function ItemContainerGrid:new(inventory, playerNum)
 
     o.inventory = inventory
     o.playerNum = playerNum
-    o.grids = ItemContainerGrid.createGrids(inventory, playerNum)
-    o.containerDefinition = ContainerData.getContainerDefinition(inventory)
+    o.containerDefinition = TetrisContainerData.getContainerDefinition(inventory)
+    o.grids = o:createGrids(inventory, playerNum)
     return o
 end
 
@@ -56,11 +56,10 @@ ItemContainerGrid.FindInstance = function(inventory, playerNum)
     return nil
 end
 
-function ItemContainerGrid.createGrids(inventory, playerNum)
-    local containerDefinition = ContainerData.getContainerDefinition(inventory)
+function ItemContainerGrid:createGrids(inventory, playerNum)
     local grids = {}
-    for index, gridDef in ipairs(containerDefinition.gridDefinitions) do
-        local grid = ItemGrid:new(containerDefinition, index, inventory, playerNum)
+    for index, gridDef in ipairs(self.containerDefinition.gridDefinitions) do
+        local grid = ItemGrid:new(self, index, inventory, playerNum)
         grids[index] = grid
     end
     return grids
@@ -78,7 +77,31 @@ function ItemContainerGrid:doesItemFit(item, gridX, gridY, gridIndex, rotate)
     return grid:doesItemFit(item, gridX, gridY, rotate)
 end
 
+function ItemContainerGrid:_getCapacity()
+    local player = getSpecificPlayer(self.playerNum)
+    local hasOrganizedTrait = player:HasTrait("Organized")
+    local hasDisorganizedTrait = player:HasTrait("Disorganized")
+
+    local capacity = self.inventory:getCapacity()
+    if hasOrganizedTrait then
+        capacity = math.floor(capacity * 1.3)
+    elseif hasDisorganizedTrait then
+        capacity = math.floor(capacity * 0.7)
+    end
+
+    return capacity
+end
+
 function ItemContainerGrid:canAddItem(item)
+    if not self:_validateOnlyAcceptCategory(item) then
+        return false
+    end
+
+    local capacity = self:_getCapacity()
+    if capacity < item:getActualWeight() + self.inventory:getCapacityWeight() then
+        return false
+    end
+
     for _, grid in ipairs(self.grids) do
         if grid:canAddItem(item, false) or grid:canAddItem(item, true) then
             return true
@@ -87,10 +110,32 @@ function ItemContainerGrid:canAddItem(item)
     return false
 end
 
+function ItemContainerGrid:_validateOnlyAcceptCategory(item)
+    if self.inventory:getOnlyAcceptCategory() then
+        if item:getCategory() ~= self.inventory:getOnlyAcceptCategory() then
+            return false
+        end
+    end
+    
+    if not self.containerDefinition.acceptedCategories then
+        return true
+    end
+    
+    return self.containerDefinition.acceptedCategories[item:getCategory()]
+end
+
 function ItemContainerGrid:refresh()
     for _, grid in ipairs(self.grids) do
         grid:refresh() 
     end
+    self.lastRefresh = getTimestampMs()
+end
+
+function ItemContainerGrid:shouldRefresh()
+    if not self.lastRefresh then
+        return true
+    end
+    return getTimestampMs() - self.lastRefresh > 1000
 end
 
 -- isDisoraganized is determined by the player's traits

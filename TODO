@@ -20,61 +20,87 @@ DONE:
 
 	Better item distribution in fresh containers, make it look more interesting by spreading items around the grid corners
 
-TODO:
-	Fix building from hands/bags
-	Speed up force equipping
-	Prevent the collection of an undroppable (VIA buildmode picup) if no space is available and 2 undroppables are already present to occupy the hands
-
-	UI for stack splitting
-	Handle auto positioning better
-
-	Item Equivelance system
-		i.e. Water bottle <-> empty bottle
-			auto keep position and force same size
-	
 	Hueristic for stack limits
 		Automatically determine the max stack size of items using item data
 		Automatic mod support!
 			Also need to support manual overrides so anything can be fine tuned
 
-		Default to not stacking
-
-		Bullets stack to 60
-			Override shotgun shells to 15
-
-		Allow light junk to stack to 3
-		Allow oven sheets to stack
-		Ripped cloth to 3
-		Cigs to 20
-
-	Dev tool for updating grids
 	Update item dev tool to allow setting stack limit
+
+	Modding APIs
+		Allow easy changes to data config
+			New item data 
+			New grid data
+
+	Speed up force equipping
 	
+	Simple multiplayer sync
+	Fix building from hands/bags
+
+	Fix drop on container
+
+	Fix window container display
+
+	Hide the key container
+
+
+TODO:
+
+	When force dropping an item try to position it in an equipped bag first
+	
+	Mod Options integration
+
+	UI for stack splitting
+
+	Item Details in popup windows
+
+	Item Equivelance system
+		i.e. Water bottle <-> empty bottle
+			auto keep position and force same size
+	
+	Dev tool for updating grids
+	
+	Prevent the collection of an undroppable (via buildmode pickup) if no space is available and 2 undroppables are already present to occupy the hands
+	
+	Obey allowedCategories in the grid's logic
 	Container item type resitrctions
 		i.e. Medkits can only hold medical items
 	
 	Improve auto container sizes again
 		Its getting decent
 
-	Auto expand world grids for too many items???
-		Red unusable slots by the player
-
-
-
-	Mod Options integration
-
 	SOUND
 		Record and implement basic interaction sounds, sounds will be per item category
 
 
-	Modding APIs
-		Allow easy changes to data config
-			Change item data
-			New item data
-			New grid data
+	Make Moveables larger in the grid
+
+	The Content Grind™️
+		Manually size items/stack limits
+		Make sure containers are good sizes and interesting
+
+
+
+
+
+
+
+
 
 
 Low Priority Or Post Launch
+	
+	Show the item sprite for world container as their image instead of the generic shelf
+		See ISMoveableSpriteProps ISMoveableAction etc
+		Add a method dedicated to extracting the texture, cache the result (including failure)
+
+	Ability to fold empty bags
+		plastic bags, totes, etc
+
+
+	Auto expand world grids for too many items???
+		Red unusable slots by the player
+	
 	Search system:
 		(Sandbox Setting)
 		When enabled, players will need to search a container to see the items inside of it.

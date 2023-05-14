@@ -51,3 +51,22 @@ function ISInventoryPage:close()
         self.inventoryPane.tetrisWindowManager:closeAll()
     end
 end
+
+local og_onRightMouseDownOutside = ISInventoryPage.onRightMouseDownOutside
+function ISInventoryPage:onRightMouseDownOutside(x, y)
+    og_onRightMouseDownOutside(self, x, y)
+    if (self.sisterPage and self.sisterPage:isMouseOver()) then
+        self.isCollapsed = false;
+        self:clearMaxDrawHeight();
+    end
+end
+
+local og_onMouseDownOutside = ISInventoryPage.onMouseDownOutside
+function ISInventoryPage:onMouseDownOutside(x, y)
+    og_onMouseDownOutside(self, x, y)
+
+    if (self.sisterPage and self.sisterPage:isMouseOver()) then
+        self.isCollapsed = false;
+        self:clearMaxDrawHeight();
+    end
+end

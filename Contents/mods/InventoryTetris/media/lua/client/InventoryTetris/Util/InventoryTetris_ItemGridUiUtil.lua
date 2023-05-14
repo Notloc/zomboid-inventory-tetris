@@ -31,7 +31,7 @@ ItemGridUiUtil.findGridPositionOfMouse = function(gridUi, item, isRotated)
     local yOff = 0
 
     if item then
-        local w, h = GridItemManager.getItemSize(item, isRotated)
+        local w, h = TetrisItemData.getItemSize(item, isRotated)
         xOff = CELL_SIZE * w / 2 - CELL_SIZE / 2
         yOff = CELL_SIZE * h / 2 - CELL_SIZE / 2
     end

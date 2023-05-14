@@ -34,7 +34,7 @@ function DragItemRenderer:render()
 
     local force1x1 = self.equipmentUi:isMouseOver()
     if not force1x1 then
-        itemW, itemH = GridItemManager.getItemSize(item, DragAndDrop.isDraggedItemRotated())
+        itemW, itemH = TetrisItemData.getItemSize(item, DragAndDrop.isDraggedItemRotated())
     end
 
     local xPos = x - itemW * CELL_SIZE / 2

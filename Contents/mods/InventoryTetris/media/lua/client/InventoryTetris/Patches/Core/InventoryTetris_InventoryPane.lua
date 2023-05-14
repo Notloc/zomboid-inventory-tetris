@@ -38,7 +38,7 @@ function ISInventoryPane:refreshContainer()
     self:refreshItemGrids()
 end
 
-function ISInventoryPane:refreshItemGrids()
+function ISInventoryPane:refreshItemGrids(forceFullRefresh)
     local oldGridContainerUis = {}
     for _, gridContainerUi in ipairs(self.gridContainerUis) do
         self.scrollView:removeScrollChild(gridContainerUi)
@@ -63,7 +63,10 @@ function ISInventoryPane:refreshItemGrids()
         for _, buttonAndY in ipairs(buttonsAndY) do
             local button = buttonAndY.button
             local inventory = button.inventory
-            table.insert(inventories, inventory)
+
+            if inventory:getType() ~= "KeyRing" then            
+                table.insert(inventories, inventory)
+            end
         end
     else
         inventories[1] = self.inventory
@@ -71,7 +74,7 @@ function ISInventoryPane:refreshItemGrids()
 
     local y = 10
     for _, inventory in ipairs(inventories) do
-        local itemGridContainerUi = oldGridContainerUis[inventory]
+        local itemGridContainerUi = not forceFullRefresh and oldGridContainerUis[inventory] or nil
         if not itemGridContainerUi then
             itemGridContainerUi = ItemGridContainerUI:new(inventory, self, self.player)
             itemGridContainerUi:initialise()
@@ -89,11 +92,11 @@ function ISInventoryPane:refreshItemGrids()
     self.scrollView:setScrollHeight(y)
 end
 
-function ISInventoryPane:findGridStackUnderMouse()
+function ISInventoryPane:findContainerGridUiUnderMouse()
     if not self.gridContainerUis then return nil end
     for _, containerUi in ipairs(self.gridContainerUis) do
         if containerUi:isMouseOver() then
-            return containerUi:findGridStackUnderMouse()
+            return containerUi
         end
     end
     return nil
@@ -119,8 +122,11 @@ function ISInventoryPane:updateTooltip()
 	local item = nil
 
 	if not self.doController and not self.dragging and not self.draggingMarquis and self:isMouseOver() then
-        local stack = self:findGridStackUnderMouse()
-        item = stack and ItemStack.getFrontItem(stack) or nil
+        local containerGrid = self:findContainerGridUiUnderMouse()
+        if containerGrid then
+            local stack = containerGrid:findGridStackUnderMouse()
+            item = stack and ItemStack.getFrontItem(stack, containerGrid.inventory) or nil
+        end
 	end
 
 	self:doTooltipForItem(item)
@@ -235,8 +241,8 @@ end
 
 local og_getActualItems = ISInventoryPane.getActualItems
 function ISInventoryPane.getActualItems(items)
-	if items == ISMouseDrag.dragging then
-        return items.items
+	if items.items then
+        return og_getActualItems(items.items)
     end
     return og_getActualItems(items)
 end
