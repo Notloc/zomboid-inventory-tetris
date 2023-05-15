@@ -43,6 +43,7 @@ DONE:
 
 	Hide the key container
 
+	Optimize grid rendering
 
 TODO:
 
@@ -54,8 +55,7 @@ TODO:
 
 	Item Details in popup windows
 
-	Optimize grid rendering further - (Mod Options + scaling first)
-		Replace manual tiel rendering with drawTextureTiled and prescaled jpegs
+	Fix scaled grid rendering following optimizations
 
 	Prevent equip of food and clothes into hands
 

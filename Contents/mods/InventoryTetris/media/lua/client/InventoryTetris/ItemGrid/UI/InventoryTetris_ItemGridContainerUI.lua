@@ -8,7 +8,7 @@ local ICON_PADDING_Y = 10
 local ICON_SIZE = 64
 local INFO_SPACING = 20
 
-local GRID_PADDING = 3
+local GRID_PADDING = 2
 
 local CONTAINER_PADDING_X = 4
 local CONTAINER_PADDING_Y = 10

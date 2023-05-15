@@ -1,9 +1,7 @@
 require "ISUI/ISUIElement"
 
 local BG_TEXTURE = getTexture("media/textures/InventoryTetris/ItemSlot.png")
-local BG_TEXTURE1X2 = getTexture("media/textures/InventoryTetris/ItemSlot1x2.png")
-local BG_TEXTURE2X1 = getTexture("media/textures/InventoryTetris/ItemSlot2x1.png")
-local BG_TEXTURE2X2 = getTexture("media/textures/InventoryTetris/ItemSlot2x2.png")
+local HORIZONTAL_LINE = getTexture("media/textures/InventoryTetris/HorizontalLine.png")
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
 local CONSTANTS = require "InventoryTetris/Constants"
 
@@ -110,45 +108,9 @@ function ItemGridUI:renderBackGrid()
 
     local gridLines = 0.2
 
-    local x = 0
-    local y = 0
-    while y <= height-1 do
-        local posY = CELL_SIZE * y - y
-        local doubleRenderY = y < height-2
-        local yTex = doubleRenderY and BG_TEXTURE1X2 or BG_TEXTURE
-        while x <= width-1 do
-            local posX = CELL_SIZE * x - x
-            local doubleRenderX = x < width-2
+    self.javaObject:DrawTextureTiled(BG_TEXTURE, 1, 1, totalWidth-1, totalHeight-1, 1, 1, 1, 0.25)
+    self.javaObject:DrawTextureTiled(HORIZONTAL_LINE, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
 
-            if doubleRenderX and doubleRenderY then
-                local size = CELL_SIZE * 2 - 1
-                self:drawTextureScaled(BG_TEXTURE2X2, posX, posY, size, size, 0.25, 1, g, b)
-            elseif doubleRenderX then
-                local size = CELL_SIZE * 2 - 1
-                self:drawTextureScaled(BG_TEXTURE2X1, posX, posY, size, CELL_SIZE, 0.25, 1, g, b)
-            elseif doubleRenderY then
-                local size = CELL_SIZE * 2 - 1
-                self:drawTextureScaled(BG_TEXTURE1X2, posX, posY, CELL_SIZE, size, 0.25, 1, g, b)
-            else
-                self:drawTextureScaled(BG_TEXTURE, posX, posY, CELL_SIZE, CELL_SIZE, 0.25, 1, g, b)
-            end
-
-            x = x + (doubleRenderX and 2 or 1)
-        end
-        
-        y = y + (doubleRenderY and 2 or 1)
-        x = 0
-    end
-
-    for y = 1,height-1,2 do
-        local posY = CELL_SIZE * y - y
-        self:drawRectBorder(0, posY, totalWidth, CELL_SIZE, 1, gridLines, gridLines, gridLines)
-    end
-
-    for x = 1,width-1,2 do
-        local posX = CELL_SIZE * x - x
-        self:drawRectBorder(posX, 0, CELL_SIZE, totalHeight, 1, gridLines, gridLines, gridLines)
-    end
 end
 
 function updateItem(item)

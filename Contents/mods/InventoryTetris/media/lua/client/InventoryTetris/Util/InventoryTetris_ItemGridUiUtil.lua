@@ -1,8 +1,6 @@
 local TETRIS = require "InventoryTetris/Constants"
 
 local CELL_SIZE = TETRIS.CELL_SIZE
-local TEXTURE_SIZE = TETRIS.TEXTURE_SIZE
-local TEXTURE_PAD = TETRIS.TEXTURE_PAD
 
 ItemGridUiUtil = {}
 
