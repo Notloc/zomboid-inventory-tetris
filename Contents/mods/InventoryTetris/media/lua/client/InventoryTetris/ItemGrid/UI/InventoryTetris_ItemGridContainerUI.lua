@@ -8,7 +8,7 @@ local ICON_PADDING_Y = 10
 local ICON_SIZE = 64
 local INFO_SPACING = 20
 
-local GRID_PADDING = 2
+local GRID_PADDING = 3
 
 local CONTAINER_PADDING_X = 4
 local CONTAINER_PADDING_Y = 10
@@ -282,7 +282,7 @@ end
 
 function ItemGridContainerUI.prerenderGrids(self)
     self:drawRect(0, 0, self.width, self.height, 0.9,0,0,0)
-    self:drawTextureScaled(CONTAINER_BG, 0, 0, self.width, self.height, 0.2, 1, 1, 1)
+    self:drawTextureScaled(CONTAINER_BG, 0, 0, self.width, self.height, 0.225, 1, 1, 1)
     self:drawRectBorder(0, 0, self.width, self.height, 0.5,1,1,1)
 end
 
@@ -426,9 +426,8 @@ function ItemGridContainerUI:cancelDragDropItem()
     if not item then return end
 
     if not ISUIElement.isMouseOverAnyUI() then
-        local playerObj = getSpecificPlayer(self.playerNum)
-        ISInventoryPaneContextMenu.dropItem(item, self.playerNum)
-    end 
+        ISInventoryPaneContextMenu.dropItem(item, self.containerUi.playerNum)
+    end
 end
 
 function ItemGridContainerUI:renderTitle(text, xOffset, yOffset, paddingX, paddingY)

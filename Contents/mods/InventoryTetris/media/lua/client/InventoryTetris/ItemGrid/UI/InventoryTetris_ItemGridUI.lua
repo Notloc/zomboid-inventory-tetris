@@ -140,12 +140,12 @@ function ItemGridUI:renderBackGrid()
         x = 0
     end
 
-    for y = 0,height-1,2 do
+    for y = 1,height-1,2 do
         local posY = CELL_SIZE * y - y
         self:drawRectBorder(0, posY, totalWidth, CELL_SIZE, 1, gridLines, gridLines, gridLines)
     end
 
-    for x = 0,width-1,2 do
+    for x = 1,width-1,2 do
         local posX = CELL_SIZE * x - x
         self:drawRectBorder(posX, 0, CELL_SIZE, totalHeight, 1, gridLines, gridLines, gridLines)
     end
