@@ -3,7 +3,7 @@ require "ISUI/ISUIElement"
 local BG_TEXTURE = getTexture("media/textures/InventoryTetris/ItemSlot.png")
 local HORIZONTAL_LINE = getTexture("media/textures/InventoryTetris/HorizontalLine.png")
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
-local CONSTANTS = require "InventoryTetris/Constants"
+local CONSTANTS = require "InventoryTetris/ModOptions"
 
 local CELL_SIZE = CONSTANTS.CELL_SIZE
 local TEXTURE_SIZE = CONSTANTS.TEXTURE_SIZE
@@ -110,7 +110,6 @@ function ItemGridUI:renderBackGrid()
 
     self.javaObject:DrawTextureTiled(BG_TEXTURE, 1, 1, totalWidth-1, totalHeight-1, 1, 1, 1, 0.25)
     self.javaObject:DrawTextureTiled(HORIZONTAL_LINE, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
-
 end
 
 function updateItem(item)

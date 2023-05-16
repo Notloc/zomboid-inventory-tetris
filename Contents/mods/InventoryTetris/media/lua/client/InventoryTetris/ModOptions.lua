@@ -1,4 +1,4 @@
-InventoryTetris = {}
+
 
 local constants = {}
 

@@ -29,6 +29,7 @@ function ItemContainerGrid:new(inventory, playerNum)
     o.inventory = inventory
     o.playerNum = playerNum
     o.containerDefinition = TetrisContainerData.getContainerDefinition(inventory)
+    o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
     o.grids = o:createGrids(inventory, playerNum)
     return o
 end
@@ -42,6 +43,11 @@ ItemContainerGrid.Create = function(inventory, playerNum)
 end
 
 ItemContainerGrid.FindInstance = function(inventory, playerNum)
+    local playerObj = getSpecificPlayer(playerNum)
+    if inventory == playerObj:getInventory() then
+        return ItemContainerGrid._getPlayerMainGrid(playerNum)
+    end
+
     local invPage = getPlayerInventory(playerNum)
     local containerGrid = searchInventoryPageForContainerGrid(invPage, inventory)
     if containerGrid then
@@ -54,6 +60,16 @@ ItemContainerGrid.FindInstance = function(inventory, playerNum)
         return containerGrid
     end
     return nil
+end
+
+ItemContainerGrid._playerMainGrids = {}
+function ItemContainerGrid._getPlayerMainGrid(playerNum)
+    if not ItemContainerGrid._playerMainGrids[playerNum] then
+        local playerObj = getSpecificPlayer(playerNum)
+        local inventory = playerObj:getInventory()
+        ItemContainerGrid._playerMainGrids[playerNum] = ItemContainerGrid:new(inventory, playerNum)
+    end
+    return ItemContainerGrid._playerMainGrids[playerNum]
 end
 
 function ItemContainerGrid:createGrids(inventory, playerNum)
@@ -126,8 +142,9 @@ end
 
 function ItemContainerGrid:refresh()
     for _, grid in ipairs(self.grids) do
-        grid:refresh() 
+        grid:refresh()
     end
+    self:_updateGridPositions()
     self.lastRefresh = getTimestampMs()
 end
 
@@ -174,6 +191,21 @@ function ItemContainerGrid:removeItem(item)
     return false
 end
 
+function ItemContainerGrid:autoPositionItem(item)
+    for _, grid in ipairs(self.grids) do
+        if grid:removeItem(item) then
+            print("ohno")
+        end
+    end
+
+    for _, grid in ipairs(self.grids) do
+        if grid:_attemptToInsertItem(item) then
+            return true
+        end
+    end
+    return false
+end
+
 function ItemContainerGrid:canItemBeStacked(item, xPos, yPos, gridIndex)
     local grid = self.grids[gridIndex]
     if not grid then
@@ -194,3 +226,103 @@ function ItemContainerGrid:findGridStackByVanillaStack(vanillaStack)
     end
     return nil, nil
 end
+
+
+function ItemContainerGrid:_updateGridPositions(useShuffle)
+    local unpositionedItems = self:_getUnpositionedItems()
+
+    -- Sort the unpositioned items by size, so we can place the biggest ones first
+    table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
+    
+    for _, grid in ipairs(self.grids) do
+        unpositionedItems = grid:_acceptUnpositionedItems(unpositionedItems, useShuffle)
+    end
+
+    for _, unpositionedItemData in ipairs(unpositionedItems) do
+        self:_dropUnpositionedItem(unpositionedItemData.item)
+    end
+end
+
+function ItemContainerGrid:_getUnpositionedItems()
+    local positionedItems = self:_getPositionedItems()
+    local unpositionedItemData = {}
+
+    local count = 0
+    local items = self.inventory:getItems();
+    for i = 0, items:size()-1 do
+        local item = items:get(i);
+        if not positionedItems[item:getID()] and self:_isItemValid(item) then
+            local w, h = TetrisItemData.getItemSize(item)
+            local size = w * h
+            table.insert(unpositionedItemData, {item = item, size = size})
+            count = count + 1
+            if count >= 100 then -- Don't process too many items at once
+                break
+            end
+        end
+    end
+    return unpositionedItemData
+end
+
+function ItemContainerGrid:_getPositionedItems()
+    local positionedItems = {}
+    for index, grid in ipairs(self.grids) do
+        local gridData = grid:_getSavedGridData()
+        for _, stack in pairs(gridData.stacks) do
+            for itemID, _ in pairs(stack.itemIDs) do
+                positionedItems[itemID] = true
+            end
+        end
+    end
+    return positionedItems
+end
+
+function ItemContainerGrid:_dropUnpositionedItem(item)
+    local playerNum = self.playerNum
+    local playerObj = getSpecificPlayer(playerNum)
+    local action = TimedActionSnooper.findUpcomingActionThatHandlesItem(playerObj, item)
+    if action then
+        if action.autoDropInjected then
+            return -- Already injected
+        end
+        
+        -- If the player is about to use the item, don't drop it
+        -- Inject an auto drop if they cancel the action
+        local og_stop = action.stop
+        action.stop = function(self)
+            og_stop(self)
+            GridAutoDropSystem.queueItemForDrop(item, playerNum)
+        end
+        action.autoDropInjected = true
+        return
+    end
+
+    GridAutoDropSystem.queueItemForDrop(item, playerNum)
+end
+
+function ItemContainerGrid:_isItemValid(item)
+    return not item:isHidden() and not item:isEquipped() and not self:_isItemInHotbar(item)
+end
+
+function ItemContainerGrid:_isItemInHotbar(item)
+    if not self.isPlayerInventory then
+        return false
+    end
+
+    local hotbar = getPlayerHotbar(self.playerNum);
+    if not hotbar then return false end
+
+    return hotbar:isInHotbar(item)
+end
+
+
+
+-- Keep the player's main inventory grid refreshed, so it drops unpositioned items even if the ui isn't open
+Events.OnTick.Add(function()
+    for _, grid in pairs(ItemContainerGrid._playerMainGrids) do
+        if grid:shouldRefresh() then
+            grid:refresh()
+        end
+    end
+end)
+

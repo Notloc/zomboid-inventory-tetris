@@ -16,9 +16,8 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, playerNum)
 
     o.width = o.gridDefinition.size.width
     o.height = o.gridDefinition.size.height
-    o.firstRefresh = true
 
-    o:_loadData()
+    o:refresh()
     return o
 end
 
@@ -186,21 +185,6 @@ function ItemGrid:_isItemInBounds(item, stack)
     return self:_isInBounds(stack.x, stack.y) and self:_isInBounds(stack.x+w-1, stack.y+h-1)
 end
 
-function ItemGrid:_isItemValid(item)
-    return not item:isHidden() and not item:isEquipped() and not self:_isItemInHotbar(item)
-end
-
-function ItemGrid:_isItemInHotbar(item)
-    if not self.isPlayerInventory then
-        return false
-    end
-
-    local hotbar = getPlayerHotbar(self.playerNum);
-    if not hotbar then return false end
-
-    return hotbar:isInHotbar(item)
-end
-
 function ItemGrid:canAddItem(item, isRotated)
     if self.inventory:getType() == "floor" then
         return true;
@@ -344,13 +328,7 @@ function ItemGrid:_attemptToInsertItem_innerLoop(item, w, h, xPos, yPos, isRotat
 end
 
 function ItemGrid:refresh()
-    self:_loadData()
-    self:_updateGridPositions(self.firstRefresh or not self.containerDefinition.isOrganized)
-    self.firstRefresh = false
-end
-
-function ItemGrid:_loadData()
-    self.persistentData, self.isoObject = self:_getSavedGridData()
+    self.persistentData, self.isoObject = self:_getSavedGridData() -- Reload incase the modData has changed from a mp sync
     self:_validateAndCleanStacks(self.persistentData)
     self:_rebuildStackMap()
 end
@@ -361,14 +339,22 @@ function ItemGrid:_validateAndCleanStacks(persistentGridData)
         return
     end
 
+    local seenItemIDs = {}
+    local badItemIDs = {}
     local badStacks = {}
     for _,stack in ipairs(persistentGridData.stacks) do
         for itemID, _ in pairs(stack.itemIDs) do
-            local item = self.inventory:getItemById(itemID)
-            if not item or not self:_isItemValid(item) then
+            if seenItemIDs[itemID] then
+                badItemIDs[itemID] = true
                 badStacks[stack] = true
-                break
             end
+            
+            local item = self.inventory:getItemById(itemID)
+            if not item or not self.containerGrid:_isItemValid(item) then
+                badStacks[stack] = true
+            end
+
+            seenItemIDs[itemID] = true
         end
     end
 
@@ -381,7 +367,7 @@ function ItemGrid:_validateAndCleanStacks(persistentGridData)
 
             for itemID, _ in pairs(stack.itemIDs) do
                 local item = self.inventory:getItemById(itemID)
-                if item and self:_isItemValid(item) and self:_isItemInBounds(item, newStack) then
+                if not badItemIDs[itemID] and item and self.containerGrid:_isItemValid(item) and self:_isItemInBounds(item, newStack) then
                     ItemStack.addItem(newStack, item)
                 end
             end
@@ -424,102 +410,20 @@ function ItemGrid:_rebuildStackMap()
     self.stackMap = stackMap
 end
 
-function ItemGrid:_updateGridPositions(useShuffle)
-    local unpositionedItems = self:_getUnpositionedItems()
-    self:_processUnpositionedItems(unpositionedItems, useShuffle)
-end
-
-function ItemGrid:_getUnpositionedItems()
-    local positionedItems = self:_getPositionedItems()
-    local unpositionedItemData = {}
-
-    local count = 0
-    local items = self.inventory:getItems();
-    for i = 0, items:size()-1 do
-        local item = items:get(i);
-        if not positionedItems[item:getID()] and self:_isItemValid(item) then
-            local w, h = TetrisItemData.getItemSize(item)
-            local size = w * h
-            table.insert(unpositionedItemData, {item = item, size = size})
-            count = count + 1
-            if count >= 50 then -- Don't process too many items at once
-                break
-            end
-        end
-    end
-    return unpositionedItemData
-end
-
-function ItemGrid:_getPositionedItems()
-    local containerData = self:_getSavedContainerData()
-
-    local positionedItems = {}
-    for index, grid in pairs(containerData) do
-        if self.containerGrid.grids[index] then
-        
-            for _, stack in pairs(grid.stacks) do
-                for itemID, _ in pairs(stack.itemIDs) do
-                    positionedItems[itemID] = true
-                end
-            end
-        end
-    end
-    return positionedItems
-end
-
-function ItemGrid:_processUnpositionedItems(unpositionedItems, useShuffle)    
-    local hasStackType = {}
-    for _,stack in ipairs(self.persistentData.stacks) do
-        local item = ItemStack.getFrontItem(stack, self.inventory)
-        hasStackType[item:getFullType()] = true
-    end
-
-    -- Try to stack items first, loop backwards so reduce array shuffling
-    for i = #unpositionedItems,1,-1 do
-        local item = unpositionedItems[i].item
-        if hasStackType[item:getFullType()] and self:_attemptToStackItem(item) then
-            table.remove(unpositionedItems, i)
-        end
-    end
-
+function ItemGrid:_acceptUnpositionedItems(unpositionedItems, useShuffle)    
+    local remainingItems = {}
     if self:hasFreeSlot() then
-        -- Sort the remaining unpositioned items by size, so we can place the biggest ones first
-        table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
-        for i = 1,#unpositionedItems do
-            local item = unpositionedItems[i].item
+        for _, itemData in ipairs(unpositionedItems) do
+            local item = itemData.item
             if not self:_attemptToInsertItem(item, false, useShuffle) then
-                if self.isPlayerInventory then
-                    self:_dropUnpositionedItem(item)
-                end
+                table.insert(remainingItems, itemData)
             end
         end
+    else
+        remainingItems = unpositionedItems
     end
+    return remainingItems
 end
-
-function ItemGrid:_dropUnpositionedItem(item)
-    local playerNum = self.playerNum
-    local playerObj = getSpecificPlayer(playerNum)
-    local action = TimedActionSnooper.findUpcomingActionThatHandlesItem(playerObj, item)
-    if action then
-        if action.autoDropInjected then
-            return -- Already injected
-        end
-        
-        -- If the player is about to use the item, don't drop it
-        -- Inject an auto drop if they cancel the action
-        local og_stop = action.stop
-        action.stop = function(self)
-            og_stop(self)
-            GridAutoDropSystem.queueItemForDrop(item, playerNum)
-        end
-        action.autoDropInjected = true
-        return
-    end
-
-    GridAutoDropSystem.queueItemForDrop(item, playerNum)
-end
-
-
 
 function ItemGrid:_getSavedGridData()
     local containerData, parent = self:_getSavedContainerData()

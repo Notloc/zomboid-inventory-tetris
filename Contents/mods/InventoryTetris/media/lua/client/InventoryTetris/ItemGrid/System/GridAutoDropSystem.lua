@@ -1,17 +1,53 @@
 -- Responsible for forcing items out of the player's inventory if it somehow slips into an invalid state
 GridAutoDropSystem = {}
-GridAutoDropSystem.itemsToDrop = {}
-GridAutoDropSystem.dropProcessing = {}
+GridAutoDropSystem._dropQueues = {}
+GridAutoDropSystem._dropProcessing = {}
 
 function GridAutoDropSystem.queueItemForDrop(item, playerNum)
-    if GridAutoDropSystem.dropProcessing[playerNum] then return end
-    GridAutoDropSystem.itemsToDrop[item] = {item, playerNum}
+    if GridAutoDropSystem._dropProcessing[playerNum] then return end
+    if not GridAutoDropSystem._dropQueues[playerNum] then GridAutoDropSystem._dropQueues[playerNum] = {} end
+    GridAutoDropSystem._dropQueues[playerNum][item] = true
 end
 
 -- PRIVATE FUNCTIONS --
 
-function GridAutoDropSystem._handleItem(item, playerNum)
-    GridAutoDropSystem.dropProcessing[playerNum] = true
+function GridAutoDropSystem._processItems(playerNum, items)
+    GridAutoDropSystem._dropProcessing[playerNum] = true
+
+    local playerObj = getSpecificPlayer(playerNum)
+    local containers = NotUtil.getAllEquippedContainers(playerObj)
+
+    for _, item in ipairs(items) do
+        local addedToContainer = false
+
+        local currentContainer = item:getContainer()
+        if currentContainer then
+            local containerGrid = ItemContainerGrid.Create(currentContainer, playerNum)
+            if containerGrid:canAddItem(item) then
+                containerGrid:autoPositionItem(item)
+                addedToContainer = true
+            else
+                for _, container in ipairs(containers) do
+                    local containerGrid = ItemContainerGrid.Create(container, playerNum)
+                    if currentContainer ~= container and containerGrid:canAddItem(item) then
+                        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, currentContainer, container))
+                        addedToContainer = true
+                        break
+                    end
+                end
+            end
+        end
+
+        if not addedToContainer then
+            GridAutoDropSystem._handleDropItem(item, playerNum)
+        end
+    end
+
+    GridAutoDropSystem._dropProcessing[playerNum] = false
+end
+
+function GridAutoDropSystem._handleDropItem(item, playerNum)
+    GridAutoDropSystem._dropProcessing[playerNum] = true
 
     if GridAutoDropSystem._isItemUndroppable(item) then
         GridAutoDropSystem._forceItemIntoInventoryOrHands(item, playerNum)
@@ -19,7 +55,7 @@ function GridAutoDropSystem._handleItem(item, playerNum)
         ISInventoryPaneContextMenu.onDropItems({item, item}, playerNum)
     end
 
-    GridAutoDropSystem.dropProcessing[playerNum] = false
+    GridAutoDropSystem._dropProcessing[playerNum] = false
 end
 
 -- Certain furniture items (like the fridge) can't be dropped on the floor as an item, they must be placed in the world.
@@ -74,13 +110,16 @@ function GridAutoDropSystem._attemptToForceEquipItem(item, playerObj, playerNum)
 end
 
 
-function GridAutoDropSystem._processItems()
-    for _, data in pairs(GridAutoDropSystem.itemsToDrop) do
-        local item, playerNum = data[1], data[2]
-        GridAutoDropSystem._handleItem(item, playerNum)
+function GridAutoDropSystem._processQueues()
+    for playerNum, itemMap in pairs(GridAutoDropSystem._dropQueues) do
+        local itemsToDrop = {}
+        for item, _ in pairs(itemMap) do
+            table.insert(itemsToDrop, item)
+        end
+        print("Processing drop queue, " .. #itemsToDrop .. " items to drop")
+        GridAutoDropSystem._processItems(playerNum, itemsToDrop)
+        GridAutoDropSystem._dropQueues[playerNum] = nil
     end
-
-    GridAutoDropSystem.itemsToDrop = {}
 end
 
-Events.OnTick.Add(GridAutoDropSystem._processItems)
+Events.OnTick.Add(GridAutoDropSystem._processQueues)
