@@ -1,7 +1,7 @@
 require "ISUI/ISUIElement"
 
 local BG_TEXTURE = getTexture("media/textures/InventoryTetris/ItemSlot.png")
-local MO = require "InventoryTetris/ModOptions"
+local OPT = require "InventoryTetris/Settings"
 
 DragItemRenderer = ISUIElement:derive("DragItemRenderer")
 
@@ -36,8 +36,8 @@ function DragItemRenderer:render()
         itemW, itemH = TetrisItemData.getItemSize(item, DragAndDrop.isDraggedItemRotated())
     end
 
-    local xPos = x - itemW * MO.CELL_SIZE / 2
-    local yPos = y - itemH * MO.CELL_SIZE / 2
+    local xPos = x - itemW * OPT.CELL_SIZE / 2
+    local yPos = y - itemH * OPT.CELL_SIZE / 2
 
     self:suspendStencil()
     ItemGridUI._renderGridItem(self, item, xPos, yPos, DragAndDrop.isDraggedItemRotated(), 1, force1x1)

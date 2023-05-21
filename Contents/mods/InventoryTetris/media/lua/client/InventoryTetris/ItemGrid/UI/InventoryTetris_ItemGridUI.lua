@@ -3,13 +3,7 @@ require "ISUI/ISUIElement"
 local BG_TEXTURE = getTexture("media/textures/InventoryTetris/ItemSlot.png")
 local HORIZONTAL_LINE = getTexture("media/textures/InventoryTetris/HorizontalLine.png")
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
-local CONSTANTS = require "InventoryTetris/ModOptions"
-
-local CELL_SIZE = CONSTANTS.CELL_SIZE
-local TEXTURE_SIZE = CONSTANTS.TEXTURE_SIZE
-local TEXTURE_PAD = CONSTANTS.TEXTURE_PAD
-local ICON_SCALE = CONSTANTS.ICON_SCALE
-
+local OPT = require "InventoryTetris/Settings"
 
 local function getItemBackgroundColor(item)
     local itemType = item:getDisplayCategory()
@@ -58,12 +52,17 @@ function ItemGridUI:new(grid, inventoryPane, containerUi, playerNum)
     return o
 end
 
+function ItemGridUI:onApplyScale(scale)
+    self:setWidth(self:calculateWidth())
+    self:setHeight(self:calculateHeight())
+end
+
 function ItemGridUI:calculateWidth()
-    return self.grid.width * CELL_SIZE - self.grid.width + 1
+    return self.grid.width * OPT.CELL_SIZE - self.grid.width + 1
 end
 
 function ItemGridUI:calculateHeight()
-    return self.grid.height * CELL_SIZE - self.grid.height + 1
+    return self.grid.height * OPT.CELL_SIZE - self.grid.height + 1
 end
 
 function ItemGridUI:findGridStackUnderMouse()
@@ -102,8 +101,8 @@ function ItemGridUI:renderBackGrid()
     local height = self.grid.height
     
     local background = 0.07
-    local totalWidth = CELL_SIZE * width - width + 1
-    local totalHeight = CELL_SIZE * height - height + 1
+    local totalWidth = OPT.CELL_SIZE * width - width + 1
+    local totalHeight = OPT.CELL_SIZE * height - height + 1
     self:drawRect(0, 0, totalWidth, totalHeight, 0.8, background, background, background)
 
     local gridLines = 0.2
@@ -122,6 +121,7 @@ function updateItem(item)
 end
 
 function ItemGridUI:renderGridItems()
+    local CELL_SIZE = OPT.CELL_SIZE
     local draggedItem = DragAndDrop.getDraggedItem()
     local stacks = self.grid:getStacks()
     local inventory = self.grid.inventory
@@ -169,7 +169,7 @@ function ItemGridUI:renderDragItemPreview()
     
     local itemW, itemH = TetrisItemData.getItemSize(item, isRotated)
 
-    local halfCell = CELL_SIZE / 2
+    local halfCell = OPT.CELL_SIZE / 2
     local xPos = x + halfCell - itemW * halfCell
     local yPos = y + halfCell - itemH * halfCell
 
@@ -183,7 +183,7 @@ function ItemGridUI:renderDragItemPreview()
 end
 
 function ItemGridUI:_renderPlacementPreview(gridX, gridY, itemW, itemH, r, g, b)
-    self:drawRect(gridX * CELL_SIZE - gridX + 1, gridY * CELL_SIZE - gridY + 1, itemW * CELL_SIZE - itemW - 1, itemH * CELL_SIZE - itemH - 1, 0.55, r, g, b)
+    self:drawRect(gridX * OPT.CELL_SIZE - gridX + 1, gridY * OPT.CELL_SIZE - gridY + 1, itemW * OPT.CELL_SIZE - itemW - 1, itemH * OPT.CELL_SIZE - itemH - 1, 0.55, r, g, b)
 end
 
 function ItemGridUI.getItemColor(item, limit)
@@ -211,6 +211,9 @@ end
 
 function ItemGridUI._renderGridItem(drawingContext, item, x, y, rotate, alphaMult, force1x1)
     local w, h = TetrisItemData.getItemSize(item, rotate)
+    local CELL_SIZE = OPT.CELL_SIZE
+    local TEXTURE_SIZE = OPT.TEXTURE_SIZE
+    local TEXTURE_PAD = OPT.TEXTURE_PAD
 
     if force1x1 then
         w, h = 1, 1
@@ -225,7 +228,7 @@ function ItemGridUI._renderGridItem(drawingContext, item, x, y, rotate, alphaMul
     local largestDimension = math.max(texW, texH)
     
     local x2, y2 = nil, nil
-    local targetScale = ICON_SCALE
+    local targetScale = OPT.ICON_SCALE
     
     local precisionFactor = 4
     if largestDimension > TEXTURE_SIZE + TEXTURE_PAD then -- Handle large textures

@@ -1,4 +1,4 @@
-local MO = require "InventoryTetris/ModOptions"
+local OPT = require "InventoryTetris/Settings"
 
 ItemGridUiUtil = {}
 
@@ -28,8 +28,8 @@ ItemGridUiUtil.findGridPositionOfMouse = function(gridUi, item, isRotated)
 
     if item then
         local w, h = TetrisItemData.getItemSize(item, isRotated)
-        xOff = MO.CELL_SIZE * w / 2 - MO.CELL_SIZE / 2
-        yOff = MO.CELL_SIZE * h / 2 - MO.CELL_SIZE / 2
+        xOff = OPT.CELL_SIZE * w / 2 - OPT.CELL_SIZE / 2
+        yOff = OPT.CELL_SIZE * h / 2 - OPT.CELL_SIZE / 2
     end
 
     return ItemGridUiUtil.mousePositionToGridPosition(gridUi:getMouseX() - xOff, gridUi:getMouseY() - yOff)
@@ -37,7 +37,7 @@ end
 
 -- Rounds a mouse position to the nearest grid position, for the top left corner of the item
 ItemGridUiUtil.mousePositionToGridPosition = function(x, y)
-    local effectiveCellSize = MO.CELL_SIZE - 1
+    local effectiveCellSize = OPT.CELL_SIZE - 1
     local gridX = math.floor(x / effectiveCellSize)
     local gridY = math.floor(y / effectiveCellSize)
     return gridX, gridY

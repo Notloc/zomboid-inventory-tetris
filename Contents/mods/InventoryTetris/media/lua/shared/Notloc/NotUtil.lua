@@ -22,3 +22,21 @@ NotUtil.getAllEquippedContainers = function(playerObj)
     end
     return containers
 end
+
+
+NotUtil.createEvent = function()
+    local event = {}
+    event._listeners = {}
+    function event:add(func)
+        table.insert(self._listeners, func)
+    end
+    function event:remove(func)
+        table.remove(self._listeners, func)
+    end
+    function event:trigger(...)
+        for _, func in ipairs(self._listeners) do
+            func(...)
+        end
+    end
+    return event
+end

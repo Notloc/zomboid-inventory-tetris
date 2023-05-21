@@ -146,6 +146,12 @@ function ItemGridWindow:createChildren()
 	self.totalWeight =  ISInventoryPage.loadWeight(self.inventory);
 end
 
+function ItemGridWindow:onApplyScale(scale)
+    self.gridContainerUi:onApplyScale(scale)
+    self:setWidth(self.gridContainerUi:getWidth())
+    self:setHeight(self.gridContainerUi:getHeight() + 10 + self:titleBarHeight())
+end
+
 function ItemGridWindow:prerender()
     
     local titleBarHeight = self:titleBarHeight()

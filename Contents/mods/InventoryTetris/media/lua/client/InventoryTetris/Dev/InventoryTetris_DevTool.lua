@@ -256,6 +256,12 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
         print("container type: " .. tostring(container:getType()))
     end
 
+    local tex = item:getTex()
+    if tex then
+        print("Texture Width: " .. tostring(tex:getWidth()))
+        print("Texture Height: " .. tostring(tex:getHeight()))
+    end
+
     TetrisDevTool.insertDebugOptions(menu, item)
 
     return menu

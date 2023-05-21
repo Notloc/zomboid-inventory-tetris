@@ -4,6 +4,7 @@ require "ISUI/ISMouseDrag"
 require "TimedActions/ISTimedActionQueue"
 require "TimedActions/ISEatFoodAction"
 require "ISUI/ISInventoryPane"
+local OPT = require "InventoryTetris/Settings"
 
 local og_new = ISInventoryPane.new
 function ISInventoryPane:new(x, y, width, height, inventory, player)
@@ -30,6 +31,25 @@ function ISInventoryPane:createChildren()
     self.expandAll:setVisible(false)
     self.collapseAll:setVisible(false)
     self.filterMenu:setVisible(false)
+
+    self.onApplyScaleTetrisCallback = function(scale)
+        self:onApplyScaleTetris(scale)
+    end
+
+    OPT.OnApplyScale:add(self.onApplyScaleTetrisCallback)
+end
+
+function ISInventoryPane:onApplyScaleTetris(scale)
+    for _, gridContainerUi in ipairs(self.gridContainerUis) do
+        gridContainerUi:onApplyScale(scale)
+    end
+
+    local windows = self:getChildWindows()
+    for _, window in ipairs(windows) do
+        window:onApplyScale(scale)
+    end
+
+    self:refreshContainer()
 end
 
 local og_refreshContainer = ISInventoryPane.refreshContainer

@@ -4,7 +4,7 @@ require "Definitions/ContainerButtonIcons"
 ItemGridContainerUI = ISPanel:derive("ItemGridContainerUI")
 
 local ICON_PADDING_X = 12
-local ICON_PADDING_Y = 10
+local ICON_PADDING_Y = 8
 local ICON_SIZE = 64
 local INFO_SPACING = 20
 
@@ -12,8 +12,7 @@ local GRID_PADDING = 2
 
 local CONTAINER_PADDING_X = 4
 local CONTAINER_PADDING_Y = 10
-
-local TITLE_Y_OFFSET = 22
+local TITLE_Y_PADDING = 4
 
 local BASIC_INV_TEXTURE = getTexture("media/ui/Icon_InventoryBasic.png")
 local SHELF_TEXTURE = getTexture("media/ui/Container_Shelf.png")
@@ -26,6 +25,8 @@ local CONTAINER_BG = getTexture("media/textures/InventoryTetris/ContainerBG.png"
 
 local ORGANIZED_TEXT = "Organized"
 local DISORGANIZED_TEXT = "Disorganized"
+
+local OPT = require "InventoryTetris/Settings"
 
 function ItemGridContainerUI:new(inventory, inventoryPane, playerNum)
     local o = ISPanel:new(0, 0, 0, 0)
@@ -100,45 +101,69 @@ end
 function ItemGridContainerUI:initialise()
     ISPanel.initialise(self)
 
-    local yOffset = self.showTitle and TITLE_Y_OFFSET or 1
-
     self.gridUis = self:createItemGridUIs()
     
-    local infoWidth = ICON_SIZE + ICON_PADDING_X * 2
-    local infoHeight = ICON_SIZE + ICON_PADDING_Y * 2 + INFO_SPACING
-    local infoRenderer = ISUIElement:new(0, yOffset, infoWidth, infoHeight)
-    infoRenderer.onRightMouseUp = nil
+    local infoRenderer = ISUIElement:new(0, 0, 5000, 5000)
     infoRenderer.containerUi = self
     infoRenderer.organizationIcon = ISImage:new(0, 0, 16, 16, ORGANIZED_TEXTURE)
     infoRenderer.organizationIcon:initialise()
+    infoRenderer:addChild(infoRenderer.organizationIcon)
     
     infoRenderer.prerender = ItemGridContainerUI.prerenderInfo
     infoRenderer.onMouseUp = ItemGridContainerUI.info_onMouseUp
-    infoRenderer.onMouseUpOutside = ItemGridContainerUI.info_onMouseUpOutside
-    infoRenderer.onMouseMove = ItemGridContainerUI.info_onMouseMove
-    infoRenderer.onMouseMoveOutside = ItemGridContainerUI.info_onMouseMoveOutside
-    infoRenderer.onRightMouseUp = ItemGridContainerUI.info_onRightMouseUp
     infoRenderer.onMouseDown = ItemGridContainerUI.info_onMouseDown
+    infoRenderer.onMouseMove = ItemGridContainerUI.info_onMouseMove
+    infoRenderer.onRightMouseUp = ItemGridContainerUI.info_onRightMouseUp
+    infoRenderer.onMouseUpOutside = ItemGridContainerUI.info_onMouseUpOutside
+    infoRenderer.onMouseMoveOutside = ItemGridContainerUI.info_onMouseMoveOutside
 
-    infoRenderer:addChild(infoRenderer.organizationIcon)
-
-    self.infoRenderer = infoRenderer
-
-    local width, height = ItemGridContainerUI.updateItemGridPositions(self.gridUis)
-    local gridRenderer = ISUIElement:new(infoWidth+2, yOffset, width+GRID_PADDING*2, height+GRID_PADDING*2)
+    local gridRenderer = ISUIElement:new(0, 0, 5000, 5000)
     gridRenderer:initialise()
     for _, gridUi in ipairs(self.gridUis) do
-        gridUi:setX(gridUi:getX() + GRID_PADDING)
-        gridUi:setY(gridUi:getY() + GRID_PADDING)
         gridRenderer:addChild(gridUi)
     end
     gridRenderer.prerender = ItemGridContainerUI.prerenderGrids
-
-    self:setWidth(gridRenderer:getWidth() + infoWidth+2)
-    self:setHeight(math.max(gridRenderer:getHeight(), infoRenderer:getHeight()) + yOffset)
     
+    self.infoRenderer = infoRenderer
+    self.gridRenderer = gridRenderer
+
     self:addChild(gridRenderer)
     self:addChild(infoRenderer)
+
+    self:onApplyScale(OPT.SCALE)
+end
+
+function ItemGridContainerUI:onApplyScale(scale)
+    
+    local yOffset = self.showTitle and getTextManager():getFontHeight(UIFont.Small) + (TITLE_Y_PADDING * 2) or 1
+    
+    local infoWidth = (ICON_SIZE + ICON_PADDING_X * 2) * scale
+    local infoHeight = (ICON_SIZE + ICON_PADDING_Y * 2 + INFO_SPACING) * scale
+
+    self.infoRenderer:setWidth(infoWidth)
+    self.infoRenderer:setHeight(infoHeight)
+    self.infoRenderer:setY(yOffset)
+
+    self.infoRenderer.organizationIcon:setWidth(16 * scale)
+    self.infoRenderer.organizationIcon:setHeight(16 * scale)
+
+    for _, grid in ipairs(self.gridUis) do
+        grid:onApplyScale(scale)
+    end
+
+    local width, height = ItemGridContainerUI.updateItemGridPositions(self.gridUis, scale)
+    self.gridRenderer:setWidth(width+(GRID_PADDING*2*scale))
+    self.gridRenderer:setHeight(height+(GRID_PADDING*2*scale))
+    self.gridRenderer:setX(infoWidth+2)
+    self.gridRenderer:setY(yOffset)
+
+    for _, gridUi in ipairs(self.gridUis) do
+        gridUi:setX(gridUi:getX() + GRID_PADDING*scale)
+        gridUi:setY(gridUi:getY() + GRID_PADDING*scale)
+    end
+
+    self:setWidth(self.gridRenderer:getWidth() + infoWidth+2)
+    self:setHeight(math.max(self.gridRenderer:getHeight(), self.infoRenderer:getHeight()) + yOffset)
 end
 
 function ItemGridContainerUI:createItemGridUIs()
@@ -162,12 +187,12 @@ end
 
 -- Positions the grids so they are nicely spaced out
 -- Returns the size of all the grids plus the spacing
-function ItemGridContainerUI.updateItemGridPositions(_gridUis)
+function ItemGridContainerUI.updateItemGridPositions(_gridUis, scale)
     local xOffset = 0
     local yOffset = 0
 
     -- Space out the grids
-    local gridSpacing = 10
+    local gridSpacing = 8 * scale
     
     local gridUis = {}
     for _, gridUi in ipairs(_gridUis) do
@@ -276,7 +301,7 @@ function ItemGridContainerUI:prerender()
             invName = getTextOrNull("IGUI_ContainerTitle_" .. inv:getType()) or "Container"
         end
 
-        self:renderTitle(invName, 0, 0, 4, 1)
+        self:renderTitle(invName, 0, 0, TITLE_Y_PADDING, 1)
     end
 end
 
@@ -292,15 +317,16 @@ end
 function ItemGridContainerUI.prerenderInfo(self)
     local containerUi = self.containerUi
     local inv = containerUi.inventory
-    
+    local scale = OPT.SCALE
+
     local r,g,b = 1,1,1
     if containerUi.item then
         r,g,b = ItemGridUI.getItemColor(containerUi.item, 0.5)
     end
     
-    local offsetX = ICON_SIZE/2 + ICON_PADDING_X
-    local offsetY = ICON_SIZE/2 + ICON_PADDING_Y
-    self:drawTextureCenteredAndSquare(containerUi.invTexture, offsetX, offsetY+4, ICON_SIZE, 1, r,g,b)
+    local offsetX = (ICON_SIZE/2 + ICON_PADDING_X) * scale
+    local offsetY = (ICON_SIZE/2 + ICON_PADDING_Y) * scale
+    self:drawTextureCenteredAndSquare(containerUi.invTexture, offsetX, offsetY+4, ICON_SIZE * scale, 1, r,g,b)
 
     local hasOrganized = containerUi.player:HasTrait("Organized")
     local hasDisorganized = containerUi.player:HasTrait("Disorganized")
@@ -312,9 +338,9 @@ function ItemGridContainerUI.prerenderInfo(self)
         isContainerOrganized = false
     end
 
-    local topIconY = offsetY - ICON_SIZE/2 - ICON_PADDING_Y
+    local topIconY = offsetY - (ICON_SIZE/2 - ICON_PADDING_Y) * scale
 
-    self.organizationIcon:setX(offsetX + ICON_SIZE/2 - ICON_PADDING_X/2 - 2)
+    self.organizationIcon:setX(offsetX + (ICON_SIZE/2 - ICON_PADDING_X/2) * scale - 2)
     self.organizationIcon:setY(topIconY)
     
     self.organizationIcon.texture = isContainerOrganized and ORGANIZED_TEXTURE or DISORGANIZED_TEXTURE
@@ -322,7 +348,9 @@ function ItemGridContainerUI.prerenderInfo(self)
 
     local isSelected = containerUi.isOnPlayer and containerUi.inventory == containerUi.inventoryPane.inventory
     if isSelected then
-        self:drawTexture(SELECTED_TEXTURE, 4, topIconY+2, 1, 1, 1, 1)
+        local tx = SELECTED_TEXTURE:getWidth() * scale
+        local ty = SELECTED_TEXTURE:getHeight() * scale
+        self:drawTextureScaled(SELECTED_TEXTURE, 4, topIconY+2, tx, ty, 1, 1, 1, 1)
     end
 
     local capacity = inv:getCapacity()
