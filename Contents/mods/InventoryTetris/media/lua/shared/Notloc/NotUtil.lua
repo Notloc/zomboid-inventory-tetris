@@ -1,4 +1,6 @@
-NotUtil = {}
+if not NotUtil then
+    NotUtil = {}
+end
 
 NotUtil.forEachItemOnPlayer = function(playerObj, callbackFunc)
     local containers = NotUtil.getAllEquippedContainers(playerObj)
