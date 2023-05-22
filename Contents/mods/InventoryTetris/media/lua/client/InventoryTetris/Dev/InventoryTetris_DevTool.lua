@@ -201,13 +201,13 @@ function TetrisDevTool.applyEdits(item, x, y, maxStack)
     TetrisDevTool.itemEdits[fType] = newData;
     
     writeJsonFile(FILENAME, TetrisDevTool.itemEdits);
-    --TetrisDevTool.writeLuaFormattedFile();
+    TetrisDevTool.writeLuaFormattedFile();
 end
 
 function TetrisDevTool.writeLuaFormattedFile()
     local file = getFileWriter(FORMATED_FILENAME, true, false);
     for k,v in pairs(TetrisDevTool.itemEdits) do
-        local line = string.format("[\"%s\"] = {x=%d, y=%d},\r\n", k, v.x, v.y);
+        local line = string.format("[\"%s\"] = {height=%d, width=%d, maxStackSize=%d},\r\n", k, v.width, v.height, v.maxStackSize);
         file:write(line);
     end
     file:close();
