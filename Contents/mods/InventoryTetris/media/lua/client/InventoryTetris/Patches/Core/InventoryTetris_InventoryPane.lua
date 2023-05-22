@@ -32,21 +32,38 @@ function ISInventoryPane:createChildren()
     self.collapseAll:setVisible(false)
     self.filterMenu:setVisible(false)
 
-    self.onApplyScaleTetrisCallback = function(scale)
-        self:onApplyScaleTetris(scale)
+    self.onApplyGridScaleCallback = function(scale)
+        self:onApplyGridScale(scale)
     end
+    OPT.OnApplyGridScale:add(self.onApplyGridScaleCallback)
 
-    OPT.OnApplyScale:add(self.onApplyScaleTetrisCallback)
+    self.onApplyContainerInfoScaleCallback = function(scale)
+        self:onApplyContainerInfoScale(scale)
+    end
+    OPT.OnApplyContainerInfoScale:add(self.onApplyContainerInfoScaleCallback)
 end
 
-function ISInventoryPane:onApplyScaleTetris(scale)
+function ISInventoryPane:onApplyGridScale(scale)
     for _, gridContainerUi in ipairs(self.gridContainerUis) do
-        gridContainerUi:onApplyScale(scale)
+        gridContainerUi:onApplyGridScale(scale)
     end
 
     local windows = self:getChildWindows()
     for _, window in ipairs(windows) do
-        window:onApplyScale(scale)
+        window:onApplyGridScale(scale)
+    end
+
+    self:refreshContainer()
+end
+
+function ISInventoryPane:onApplyContainerInfoScale(scale)
+    for _, gridContainerUi in ipairs(self.gridContainerUis) do
+        gridContainerUi:onApplyContainerInfoScale(scale)
+    end
+
+    local windows = self:getChildWindows()
+    for _, window in ipairs(windows) do
+        window:onApplyContainerInfoScale(scale)
     end
 
     self:refreshContainer()
@@ -119,6 +136,13 @@ function ISInventoryPane:findContainerGridUiUnderMouse()
             return containerUi
         end
     end
+
+    for _, window in ipairs(self:getChildWindows()) do
+        if window:isMouseOver() then
+            return window.gridContainerUi
+        end
+    end
+
     return nil
 end
 
@@ -141,7 +165,7 @@ function ISInventoryPane:updateTooltip()
 
 	local item = nil
 
-	if not self.doController and not self.dragging and not self.draggingMarquis and self:isMouseOver() then
+	if not self.doController and not self.dragging and not self.draggingMarquis then
         local containerGrid = self:findContainerGridUiUnderMouse()
         if containerGrid then
             local stack = containerGrid:findGridStackUnderMouse()
@@ -241,10 +265,9 @@ function ISInventoryPane:onMouseDoubleClick(x, y)
     end
 
     for _, gridContainerUi in ipairs(self.gridContainerUis) do
-        local gridUi = ItemGridUiUtil.findGridUiUnderMouse(gridContainerUi.gridUis, x, y)
-        if gridUi then
-            gridUi:onMouseDoubleClick(gridUi:getMouseX(), gridUi:getMouseY())
-            return
+        local containerUi = self:findContainerGridUiUnderMouse()
+        if containerUi then
+            return containerUi:onMouseDoubleClick(containerUi:getMouseX(), containerUi:getMouseY())
         end
     end
 end

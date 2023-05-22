@@ -1,9 +1,27 @@
 require "ISUI/ISUIElement"
 
-local BG_TEXTURE = getTexture("media/textures/InventoryTetris/ItemSlot.png")
-local HORIZONTAL_LINE = getTexture("media/textures/InventoryTetris/HorizontalLine.png")
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
 local OPT = require "InventoryTetris/Settings"
+
+local GridBackgroundTexturesByScale = {
+    [0.5] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX0.5.png"),
+    [0.75] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX0.75.png"),
+    [1] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX1.png"),
+    [1.5] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX1.5.png"),
+    [2] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX2.png"),
+    [3] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX3.png"),
+    [4] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX4.png")
+}
+
+local GridLineTexturesByScale = {
+    [0.5] = getTexture("media/textures/InventoryTetris/Grid/GridLineX0.5.png"),
+    [0.75] = getTexture("media/textures/InventoryTetris/Grid/GridLineX0.75.png"),
+    [1] = getTexture("media/textures/InventoryTetris/Grid/GridLineX1.png"),
+    [1.5] = getTexture("media/textures/InventoryTetris/Grid/GridLineX1.5.png"),
+    [2] = getTexture("media/textures/InventoryTetris/Grid/GridLineX2.png"),
+    [3] = getTexture("media/textures/InventoryTetris/Grid/GridLineX3.png"),
+    [4] = getTexture("media/textures/InventoryTetris/Grid/GridLineX4.png")
+}
 
 local function getItemBackgroundColor(item)
     local itemType = item:getDisplayCategory()
@@ -105,10 +123,12 @@ function ItemGridUI:renderBackGrid()
     local totalHeight = OPT.CELL_SIZE * height - height + 1
     self:drawRect(0, 0, totalWidth, totalHeight, 0.8, background, background, background)
 
-    local gridLines = 0.2
+    local gridLines = 0.28
 
-    self.javaObject:DrawTextureTiled(BG_TEXTURE, 1, 1, totalWidth-1, totalHeight-1, 1, 1, 1, 0.25)
-    self.javaObject:DrawTextureTiled(HORIZONTAL_LINE, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
+    local bgTex = GridBackgroundTexturesByScale[OPT.SCALE] or GridBackgroundTexturesByScale[1]
+    local lineTex = GridLineTexturesByScale[OPT.SCALE] or GridLineTexturesByScale[1]
+    self.javaObject:DrawTextureTiled(bgTex, 1, 1, totalWidth-1, totalHeight-1, 1, 1, 1, 0.35)
+    self.javaObject:DrawTextureTiled(lineTex, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
 end
 
 function updateItem(item)
@@ -538,6 +558,8 @@ function ItemGridUI:quickEquipClothes(item)
 end
 
 function ItemGridUI:quickEquipWeapon(item)
+    if not self:_canEquipItem(item) then return end
+
     local playerObj = getSpecificPlayer(self.playerNum)
     local hasPrimaryHand = playerObj:getPrimaryHandItem()
     local hasSecondaryHand = playerObj:getSecondaryHandItem()
@@ -556,6 +578,20 @@ function ItemGridUI:quickEquipWeapon(item)
             ISInventoryPaneContextMenu.equipWeapon(item, false, false, self.playerNum)
         end
     end
+end
+
+function ItemGridUI:_canEquipItem(item)
+    local isFood = item:getCategory() == "Food" and not item:getScriptItem():isCantEat()
+    if isFood then
+        return false
+    end
+
+    local isClothes = item:getCategory() == "Clothing"
+    if isClothes then
+        return false
+    end
+
+    return true
 end
 
 function ItemGridUI:handleDoubleClick(x, y)

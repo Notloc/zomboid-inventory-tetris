@@ -70,3 +70,18 @@ function ISInventoryPage:onMouseDownOutside(x, y)
         self:clearMaxDrawHeight();
     end
 end
+
+local og_onKeyPressed = ISInventoryPage.onKeyPressed
+function ISInventoryPage.onKeyPressed(key)
+    local closeKey = getCore():getKey("tetris_close_window")
+    if key == closeKey then
+        local closedAWindow = getPlayerInventory(0).inventoryPane.tetrisWindowManager:closeTopWindow()
+        if closedAWindow and closeKey == getCore():getKey("Toggle Inventory") then
+            return
+        end
+    end
+    og_onKeyPressed(key)
+end
+
+Events.OnKeyPressed.Remove(og_onKeyPressed);
+Events.OnKeyPressed.Add(ISInventoryPage.onKeyPressed);

@@ -6,7 +6,6 @@ ItemGridContainerUI = ISPanel:derive("ItemGridContainerUI")
 local ICON_PADDING_X = 12
 local ICON_PADDING_Y = 8
 local ICON_SIZE = 64
-local INFO_SPACING = 20
 
 local GRID_PADDING = 2
 
@@ -116,6 +115,7 @@ function ItemGridContainerUI:initialise()
     infoRenderer.onRightMouseUp = ItemGridContainerUI.info_onRightMouseUp
     infoRenderer.onMouseUpOutside = ItemGridContainerUI.info_onMouseUpOutside
     infoRenderer.onMouseMoveOutside = ItemGridContainerUI.info_onMouseMoveOutside
+    infoRenderer.onMouseDoubleClick = ItemGridContainerUI.info_onMouseDoubleClick
 
     local gridRenderer = ISUIElement:new(0, 0, 5000, 5000)
     gridRenderer:initialise()
@@ -130,36 +130,47 @@ function ItemGridContainerUI:initialise()
     self:addChild(gridRenderer)
     self:addChild(infoRenderer)
 
-    self:onApplyScale(OPT.SCALE)
+    self:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
 end
 
-function ItemGridContainerUI:onApplyScale(scale)
-    
-    local yOffset = self.showTitle and getTextManager():getFontHeight(UIFont.Small) + (TITLE_Y_PADDING * 2) or 1
-    
-    local infoWidth = (ICON_SIZE + ICON_PADDING_X * 2) * scale
-    local infoHeight = (ICON_SIZE + ICON_PADDING_Y * 2 + INFO_SPACING) * scale
+function ItemGridContainerUI:onApplyGridScale(gridScale)
+    self:applyScales(gridScale, OPT.CONTAINER_INFO_SCALE)
+end
+
+function ItemGridContainerUI:onApplyContainerInfoScale(infoScale)
+    self:applyScales(OPT.SCALE, infoScale)
+end
+
+
+function ItemGridContainerUI:applyScales(gridScale, infoScale)
+    local lineHeight = getTextManager():getFontHeight(UIFont.Small)
+    local yOffset = self.showTitle and lineHeight + (TITLE_Y_PADDING * 2) - 5 or 1
+
+    local infoWidth = (ICON_SIZE + ICON_PADDING_X * 2) * infoScale
+    local infoHeight = (ICON_SIZE + ICON_PADDING_Y * 2) * infoScale + (lineHeight + 4)
 
     self.infoRenderer:setWidth(infoWidth)
     self.infoRenderer:setHeight(infoHeight)
     self.infoRenderer:setY(yOffset)
 
-    self.infoRenderer.organizationIcon:setWidth(16 * scale)
-    self.infoRenderer.organizationIcon:setHeight(16 * scale)
+    self.infoRenderer.organizationIcon:setWidth(16 * infoScale)
+    self.infoRenderer.organizationIcon:setHeight(16 * infoScale)
+    self.infoRenderer.organizationIcon.scaledWidth = 16 * infoScale
+    self.infoRenderer.organizationIcon.scaledHeight = 16 * infoScale
 
     for _, grid in ipairs(self.gridUis) do
-        grid:onApplyScale(scale)
+        grid:onApplyScale(gridScale)
     end
 
-    local width, height = ItemGridContainerUI.updateItemGridPositions(self.gridUis, scale)
-    self.gridRenderer:setWidth(width+(GRID_PADDING*2*scale))
-    self.gridRenderer:setHeight(height+(GRID_PADDING*2*scale))
+    local width, height = ItemGridContainerUI.updateItemGridPositions(self.gridUis, gridScale)
+    self.gridRenderer:setWidth(width+(GRID_PADDING*2*gridScale))
+    self.gridRenderer:setHeight(height+(GRID_PADDING*2*gridScale))
     self.gridRenderer:setX(infoWidth+2)
     self.gridRenderer:setY(yOffset)
 
     for _, gridUi in ipairs(self.gridUis) do
-        gridUi:setX(gridUi:getX() + GRID_PADDING*scale)
-        gridUi:setY(gridUi:getY() + GRID_PADDING*scale)
+        gridUi:setX(gridUi:getX() + GRID_PADDING*gridScale)
+        gridUi:setY(gridUi:getY() + GRID_PADDING*gridScale)
     end
 
     self:setWidth(self.gridRenderer:getWidth() + infoWidth+2)
@@ -317,7 +328,7 @@ end
 function ItemGridContainerUI.prerenderInfo(self)
     local containerUi = self.containerUi
     local inv = containerUi.inventory
-    local scale = OPT.SCALE
+    local scale = OPT.CONTAINER_INFO_SCALE
 
     local r,g,b = 1,1,1
     if containerUi.item then
@@ -338,9 +349,9 @@ function ItemGridContainerUI.prerenderInfo(self)
         isContainerOrganized = false
     end
 
-    local topIconY = offsetY - (ICON_SIZE/2 - ICON_PADDING_Y) * scale
+    local topIconY = 3 * scale
 
-    self.organizationIcon:setX(offsetX + (ICON_SIZE/2 - ICON_PADDING_X/2) * scale - 2)
+    self.organizationIcon:setX(self.width - (18*scale))
     self.organizationIcon:setY(topIconY)
     
     self.organizationIcon.texture = isContainerOrganized and ORGANIZED_TEXTURE or DISORGANIZED_TEXTURE
@@ -375,28 +386,33 @@ function ItemGridContainerUI.prerenderInfo(self)
         r,g,b = getWeightColor(realWeight, capacity)
     end
     
-    self:drawTextCentre(weightText, ICON_SIZE/2 + ICON_PADDING_X - 7, ICON_PADDING_Y*2 + ICON_SIZE - 1, r,g,b, 1);
+    local centerX = (ICON_SIZE/2 + ICON_PADDING_X) * scale - 8 * scale
+    local textY = (ICON_PADDING_Y*2 + ICON_SIZE) * scale - scale
+    self:drawTextCentre(weightText, centerX, textY, r,g,b, 1);
     local lineHeight = getTextManager():getFontFromEnum(UIFont.Small):getLineHeight()
     local lineWidth = getTextManager():MeasureStringX(UIFont.Small, weightText)
     
-    local weightXOff = 3
-    local weightYOff = 2
+    local weightXOff = 5
+    local weightYOff = 0
     if g == 0 then
         weightXOff = weightXOff + ZombRand(-1/r,1/r)
         weightYOff = weightYOff + ZombRand(-1/r,1/r)
     end
 
+    local weightX = centerX + lineWidth/2 + weightXOff * scale
+    local weightY = textY + lineHeight*0.75 + weightYOff - (8 * scale) --half height of weight icon 
     if r == 1 and g == 1 and b == 1 then
-        self:drawTexture(WEIGHT_TEXTURE, ICON_SIZE/2 + ICON_PADDING_X - 7 + lineWidth/2 + weightXOff, ICON_PADDING_Y*2 + ICON_SIZE + weightYOff, 1, 1, 0.92, 0.75);
+        self:drawTextureScaledUniform(WEIGHT_TEXTURE, weightX, weightY, scale, 1, 1, 0.92, 0.75);
     else
-        self:drawTexture(WEIGHT_TEXTURE, ICON_SIZE/2 + ICON_PADDING_X - 7 + lineWidth/2 + weightXOff, ICON_PADDING_Y*2 + ICON_SIZE + weightYOff, 1, math.max(r*0.65, 0.4), g*0.65, b*0.65);
+        self:drawTextureScaledUniform(WEIGHT_TEXTURE, weightX, weightY, scale, 1, math.max(r*0.65, 0.4), g*0.65, b*0.65);
     end
 
     self:drawRectBorder(0, 0, self.width, self.height, 0.5,1,1,1)   
 end
 
 local function isPointOverContainerIcon(x, y)
-    return x > ICON_PADDING_X and x < ICON_SIZE + ICON_PADDING_X and y > ICON_PADDING_Y/2 and y < ICON_SIZE + ICON_PADDING_Y/2
+    local scale = OPT.CONTAINER_INFO_SCALE
+    return x > ICON_PADDING_X * scale and x < (ICON_SIZE + ICON_PADDING_X) * scale  and y > ICON_PADDING_Y * scale and y < (ICON_SIZE + ICON_PADDING_Y) * scale
 end
 
 function ItemGridContainerUI.info_onRightMouseUp(self, x, y)
@@ -437,6 +453,25 @@ function ItemGridContainerUI.info_onMouseUp(self, x, y)
         end
     end
 
+    DragAndDrop.endDrag(self)
+end
+
+function ItemGridContainerUI:onMouseDoubleClick(x, y)
+    if self.infoRenderer:isMouseOver(x, y) then
+        self.infoRenderer:onMouseDoubleClick(self.infoRenderer:getMouseX(), self.infoRenderer:getMouseY())
+    else
+        local gridUi = ItemGridUiUtil.findGridUiUnderMouse(self.gridUis, x, y)
+        if gridUi then
+            gridUi:onMouseDoubleClick(gridUi:getMouseX(), gridUi:getMouseY())
+            return
+        end
+    end
+end
+
+function ItemGridContainerUI.info_onMouseDoubleClick(self, x, y)
+    if self.containerUi.item and isPointOverContainerIcon(x, y) then
+        self.containerUi.inventoryPane.tetrisWindowManager:openContainerPopup(self.containerUi.item, self.containerUi.playerNum, self.containerUi.inventoryPane)
+    end
     DragAndDrop.endDrag(self)
 end
 

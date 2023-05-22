@@ -8,6 +8,12 @@ require "defines"
 
 ItemGridWindow = ISPanel:derive("ItemGridWindow");
 
+ItemGridWindow._globalInstances = {};
+
+ItemGridWindow.getTopWindow = function()
+    return ItemGridWindow._globalInstances[#ItemGridWindow._globalInstances];
+end
+
 function ItemGridWindow:new (x, y, inventory, inventoryPane, playerNum)
 	local o = ISPanel:new(x, y, 100, 100);
     setmetatable(o, self)
@@ -53,6 +59,9 @@ function ItemGridWindow:new (x, y, inventory, inventoryPane, playerNum)
 	o.titleFontHgt = getTextManager():getFontHeight(o.titleFont)
 	local sizes = { 32, 40, 48 }
 	o.buttonSize = sizes[getCore():getOptionInventoryContainerSize()]
+
+    table.insert(ItemGridWindow._globalInstances, o)
+
    return o
 end
 
@@ -146,14 +155,19 @@ function ItemGridWindow:createChildren()
 	self.totalWeight =  ISInventoryPage.loadWeight(self.inventory);
 end
 
-function ItemGridWindow:onApplyScale(scale)
-    self.gridContainerUi:onApplyScale(scale)
+function ItemGridWindow:onApplyGridScale(scale)
+    self.gridContainerUi:onApplyGridScale(scale)
+    self:setWidth(self.gridContainerUi:getWidth())
+    self:setHeight(self.gridContainerUi:getHeight() + 10 + self:titleBarHeight())
+end
+
+function ItemGridWindow:onApplyContainerInfoScale(scale)
+    self.gridContainerUi:onApplyContainerInfoScale(scale)
     self:setWidth(self.gridContainerUi:getWidth())
     self:setHeight(self.gridContainerUi:getHeight() + 10 + self:titleBarHeight())
 end
 
 function ItemGridWindow:prerender()
-    
     local titleBarHeight = self:titleBarHeight()
     local height = self:getHeight();
     if self.isCollapsed then
@@ -167,23 +181,8 @@ function ItemGridWindow:prerender()
     if self.title then
         self:drawText(self.title, self.closeButton:getRight() + 1, 0, 1,1,1,1);
     end
-
-	-- load the current weight of the container
-	self.totalWeight = ISInventoryPage.loadWeight(self.inventory);
-
-    local roundedWeight = round(self.totalWeight, 2)
-	if self.capacity then
-		if self.inventory == getSpecificPlayer(self.player):getInventory() then
-			self:drawTextRight(roundedWeight .. " / " .. getSpecificPlayer(self.player):getMaxWeight(), self.pinButton:getX(), 0, 1,1,1,1);
-		else
-			self:drawTextRight(roundedWeight .. " / " .. self.capacity, self.pinButton:getX(), 0, 1,1,1,1);
-		end
-	else
-		self:drawTextRight(roundedWeight .. "", self.width - 20, 0, 1,1,1,1);
-    end
     
-	local weightWid = getTextManager():MeasureStringX(UIFont.Small, "99.99 / 99")
-	weightWid = math.max(90, weightWid + 10)
+	local weightWid = 5
     self.transferAll:setX(self.pinButton:getX() - weightWid - getTextManager():MeasureStringX(UIFont.Small, getText("IGUI_invpage_Transfer_all")));
     if not self.onCharacter or self.width < 370 then
         self.transferAll:setVisible(false)
@@ -254,4 +253,29 @@ end
 function ItemGridWindow:onMouseUpOutside(x, y)
 	self.moving = false;
 	self:setCapture(false);
+end
+
+local og_removeFromUIManager = ISPanel.removeFromUIManager
+function ItemGridWindow:removeFromUIManager()
+    og_removeFromUIManager(self)
+
+    for i,v in ipairs(ItemGridWindow._globalInstances) do
+        if v == self then
+            table.remove(ItemGridWindow._globalInstances, i)
+            break
+        end
+    end
+end
+
+local og_bringToTop = ISPanel.bringToTop
+function ItemGridWindow:bringToTop()
+    og_bringToTop(self)
+
+    for i,v in ipairs(ItemGridWindow._globalInstances) do
+        if v == self then
+            table.remove(ItemGridWindow._globalInstances, i)
+            break
+        end
+    end
+    table.insert(ItemGridWindow._globalInstances, self)
 end

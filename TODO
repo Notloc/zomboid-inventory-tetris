@@ -50,33 +50,26 @@ DONE:
 	Move unpositioned claiming / dropping to container level
 		Have the grids receive unpositioned items to claim and the container trigger drop on the rest
 
-
-
-TODO:
 	Mod Options integration
 
-
-
-
-
+	Fix scaled grid rendering following optimizations
 	Item Details in popup windows
 
-	Fix scaled grid rendering following optimizations
-
-	UI for stack splitting
+	Show the item sprite for world container as their image instead of the generic shelf
+		See ISMoveableSpriteProps ISMoveableAction etc
+		Add a method dedicated to extracting the texture, cache the result
 
 	Prevent equip of food and clothes into hands
-
-	Prevent unlimited instances of popup windows
-
 	Shortcut to close popup windows
+
+TODO:
+
+	Dev tool for updating grids
 
 	Item Equivelance system
 		i.e. Water bottle <-> empty bottle
 			auto keep position and force same size
-	
-	Dev tool for updating grids
-	
+		
 	Prevent the collection of an undroppable (via buildmode pickup) if no space is available and 2 undroppables are already present to occupy the hands
 	
 	Obey allowedCategories in the grid's logic
@@ -85,6 +78,9 @@ TODO:
 	
 	Improve auto container sizes again
 		Its getting decent
+
+	UI for stack splitting
+	Prevent unlimited instances of popup windows
 
 	SOUND
 		Record and implement basic interaction sounds, sounds will be per item category
@@ -98,8 +94,6 @@ TODO:
 
 
 
-	Optimize Equipment UI's performance.
-		Shouldn't be as heavy as it is
 
 
 
@@ -107,10 +101,10 @@ TODO:
 
 
 Low Priority Or Post Launch
+
+	Optimize Equipment UI's performance.
+		Shouldn't be as heavy as it is
 	
-	Show the item sprite for world container as their image instead of the generic shelf
-		See ISMoveableSpriteProps ISMoveableAction etc
-		Add a method dedicated to extracting the texture, cache the result (including failure)
 
 	Ability to fold empty bags
 		plastic bags, totes, etc

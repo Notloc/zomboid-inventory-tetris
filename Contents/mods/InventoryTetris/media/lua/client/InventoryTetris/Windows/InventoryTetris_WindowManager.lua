@@ -31,7 +31,7 @@ function TetrisWindowManager:addBringToFrontOnMouseDown(window)
     end
     -- Bring the window to the top of the stack when it is clicked
     window.onMouseDown = function(window, x, y)
-        self:onChildWindowMouseDown(window, x, y)
+        window:bringToTop()
         window:onMouseDown_preWindowManager(x, y)
     end
 end
@@ -58,13 +58,6 @@ function TetrisWindowManager:removeChildWindow(window)
             end
         end
     end
-end
-
-function TetrisWindowManager:onChildWindowMouseDown(window, x, y)
-    -- bring the window to the top of the stack
-    --window:removeFromUIManager()
-    --window:addToUIManager()
-    window:bringToTop()
 end
 
 function TetrisWindowManager:keepChildWindowsOnTop()
@@ -148,4 +141,13 @@ function TetrisWindowManager:closeAll()
         child:removeFromUIManager()
     end
     self.childWindows = {}
+end
+
+function TetrisWindowManager:closeTopWindow()
+    local window = ItemGridWindow.getTopWindow()
+    if not window then return false end
+
+    window:removeFromUIManager()
+    self:removeChildWindow(window)
+    return true
 end
