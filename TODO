@@ -62,31 +62,51 @@ DONE:
 	Prevent equip of food and clothes into hands
 	Shortcut to close popup windows
 
-TODO:
+	Make Moveables larger in the grid
 
-	Dev tool for updating grids
+	Prevent items from outside inventories being force dropped
 
-	Item Equivelance system
-		i.e. Water bottle <-> empty bottle
-			auto keep position and force same size
-		
-	Prevent the collection of an undroppable (via buildmode pickup) if no space is available and 2 undroppables are already present to occupy the hands
-	
+	Backgrid
+		-- Another layer behind the main grid for displaying items that spawn in a container but don't fit
+
+	MP Testing and bug fixing:
+		I expect I'll see some container desync in the grids that I'll need to iron out.
+		I do not expect any item desync though, so at worst players will be seeing the same items, but in different arrangements in the item grids.
+		Sync mod data
+
 	Obey allowedCategories in the grid's logic
 	Container item type resitrctions
 		i.e. Medkits can only hold medical items
-	
-	Improve auto container sizes again
-		Its getting decent
+
+	Dev tool for updating grids
+
+TODO:
+
+	Grid tool support for item categories
+	Grid tool support same as item tool for auto load and bulk export
+
+	Figure out centered texture rendering
+		Do the debugging boxes again, but properly anchor them
 
 	UI for stack splitting
-	Prevent unlimited instances of popup windows
+	
+	Option to hide popups with inventory
 
+	Item Colors
+	Item Temperature
+
+	Make auto-sized vehicle trunks bigger 
+	
+
+	Lock down dev tool to SP debug mode only
+
+	Finalize dev tool with ability to export "packs"
+
+	Prevent the collection of an undroppable (i.e. furniture) via buildmode pickup 
+		(if no inventory space is available and 2 undroppables are already present in the hands)
+	
 	SOUND
 		Record and implement basic interaction sounds, sounds will be per item category
-
-
-	Make Moveables larger in the grid
 
 	The Content Grind™️
 		Manually size items/stack limits
@@ -94,25 +114,20 @@ TODO:
 
 
 
-
-
-
-
-
-
 Low Priority Or Post Launch
+
+	Item Equivelance system
+		i.e. Water bottle <-> empty bottle
+			auto keep position and force same size
 
 	Optimize Equipment UI's performance.
 		Shouldn't be as heavy as it is
 	
+	Prevent unlimited instances of popup windows
 
 	Ability to fold empty bags
 		plastic bags, totes, etc
 
-
-	Auto expand world grids for too many items???
-		Red unusable slots by the player
-	
 	Search system:
 		(Sandbox Setting)
 		When enabled, players will need to search a container to see the items inside of it.
@@ -124,10 +139,6 @@ Low Priority Or Post Launch
 		This one is proving tough for the CTRL key, I can't figure out how the inventory windows are doing it.
 			Not a huge problem, but I'd like to fix this
 
-	MP Testing and bug fixing:
-		I expect I'll see some container desync in the grids that I'll need to iron out.
-		I do not expect any item desync though, so at worst players will be seeing the same items, but in different arrangements in the item grids.
-		Sync mod data
 
 
 

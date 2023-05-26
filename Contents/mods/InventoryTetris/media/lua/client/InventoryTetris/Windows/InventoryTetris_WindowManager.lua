@@ -38,24 +38,22 @@ end
 
 function TetrisWindowManager:addRemoveOnClose(window)
     -- Incase the window is being pooled/reused
-    if not window.onClose_preWindowManager then
-        window.onClose_preWindowManager = window.onClose
+    if not window.close_preWindowManager then
+        window.close_preWindowManager = window.close
     end
     -- Remove the window from the stack when it is closed
-    window.onClose = function(window)
+    window.close = function(window)
         self:removeChildWindow(window)
-        window:onClose_preWindowManager()
+        window:close_preWindowManager()
     end
 end
 
 function TetrisWindowManager:removeChildWindow(window)
-    if self.childWindows then
-        for i, child in ipairs(self.childWindows) do
-            if child == window then
-                table.remove(self.childWindows, i)
-                window:removeFromUIManager()
-                break
-            end
+    for i, child in ipairs(self.childWindows) do
+        if child == window then
+            table.remove(self.childWindows, i)
+            window:removeFromUIManager()
+            break
         end
     end
 end
@@ -146,8 +144,6 @@ end
 function TetrisWindowManager:closeTopWindow()
     local window = ItemGridWindow.getTopWindow()
     if not window then return false end
-
-    window:removeFromUIManager()
-    self:removeChildWindow(window)
+    window:close()
     return true
 end

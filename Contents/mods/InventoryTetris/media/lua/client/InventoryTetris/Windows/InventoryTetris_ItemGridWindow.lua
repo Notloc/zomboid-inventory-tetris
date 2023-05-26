@@ -135,7 +135,7 @@ function ItemGridWindow:createChildren()
 
     self.resizeWidget2 = resizeWidget;
 
-    self.closeButton = ISButton:new(3, 0, closeBtnSize, closeBtnSize, "", self, ItemGridWindow.close);
+    self.closeButton = ISButton:new(3, 0, closeBtnSize, closeBtnSize, "", self, ItemGridWindow.onCloseButton);
     self.closeButton:initialise();
     self.closeButton.borderColor.a = 0.0;
     self.closeButton.backgroundColor.a = 0;
@@ -192,6 +192,10 @@ function ItemGridWindow:prerender()
     
     -- self:drawRectBorder(self:getWidth()-32, 15, 32, self:getHeight()-16-6, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
     self:setStencilRect(0,0,self.width+1, height);
+end
+
+function ItemGridWindow:onCloseButton()
+    self:close()
 end
 
 function ItemGridWindow:close()

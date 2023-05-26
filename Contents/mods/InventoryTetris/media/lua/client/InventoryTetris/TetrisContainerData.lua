@@ -1,3 +1,5 @@
+require "InventoryTetris/TetrisItemCategory"
+
 local MAX_ITEM_HEIGHT = 8
 local MAX_ITEM_WIDTH = 8
 
@@ -111,80 +113,62 @@ function TetrisContainerData._calculateDimensions(target)
     return bestX, bestY
 end
 
-
-function TetrisContainerData._addContainerDefinition(key, definition)
-    if not definition.gridDefinitions then
-        definition.gridDefinitions = TetrisContainerData._generateGridDefinitions(definition)
-    end
-    TetrisContainerData._containerDefinitions[key] = definition
-end
-
-function TetrisContainerData._generateGridDefinitions(definition)
-    local rows = definition.rows or 1
-    local columns = definition.columns or 1
-
-    local gridDefinitions = {}
-    for row = 1, rows do
-        for column = 1, columns do
-            local width = math.floor(definition.size.width / columns)
-            local height = math.floor(definition.size.height / rows)
-            local gridDefinition = {
-                size = {width=width, height=height},
-                position = {x=column-1, y=row-1},
-            }
-            table.insert(gridDefinitions, gridDefinition)
-        end
-    end
-    return gridDefinitions
-end
-
-TetrisContainerData._definitionPacks = {}
-
-function TetrisContainerData.RegisterContainerDefinitions(modData)
-    table.insert(TetrisContainerData._definitionPacks, modData)
-    if TetrisContainerData._isInitialized then
-        for key, definition in pairs(modData) do
-            TetrisContainerData._addContainerDefinition(key, definition)
-        end
-    end
-end
-
-function TetrisContainerData._onGameBoot()
-    for _, definitionPack in ipairs(TetrisContainerData._definitionPacks) do
-        for key, definition in pairs(definitionPack) do
-            TetrisContainerData._addContainerDefinition(key, definition)
-        end
-    end
-    TetrisContainerData._isInitialized = true
-end
-
-local builtIn = {
-    -- Player Inv
-    ["none"] = {
-        size = {width=4, height=2},
-        columns = 4,
-        isOrganized = true,
-    },
-
-    ["floor_50"] = {
-        size = {width=9, height=12},
-        --gridDefinitions = {
-        --    {
-        --        size = {width=9, height=12},
-        --        position = {x=1, y=1},
-        --    }
-        --},
-        isOrganized = false,
-    },
-}
-
-TetrisContainerData.RegisterContainerDefinitions(builtIn)
-
-Events.OnGameBoot.Add(TetrisContainerData._onGameBoot)
-
-
 TetrisContainerData.recalculateContainerData = function()
     TetrisContainerData._containerDefinitions = {}
     TetrisContainerData._onGameBoot()
 end
 
+TetrisContainerData.validateInsert = function(containerDef, item)
+    if not containerDef.validCategories and not containerDef.validItems then
+        return true
+    end
+
+    if containerDef.validCategories then
+        local itemCategory = TetrisItemCategory.getCategory(item)
+        for _, category in ipairs(containerDef.validCategories) do
+            if itemCategory == category then
+                return true
+            end
+        end
+    end
+
+    if containerDef.validItems then
+        local itemType = item:getFullType()
+        for _, validItem in ipairs(containerDef.validItems) do
+            if itemType == validItem then
+                return true
+            end
+        end
+    end
+
+end
+
+
+
+-- Container Pack Registration
+TetrisContainerData._containerDataPacks = {}
+
+TetrisContainerData.registerContainerDefinitions = function(containerPack)
+    table.insert(TetrisContainerData._containerDataPacks, containerPack)
+    if TetrisContainerData._packsLoaded then
+        TetrisContainerData._processContainerPack(containerPack) -- You're late.
+    end
+end
+
+TetrisContainerData._initializeContainerPacks = function()
+    for _, containerPack in ipairs(TetrisContainerData._containerDataPacks) do
+        TetrisContainerData._processContainerPack(containerPack)
+    end
+    TetrisContainerData._packsLoaded = true
+end
+
+TetrisContainerData._processContainerPack = function(containerPack)
+    for key, containerDef in pairs(containerPack) do
+        TetrisContainerData._containerDefinitions[key] = containerDef
+    end
+end
+
+TetrisContainerData._onInitWorld = function()
+    TetrisContainerData._initializeContainerPacks()
+end
+Events.OnInitWorld.Add(TetrisContainerData._onInitWorld)

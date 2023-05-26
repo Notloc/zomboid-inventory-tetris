@@ -1,3 +1,22 @@
+ItemContainerGrid = {}
+ItemContainerGrid._tempGrid = {} -- For hovering over items, so we don't create a new grid every frame to evaluate if an item can be placed
+
+-- TODO: Remove playerNum from this class, it's not actually used unless the grid is for the player's base inventory
+-- Thankfully grids are pretty much entirely agnostic to the player interacting with them, so it should be easy to remove or ignore
+function ItemContainerGrid:new(inventory, playerNum)
+    local o = {}
+    setmetatable(o, self)
+    self.__index = self
+
+    o.inventory = inventory
+    o.playerNum = playerNum
+    o.containerDefinition = TetrisContainerData.getContainerDefinition(inventory)
+    o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
+    o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
+    o.grids = o:createGrids(inventory, playerNum)
+    return o
+end
+
 local function searchInventoryPageForContainerGrid(invPage, targetInventory)
     if not invPage then
         return nil
@@ -18,28 +37,37 @@ local function searchInventoryPageForContainerGrid(invPage, targetInventory)
     return nil
 end
 
-
-ItemContainerGrid = {}
-
-function ItemContainerGrid:new(inventory, playerNum)
-    local o = {}
-    setmetatable(o, self)
-    self.__index = self
-
-    o.inventory = inventory
-    o.playerNum = playerNum
-    o.containerDefinition = TetrisContainerData.getContainerDefinition(inventory)
-    o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
-    o.grids = o:createGrids(inventory, playerNum)
-    return o
-end
-
 ItemContainerGrid.Create = function(inventory, playerNum)
     local containerGrid = ItemContainerGrid.FindInstance(inventory, playerNum)
     if containerGrid then
         return containerGrid
     end
+
+    -- Remove any temp grids that are for this inventory
+    for playerN, grid in pairs(ItemContainerGrid._tempGrid) do
+        if grid.inventory == inventory then
+            ItemContainerGrid._tempGrid[playerN] = nil
+        end
+    end
+
     return ItemContainerGrid:new(inventory, playerNum)
+end
+
+ItemContainerGrid.CreateTemp = function(inventory, playerNum)
+    local containerGrid = ItemContainerGrid.FindInstance(inventory, playerNum)
+    if containerGrid then
+        return containerGrid
+    end
+
+    local existingTempGrid = ItemContainerGrid._tempGrid[playerNum]
+
+    if existingTempGrid and existingTempGrid.inventory == inventory then
+        return existingTempGrid
+    end
+
+    local tempGrid = ItemContainerGrid:new(inventory, playerNum)
+    ItemContainerGrid._tempGrid[playerNum] = tempGrid
+    return tempGrid
 end
 
 ItemContainerGrid.FindInstance = function(inventory, playerNum)
@@ -133,11 +161,7 @@ function ItemContainerGrid:_validateOnlyAcceptCategory(item)
         end
     end
     
-    if not self.containerDefinition.acceptedCategories then
-        return true
-    end
-    
-    return self.containerDefinition.acceptedCategories[item:getCategory()]
+    return TetrisContainerData.validateInsert(self.containerDefinition, item)
 end
 
 function ItemContainerGrid:refresh()
@@ -232,14 +256,31 @@ function ItemContainerGrid:_updateGridPositions(useShuffle)
     local unpositionedItems = self:_getUnpositionedItems()
 
     -- Sort the unpositioned items by size, so we can place the biggest ones first
-    table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
+    --table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
+    -- DISABLED, the introduction of the backgrid makes it more interesting to place items in a random order
     
     for _, grid in ipairs(self.grids) do
         unpositionedItems = grid:_acceptUnpositionedItems(unpositionedItems, useShuffle)
     end
 
-    for _, unpositionedItemData in ipairs(unpositionedItems) do
-        self:_dropUnpositionedItem(unpositionedItemData.item)
+    if #unpositionedItems == 0 then
+        return
+    end
+
+    if self.isOnPlayer then
+        for _, unpositionedItemData in ipairs(unpositionedItems) do
+            self:_dropUnpositionedItem(unpositionedItemData.item)
+        end
+    else
+        local i = 1
+        for _, unpositionedItemData in ipairs(unpositionedItems) do
+            local grid = self.grids[i]
+            grid:forceInsertItem(unpositionedItemData.item)
+            i = i + 1
+            if i > #self.grids then
+                i = 1
+            end
+        end
     end
 end
 
@@ -269,6 +310,12 @@ function ItemContainerGrid:_getPositionedItems()
     for index, grid in ipairs(self.grids) do
         local gridData = grid:_getSavedGridData()
         for _, stack in pairs(gridData.stacks) do
+            for itemID, _ in pairs(stack.itemIDs) do
+                positionedItems[itemID] = true
+            end
+        end
+
+        for _, stack in pairs(grid.backStacks) do
             for itemID, _ in pairs(stack.itemIDs) do
                 positionedItems[itemID] = true
             end

@@ -13,23 +13,27 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, playerNum)
     o.playerNum = playerNum
 
     o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
+    o.isOnPlayer = inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory()
 
     o.width = o.gridDefinition.size.width
     o.height = o.gridDefinition.size.height
+
+    o.backStacks = {}
+    o.backStackMap = {}
 
     o:refresh()
     return o
 end
 
 function ItemGrid:getItem(x, y)
-    if not self.stackMap[x] then return nil end
-    local stack = self.stackMap[x][y]
+    local stack = self:getStack(x, y)
     return stack and ItemStack.getFrontItem(stack, self.inventory) or nil
 end
 
 function ItemGrid:getStack(x, y)
-    if not self.stackMap[x] then return nil end
-    return self.stackMap[x][y]
+    if self.stackMap[x] and self.stackMap[x][y] then return self.stackMap[x][y] end
+    if self.backStackMap[x] and self.backStackMap[x][y] then return self.backStackMap[x][y] end
+    return nil
 end
 
 function ItemGrid:getStacks()
@@ -42,6 +46,13 @@ function ItemGrid:findStackByItem(item)
             return stack
         end
     end
+
+    for _, stack in ipairs(self.backStacks) do
+        if ItemStack.containsItem(stack, item) then
+            return stack
+        end
+    end
+
     return nil
 end
 
@@ -76,6 +87,18 @@ function ItemGrid:removeItem(item)
             return true
         end
     end
+
+    for i, stack in ipairs(self.backStacks) do
+        if ItemStack.containsItem(stack, item) then
+            ItemStack.removeItem(stack, item, self.inventory)
+            if stack.count == 0 then
+                table.remove(self.backStacks, i)
+                self:_rebuildBackStackMap()
+            end
+            return true
+        end
+    end
+
     return false
 end
 
@@ -155,6 +178,14 @@ function ItemGrid:_removeStack(stack)
             table.remove(self.persistentData.stacks, i)
             self:_rebuildStackMap()
             self:_sendModData()
+            return
+        end
+    end
+
+    for i, s in ipairs(self.backStacks) do
+        if s == stack then
+            table.remove(self.backStacks, i)
+            self:_rebuildBackStackMap()
             return
         end
     end
@@ -246,6 +277,34 @@ function ItemGrid:hasFreeSlot()
     return false
 end
 
+function ItemGrid:forceInsertItem(item)
+    for _, stack in ipairs(self.backStacks) do
+        if ItemStack.canAddItem(stack, item) then
+            ItemStack.addItem(stack, item)
+            return
+        end
+    end
+
+    local w, h = TetrisItemData.getItemSize(item, false)
+    local xDiff = self.width - w
+    local yDiff = self.height - h
+
+    local x = 0
+    if xDiff > 0 then
+        x = ZombRand(0, xDiff+1)
+    end
+
+    local y = 0
+    if yDiff > 0 then
+        y = ZombRand(0, yDiff+1)
+    end
+
+    local stack = ItemStack.create(x, y, false, item:getFullType())
+    ItemStack.addItem(stack, item)
+    table.insert(self.backStacks, stack)
+    self:_rebuildBackStackMap()
+end
+
 function ItemGrid:_attemptToStackItem(item)
     for _, stack in ipairs(self.persistentData.stacks) do
         if ItemStack.canAddItem(stack, item) then
@@ -257,7 +316,7 @@ function ItemGrid:_attemptToStackItem(item)
     return false
 end
 
--- Slightly hacky, but shuffleMode can be nil as well, in which case it will be set to not containerDefinition.isOrganized
+-- Slightly hacky, but shuffleMode can be nil as well, in which case it will be set to (not containerDefinition.isOrganized)
 function ItemGrid:_attemptToInsertItem(item, preferRotated, shuffleMode)
     preferRotated = preferRotated or false
     
@@ -328,7 +387,7 @@ function ItemGrid:_attemptToInsertItem_innerLoop(item, w, h, xPos, yPos, isRotat
 end
 
 function ItemGrid:refresh()
-    self.persistentData, self.isoObject = self:_getSavedGridData() -- Reload incase the modData has changed from a mp sync
+    self.persistentData = self:_getSavedGridData() -- Reload incase the modData has changed from a mp sync
     self:_validateAndCleanStacks(self.persistentData)
     self:_rebuildStackMap()
 end
@@ -410,6 +469,29 @@ function ItemGrid:_rebuildStackMap()
     self.stackMap = stackMap
 end
 
+function ItemGrid:_rebuildBackStackMap()
+    local stackMap = {}
+    for x=0, self.width-1 do
+        stackMap[x] = {}
+    end
+
+    for _,stack in ipairs(self.backStacks) do
+        local item = ItemStack.getFrontItem(stack, self.inventory)
+        if item then
+            local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
+            for x=stack.x,stack.x+w-1 do
+                for y=stack.y,stack.y+h-1 do
+                    if self:_isInBounds(x, y) then
+                        stackMap[x][y] = stack
+                    end
+                end
+            end
+        end
+    end
+
+    self.backStackMap = stackMap
+end
+
 function ItemGrid:_acceptUnpositionedItems(unpositionedItems, useShuffle)    
     local remainingItems = {}
     if self:hasFreeSlot() then
@@ -453,16 +535,17 @@ ItemGrid._floorModData = {} -- No need to save floor grids, but we do allow user
 
 function ItemGrid:_getParentModData()
     if self.isPlayerInventory then
-        return getSpecificPlayer(self.playerNum):getModData()
+        local player = getSpecificPlayer(self.playerNum)
+        return player:getModData(), player
     end
 
     if self.inventory:getType() == "floor" then
-        return ItemGrid._floorModData
+        return ItemGrid._floorModData, nil
     end
 
     local item = self.inventory:getContainingItem()
     if item then
-        return item:getModData()
+        return item:getModData(), item
     end
 
     local isoObject = self.inventory:getParent()
@@ -478,15 +561,18 @@ end
 ItemGrid._modDataSyncQueue = {}
 
 function ItemGrid:_sendModData()
-    if isClient() and self.isoObject then
-        ItemGrid._modDataSyncQueue[self.isoObject] = true
+    if isClient() then
+        local _, parent = self:_getParentModData()
+        if parent then
+            ItemGrid._modDataSyncQueue[parent] = true
+        end
     end
 end
 
 if isClient() then
     Events.OnTick.Add(function()
-        for isoObject,_ in pairs(ItemGrid._modDataSyncQueue) do
-            isoObject:transmitModData()
+        for parent,_ in pairs(ItemGrid._modDataSyncQueue) do
+            parent:transmitModData()
         end
         ItemGrid._modDataSyncQueue = {}
     end)

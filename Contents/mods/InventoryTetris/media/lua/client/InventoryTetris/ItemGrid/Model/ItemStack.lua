@@ -68,9 +68,11 @@ ItemStack.convertToVanillaStack = function(stack, inventory)
     if stack.count == 0 then return vanillaStack end
 
     table.insert(vanillaStack.items, ItemStack.getFrontItem(stack, inventory))
+    table.insert(vanillaStack, ItemStack.getFrontItem(stack, inventory))
     for itemId, _ in pairs(stack.itemIDs) do
         local item = inventory:getItemById(itemId)
         table.insert(vanillaStack.items, item)
+        table.insert(vanillaStack, item)
     end
 
     return vanillaStack
