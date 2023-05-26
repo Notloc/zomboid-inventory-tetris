@@ -79,12 +79,10 @@ DONE:
 		i.e. Medkits can only hold medical items
 
 	Dev tool for updating grids
+	Grid tool support same as item tool for auto load and bulk export
+	Grid tool support for item categories
 
 TODO:
-
-	Grid tool support for item categories
-	Grid tool support same as item tool for auto load and bulk export
-
 	Figure out centered texture rendering
 		Do the debugging boxes again, but properly anchor them
 

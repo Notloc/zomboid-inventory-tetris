@@ -10,10 +10,15 @@ TetrisItemCategory = {
     HEALING = "HEALING",
     BOOK = "BOOK",
     ENTERTAINMENT = "ENTERTAINMENT",
-    
     KEY = "KEY",
     MISC = "MISC",
 }
+
+local list = {}
+for _, category in pairs(TetrisItemCategory) do
+    table.insert(list, category)
+end
+TetrisItemCategory.list = list
 
 TetrisItemCategory.getCategory = function(item)
     local category = item:getDisplayCategory()

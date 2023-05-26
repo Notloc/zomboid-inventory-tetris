@@ -36,14 +36,24 @@ local function writeJsonFile(fileName, json)
 end
 
 
-
+local function contains(needle, haystack)
+    for _, item in ipairs(haystack) do
+        if item == needle then
+            return true;
+        end
+    end
+    return false;
+end
 
 
 TetrisDevTool = {}
 
-local FILENAME = "InventoryTetris_ItemData.json"
-local FORMATED_FILENAME = "InventoryTetris_ItemData_Formated.txt"
-TetrisDevTool.itemEdits = readJsonFile(FILENAME) or {}
+local ITEM_FILENAME = "InventoryTetris_ItemData"
+local CONTAINER_FILENAME = "InventoryTetris_ContainerData"
+
+
+TetrisDevTool.itemEdits = readJsonFile(ITEM_FILENAME..".json") or {}
+TetrisDevTool.containerEdits = readJsonFile(CONTAINER_FILENAME..".json") or {}
 
 function TetrisDevTool.insertDebugOptions(menu, item)
     if not isDebugEnabled() then
@@ -166,7 +176,7 @@ function TetrisDevTool.applyEdits(item, x, y, maxStack)
 
     TetrisDevTool.itemEdits[fType] = newData;
     
-    writeJsonFile(FILENAME, TetrisDevTool.itemEdits);
+    writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
     TetrisDevTool.writeLuaFormattedFile();
 end
 
@@ -249,7 +259,8 @@ function TetrisDevTool.remakeContainerUi(editWindow)
         editWindow.containerUi = nil;
     end
 
-    TetrisContainerData._containerDefinitions[editWindow.containerDataKey] = editWindow.newContainerDefinition;
+    local existingEdit = TetrisDevTool.containerEdits[editWindow.containerDataKey];
+    TetrisDevTool.containerEdits[editWindow.containerDataKey] = editWindow.newContainerDefinition;
 
     local containerUi = ItemGridContainerUI:new(editWindow.inventory, editWindow.inventoryPane, 0);
     containerUi.containerGrid = ItemContainerGrid:new(editWindow.inventory, 0)
@@ -257,7 +268,7 @@ function TetrisDevTool.remakeContainerUi(editWindow)
 
     editWindow.containerUi = containerUi;
 
-    TetrisContainerData._containerDefinitions[editWindow.containerDataKey] = editWindow.originalContainerDef;
+    TetrisDevTool.containerEdits[editWindow.containerDataKey] = existingEdit;
 
     editWindow:addChild(containerUi);
     containerUi:setY(200);
@@ -285,12 +296,6 @@ function TetrisDevTool.remakeContainerUi(editWindow)
                 }
             }
 
-            ItemContainerGrid._playerMainGrids = {}
-            ItemContainerGrid._getPlayerMainGrid(0)
-
-            getPlayerInventory(0).inventoryPane:refreshItemGrids(true)
-            getPlayerLoot(0).inventoryPane:refreshItemGrids(true)
-
             TetrisDevTool.remakeContainerUi(editWindow);
             editWindow:reflow();
         end);
@@ -311,26 +316,20 @@ function TetrisDevTool.openContainerEdit(containerUi)
     editWindow.inventoryPane = inventoryPane;
     
     editWindow.containerDataKey = TetrisContainerData._getContainerKey(editWindow.inventory);
-    editWindow.originalContainerDef = TetrisContainerData.getContainerDefinition(editWindow.inventory);
     editWindow.newContainerDefinition = {}
-    copyTable(editWindow.originalContainerDef, editWindow.newContainerDefinition);
+    local originalContainerDef = TetrisContainerData.getContainerDefinition(editWindow.inventory);
+    copyTable(originalContainerDef, editWindow.newContainerDefinition);
 
     TetrisDevTool.remakeContainerUi(editWindow);    
 
     editWindow.reflow = function(self)
         self.containerUi:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
         self.containerUi.containerGrid:refresh();
-        self:setWidth(self.containerUi:getWidth() + 48);
+        self:setWidth(math.max(self.containerUi:getWidth() + 48, 450));
         self:setHeight(self.containerUi:getHeight() + 200 + 48);
-        TetrisDevTool.writeContainerEditsToFile({[editWindow.containerDataKey] = editWindow.newContainerDefinition})
         self.quickButtonsDirty = true
     end
-
-    editWindow:reflow();
-
-    editWindow:setWidth(containerUi:getWidth() + 48);
-    editWindow:setHeight(containerUi:getHeight() + 200 + 48);
-    
+  
     -- Create titlebar
     local titleBar = ISPanel:new(0, 0, editWindow:getWidth(), 20);
     titleBar:initialise();
@@ -369,6 +368,7 @@ function TetrisDevTool.openContainerEdit(containerUi)
     alignmentButton.internal = "ALIGNMENT";
     alignmentButton:setOnClick(TetrisDevTool.onEditContainer, alignmentButton);
     editWindow:addChild(alignmentButton);
+    editWindow.alignmentButton = alignmentButton;
 
     -- Organized Title
     local organizedTitle = ISLabel:new(10, 65, 16, "Organized:", 1, 1, 1, 1, UIFont.Small, true);
@@ -385,7 +385,77 @@ function TetrisDevTool.openContainerEdit(containerUi)
     organizedButton:setOnClick(TetrisDevTool.onEditContainer, organizedButton);
     editWindow:addChild(organizedButton);
 
-    editWindow.alignmentButton = alignmentButton;
+    -- function ISTickBox:new (x, y, width, height, name, changeOptionTarget, changeOptionMethod, changeOptionArg1, changeOptionArg2)
+
+
+    -- Offset to the right and do 2 columns of tickboxes
+
+    -- Item Restrictions Title
+    local itemRestrictionsTitle = ISLabel:new(120, 25, 16, "Item Restrictions:", 1, 1, 1, 1, UIFont.Small, true);
+    itemRestrictionsTitle:initialise();
+    itemRestrictionsTitle:instantiate();
+    editWindow:addChild(itemRestrictionsTitle);
+
+    local validCategories = editWindow.newContainerDefinition.validCategories or {};
+
+    -- Tickboxes for each item category restriction
+    local itemCategoryBoxes1 = ISTickBox:new(130, 42, 100, 16, "", editWindow, TetrisDevTool.onItemRestriction, 0);
+    itemCategoryBoxes1:initialise();
+    itemCategoryBoxes1:instantiate();
+
+    local firstCount = 0
+    for i, category in ipairs(TetrisItemCategory.list) do
+        if i <= #TetrisItemCategory.list/2 then
+            itemCategoryBoxes1:addOption(category, {});
+            itemCategoryBoxes1:setSelected(i, contains(category, validCategories));
+            firstCount = firstCount + 1
+        end
+    end
+
+    itemCategoryBoxes1:setAnchorLeft(true);
+    itemCategoryBoxes1:setAnchorRight(false);
+    itemCategoryBoxes1:setAnchorTop(true);
+    itemCategoryBoxes1:setAnchorBottom(false);
+    itemCategoryBoxes1:setAlwaysOnTop(true);
+
+    editWindow:addChild(itemCategoryBoxes1);
+
+    local itemCategoryBoxes2 = ISTickBox:new(265, 42, 100, 16, "", editWindow, TetrisDevTool.onItemRestriction, firstCount);
+    itemCategoryBoxes2:initialise();
+    itemCategoryBoxes2:instantiate();
+    
+    local j = 1
+    for i, category in ipairs(TetrisItemCategory.list) do
+        if i > #TetrisItemCategory.list/2 then
+            itemCategoryBoxes2:addOption(category, {});
+            itemCategoryBoxes2:setSelected(j, contains(category, validCategories));
+            j = j + 1
+        end
+    end
+
+    itemCategoryBoxes2:setAnchorLeft(true);
+    itemCategoryBoxes2:setAnchorRight(false);
+    itemCategoryBoxes2:setAnchorTop(true);
+    itemCategoryBoxes2:setAnchorBottom(false);
+    itemCategoryBoxes2:setAlwaysOnTop(true);
+
+    editWindow:addChild(itemCategoryBoxes2);
+
+
+
+
+    -- Accept button
+    local acceptButton = ISButton:new(editWindow:getWidth() - 100, 35, 90, 16, "Accept", editWindow);
+    acceptButton:initialise();
+    acceptButton:instantiate();
+    acceptButton.internal = "ACCEPT";
+    acceptButton:setAnchorRight(true);
+    acceptButton:setAnchorTop(true);
+    acceptButton:setAnchorBottom(false);
+    acceptButton:setAnchorLeft(false);
+    acceptButton:setAlwaysOnTop(true);
+    acceptButton:setOnClick(TetrisDevTool.onEditContainer, acceptButton);
+    editWindow:addChild(acceptButton);
 
     local og_prerender = editWindow.prerender
     editWindow.prerender = function(self)
@@ -492,6 +562,8 @@ function TetrisDevTool.openContainerEdit(containerUi)
     end
 
     titleBar:addChild(closeButton);
+    
+    editWindow:reflow();
     editWindow:addToUIManager();
 end
 
@@ -513,9 +585,43 @@ function TetrisDevTool.onEditContainer(self, button)
         button:setTitle(self.newContainerDefinition.isOrganized and "True" or "False");
     end
 
+    if button.internal == "ACCEPT" then
+        TetrisDevTool.applyContainerEdit(self.containerDataKey, self.newContainerDefinition);
+        self:removeFromUIManager();
+    end
+
     self:reflow();
 end
 
+function TetrisDevTool.onItemRestriction(editWindow, index, state, offset)
+    local category = TetrisItemCategory.list[index+offset];
+
+    local def = editWindow.newContainerDefinition;
+    if state then
+        if not def.validCategories then
+            def.validCategories = {};
+        end
+        if not contains(category, def.validCategories) then
+            table.insert(def.validCategories, category);
+        end
+        table.insert(editWindow.newContainerDefinition.validCategories, category);
+    else
+        if not def.validCategories then
+            return;
+        end
+
+        for i, cat in ipairs(def.validCategories) do
+            if cat == category then
+                table.remove(def.validCategories, i);
+                break;
+            end
+        end
+
+        if #def.validCategories == 0 then
+            def.validCategories = nil;
+        end
+    end
+end
 
 function TetrisDevTool.onAddGridButton(editWindow, button)
     table.insert(editWindow.newContainerDefinition.gridDefinitions, {
@@ -711,15 +817,28 @@ function TetrisDevTool.createDragHandle(gridUi, pixelIncrement, onReleaseCallbac
 end
 
 
-function TetrisDevTool.writeContainerEditsToFile(containerPack)
-    local file = getFileWriter(FORMATED_FILENAME.."CONTAINER", true, false);
-    local text = FormattedLuaWriter.formatLocalVariable("containerPack", containerPack, 0);
+function TetrisDevTool.applyContainerEdit(key, newDef)
+    TetrisDevTool.containerEdits[key] = newDef;
+
+    writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
+    TetrisDevTool.writeContainerEditsLua();
+
+    -- Force refresh all the grids
+    ItemContainerGrid._playerMainGrids = {}
+    ItemContainerGrid._getPlayerMainGrid(0)
+    getPlayerInventory(0).inventoryPane:refreshItemGrids(true)
+    getPlayerLoot(0).inventoryPane:refreshItemGrids(true)
+end
+
+function TetrisDevTool.writeContainerEditsLua()
+    local file = getFileWriter(CONTAINER_FILENAME..".lua", true, false);
+    local text = FormattedLuaWriter.formatLocalVariable("containerPack", TetrisDevTool.containerEdits, 0);
     file:write(text);
     file:close();
 end
 
 function TetrisDevTool.writeLuaFormattedFile()
-    local file = getFileWriter(FORMATED_FILENAME, true, false);
+    local file = getFileWriter(ITEM_FILENAME..".lua", true, false);
     for k,v in pairs(TetrisDevTool.itemEdits) do
         local line = string.format("[\"%s\"] = {height=%d, width=%d, maxStackSize=%d},\r\n", k, v.width, v.height, v.maxStackSize);
         file:write(line);
@@ -731,7 +850,7 @@ function TetrisDevTool.recalculateItemData(item)
     local fType = item:getFullType();
     TetrisItemData._itemData[fType] = nil;
     TetrisDevTool.itemEdits[fType] = nil;
-    writeJsonFile(FILENAME, TetrisDevTool.itemEdits);
+    writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
     -- Recalculation will happen when the item is next rendered
 end
 
