@@ -14,6 +14,7 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, playerNum)
 
     o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
     o.isOnPlayer = inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory()
+    o.isFloor = inventory:getType() == "floor"
 
     o.width = o.gridDefinition.size.width
     o.height = o.gridDefinition.size.height
@@ -154,7 +155,7 @@ function ItemGrid:gatherSameItems(stack)
 end
 
 function ItemGrid:_insertStack(xPos, yPos, item, isRotated)
-    local stack = ItemStack.create(xPos, yPos, isRotated, item:getFullType())
+    local stack = ItemStack.create(xPos, yPos, isRotated, item:getFullType(), TetrisItemCategory.getCategory(item))
     ItemStack.addItem(stack, item)
     table.insert(self.persistentData.stacks, stack)
     self:_rebuildStackMap()
@@ -299,7 +300,7 @@ function ItemGrid:forceInsertItem(item)
         y = ZombRand(0, yDiff+1)
     end
 
-    local stack = ItemStack.create(x, y, false, item:getFullType())
+    local stack = ItemStack.create(x, y, false, item:getFullType(), TetrisItemCategory.getCategory(item))
     ItemStack.addItem(stack, item)
     table.insert(self.backStacks, stack)
     self:_rebuildBackStackMap()
@@ -395,13 +396,18 @@ end
 function ItemGrid:_validateAndCleanStacks(persistentGridData)
     if not persistentGridData.stacks then
         persistentGridData.stacks = {}
-        return
     end
 
+    persistentGridData.stacks = self:_validateStackList(persistentGridData.stacks)
+    self.backStacks = self:_validateStackList(self.backStacks, true)
+    self:_rebuildStackMap()
+end
+
+function ItemGrid:_validateStackList(stacks, skipBounds)
     local seenItemIDs = {}
     local badItemIDs = {}
     local badStacks = {}
-    for _,stack in ipairs(persistentGridData.stacks) do
+    for _,stack in ipairs(stacks) do
         for itemID, _ in pairs(stack.itemIDs) do
             if seenItemIDs[itemID] then
                 badItemIDs[itemID] = true
@@ -418,8 +424,8 @@ function ItemGrid:_validateAndCleanStacks(persistentGridData)
     end
 
     local validatedStacks = {}
-    for _,stack in ipairs(persistentGridData.stacks) do
-        if not badStacks[stack] and self:_isInBounds(stack.x, stack.y) then
+    for _,stack in ipairs(stacks) do
+        if not badStacks[stack] and (skipBounds or self:_isInBounds(stack.x, stack.y)) then
             table.insert(validatedStacks, stack)
         else
             local newStack = ItemStack.copyWithoutItems(stack)
@@ -438,9 +444,9 @@ function ItemGrid:_validateAndCleanStacks(persistentGridData)
         end
     end
 
-    persistentGridData.stacks = validatedStacks
-    self:_rebuildStackMap()
+    return validatedStacks
 end
+
 
 function ItemGrid:_rebuildStackMap()
     local stackMap = {}
@@ -507,6 +513,164 @@ function ItemGrid:_acceptUnpositionedItems(unpositionedItems, useShuffle)
     return remainingItems
 end
 
+
+
+
+
+
+function ItemGrid:isUnsearched(playerNum)
+    if not SandboxVars.InventoryTetris.EnableSearch then
+        return false
+    end
+
+    if self.isPlayerInventory or self.isFloor then
+        return false
+    end
+
+    local uuid = self._getPlayerUUID(playerNum)
+
+    if not self.persistentData.searchLog then
+        self.persistentData.searchLog = {}
+    end
+
+    return not self.persistentData.searchLog[uuid]
+end
+
+
+
+
+
+-- Searches are not saved, they are kept in memory only
+-- Only completion of a search is saved
+ItemGrid._searchSessions = {}
+
+function ItemGrid._getSearchSession(playerNum, grid)
+    if not ItemGrid._searchSessions[playerNum] then
+        ItemGrid._searchSessions[playerNum] = {}
+    end
+
+    if not ItemGrid._searchSessions[playerNum][grid.inventory] then
+        return nil
+    end
+
+    return ItemGrid._searchSessions[playerNum][grid.inventory][grid.gridIndex]
+end
+
+function ItemGrid._getOrCreateSearchSession(playerNum, grid)
+    local existingSession = ItemGrid._getSearchSession(playerNum, grid)
+    if existingSession then
+        return existingSession
+    end
+
+    local sessions = ItemGrid._searchSessions[playerNum]
+    if not sessions[grid.inventory] then
+        sessions[grid.inventory] = {}
+    end
+
+    sessions[grid.inventory][grid.gridIndex] = ItemGrid._createSearchSession(grid)
+    table.insert(sessions, sessions[grid.inventory][grid.gridIndex])
+
+    if #sessions > 10 then
+        local session = sessions[1]
+        table.remove(sessions, 1)
+        sessions[session.inventory] = nil
+    end
+
+    return sessions[grid.inventory][grid.gridIndex]
+end
+
+function ItemGrid._createSearchSession(grid)
+    local session = {}
+    session.inventory = grid.inventory
+    session.gridIndex = grid.gridIndex
+    session.isGridRevealed = false
+    session.searchedStackIDs = {}
+    session.progressTicks = 0
+    return session
+end
+
+function ItemGrid:getSearchSession(playerNum)
+    return ItemGrid._getSearchSession(playerNum, self)
+end
+
+function ItemGrid:updateSearch(player, playerNum)
+    local session = ItemGrid._getOrCreateSearchSession(playerNum, self)
+
+    local searchTime = SandboxVars.InventoryTetris.SearchTime
+    if player:HasTrait("AllThumbs") then
+        searchTime = searchTime * 1.5
+    elseif player:HasTrait("Dextrous") then
+        searchTime = searchTime * 0.66
+    end
+
+    local progressTicks = session.progressTicks + 1
+
+    if not session.isGridRevealed and progressTicks >= (searchTime * 2) then
+        progressTicks = progressTicks - (searchTime * 2)
+        session.isGridRevealed = true
+    end
+
+    if not session.isGridRevealed then
+        session.progressTicks = progressTicks
+        return false
+    end
+
+    local stacks = self:getStacks()
+    local i = 1
+    while progressTicks >= searchTime do
+        if i > #stacks then
+            break
+        end
+
+        while i <= #stacks do
+            local stack = stacks[i]
+            i = i + 1
+            
+            local frontItem = ItemStack.getFrontItem(stack, self.inventory)
+            local frontItemID = frontItem and frontItem:getID() or nil
+            if frontItemID and not session.searchedStackIDs[frontItemID] then
+                session.searchedStackIDs[frontItemID] = true
+                progressTicks = progressTicks - searchTime
+                break
+            end
+        end
+    end
+
+    session.progressTicks = progressTicks
+
+    for j=i, #stacks do
+        local stack = stacks[j]
+        local frontItem = ItemStack.getFrontItem(stack, self.inventory)
+        local frontItemID = frontItem and frontItem:getID() or nil
+        if frontItemID and not session.searchedStackIDs[frontItemID] then
+            return false
+        end
+    end
+
+    return true
+end
+
+function ItemGrid:completeSearch(playerNum)
+    if not self:isUnsearched(playerNum) then
+        return
+    end
+
+    local uuid = self._getPlayerUUID(playerNum)
+    if not self.persistentData.searchLog then
+        self.persistentData.searchLog = {}
+    end
+
+    self.persistentData.searchLog[uuid] = true
+    self:_sendModData()
+end
+
+
+function ItemGrid:resetGridData()
+    self:_getSavedContainerData()[self.gridIndex] = {}
+    self.persistentData = self:_getSavedGridData()
+    self.backStacks = {}
+end
+
 function ItemGrid:_getSavedGridData()
     local containerData, parent = self:_getSavedContainerData()
 
@@ -555,6 +719,20 @@ function ItemGrid:_getParentModData()
 
     print("Error: ItemGrid:_getParentModData() An invalid container setup was found. Contact Notloc and tell him what you were doing when this happened.")
     return {} -- Return an empty table so we don't error out
+end
+
+local TETRIS_UUID = "TetrisUUID"
+function ItemGrid._getPlayerUUID(playerNum)
+    local player = getSpecificPlayer(playerNum)
+    
+    local uuid = player:getModData()[TETRIS_UUID]
+    if not uuid then
+        uuid = getRandomUUID()
+        player:getModData()[TETRIS_UUID] = uuid
+        ItemGrid._modDataSyncQueue[player] = true
+    end
+
+    return uuid
 end
 
 

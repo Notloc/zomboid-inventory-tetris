@@ -1,11 +1,12 @@
 require "InventoryTetris/TetrisItemCategory"
 
-local MAX_ITEM_HEIGHT = 8
-local MAX_ITEM_WIDTH = 8
+local MAX_ITEM_HEIGHT = 30
+local MAX_ITEM_WIDTH = 10
 
 TetrisContainerData = {}
 
 TetrisContainerData._containerDefinitions = {}
+TetrisContainerData._vehicleStorageNames= {}
 
 function TetrisContainerData.getContainerDefinition(container)
     local containerKey = TetrisContainerData._getContainerKey(container)
@@ -39,6 +40,7 @@ end
 
 function TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
     print("containerKey: " .. containerKey)
+
     if TetrisDevTool.containerEdits[containerKey] then
         return TetrisDevTool.containerEdits[containerKey]
     end
@@ -50,6 +52,11 @@ function TetrisContainerData._getContainerDefinitionByKey(container, containerKe
 end
 
 function TetrisContainerData._calculateContainerDefinition(container)
+    local type = container:getType()
+    if TetrisContainerData._vehicleStorageNames[type] then
+        return TetrisContainerData._calculateVehicleTrunkContainerDefinition(container)
+    end
+    
     local item = container:getContainingItem()
     if item then
         return TetrisContainerData._calculateItemContainerDefinition(container, item)
@@ -88,10 +95,23 @@ end
 function TetrisContainerData._calculateWorldContainerDefinition(container)
     local capacity = container:getCapacity()
 
-    local size = 1 + math.ceil(math.pow(capacity, 0.35))
+    local size = 1 + math.ceil(math.pow(capacity, 0.4))
     return {
         gridDefinitions = {{
             size = {width=size, height=size},
+            position = {x=0, y=0},
+        }}
+    }
+end
+
+function TetrisContainerData._calculateVehicleTrunkContainerDefinition(container)
+    local capacity = container:getCapacity()
+
+    local size = 50 + capacity
+    local x, y = TetrisContainerData._calculateDimensions(size)
+    return {
+        gridDefinitions = {{
+            size = {width=x, height=y},
             position = {x=0, y=0},
         }}
     }
@@ -119,7 +139,7 @@ end
 
 TetrisContainerData.recalculateContainerData = function()
     TetrisContainerData._containerDefinitions = {}
-    TetrisContainerData._onGameBoot()
+    TetrisContainerData._onInitWorld()
 end
 
 TetrisContainerData.validateInsert = function(containerDef, item)
@@ -145,9 +165,16 @@ TetrisContainerData.validateInsert = function(containerDef, item)
         end
     end
 
+    return false
 end
 
+-- Vehicle Storage Registration
 
+TetrisContainerData.registerLargeVehicleStorageContainers = function(containerTypes)
+    for _, type in ipairs(containerTypes) do
+        TetrisContainerData._vehicleStorageNames[type] = true
+    end
+end
 
 -- Container Pack Registration
 TetrisContainerData._containerDataPacks = {}

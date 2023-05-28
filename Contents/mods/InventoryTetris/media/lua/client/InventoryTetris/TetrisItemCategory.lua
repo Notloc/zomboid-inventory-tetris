@@ -12,6 +12,7 @@ TetrisItemCategory = {
     ENTERTAINMENT = "ENTERTAINMENT",
     KEY = "KEY",
     MISC = "MISC",
+    SEED = "SEED",
 }
 
 local list = {}
@@ -22,6 +23,7 @@ TetrisItemCategory.list = list
 
 TetrisItemCategory.getCategory = function(item)
     local category = item:getDisplayCategory()
+    local type = item:getFullType()
 
     if item:IsInventoryContainer() then
         return TetrisItemCategory.CONTAINER
@@ -58,6 +60,9 @@ TetrisItemCategory.getCategory = function(item)
     
     elseif category == "Key" then
         return TetrisItemCategory.KEY
+    
+    elseif string.find(type, "Seed") then 
+        return TetrisItemCategory.SEED
     end
 
     return TetrisItemCategory.MISC

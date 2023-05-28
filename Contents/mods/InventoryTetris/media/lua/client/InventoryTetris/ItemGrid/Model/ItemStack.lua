@@ -3,7 +3,7 @@
 
 ItemStack = {}
 
-ItemStack.create = function(x, y, isRotated, itemFullType)
+ItemStack.create = function(x, y, isRotated, itemFullType, category)
     local stack = {}
     stack.itemIDs = {}
     stack.count = 0
@@ -11,11 +11,12 @@ ItemStack.create = function(x, y, isRotated, itemFullType)
     stack.y = y
     stack.isRotated = isRotated and true or false
     stack.itemType = itemFullType
+    stack.category = category
     return stack
 end
 
 ItemStack.copyWithoutItems = function(stack)
-    return ItemStack.create(stack.x, stack.y, stack.isRotated, stack.itemType)
+    return ItemStack.create(stack.x, stack.y, stack.isRotated, stack.itemType, stack.category)
 end
 
 ItemStack.getFrontItem = function(stack, inventory)

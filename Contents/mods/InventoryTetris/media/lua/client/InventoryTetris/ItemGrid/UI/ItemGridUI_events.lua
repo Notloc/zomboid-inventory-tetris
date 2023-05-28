@@ -35,6 +35,12 @@ local function isStackSplitDown()
 end
 
 function ItemGridUI:onMouseDown(x, y)
+    if self.grid:isUnsearched(self.playerNum) then
+        local searchAction = SearchGridAction:new(getSpecificPlayer(self.playerNum), self.grid)
+        ISTimedActionQueue.add(searchAction)
+        return true
+    end
+
 	if self.playerNum ~= 0 then return end
 	getSpecificPlayer(self.playerNum):nullifyAiming();
     local gridStack = self:findGridStackUnderMouse()
@@ -47,6 +53,7 @@ function ItemGridUI:onMouseDown(x, y)
 end
 
 function ItemGridUI:onMouseUp(x, y)
+    if self.grid:isUnsearched(self.playerNum) then return end
 	if self.playerNum ~= 0 then return end
     
     if not DragAndDrop.isDragging() then
@@ -61,6 +68,7 @@ function ItemGridUI:onMouseUp(x, y)
 end
 
 function ItemGridUI:onMouseUpOutside(x, y)
+    if self.grid:isUnsearched(self.playerNum) then return end
     if self.playerNum ~= 0 then return end
     if not DragAndDrop.isDragOwner(self) then return end
 
@@ -90,6 +98,7 @@ function ItemGridUI:cancelDragDropItem()
 end
 
 function ItemGridUI:onRightMouseUp(x, y)
+    if self.grid:isUnsearched(self.playerNum) then return end
     if self.playerNum ~= 0 then return end
 
     local itemStack = self:findGridStackUnderMouse()
@@ -108,16 +117,19 @@ function ItemGridUI:onRightMouseUp(x, y)
 end
 
 function ItemGridUI:onMouseDoubleClick(x, y)
+    if self.grid:isUnsearched(self.playerNum) then return end
     if self.playerNum ~= 0 then return end
     self:handleDoubleClick(x, y)
 end
 
 function ItemGridUI:onMouseMove(dx, dy)
+    if self.grid:isUnsearched(self.playerNum) then return end
     if self.playerNum ~= 0 then return end
     DragAndDrop.startDrag(self)
 end
 
 function ItemGridUI:onMouseMoveOutside(dx, dy)
+    if self.grid:isUnsearched(self.playerNum) then return end
     if self.playerNum ~= 0 then return end
     DragAndDrop.startDrag(self)
 end
@@ -153,7 +165,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
         local x, y = ItemGridUiUtil.findGridPositionOfMouse(self, vanillaStack.items[1], DragAndDrop.isDraggedItemRotated())
         if isSameGrid then
             if isStackSplitDown() then
-                self:splitStackSameGrid(vanillaStack, x, y)
+                self:openSplitStack(vanillaStack, x, y)
             else
                 self.grid:moveStack(gridStack, x, y, DragAndDrop.isDraggedItemRotated())
             end
@@ -203,7 +215,7 @@ function ItemGridUI:handleDragAndDropTransfer(playerObj, gridX, gridY, targetSta
     end
 
     if isStackSplitDown() then
-        self:splitStackDifferentGrid(vanillaStack, gridX, gridY)
+        self:openSplitStack(vanillaStack, gridX, gridY)
     else 
         for i, item in ipairs(vanillaStack.items) do
             if i > 1 then
@@ -216,38 +228,29 @@ function ItemGridUI:handleDragAndDropTransfer(playerObj, gridX, gridY, targetSta
     end
 end
 
-function ItemGridUI:splitStackDifferentGrid(vanillaStack, targetX, targetY)
+function ItemGridUI:openSplitStack(vanillaStack, targetX, targetY)
     if not vanillaStack or vanillaStack.count < 2 then return end
 
-    local isRotated = DragAndDrop.isDraggedItemRotated()
     local dragInventory = vanillaStack.items[1]:getContainer()
     local isSameInventory = self.grid.inventory == dragInventory
-
-    local playerObj = getSpecificPlayer(self.playerNum)
-
-    local half = math.ceil(vanillaStack.count / 2)
-    for i = 2, half+1 do
-        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, vanillaStack.items[i], vanillaStack.items[i]:getContainer(), self.grid.inventory, 1, targetX, targetY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated()))
-    end
-end
-
-function ItemGridUI:splitStackSameGrid(vanillaStack, targetX, targetY)
-    if not vanillaStack or vanillaStack.count < 2 then return end
-
-    local isRotated = DragAndDrop.isDraggedItemRotated()
-    local dragInventory = vanillaStack.items[1]:getContainer()
-    local isSameInventory = self.grid.inventory == dragInventory
-    local gridStack = self.grid:findStackByItem(vanillaStack.items[1])
-    if isSameInventory and self.grid:willStackOverlapSelf(gridStack, targetX, targetY, isRotated) then
-        return
+    if isSameInventory then
+        local gridStack = self.grid:findStackByItem(vanillaStack.items[1])
+        if gridStack and self.grid:willStackOverlapSelf(gridStack, targetX, targetY, DragAndDrop.isDraggedItemRotated()) then
+            return
+        end
     end
 
-    local playerObj = getSpecificPlayer(self.playerNum)
+    local window = ItemGridStackSplitWindow:new(self.grid, vanillaStack, targetX, targetY, DragAndDrop.isDraggedItemRotated(), self.playerNum)
+    window:initialise()
+    window:addToUIManager()
+    window:setX(getMouseX() - window:getWidth() / 2)
+    window:setY(getMouseY() - window:getHeight() / 2)
 
-    local half = math.ceil(vanillaStack.count / 2)
-    for i = 2, half+1 do
-        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, vanillaStack.items[i], vanillaStack.items[i]:getContainer(), self.grid.inventory, 1, targetX, targetY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated()))
+    if vanillaStack.count <= 3 then
+        window:onOK()
     end
+
+
 end
 
 function ItemGridUI:handleClick(x, y)

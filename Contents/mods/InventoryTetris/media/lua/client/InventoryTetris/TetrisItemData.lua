@@ -48,7 +48,7 @@ TetrisItemData._calculateItemSize = function(item, category)
         if instanceof(item, "Moveable") then
             return x+2, y+2
         else
-            return y, x
+            return x, y
         end
     else
         return calculation.x, calculation.y
@@ -136,8 +136,8 @@ TetrisItemData._calculateItemSizeClothing = function(item)
             width = 1
             height = 1
         elseif weight <= 1.0 then
-            width = 2
-            height = 1
+            width = 1
+            height = 2
         end
     end
 
@@ -159,7 +159,17 @@ TetrisItemData._calculateItemSizeWeightBased = function(item)
     local height = 1
 
     local weight = item:getActualWeight()
-    if weight >= 20 then
+    
+    if weight >= 50 then
+        width = 12
+        height = 12
+    elseif weight >= 40 then
+        width = 10
+        height = 10
+    elseif weight >= 30 then
+        width = 9
+        height = 9
+    elseif weight >= 20 then
         width = 8
         height = 8
     elseif weight >= 16 then
@@ -227,7 +237,8 @@ TetrisItemData._itemClassToSizeCalculation = {
     [TetrisItemCategory.ENTERTAINMENT] = TetrisItemData._calculateEntertainmentSize,
     
     [TetrisItemCategory.KEY] = {x = 1, y = 1},
-    [TetrisItemCategory.MISC] = TetrisItemData._calculateItemSizeWeightBased
+    [TetrisItemCategory.MISC] = TetrisItemData._calculateItemSizeWeightBased,
+    [TetrisItemCategory.SEED] = {x = 1, y = 1},
 }
 
 TetrisItemData._calculateItemStackability = function(item, itemClass)
@@ -273,6 +284,10 @@ end
 TetrisItemData._calculateMiscStackability = function(item)
     local maxStack = 1
 
+    if instanceof(item, "Drainable") then
+        return 1;
+    end
+
     local weight = item:getActualWeight()
     if weight >= 0.5 then
         maxStack = 2
@@ -285,6 +300,16 @@ TetrisItemData._calculateMiscStackability = function(item)
     end
 
     return maxStack
+end
+
+TetrisItemData._calculateSeedStackability = function(item)
+    local type = item:getFullType()
+
+    if string.find(type, "BagSeed") then
+        return 4
+    else
+        return 50
+    end
 end
 
 TetrisItemData._itemClassToStackabilityCalculation = {
@@ -305,7 +330,8 @@ TetrisItemData._itemClassToStackabilityCalculation = {
     [TetrisItemCategory.ENTERTAINMENT] = TetrisItemData._calculateEntertainmentStackability,
     
     [TetrisItemCategory.KEY] = 1,
-    [TetrisItemCategory.MISC] = TetrisItemData._calculateMiscStackability
+    [TetrisItemCategory.MISC] = TetrisItemData._calculateMiscStackability,
+    [TetrisItemCategory.SEED] = TetrisItemData._calculateSeedStackability,
 }
 
 

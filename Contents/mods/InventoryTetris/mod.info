@@ -1,4 +1,5 @@
 name=Inventory Tetris
 id=INVENTORY_TETRIS
-description=Tarkov style inventory for Zomboid.
+description=A full grid-based inventory overhaul for Project Zomboid.
 require=EQUIPMENT_UI
+poster=poster.png

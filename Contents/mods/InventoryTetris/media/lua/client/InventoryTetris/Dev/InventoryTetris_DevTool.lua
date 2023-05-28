@@ -60,8 +60,8 @@ function TetrisDevTool.insertDebugOptions(menu, item)
         return;
     end
 
-    menu:addOptionOnTop("Edit Item Data", item, TetrisDevTool.openEditItem);
     menu:addOptionOnTop("Recalculate Item Data", item, TetrisDevTool.recalculateItemData);
+    menu:addOptionOnTop("Edit Item Data", item, TetrisDevTool.openEditItem);
 end
 
 function TetrisDevTool.insertContainerDebugOptions(menu, containerUi)
@@ -69,6 +69,7 @@ function TetrisDevTool.insertContainerDebugOptions(menu, containerUi)
         return;
     end
 
+    menu:addOptionOnTop("Reset Grid Data", containerUi.containerGrid, TetrisDevTool.resetGridData);
     menu:addOptionOnTop("Recalculate Container Data", containerUi.containerGrid, TetrisDevTool.recalculateContainerData);
     menu:addOptionOnTop("Edit Container Data", containerUi, TetrisDevTool.openContainerEdit);
 end
@@ -77,7 +78,7 @@ function TetrisDevTool.openEditItem(item)
     -- create a new window with 2 number inputs for width and height
     -- and a button to save the changes or cancel
 
-    local editWindow = ISPanel:new(getMouseX(), getMouseY(), 200, 200);
+    local editWindow = ISPanel:new(getMouseX(), getMouseY(), 200, 400);
     editWindow:initialise();
     editWindow:addToUIManager();
 
@@ -87,42 +88,15 @@ function TetrisDevTool.openEditItem(item)
     nameLabel:instantiate();
     editWindow:addChild(nameLabel);
     
-
     local currentX, currentY = TetrisItemData.getItemSize(item, false)
     local maxStackSize = TetrisItemData.getMaxStackSize(item)
 
-    local widthLabel = ISLabel:new(10, 25, 10, "X:", 1, 1, 1, 1, UIFont.Small, true);
-    widthLabel:initialise();
-    widthLabel:instantiate();
-    editWindow:addChild(widthLabel);
-    
-    local widthInput = ISTextEntryBox:new("", 30, 25, 100, 20);
-    widthInput:initialise();
-    widthInput:instantiate();
-    widthInput:setOnlyNumbers(true);
-    widthInput:setMaxTextLength(2);
-    widthInput:setText(tostring(currentX));
-    editWindow:addChild(widthInput);
-
-    local heightLabel = ISLabel:new(10, 60, 10, "Y:", 1, 1, 1, 1, UIFont.Small, true);
-    heightLabel:initialise();
-    heightLabel:instantiate();
-    editWindow:addChild(heightLabel);
-
-    local heightInput = ISTextEntryBox:new("", 30, 60, 100, 20);
-    heightInput:initialise();
-    heightInput:instantiate();
-    heightInput:setOnlyNumbers(true);
-    heightInput:setMaxTextLength(2);
-    heightInput:setText(tostring(currentY));
-    editWindow:addChild(heightInput);
-
-    local maxStackLabel = ISLabel:new(10, 95, 10, "Max Stack:", 1, 1, 1, 1, UIFont.Small, true);
+    local maxStackLabel = ISLabel:new(10, 25, 10, "Max Stack:", 1, 1, 1, 1, UIFont.Small, true);
     maxStackLabel:initialise();
     maxStackLabel:instantiate();
     editWindow:addChild(maxStackLabel);
 
-    local maxStackInput = ISTextEntryBox:new("", 80, 95, 50, 20);
+    local maxStackInput = ISTextEntryBox:new("", 80, 25, 50, 20);
     maxStackInput:initialise();
     maxStackInput:instantiate();
     maxStackInput:setOnlyNumbers(true);
@@ -135,25 +109,57 @@ function TetrisDevTool.openEditItem(item)
     editWindow.maxStackInput = maxStackInput;
     editWindow.item = item;
 
-    local okButton = ISButton:new(10, 125, 100, 20, "OK", editWindow);
+    local okButton = ISButton:new(10, 55, 100, 20, "OK", editWindow);
     okButton:setOnClick(TetrisDevTool.onEditItem, okButton);
     okButton:initialise();
     okButton:instantiate();
     okButton.internal = "OK";
     editWindow:addChild(okButton);
 
-    local cancelButton = ISButton:new(10, 155, 100, 20, "Cancel", editWindow);
+    local cancelButton = ISButton:new(10, 80, 100, 20, "Cancel", editWindow);
     cancelButton:setOnClick(TetrisDevTool.onEditItem, cancelButton);
     cancelButton:initialise();
     cancelButton:instantiate();
     cancelButton.internal = "Cancel";
     editWindow:addChild(cancelButton);
+
+    local width, height = TetrisItemData.getItemSize(item, false);
+    local itemRenderer = DevItemRenderer:new(10, 120, item, width, height);
+    itemRenderer:initialise();
+    itemRenderer:instantiate();
+    editWindow:addChild(itemRenderer);
+
+    local dragHandle = TetrisDevTool.createDragHandle(itemRenderer, OPT.TEXTURE_SIZE, function(handle)
+        
+        local x, y = TetrisDevTool.getGridXYFromHandle(handle);
+
+        print("Drag handle at: " .. x .. ", " .. y);
+
+        handle:setX(x * OPT.TEXTURE_SIZE);
+        handle:setY(y * OPT.TEXTURE_SIZE);
+
+        handle.parent.w = x + 1;
+        handle.parent.h = y + 1;
+    end,  {a=0.25, r=1, g=1, b=1});
+
+    itemRenderer:addChild(dragHandle);
+    dragHandle:setX((width - 1) * OPT.TEXTURE_SIZE);
+    dragHandle:setY((height - 1) * OPT.TEXTURE_SIZE);
+
+    editWindow.itemRenderer = itemRenderer;
+
+    editWindow.render = function(self)
+        ISPanel.render(self);
+        self:setWidth(math.max(itemRenderer:getWidth(), 250))
+        self:setHeight(math.max(itemRenderer:getHeight() + 150, 250))
+    end
+
 end
 
 TetrisDevTool.onEditItem = function(self, button)
     if button.internal == "OK" then
-        local x = tonumber(self.widthInput:getText());
-        local y = tonumber(self.heightInput:getText());
+        local x = self.itemRenderer.w 
+        local y = self.itemRenderer.h
         local maxStack = tonumber(self.maxStackInput:getText());
         if x and y and maxStack and x > 0 and y > 0 and maxStack > 0 then
             TetrisDevTool.applyEdits(self.item, x, y, maxStack);
@@ -177,7 +183,6 @@ function TetrisDevTool.applyEdits(item, x, y, maxStack)
     TetrisDevTool.itemEdits[fType] = newData;
     
     writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
-    TetrisDevTool.writeLuaFormattedFile();
 end
 
 
@@ -192,7 +197,7 @@ local function copyTable(from, to)
     end
 end
 
-local function getGridXYFromHandle(handle)
+function TetrisDevTool.getGridXYFromHandle(handle)
     local x = handle:getX() + OPT.CELL_SIZE / 2;
     local y = handle:getY() + OPT.CELL_SIZE / 2;
 
@@ -276,7 +281,7 @@ function TetrisDevTool.remakeContainerUi(editWindow)
     -- Resize handles
     for _, gridUi in pairs(containerUi.gridUis) do
         local dragHandle = TetrisDevTool.createDragHandle(gridUi, OPT.CELL_SIZE, function(handle)
-            local x, y = getGridXYFromHandle(handle);
+            local x, y = TetrisDevTool.getGridXYFromHandle(handle);
 
             print("Drag handle at: " .. x .. ", " .. y);
 
@@ -341,7 +346,6 @@ function TetrisDevTool.openContainerEdit(containerUi)
     editWindow:addChild(titleBar);
     titleBar.moveWithMouse = true;
 
-
     -- Close button, top right
     local closeButton = ISButton:new(editWindow:getWidth() - 40, 2, 16, 16, "Close", editWindow);
     closeButton:initialise();
@@ -385,10 +389,6 @@ function TetrisDevTool.openContainerEdit(containerUi)
     organizedButton:setOnClick(TetrisDevTool.onEditContainer, organizedButton);
     editWindow:addChild(organizedButton);
 
-    -- function ISTickBox:new (x, y, width, height, name, changeOptionTarget, changeOptionMethod, changeOptionArg1, changeOptionArg2)
-
-
-    -- Offset to the right and do 2 columns of tickboxes
 
     -- Item Restrictions Title
     local itemRestrictionsTitle = ISLabel:new(120, 25, 16, "Item Restrictions:", 1, 1, 1, 1, UIFont.Small, true);
@@ -441,9 +441,6 @@ function TetrisDevTool.openContainerEdit(containerUi)
 
     editWindow:addChild(itemCategoryBoxes2);
 
-
-
-
     -- Accept button
     local acceptButton = ISButton:new(editWindow:getWidth() - 100, 35, 90, 16, "Accept", editWindow);
     acceptButton:initialise();
@@ -456,6 +453,20 @@ function TetrisDevTool.openContainerEdit(containerUi)
     acceptButton:setAlwaysOnTop(true);
     acceptButton:setOnClick(TetrisDevTool.onEditContainer, acceptButton);
     editWindow:addChild(acceptButton);
+
+    -- Export button
+    local exportButton = ISButton:new(editWindow:getWidth() - 100, 55, 90, 16, "Export", editWindow);
+    exportButton:initialise();
+    exportButton:instantiate();
+    exportButton:setAnchorRight(true);
+    exportButton:setAnchorTop(true);
+    exportButton:setAnchorBottom(false);
+    exportButton:setAnchorLeft(false);
+    exportButton:setAlwaysOnTop(true);
+    exportButton.internal = "EXPORT";
+    exportButton:setOnClick(TetrisDevTool.onEditContainer, exportButton);
+
+    editWindow:addChild(exportButton);
 
     local og_prerender = editWindow.prerender
     editWindow.prerender = function(self)
@@ -551,7 +562,7 @@ function TetrisDevTool.openContainerEdit(containerUi)
             local y = gridDef.position.y;
 
             if gridUi.dragHandle.moving then
-                w, h = getGridXYFromHandle(gridUi.dragHandle);
+                w, h = TetrisDevTool.getGridXYFromHandle(gridUi.dragHandle);
                 w = w + 1;
                 h = h + 1;
             end
@@ -588,6 +599,10 @@ function TetrisDevTool.onEditContainer(self, button)
     if button.internal == "ACCEPT" then
         TetrisDevTool.applyContainerEdit(self.containerDataKey, self.newContainerDefinition);
         self:removeFromUIManager();
+    end
+
+    if button.internal == "EXPORT" then
+        TetrisDevTool._exportDataPack();
     end
 
     self:reflow();
@@ -780,7 +795,7 @@ local function onMouseDown_handle(self, x, y)
     self:bringToTop();
 end
 
-function TetrisDevTool.createDragHandle(gridUi, pixelIncrement, onReleaseCallback)
+function TetrisDevTool.createDragHandle(uiElement, pixelIncrement, onReleaseCallback, col)
     local handle = ISPanel:new(0,0, pixelIncrement, pixelIncrement);
     handle:initialise();
     handle:instantiate();
@@ -797,11 +812,16 @@ function TetrisDevTool.createDragHandle(gridUi, pixelIncrement, onReleaseCallbac
     handle.onMouseUp = onMouseUp_handle;
     handle.onMouseUpOutside = onMouseUpOutside_handle;
 
-    gridUi.dragHandle = handle;
+    uiElement.dragHandle = handle;
 
-    -- Draw a red square
-    handle.prerender = function(self)
-        self:drawRect(0, 0, self:getWidth(), self:getHeight(), 1, 1, 0, 0);
+    if col then
+        handle.prerender = function(self)
+            self:drawRect(0, 0, self:getWidth(), self:getHeight(), col.a, col.r, col.g, col.b);
+        end
+    else
+        handle.prerender = function(self)
+            self:drawRect(0, 0, self:getWidth(), self:getHeight(), 1, 1, 0, 0);
+        end
     end
 
     handle.render = function(self)
@@ -821,7 +841,6 @@ function TetrisDevTool.applyContainerEdit(key, newDef)
     TetrisDevTool.containerEdits[key] = newDef;
 
     writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
-    TetrisDevTool.writeContainerEditsLua();
 
     -- Force refresh all the grids
     ItemContainerGrid._playerMainGrids = {}
@@ -830,6 +849,28 @@ function TetrisDevTool.applyContainerEdit(key, newDef)
     getPlayerLoot(0).inventoryPane:refreshItemGrids(true)
 end
 
+function TetrisDevTool._exportDataPack()
+    local items = FormattedLuaWriter.formatLocalVariable("itemPack", TetrisDevTool.itemEdits, 1);
+    local containers = FormattedLuaWriter.formatLocalVariable("containerPack", TetrisDevTool.containerEdits, 1);
+
+    local text =   'require "InventoryTetris/TetrisItemData";\r\n'
+    text = text .. 'require "InventoryTetris/TetrisContainerData";\r\n'
+    text = text .. '\r\n'
+    text = text .. 'Events.OnGameBoot.Add(function() \r\n'
+    text = text .. items
+    text = text .. '\r\n'
+    text = text .. containers
+    text = text .. '\r\n\r\n'
+    text = text .. '\t' .. 'TetrisItemData.registerItemDefinitions(itemPack)\r\n'
+    text = text .. '\t' .. 'TetrisContainerData.registerContainerDefinitions(containerPack)\r\n'
+    text = text .. 'end)\r\n'
+
+    local file = getFileWriter("TetrisDataPack.lua", true, false);
+    file:write(text);
+    file:close();
+end
+
+
 function TetrisDevTool.writeContainerEditsLua()
     local file = getFileWriter(CONTAINER_FILENAME..".lua", true, false);
     local text = FormattedLuaWriter.formatLocalVariable("containerPack", TetrisDevTool.containerEdits, 0);
@@ -837,14 +878,6 @@ function TetrisDevTool.writeContainerEditsLua()
     file:close();
 end
 
-function TetrisDevTool.writeLuaFormattedFile()
-    local file = getFileWriter(ITEM_FILENAME..".lua", true, false);
-    for k,v in pairs(TetrisDevTool.itemEdits) do
-        local line = string.format("[\"%s\"] = {height=%d, width=%d, maxStackSize=%d},\r\n", k, v.width, v.height, v.maxStackSize);
-        file:write(line);
-    end
-    file:close();
-end
 
 function TetrisDevTool.recalculateItemData(item)
     local fType = item:getFullType();
@@ -856,11 +889,23 @@ end
 
 function TetrisDevTool.recalculateContainerData(containerGrid)
     TetrisContainerData.recalculateContainerData(containerGrid.inventory);
+    TetrisDevTool.containerEdits[TetrisContainerData._getContainerKey(containerGrid.inventory)] = nil;
+
+
     local playerNum = containerGrid.playerNum
     getPlayerInventory(playerNum).inventoryPane:refreshItemGrids(true)
     getPlayerLoot(playerNum).inventoryPane:refreshItemGrids(true)
 end
 
+function TetrisDevTool.resetGridData(containerGrid)
+    for _, grid in ipairs(containerGrid.grids) do
+        grid:resetGridData();
+    end
+
+    local playerNum = containerGrid.playerNum
+    getPlayerInventory(playerNum).inventoryPane:refreshItemGrids(true)
+    getPlayerLoot(playerNum).inventoryPane:refreshItemGrids(true)
+end
 
 local og_createMenu = ISInventoryPaneContextMenu.createMenu
 ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)

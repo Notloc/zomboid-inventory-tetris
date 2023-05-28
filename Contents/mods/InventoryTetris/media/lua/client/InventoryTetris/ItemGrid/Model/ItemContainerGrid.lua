@@ -256,24 +256,49 @@ function ItemContainerGrid:_updateGridPositions(useShuffle)
     local unpositionedItems = self:_getUnpositionedItems()
 
     -- Sort the unpositioned items by size, so we can place the biggest ones first
-    --table.sort(unpositionedItems, function(a, b) return a.size > b.size end)
-    -- DISABLED, the introduction of the backgrid makes it more interesting to place items in a random order
+    table.sort(unpositionedItems, function(a, b) return a.size < b.size end)
     
-    for _, grid in ipairs(self.grids) do
-        unpositionedItems = grid:_acceptUnpositionedItems(unpositionedItems, useShuffle)
+    local remainingItems = {}
+    local gridCount = #self.grids
+
+    local gridIndex = 1
+    for _, item in ipairs(unpositionedItems) do
+        local startIndex = gridIndex
+        local unplaced = nil
+        repeat
+            local grid = self.grids[gridIndex]
+            gridIndex = gridIndex + 1
+            if gridIndex > #self.grids then
+                gridIndex = 1
+            end
+
+            unplaced = grid:_acceptUnpositionedItems({item}, useShuffle)
+            if #unplaced == 0 then
+                break
+            end
+        until gridIndex == startIndex
+
+        if unplaced and #unplaced > 0 then
+            remainingItems[#remainingItems+1] = item
+        end
+
+        gridIndex = (gridIndex + ZombRand(0, gridCount+1)) % (gridCount + 1)
+        if gridIndex == 0 then
+            gridIndex = 1
+        end
     end
 
-    if #unpositionedItems == 0 then
+    if #remainingItems == 0 then
         return
     end
 
     if self.isOnPlayer then
-        for _, unpositionedItemData in ipairs(unpositionedItems) do
+        for _, unpositionedItemData in ipairs(remainingItems) do
             self:_dropUnpositionedItem(unpositionedItemData.item)
         end
     else
         local i = 1
-        for _, unpositionedItemData in ipairs(unpositionedItems) do
+        for _, unpositionedItemData in ipairs(remainingItems) do
             local grid = self.grids[i]
             grid:forceInsertItem(unpositionedItemData.item)
             i = i + 1
