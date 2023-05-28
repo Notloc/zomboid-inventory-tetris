@@ -52,8 +52,13 @@ local ITEM_FILENAME = "InventoryTetris_ItemData"
 local CONTAINER_FILENAME = "InventoryTetris_ContainerData"
 
 
-TetrisDevTool.itemEdits = readJsonFile(ITEM_FILENAME..".json") or {}
-TetrisDevTool.containerEdits = readJsonFile(CONTAINER_FILENAME..".json") or {}
+if isDebugEnabled() then
+    TetrisDevTool.itemEdits = readJsonFile(ITEM_FILENAME..".json") or {}
+    TetrisDevTool.containerEdits = readJsonFile(CONTAINER_FILENAME..".json") or {}
+else
+    TetrisDevTool.itemEdits = {}
+    TetrisDevTool.containerEdits = {}
+end
 
 function TetrisDevTool.insertDebugOptions(menu, item)
     if not isDebugEnabled() then
