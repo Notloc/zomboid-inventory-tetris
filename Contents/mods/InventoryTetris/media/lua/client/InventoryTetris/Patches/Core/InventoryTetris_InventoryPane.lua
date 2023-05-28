@@ -121,7 +121,7 @@ function ISInventoryPane:refreshItemGrids(forceFullRefresh)
         itemGridContainerUi:setX(10)
         self.scrollView:addScrollChild(itemGridContainerUi)
 
-        y = y + itemGridContainerUi:getHeight() + 20
+        y = y + itemGridContainerUi:getHeight() + 8
 
         table.insert(self.gridContainerUis, itemGridContainerUi)
     end

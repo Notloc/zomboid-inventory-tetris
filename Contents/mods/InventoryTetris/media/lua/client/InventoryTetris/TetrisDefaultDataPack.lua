@@ -1885,6 +1885,11 @@ local itemPack = {
         ["width"] = 3,
         ["maxStackSize"] = 1,
     },
+    ["Base.CottonBalls"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
+    },
 }
 
 local containerPack = {
@@ -1902,8 +1907,8 @@ local containerPack = {
             },
             [2] = {
                 ["size"] = {
-                    ["width"] = 4,
-                    ["height"] = 3,
+                    ["width"] = 8,
+                    ["height"] = 4,
                 },
                 ["position"] = {
                     ["x"] = 0,
@@ -1918,16 +1923,6 @@ local containerPack = {
                 ["position"] = {
                     ["x"] = 1,
                     ["y"] = 0,
-                },
-            },
-            [4] = {
-                ["size"] = {
-                    ["width"] = 4,
-                    ["height"] = 3,
-                },
-                ["position"] = {
-                    ["x"] = 1,
-                    ["y"] = 1,
                 },
             },
         },
@@ -1983,7 +1978,7 @@ local containerPack = {
             [1] = {
                 ["size"] = {
                     ["width"] = 10,
-                    ["height"] = 11,
+                    ["height"] = 12,
                 },
                 ["position"] = {
                     ["x"] = 1,
@@ -3183,6 +3178,143 @@ local containerPack = {
                 },
             },
         },
+    },
+    ["overhead_50"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 1,
+                },
+            },
+            [4] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+        },
+    },
+    ["locker_50"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 6,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 6,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+        },
+    },
+    ["shelves_50"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+        },
+    },
+    ["shelvesmag_15"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isOrganized"] = true,
+    },
+    ["displaycase_20"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isOrganized"] = true,
+    },
+    ["clothingrack_50"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 8,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isOrganized"] = true,
     },
 }
 

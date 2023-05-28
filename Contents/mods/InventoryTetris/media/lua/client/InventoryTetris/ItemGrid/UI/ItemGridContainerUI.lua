@@ -7,7 +7,7 @@ local ICON_PADDING_X = 12
 local ICON_PADDING_Y = 8
 local ICON_SIZE = 64
 
-local GRID_PADDING = 2
+local GRID_PADDING = 5
 
 local CONTAINER_PADDING_X = 4
 local CONTAINER_PADDING_Y = 10
@@ -203,7 +203,7 @@ function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale)
     local yOffset = 0
 
     -- Space out the grids
-    local gridSpacing = 7 * scale
+    local gridSpacing = 6 * scale
     
     local gridUis = {}
     for _, gridUi in ipairs(_gridUis) do

@@ -35,12 +35,6 @@ local function isStackSplitDown()
 end
 
 function ItemGridUI:onMouseDown(x, y)
-    if self.grid:isUnsearched(self.playerNum) then
-        local searchAction = SearchGridAction:new(getSpecificPlayer(self.playerNum), self.grid)
-        ISTimedActionQueue.add(searchAction)
-        return true
-    end
-
 	if self.playerNum ~= 0 then return end
 	getSpecificPlayer(self.playerNum):nullifyAiming();
     local gridStack = self:findGridStackUnderMouse()
@@ -53,7 +47,6 @@ function ItemGridUI:onMouseDown(x, y)
 end
 
 function ItemGridUI:onMouseUp(x, y)
-    if self.grid:isUnsearched(self.playerNum) then return end
 	if self.playerNum ~= 0 then return end
     
     if not DragAndDrop.isDragging() then
@@ -68,7 +61,6 @@ function ItemGridUI:onMouseUp(x, y)
 end
 
 function ItemGridUI:onMouseUpOutside(x, y)
-    if self.grid:isUnsearched(self.playerNum) then return end
     if self.playerNum ~= 0 then return end
     if not DragAndDrop.isDragOwner(self) then return end
 
@@ -98,7 +90,6 @@ function ItemGridUI:cancelDragDropItem()
 end
 
 function ItemGridUI:onRightMouseUp(x, y)
-    if self.grid:isUnsearched(self.playerNum) then return end
     if self.playerNum ~= 0 then return end
 
     local itemStack = self:findGridStackUnderMouse()
@@ -117,19 +108,16 @@ function ItemGridUI:onRightMouseUp(x, y)
 end
 
 function ItemGridUI:onMouseDoubleClick(x, y)
-    if self.grid:isUnsearched(self.playerNum) then return end
     if self.playerNum ~= 0 then return end
     self:handleDoubleClick(x, y)
 end
 
 function ItemGridUI:onMouseMove(dx, dy)
-    if self.grid:isUnsearched(self.playerNum) then return end
     if self.playerNum ~= 0 then return end
     DragAndDrop.startDrag(self)
 end
 
 function ItemGridUI:onMouseMoveOutside(dx, dy)
-    if self.grid:isUnsearched(self.playerNum) then return end
     if self.playerNum ~= 0 then return end
     DragAndDrop.startDrag(self)
 end
@@ -255,6 +243,12 @@ end
 
 function ItemGridUI:handleClick(x, y)
     DragAndDrop.endDrag()
+
+    if self.grid:isUnsearched(self.playerNum) then
+        local searchAction = SearchGridAction:new(getSpecificPlayer(self.playerNum), self.grid)
+        ISTimedActionQueue.add(searchAction)
+        return
+    end
 
     local gridStack = self:findGridStackUnderMouse()
     if gridStack then

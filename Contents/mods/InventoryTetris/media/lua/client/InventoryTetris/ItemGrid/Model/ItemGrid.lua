@@ -28,13 +28,30 @@ end
 
 function ItemGrid:getItem(x, y)
     local stack = self:getStack(x, y)
+
+
+
     return stack and ItemStack.getFrontItem(stack, self.inventory) or nil
 end
 
 function ItemGrid:getStack(x, y)
-    if self.stackMap[x] and self.stackMap[x][y] then return self.stackMap[x][y] end
-    if self.backStackMap[x] and self.backStackMap[x][y] then return self.backStackMap[x][y] end
-    return nil
+    local stack = nil
+
+    if self.stackMap[x] and self.stackMap[x][y] then 
+        stack = self.stackMap[x][y] 
+    end
+
+    if not stack and self.backStackMap[x] and self.backStackMap[x][y] then 
+        stack = self.backStackMap[x][y] 
+    end
+
+    if stack then
+        if not self:_validateStackIsSearched(stack, self.playerNum) then
+            return nil
+        end
+    end
+
+    return stack
 end
 
 function ItemGrid:getStacks()
@@ -664,6 +681,21 @@ function ItemGrid:completeSearch(playerNum)
     self:_sendModData()
 end
 
+
+function ItemGrid:_validateStackIsSearched(stack, playerNum)
+    if not self:isUnsearched(playerNum) then
+        return true
+    end
+
+    local frontItem = ItemStack.getFrontItem(stack, self.inventory)
+    local frontItemID = frontItem and frontItem:getID() or nil
+    if not frontItemID then
+        return false
+    end
+
+    local session = ItemGrid._getSearchSession(playerNum, self)
+    return session and session.searchedStackIDs[frontItemID]
+end
 
 function ItemGrid:resetGridData()
     self:_getSavedContainerData()[self.gridIndex] = {}

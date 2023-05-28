@@ -36,6 +36,18 @@ function ISInventoryPage:refreshBackpacks()
     end
 end
 
+local og_addContainerButton = ISInventoryPage.addContainerButton
+function ISInventoryPage:addContainerButton(container, texture, name, tooltip)
+    local button = og_addContainerButton(self, container, texture, name, tooltip)
+
+    if (container:getType() == "KeyRing") then
+        self:removeChild(button)
+        self.backpacks[#self.backpacks] = nil
+    end
+
+    return button;
+end
+
 local og_bringToTop = ISInventoryPage.bringToTop
 function ISInventoryPage:bringToTop()
     og_bringToTop(self)
