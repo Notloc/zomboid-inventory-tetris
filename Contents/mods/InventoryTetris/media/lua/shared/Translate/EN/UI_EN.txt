@@ -3,5 +3,9 @@ UI_EN = {
 	UI_optionscreen_binding_tetris_quick_move = "Quick Move Key",
 	UI_optionscreen_binding_tetris_quick_equip = "Quick Equip Key",
 	UI_optionscreen_binding_tetris_stack_split = "Split Stacks Key",
-	UI_optionscreen_binding_tetris_close_window = "Close Popup Window"
+	UI_optionscreen_binding_tetris_close_window = "Close Popup Window",
+
+	UI_tetris_options_grid_scale = "Grid Scale",
+	UI_tetris_options_container_info_scale = "Container Info Scale",
+	UI_optionscreen_binding_InventoryTetris = "Inventory Tetris"
 }

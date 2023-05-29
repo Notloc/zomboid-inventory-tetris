@@ -567,7 +567,9 @@ function ItemGrid:_acceptUnpositionedItems(unpositionedItems, useShuffle)
     return remainingItems
 end
 
-
+function ItemGrid:isEmpty()
+    return #self.persistentData.stacks == 0 and #self.overflow == 0
+end
 
 
 
@@ -650,6 +652,11 @@ end
 function ItemGrid:updateSearch(player, playerNum)
     local session = ItemGrid._getOrCreateSearchSession(playerNum, self)
 
+    if self:isEmpty() then
+        session.isGridRevealed = true
+        return true
+    end
+
     local searchTime = SandboxVars.InventoryTetris.SearchTime
     if player:HasTrait("AllThumbs") then
         searchTime = searchTime * 1.5
@@ -657,6 +664,7 @@ function ItemGrid:updateSearch(player, playerNum)
         searchTime = searchTime * 0.66
     end
 
+    
     local progressTicks = session.progressTicks + 1
 
     if not session.isGridRevealed and progressTicks >= (searchTime * 2) then
@@ -669,8 +677,39 @@ function ItemGrid:updateSearch(player, playerNum)
         return false
     end
 
-    local stacks = self:getStacks()
+    local overflow = self.overflow
     local i = 1
+    while progressTicks >= searchTime do
+        if i > #overflow then
+            break
+        end
+
+        while i <= #overflow do
+            local stack = overflow[i]
+            i = i + 1
+            
+            local frontItem = ItemStack.getFrontItem(stack, self.inventory)
+            local frontItemID = frontItem and frontItem:getID() or nil
+            if frontItemID and not session.searchedStackIDs[frontItemID] then
+                session.searchedStackIDs[frontItemID] = true
+                progressTicks = progressTicks - searchTime
+                break
+            end
+        end
+    end
+
+    for j=i, #overflow do
+        local stack = overflow[j]
+        local frontItem = ItemStack.getFrontItem(stack, self.inventory)
+        local frontItemID = frontItem and frontItem:getID() or nil
+        if frontItemID and not session.searchedStackIDs[frontItemID] then
+            allSearched = false
+            break
+        end
+    end
+
+    local stacks = self:getStacks()
+    i = 1
     while progressTicks >= searchTime do
         if i > #stacks then
             break
@@ -690,18 +729,20 @@ function ItemGrid:updateSearch(player, playerNum)
         end
     end
 
-    session.progressTicks = progressTicks
+    local allSearched = true
 
     for j=i, #stacks do
         local stack = stacks[j]
         local frontItem = ItemStack.getFrontItem(stack, self.inventory)
         local frontItemID = frontItem and frontItem:getID() or nil
         if frontItemID and not session.searchedStackIDs[frontItemID] then
-            return false
+            allSearched = false
+            break
         end
     end
 
-    return true
+    session.progressTicks = progressTicks
+    return allSearched
 end
 
 function ItemGrid:completeSearch(playerNum)

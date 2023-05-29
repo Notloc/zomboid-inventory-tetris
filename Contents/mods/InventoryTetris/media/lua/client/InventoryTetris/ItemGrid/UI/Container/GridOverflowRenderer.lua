@@ -77,18 +77,29 @@ function GridOverflowRenderer:render()
     for _, data in ipairs(overflowData) do
         local gridUi = data.gridUi
         local stacks = data.stacks
-        for _, stack in ipairs(stacks) do
-            local item = ItemStack.getFrontItem(stack, inventory)
-            if item then
-                updateItem(item);
+        local isUnsearched = gridUi.grid:isUnsearched(gridUi.playerNum)
+        local searchSession = gridUi.grid:getSearchSession(gridUi.playerNum)
 
-                local yPos = yPositions[yi]
-                ItemGridUI._renderGridStack(self, stack, item, xPos, yPos, 1, true)
-                
-                yi = yi + 1
-                if yi > #yPositions then
-                    yi = 1
-                    xPos = xPos + OPT.CELL_SIZE + OVERFLOW_MARGIN
+        local doNotShowOverflow = isUnsearched and (not searchSession or not searchSession.isGridRevealed)
+        if not doNotShowOverflow then
+            for _, stack in ipairs(stacks) do
+                local item = ItemStack.getFrontItem(stack, inventory)
+                if item then
+                    updateItem(item);
+
+                    local yPos = yPositions[yi]
+
+                    if not isUnsearched or (searchSession and searchSession.searchedStackIDs[item:getID()]) then
+                        ItemGridUI._renderGridStack(self, stack, item, xPos, yPos, 1, true)
+                    else
+                        ItemGridUI._renderHiddenStack(self, stack, item, xPos, yPos, 1, true)
+                    end
+
+                    yi = yi + 1
+                    if yi > #yPositions then
+                        yi = 1
+                        xPos = xPos + OPT.CELL_SIZE + OVERFLOW_MARGIN
+                    end
                 end
             end
         end

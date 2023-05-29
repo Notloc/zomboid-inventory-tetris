@@ -365,8 +365,12 @@ end
 
 
 
-function ItemGridUI._renderHiddenStack(drawingContext, stack, item, x, y, alphaMult)
+function ItemGridUI._renderHiddenStack(drawingContext, stack, item, x, y, alphaMult, force1x1)
     local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
+    if force1x1 then
+        w, h = 1, 1
+    end
+    
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
     local TEXTURE_PAD = OPT.TEXTURE_PAD
