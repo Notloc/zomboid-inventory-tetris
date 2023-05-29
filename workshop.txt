@@ -1,0 +1,10 @@
+version=1
+id=2982070344
+title=Inventory Tetris - Grid Based Inventory Overhaul [BETA]
+description=Description pending.
+description=
+description=I'm writing it now.
+description=
+description=Bascially, Tarkov inventory for Zomboid. Yes other mods and multiplayer work with it.
+tags=Build 41;Balance;Interface;Items;Multiplayer;Silly/Fun
+visibility=public

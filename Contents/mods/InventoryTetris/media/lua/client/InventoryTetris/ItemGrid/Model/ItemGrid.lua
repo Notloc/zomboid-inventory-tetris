@@ -741,7 +741,7 @@ function ItemGrid:_getParentModData()
 
     local item = self.inventory:getContainingItem()
     if item then
-        return item:getModData(), item
+        return item:getModData(), nil
     end
 
     local isoObject = self.inventory:getParent()
@@ -782,7 +782,9 @@ end
 if isClient() then
     Events.OnTick.Add(function()
         for parent,_ in pairs(ItemGrid._modDataSyncQueue) do
-            parent:transmitModData()
+            if parent.transmitModData then
+                parent:transmitModData()
+            end
         end
         ItemGrid._modDataSyncQueue = {}
     end)
