@@ -182,8 +182,8 @@ function ItemGridUI:renderGridItems(searchSession)
     local stacks = self.grid:getStacks()
     local backStacks = self.grid.backStacks
 
-    self:renderStackLoop(inventory, backStacks, 0.5, searchSession)
-    self:renderStackLoop(inventory, stacks, 1, searchSession)    
+    self:renderStackLoop(inventory, stacks, 1, searchSession)
+    self:renderStackLoop(inventory, backStacks, 1, searchSession) 
 end
 
 function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
@@ -193,22 +193,25 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     for i=count,1,-1 do
         local stack = stacks[i]
         local item = ItemStack.getFrontItem(stack, inventory)
-        updateItem(item);
 
-        local x, y = stack.x, stack.y
-        if x and y then
-            if searchSession then
-                local revealed = searchSession.searchedStackIDs[item:getID()]
-                if revealed then
-                    self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult)
+        if item then
+            updateItem(item);
+
+            local x, y = stack.x, stack.y
+            if x and y then
+                if searchSession then
+                    local revealed = searchSession.searchedStackIDs[item:getID()]
+                    if revealed then
+                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult)
+                    else
+                        self:_renderHiddenStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult)
+                    end
                 else
-                    self:_renderHiddenStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult)
-                end
-            else
-                if item ~= draggedItem then
-                    self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult)
-                else
-                    self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult)
+                    if item ~= draggedItem then
+                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult)
+                    else
+                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult)
+                    end
                 end
             end
         end
@@ -289,8 +292,8 @@ function ItemGridUI.getItemColor(item, limit)
     return r,g,b
 end
 
-function ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, alphaMult)
-    ItemGridUI._renderGridItem(drawingContext, item, stack.category, x, y, stack.isRotated, alphaMult)
+function ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, alphaMult, force1x1)
+    ItemGridUI._renderGridItem(drawingContext, item, stack.category, x, y, stack.isRotated, alphaMult, force1x1)
     if stack.count > 1 then
         -- Draw the item count
         local font = UIFont.Small

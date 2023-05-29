@@ -8,7 +8,7 @@ NotUtil.forEachItemOnPlayer = function(playerObj, callbackFunc)
         local _items = container:getItems()
         local _itemCount = container:getItems():size() - 1
         for i = 0, _itemCount do
-            callbackFunc(_items:get(i))
+            callbackFunc(_items:get(i), container)
         end
     end
 end

@@ -43,6 +43,7 @@ function ISInventoryPage:addContainerButton(container, texture, name, tooltip)
     if (container:getType() == "KeyRing") then
         self:removeChild(button)
         self.backpacks[#self.backpacks] = nil
+        table.insert(self.buttonPool, button)
     end
 
     return button;

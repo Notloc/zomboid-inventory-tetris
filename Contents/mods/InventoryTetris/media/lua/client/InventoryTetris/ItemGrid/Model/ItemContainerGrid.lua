@@ -14,6 +14,7 @@ function ItemContainerGrid:new(inventory, playerNum)
     o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
     o.grids = o:createGrids(inventory, playerNum)
+    o:refresh()
     return o
 end
 
@@ -391,10 +392,14 @@ end
 
 -- Keep the player's main inventory grid refreshed, so it drops unpositioned items even if the ui isn't open
 Events.OnTick.Add(function()
-    for _, grid in pairs(ItemContainerGrid._playerMainGrids) do
-        if grid:shouldRefresh() then
-            grid:refresh()
+    for playerNum, grid in pairs(ItemContainerGrid._playerMainGrids) do
+        local player = getSpecificPlayer(playerNum)
+        if not player or player:isDead() then
+            ItemContainerGrid._playerMainGrids[playerNum] = nil
+        else
+            if grid:shouldRefresh() then
+                grid:refresh()
+            end
         end
     end
 end)
-

@@ -16,11 +16,12 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, playerNum)
     o.isOnPlayer = inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory()
     o.isFloor = inventory:getType() == "floor"
 
-    o.width = o.gridDefinition.size.width
-    o.height = o.gridDefinition.size.height
+    o.width = o.gridDefinition.size.width + SandboxVars.InventoryTetris.BonusGridSize
+    o.height = o.gridDefinition.size.height + SandboxVars.InventoryTetris.BonusGridSize
 
     o.backStacks = {}
     o.backStackMap = {}
+    o.overflow = {}
 
     o:refresh()
     return o
@@ -28,9 +29,6 @@ end
 
 function ItemGrid:getItem(x, y)
     local stack = self:getStack(x, y)
-
-
-
     return stack and ItemStack.getFrontItem(stack, self.inventory) or nil
 end
 
@@ -112,6 +110,16 @@ function ItemGrid:removeItem(item)
             if stack.count == 0 then
                 table.remove(self.backStacks, i)
                 self:_rebuildBackStackMap()
+            end
+            return true
+        end
+    end
+
+    for i, stack in ipairs(self.overflow) do
+        if ItemStack.containsItem(stack, item) then
+            ItemStack.removeItem(stack, item, self.inventory)
+            if stack.count == 0 then
+                table.remove(self.overflow, i)
             end
             return true
         end
@@ -204,6 +212,13 @@ function ItemGrid:_removeStack(stack)
         if s == stack then
             table.remove(self.backStacks, i)
             self:_rebuildBackStackMap()
+            return
+        end
+    end
+
+    for i, s in ipairs(self.overflow) do
+        if s == stack then
+            table.remove(self.overflow, i)
             return
         end
     end
@@ -307,6 +322,11 @@ function ItemGrid:forceInsertItem(item)
     local xDiff = self.width - w
     local yDiff = self.height - h
 
+    if true or xDiff <= 0 or yDiff <= 0 then
+        self:addOverflow(item)
+        return
+    end
+
     local x = 0
     if xDiff > 0 then
         x = ZombRand(0, xDiff+1)
@@ -321,6 +341,19 @@ function ItemGrid:forceInsertItem(item)
     ItemStack.addItem(stack, item)
     table.insert(self.backStacks, stack)
     self:_rebuildBackStackMap()
+end
+
+function ItemGrid:addOverflow(item)
+    for _, stack in ipairs(self.overflow) do
+        if ItemStack.canAddItem(stack, item) then
+            ItemStack.addItem(stack, item)
+            return
+        end
+    end
+
+    local stack = ItemStack.create(0, 0, false, item:getFullType(), TetrisItemCategory.getCategory(item))
+    ItemStack.addItem(stack, item)
+    table.insert(self.overflow, stack)
 end
 
 function ItemGrid:_attemptToStackItem(item)
@@ -516,6 +549,10 @@ function ItemGrid:_rebuildBackStackMap()
 end
 
 function ItemGrid:_acceptUnpositionedItems(unpositionedItems, useShuffle)    
+    if #self.overflow > 0 then
+        self.overflow = {}
+    end
+
     local remainingItems = {}
     if self:hasFreeSlot() then
         for _, itemData in ipairs(unpositionedItems) do
@@ -771,7 +808,7 @@ end
 ItemGrid._modDataSyncQueue = {}
 
 function ItemGrid:_sendModData()
-    if isClient() then
+    if true or isClient() then
         local _, parent = self:_getParentModData()
         if parent then
             ItemGrid._modDataSyncQueue[parent] = true

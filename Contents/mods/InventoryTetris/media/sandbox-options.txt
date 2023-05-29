@@ -13,3 +13,10 @@ option InventoryTetris.SearchTime
 	page = InventoryTetris,
 	translation = InventoryTetris_SearchTime,
 }
+
+option InventoryTetris.BonusGridSize
+{
+	type = integer, min = 0, max = 8, default = 0,
+	page = InventoryTetris,
+	translation = InventoryTetris_BonusGridSize,
+}

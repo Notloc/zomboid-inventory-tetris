@@ -34,10 +34,10 @@ local function isStackSplitDown()
     return isKeyDown(getCore():getKey("tetris_stack_split"))
 end
 
-function ItemGridUI:onMouseDown(x, y)
+function ItemGridUI:onMouseDown(x, y, gridStack)
 	if self.playerNum ~= 0 then return end
 	getSpecificPlayer(self.playerNum):nullifyAiming();
-    local gridStack = self:findGridStackUnderMouse()
+    gridStack = gridStack or self:findGridStackUnderMouse()
     if gridStack then 
         local vanillaStack = ItemStack.convertToVanillaStack(gridStack, self.grid.inventory)
         DragAndDrop.prepareDrag(self, vanillaStack, x, y)
