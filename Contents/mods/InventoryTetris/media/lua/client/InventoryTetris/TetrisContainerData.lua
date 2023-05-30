@@ -6,29 +6,23 @@ local MAX_ITEM_WIDTH = 10
 TetrisContainerData = {}
 
 TetrisContainerData._containerDefinitions = {}
-TetrisContainerData._vehicleStorageNames= {}
+TetrisContainerData._vehicleStorageNames = {}
 
 function TetrisContainerData.getContainerDefinition(container)
     local containerKey = TetrisContainerData._getContainerKey(container)
     return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
 end
 
-function TetrisContainerData.isTardis(container)
-    local item = container:getContainingItem()
-    if not item then return false end
-
-    local w, h = TetrisItemData.getItemSize(item)
-    local size = w * h
-
-    local containerKey = TetrisContainerData._getContainerKey(container)
-    local definition = TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
-
+function TetrisContainerData.calculateInnerSize(container)
+    local definition = TetrisContainerData.getContainerDefinition(container)
+    
     local innerSize = 0
     for _, gridDefinition in ipairs(definition.gridDefinitions) do
-        innerSize = innerSize + gridDefinition.size.width * gridDefinition.size.height
+        local x = gridDefinition.size.width + SandboxVars.InventoryTetris.BonusGridSize
+        local y = gridDefinition.size.height + SandboxVars.InventoryTetris.BonusGridSize
+        innerSize = innerSize + x * y
     end
-
-    return size < innerSize
+    return innerSize
 end
 
 function TetrisContainerData._getContainerKey(container)
@@ -68,12 +62,12 @@ function TetrisContainerData._calculateItemContainerDefinition(container, item)
     local capacity = container:getCapacity()
     local weightReduction = item:getWeightReduction()
 
-    local bonus = weightReduction - 50
+    local bonus = weightReduction - 45
     if bonus < 0 then
         bonus = 0
     end
 
-    local slotCount = 4 + capacity + bonus
+    local slotCount = 6 + capacity + bonus
 
     -- Determine two numbers that multiply close to the slot count
     local x, y = TetrisContainerData._calculateDimensions(slotCount)
@@ -95,7 +89,7 @@ end
 function TetrisContainerData._calculateWorldContainerDefinition(container)
     local capacity = container:getCapacity()
 
-    local size = 1 + math.ceil(math.pow(capacity, 0.4))
+    local size = 1 + math.ceil(math.pow(capacity, 0.55))
     return {
         gridDefinitions = {{
             size = {width=size, height=size},
@@ -143,29 +137,18 @@ TetrisContainerData.recalculateContainerData = function()
 end
 
 TetrisContainerData.validateInsert = function(containerDef, item)
-    if not containerDef.validCategories and not containerDef.validItems then
+    if not containerDef.invalidCategories then
         return true
     end
 
-    if containerDef.validCategories then
-        local itemCategory = TetrisItemCategory.getCategory(item)
-        for _, category in ipairs(containerDef.validCategories) do
-            if itemCategory == category then
-                return true
-            end
+    local itemCategory = TetrisItemCategory.getCategory(item)
+    for _, category in ipairs(containerDef.invalidCategories) do
+        if itemCategory == category then
+            return false
         end
     end
 
-    if containerDef.validItems then
-        local itemType = item:getFullType()
-        for _, validItem in ipairs(containerDef.validItems) do
-            if itemType == validItem then
-                return true
-            end
-        end
-    end
-
-    return false
+    return true
 end
 
 -- Vehicle Storage Registration

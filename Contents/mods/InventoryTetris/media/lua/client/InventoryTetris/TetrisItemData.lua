@@ -36,6 +36,9 @@ TetrisItemData._calculateAndCacheItemInfo = function(item)
     local category = TetrisItemCategory.getCategory(item)
 
     data.width, data.height = TetrisItemData._calculateItemSize(item, category)
+    if data.width > 10 then data.width = 10 end
+    if data.height > 12 then data.height = 12 end
+
     data.maxStackSize = TetrisItemData._calculateItemStackability(item, category)
 
     TetrisItemData._itemData[item:getFullType()] = data
@@ -148,10 +151,15 @@ TetrisItemData._calculateItemSizeContainer = function(item)
     local containerDefinition = TetrisContainerData.getContainerDefinition(item:getItemContainer())
     if #containerDefinition.gridDefinitions == 1 then
         local gridDef = containerDefinition.gridDefinitions[1]
-        return gridDef.size.width, gridDef.size.height
+        local x,y = gridDef.size.width, gridDef.size.height
+        x = x + SandboxVars.InventoryTetris.BonusGridSize
+        y = y + SandboxVars.InventoryTetris.BonusGridSize
+        return math.ceil(x/2), math.ceil(y/2)
     end
 
-    return containerDefinition.size.width, containerDefinition.size.height
+    local innerSize = TetrisContainerData.calculateInnerSize(item)
+    local x, y = TetrisContainerData._calculateDimensions(innerSize)
+    return math.ceil(x/2), math.ceil(y/2)
 end
 
 TetrisItemData._calculateItemSizeWeightBased = function(item)
@@ -334,6 +342,10 @@ TetrisItemData._itemClassToStackabilityCalculation = {
     [TetrisItemCategory.SEED] = TetrisItemData._calculateSeedStackability,
 }
 
+function TetrisItemData.isAlwaysStacks(item)
+    return TetrisItemData._alwaysStackOnSpawnItems[item:getFullType()] or false
+end
+
 
 -- Item Pack Registration
 TetrisItemData._itemDataPacks = {}
@@ -355,6 +367,14 @@ end
 TetrisItemData._processItemPack = function(itemPack)
     for k, v in pairs(itemPack) do
         TetrisItemData._itemData[k] = v
+    end
+end
+
+TetrisItemData._alwaysStackOnSpawnItems = {}
+
+TetrisItemData.registerAlwaysStackOnSpawnItems = function(itemNames)
+    for _, itemName in ipairs(itemNames) do
+        TetrisItemData._alwaysStackOnSpawnItems[itemName] = true
     end
 end
 

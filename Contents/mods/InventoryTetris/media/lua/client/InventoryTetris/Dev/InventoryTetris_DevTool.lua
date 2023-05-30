@@ -401,7 +401,7 @@ function TetrisDevTool.openContainerEdit(containerUi)
     itemRestrictionsTitle:instantiate();
     editWindow:addChild(itemRestrictionsTitle);
 
-    local validCategories = editWindow.newContainerDefinition.validCategories or {};
+    local invalidCategories = editWindow.newContainerDefinition.invalidCategories or {};
 
     -- Tickboxes for each item category restriction
     local itemCategoryBoxes1 = ISTickBox:new(130, 42, 100, 16, "", editWindow, TetrisDevTool.onItemRestriction, 0);
@@ -412,7 +412,7 @@ function TetrisDevTool.openContainerEdit(containerUi)
     for i, category in ipairs(TetrisItemCategory.list) do
         if i <= #TetrisItemCategory.list/2 then
             itemCategoryBoxes1:addOption(category, {});
-            itemCategoryBoxes1:setSelected(i, contains(category, validCategories));
+            itemCategoryBoxes1:setSelected(i, contains(category, invalidCategories));
             firstCount = firstCount + 1
         end
     end
@@ -433,7 +433,7 @@ function TetrisDevTool.openContainerEdit(containerUi)
     for i, category in ipairs(TetrisItemCategory.list) do
         if i > #TetrisItemCategory.list/2 then
             itemCategoryBoxes2:addOption(category, {});
-            itemCategoryBoxes2:setSelected(j, contains(category, validCategories));
+            itemCategoryBoxes2:setSelected(j, contains(category, invalidCategories));
             j = j + 1
         end
     end
@@ -618,27 +618,27 @@ function TetrisDevTool.onItemRestriction(editWindow, index, state, offset)
 
     local def = editWindow.newContainerDefinition;
     if state then
-        if not def.validCategories then
-            def.validCategories = {};
+        if not def.invalidCategories then
+            def.invalidCategories = {};
         end
-        if not contains(category, def.validCategories) then
-            table.insert(def.validCategories, category);
+        if not contains(category, def.invalidCategories) then
+            table.insert(def.invalidCategories, category);
         end
-        table.insert(editWindow.newContainerDefinition.validCategories, category);
+        table.insert(editWindow.newContainerDefinition.invalidCategories, category);
     else
-        if not def.validCategories then
+        if not def.invalidCategories then
             return;
         end
 
-        for i, cat in ipairs(def.validCategories) do
+        for i, cat in ipairs(def.invalidCategories) do
             if cat == category then
-                table.remove(def.validCategories, i);
+                table.remove(def.invalidCategories, i);
                 break;
             end
         end
 
-        if #def.validCategories == 0 then
-            def.validCategories = nil;
+        if #def.invalidCategories == 0 then
+            def.invalidCategories = nil;
         end
     end
 end
@@ -893,10 +893,11 @@ function TetrisDevTool.recalculateItemData(item)
 end
 
 function TetrisDevTool.recalculateContainerData(containerGrid)
-    TetrisContainerData.recalculateContainerData(containerGrid.inventory);
     TetrisDevTool.containerEdits[TetrisContainerData._getContainerKey(containerGrid.inventory)] = nil;
-
-
+    writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
+    
+    TetrisContainerData.recalculateContainerData(containerGrid.inventory);
+    
     local playerNum = containerGrid.playerNum
     getPlayerInventory(playerNum).inventoryPane:refreshItemGrids(true)
     getPlayerLoot(playerNum).inventoryPane:refreshItemGrids(true)

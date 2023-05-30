@@ -380,7 +380,7 @@ function ItemGrid:_attemptToInsertItem(item, preferRotated, shuffleMode)
         shuffleMode = not self.containerDefinition.isOrganized
     end
 
-    if not shuffleMode then
+    if not shuffleMode or TetrisItemData.isAlwaysStacks(item) then
         if self:_attemptToStackItem(item) then
             return true
         end
