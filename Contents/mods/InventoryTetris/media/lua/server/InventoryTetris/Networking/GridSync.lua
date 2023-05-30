@@ -8,20 +8,14 @@ local function onServerReceiveGlobalModData(key, data)
     end
     
     if key == WORLD_ITEM_PARTIAL then
-
-        for k, v in pairs(data) do
-            print(k)
-        end
-
         local serverTime = getTimestampMs()
         data.lastModified = serverTime
         
         local worldItemData = ModData.getOrCreate(WORLD_ITEM_DATA)
         worldItemData[data.id] = data
         
-        ModData.add(key, data)
-        ModData.transmit(key)
-        --ModData.remove(key)
+        ModData.add(WORLD_ITEM_PARTIAL, data)
+        ModData.transmit(WORLD_ITEM_PARTIAL)
     end
 end
 

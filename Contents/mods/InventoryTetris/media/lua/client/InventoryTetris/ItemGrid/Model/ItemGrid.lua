@@ -942,7 +942,6 @@ function serverStampModData(parent)
     local modData = parent:getModData().gridContainers
     if not modData then return end
     modData.lastModified = GameTime.getServerTimeMills()
-    print("Last modified: " .. tostring(modData.lastModified))
 end
 
 if isClient() then
