@@ -21,8 +21,8 @@ local SELECTED_TEXTURE = getTexture("media/ui/FavoriteStar.png")
 
 local CONTAINER_BG = getTexture("media/textures/InventoryTetris/ContainerBG.png")
 
-local ORGANIZED_TEXT = "Organized"
-local DISORGANIZED_TEXT = "Disorganized"
+local ORGANIZED_TEXT = getText("trait_Organized")
+local DISORGANIZED_TEXT = getText("trait_Disorganized")
 
 local OPT = require "InventoryTetris/Settings"
 
@@ -88,7 +88,7 @@ function GridContainerInfo:prerender()
     self.organizationIcon:setY(topIconY)
     
     self.organizationIcon.texture = isContainerOrganized and ORGANIZED_TEXTURE or DISORGANIZED_TEXTURE
-    self.organizationIcon:setMouseOverText(isContainerOrganized and "Organized" or "Disorganized")
+    self.organizationIcon:setMouseOverText(isContainerOrganized and ORGANIZED_TEXT or DISORGANIZED_TEXT)
 
     local isSelected = containerUi.isOnPlayer and containerUi.inventory == containerUi.inventoryPane.inventory
     if isSelected then

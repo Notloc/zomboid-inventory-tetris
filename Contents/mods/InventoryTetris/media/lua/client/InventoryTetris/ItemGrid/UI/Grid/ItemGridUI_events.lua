@@ -210,7 +210,9 @@ function ItemGridUI:handleDragAndDropTransfer(playerObj, gridX, gridY, targetSta
                 if item:isEquipped() then
                     ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
                 end
-                ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1, gridX, gridY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated()))
+                local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1)
+                action:setTetrisTarget(gridX, gridY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated())
+                ISTimedActionQueue.add(action)
             end
         end
     end

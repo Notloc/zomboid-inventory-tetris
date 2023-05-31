@@ -48,7 +48,7 @@ TetrisItemData._calculateItemSize = function(item, category)
     local calculation = TetrisItemData._itemClassToSizeCalculation[category]    
     if type(calculation) == "function" then
         local x, y = calculation(item)
-        if instanceof(item, "Moveable") then
+        if instanceof(item, "Moveable") and item:getActualWeight() > 2.5 then
             return x+2, y+2
         else
             return x, y
@@ -297,14 +297,16 @@ TetrisItemData._calculateMiscStackability = function(item)
     end
 
     local weight = item:getActualWeight()
-    if weight >= 0.5 then
-        maxStack = 2
-    elseif weight >= 0.25 then
-        maxStack = 3
-    elseif weight >= 0.1 then
-        maxStack = 4
-    elseif weight >= 0.05 then
+    if weight <= 0.025 then
+        maxStack = 50
+    elseif weight <= 0.05 then
+        maxStack = 25
+    elseif weight <= 0.1 then
+        maxStack = 10
+    elseif weight <= 0.25 then
         maxStack = 5
+    elseif weight <= 0.5 then
+        maxStack = 3
     end
 
     return maxStack
@@ -343,7 +345,8 @@ TetrisItemData._itemClassToStackabilityCalculation = {
 }
 
 function TetrisItemData.isAlwaysStacks(item)
-    return TetrisItemData._alwaysStackOnSpawnItems[item:getFullType()] or false
+    local maxStack = TetrisItemData.getMaxStackSize(item)
+    return TetrisItemData._alwaysStackOnSpawnItems[item:getFullType()] or maxStack >= 10 or false
 end
 
 

@@ -52,6 +52,7 @@ function GridAutoDropSystem._handleDropItem(item, playerNum)
     if GridAutoDropSystem._isItemUndroppable(item) then
         GridAutoDropSystem._forceItemIntoInventoryOrHands(item, playerNum)
     else
+        item:setFavorite(false) -- We don't play favorites here
         ISInventoryPaneContextMenu.onDropItems({item, item}, playerNum)
     end
 

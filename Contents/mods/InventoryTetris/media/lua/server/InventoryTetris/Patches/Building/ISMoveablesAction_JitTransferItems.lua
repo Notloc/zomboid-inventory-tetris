@@ -20,13 +20,20 @@ local function jitTransferItems(playerObj, moveProps, _origSpriteName)
         return
     end
 
+    local playerInv = playerObj:getInventory()
+
     local foundItem = false
     if not moveProps.isMultiSprite then
-        NotUtil.forEachItemOnPlayer(playerObj, function(item)
+        NotUtil.forEachItemOnPlayer(playerObj, function(item, container)
             if not foundItem and instanceof(item, "Moveable") then
                 if item:getWorldSprite() == _origSpriteName then
-                    ISInventoryPaneContextMenu.transferIfNeeded(playerObj, item)
-                    ISInventoryPaneContextMenu.unequipItem(item, playerNum)
+                    if container ~= playerInv then
+                        local action = ISInventoryTransferAction:new(playerObj, item, container, playerInv)
+                        action.tetrisForceAllow = true
+                        ISTimedActionQueue.add(action)
+                    else
+                        ISInventoryPaneContextMenu.unequipItem(item, playerNum)
+                    end
                     foundItem = true
                 end
             end
