@@ -1,3 +1,5 @@
+local GRID_REFRESH_DELAY = 500 -- How often the grid should be refreshed, in ms
+
 ItemContainerGrid = {}
 ItemContainerGrid._tempGrid = {} -- For hovering over items, so we don't create a new grid every frame to evaluate if an item can be placed
 
@@ -167,7 +169,7 @@ end
 
 function ItemContainerGrid:refresh()
     for _, grid in ipairs(self.grids) do
-        grid:refresh()
+        grid:refresh(true)
     end
     self:_updateGridPositions()
     self.lastRefresh = getTimestampMs()
@@ -177,7 +179,7 @@ function ItemContainerGrid:shouldRefresh()
     if not self.lastRefresh then
         return true
     end
-    return getTimestampMs() - self.lastRefresh > 1000
+    return getTimestampMs() - self.lastRefresh >= GRID_REFRESH_DELAY
 end
 
 -- isDisoraganized is determined by the player's traits
@@ -336,12 +338,6 @@ function ItemContainerGrid:_getPositionedItems()
     for index, grid in ipairs(self.grids) do
         local gridData = grid:_getSavedGridData()
         for _, stack in pairs(gridData.stacks) do
-            for itemID, _ in pairs(stack.itemIDs) do
-                positionedItems[itemID] = true
-            end
-        end
-
-        for _, stack in pairs(grid.backStacks) do
             for itemID, _ in pairs(stack.itemIDs) do
                 positionedItems[itemID] = true
             end

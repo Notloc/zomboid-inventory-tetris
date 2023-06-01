@@ -24,8 +24,6 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, playerNum)
     o.width = o.gridDefinition.size.width + SandboxVars.InventoryTetris.BonusGridSize
     o.height = o.gridDefinition.size.height + SandboxVars.InventoryTetris.BonusGridSize
 
-    o.backStacks = {}
-    o.backStackMap = {}
     o.overflow = {}
 
     o:refresh()
@@ -42,10 +40,6 @@ function ItemGrid:getStack(x, y)
 
     if self.stackMap[x] and self.stackMap[x][y] then 
         stack = self.stackMap[x][y] 
-    end
-
-    if not stack and self.backStackMap[x] and self.backStackMap[x][y] then 
-        stack = self.backStackMap[x][y] 
     end
 
     if stack then
@@ -67,13 +61,6 @@ function ItemGrid:findStackByItem(item)
             return stack
         end
     end
-
-    for _, stack in ipairs(self.backStacks) do
-        if ItemStack.containsItem(stack, item) then
-            return stack
-        end
-    end
-
     return nil
 end
 
@@ -105,17 +92,6 @@ function ItemGrid:removeItem(item)
             end
 
             self:_sendModData()
-            return true
-        end
-    end
-
-    for i, stack in ipairs(self.backStacks) do
-        if ItemStack.containsItem(stack, item) then
-            ItemStack.removeItem(stack, item, self.inventory)
-            if stack.count == 0 then
-                table.remove(self.backStacks, i)
-                self:_rebuildBackStackMap()
-            end
             return true
         end
     end
@@ -209,14 +185,6 @@ function ItemGrid:_removeStack(stack)
             table.remove(self.persistentData.stacks, i)
             self:_rebuildStackMap()
             self:_sendModData()
-            return
-        end
-    end
-
-    for i, s in ipairs(self.backStacks) do
-        if s == stack then
-            table.remove(self.backStacks, i)
-            self:_rebuildBackStackMap()
             return
         end
     end
@@ -316,13 +284,6 @@ function ItemGrid:hasFreeSlot()
 end
 
 function ItemGrid:forceInsertItem(item)
-    for _, stack in ipairs(self.backStacks) do
-        if ItemStack.canAddItem(stack, item) then
-            ItemStack.addItem(stack, item)
-            return
-        end
-    end
-
     local w, h = TetrisItemData.getItemSize(item, false)
     local xDiff = self.width - w
     local yDiff = self.height - h
@@ -331,21 +292,6 @@ function ItemGrid:forceInsertItem(item)
         self:addOverflow(item)
         return
     end
-
-    local x = 0
-    if xDiff > 0 then
-        x = ZombRand(0, xDiff+1)
-    end
-
-    local y = 0
-    if yDiff > 0 then
-        y = ZombRand(0, yDiff+1)
-    end
-
-    local stack = ItemStack.create(x, y, false, item:getFullType(), TetrisItemCategory.getCategory(item))
-    ItemStack.addItem(stack, item)
-    table.insert(self.backStacks, stack)
-    self:_rebuildBackStackMap()
 end
 
 function ItemGrid:addOverflow(item)
@@ -442,10 +388,10 @@ function ItemGrid:_attemptToInsertItem_innerLoop(item, w, h, xPos, yPos, isRotat
     end
 end
 
-function ItemGrid:refresh()
+function ItemGrid:refresh(doPhysics)
     self.persistentData = self:_getSavedGridData() -- Reload incase the modData has changed from a mp sync
     self:_validateAndCleanStacks(self.persistentData)
-    self:_rebuildStackMap()
+    self:_rebuildStackMap(doPhysics)
 end
 
 function ItemGrid:_validateAndCleanStacks(persistentGridData)
@@ -454,8 +400,6 @@ function ItemGrid:_validateAndCleanStacks(persistentGridData)
     end
 
     persistentGridData.stacks = self:_validateStackList(persistentGridData.stacks)
-    self.backStacks = self:_validateStackList(self.backStacks, true)
-    self:_rebuildStackMap()
 end
 
 function ItemGrid:_validateStackList(stacks, skipBounds)
@@ -503,7 +447,7 @@ function ItemGrid:_validateStackList(stacks, skipBounds)
 end
 
 
-function ItemGrid:_rebuildStackMap()
+function ItemGrid:_rebuildStackMap(doPhysics)
     local stackMap = {}
     for x=0, self.width-1 do
         stackMap[x] = {}
@@ -528,29 +472,9 @@ function ItemGrid:_rebuildStackMap()
     end
 
     self.stackMap = stackMap
-end
-
-function ItemGrid:_rebuildBackStackMap()
-    local stackMap = {}
-    for x=0, self.width-1 do
-        stackMap[x] = {}
+    if doPhysics then
+        self:physicsUpdate()
     end
-
-    for _,stack in ipairs(self.backStacks) do
-        local item = ItemStack.getFrontItem(stack, self.inventory)
-        if item then
-            local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
-            for x=stack.x,stack.x+w-1 do
-                for y=stack.y,stack.y+h-1 do
-                    if self:_isInBounds(x, y) then
-                        stackMap[x][y] = stack
-                    end
-                end
-            end
-        end
-    end
-
-    self.backStackMap = stackMap
 end
 
 function ItemGrid:_acceptUnpositionedItems(unpositionedItems, useShuffle)    
@@ -783,7 +707,7 @@ end
 function ItemGrid:resetGridData()
     self:_getSavedContainerData()[self.gridIndex] = {}
     self.persistentData = self:_getSavedGridData()
-    self.backStacks = {}
+    self.overflow = {}
 end
 
 function ItemGrid:_getSavedGridData()
