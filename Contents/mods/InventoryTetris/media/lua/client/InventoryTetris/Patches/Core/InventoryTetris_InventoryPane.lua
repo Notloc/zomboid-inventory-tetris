@@ -7,7 +7,7 @@ require "ISUI/ISInventoryPane"
 local OPT = require "InventoryTetris/Settings"
 
 -- Aggressively ensure we load last
--- If the user has this mod enabled, they want it to take priority
+-- If the user has this mod enabled, I safe to assume they want it to take priority
 Events.OnGameBoot.Add(function()
     local og_new = ISInventoryPane.new
     function ISInventoryPane:new(x, y, width, height, inventory, player)
@@ -74,8 +74,6 @@ Events.OnGameBoot.Add(function()
 
     local og_refreshContainer = ISInventoryPane.refreshContainer
     function ISInventoryPane:refreshContainer()
-        self.mode = "grid"
-
         -- Do this for mod compatibility only, tetris has no use for this
         og_refreshContainer(self)
 
@@ -159,6 +157,12 @@ Events.OnGameBoot.Add(function()
         og_prerender(self);
         self.nameHeader:setVisible(false)
         self.typeHeader:setVisible(false)
+    end
+
+    local og_render = ISInventoryPane.render
+    function ISInventoryPane:render()
+        og_render(self)
+        self.mode = "grid" -- Let a single frame pass before we start rendering the grid
     end
 
     local og_updateTooltip = ISInventoryPane.updateTooltip

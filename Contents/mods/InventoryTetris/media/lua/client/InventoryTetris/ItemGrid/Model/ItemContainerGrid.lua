@@ -1,4 +1,4 @@
-local GRID_REFRESH_DELAY = 500 -- How often the grid should be refreshed, in ms
+local GRID_REFRESH_DELAY = 600 -- A sacred tick rate
 
 ItemContainerGrid = {}
 ItemContainerGrid._tempGrid = {} -- For hovering over items, so we don't create a new grid every frame to evaluate if an item can be placed
@@ -168,8 +168,9 @@ function ItemContainerGrid:_validateOnlyAcceptCategory(item)
 end
 
 function ItemContainerGrid:refresh()
+    local doPhysics = SandboxVars.InventoryTetris.EnableGravity and self:shouldRefresh()  
     for _, grid in ipairs(self.grids) do
-        grid:refresh(true)
+        grid:refresh(doPhysics)
     end
     self:_updateGridPositions()
     self.lastRefresh = getTimestampMs()

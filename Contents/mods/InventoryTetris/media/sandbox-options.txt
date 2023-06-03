@@ -20,3 +20,10 @@ option InventoryTetris.BonusGridSize
 	page = InventoryTetris,
 	translation = InventoryTetris_BonusGridSize,
 }
+
+option InventoryTetris.EnableGravity
+{
+	type = boolean, default = false,
+	page = InventoryTetris,
+	translation = InventoryTetris_EnableGravity,
+}

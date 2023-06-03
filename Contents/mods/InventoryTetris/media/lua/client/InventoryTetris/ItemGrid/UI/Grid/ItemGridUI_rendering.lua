@@ -62,6 +62,13 @@ local colorsByCategory = {
 local containerItemHoverColor = {1, 1, 0}
 local invalidItemHoverColor = {1, 0, 0}
 
+local function unpackColors(cols, brightness)
+    if not brightness then
+        brightness = 1
+    end
+    return cols[1] * brightness, cols[2] * brightness, cols[3] * brightness
+end
+
 local OPT = require "InventoryTetris/Settings"
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
 local HIDDEN_ITEM = getTexture("media/textures/InventoryTetris/Hidden.png")
@@ -180,15 +187,14 @@ function ItemGridUI:renderGridItems(searchSession)
     local draggedItem = DragAndDrop.getDraggedItem()
     local inventory = self.grid.inventory
     local stacks = self.grid:getStacks()
-    local backStacks = self.grid.backStacks
 
     self:renderStackLoop(inventory, stacks, 1, searchSession)
-    self:renderStackLoop(inventory, backStacks, 1, searchSession) 
 end
 
 function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local CELL_SIZE = OPT.CELL_SIZE
-    
+    local gravityEnabled = SandboxVars.InventoryTetris.EnableGravity
+
     local count = #stacks
     for i=count,1,-1 do
         local stack = stacks[i]
@@ -199,18 +205,21 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 
             local x, y = stack.x, stack.y
             if x and y then
+
+                local isBuried = gravityEnabled and self.grid:isStackBuried(stack)
+
                 if searchSession then
                     local revealed = searchSession.searchedStackIDs[item:getID()]
                     if revealed then
-                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult)
+                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false, isBuried)
                     else
-                        self:_renderHiddenStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult)
+                        self:_renderHiddenStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false)
                     end
                 else
                     if item ~= draggedItem then
-                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult)
+                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false, isBuried)
                     else
-                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult)
+                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult, false, isBuried)
                     end
                 end
             end
@@ -292,8 +301,8 @@ function ItemGridUI.getItemColor(item, limit)
     return r,g,b
 end
 
-function ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, alphaMult, force1x1)
-    ItemGridUI._renderGridItem(drawingContext, item, stack.category, x, y, stack.isRotated, alphaMult, force1x1)
+function ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, alphaMult, force1x1, isBuried)
+    ItemGridUI._renderGridItem(drawingContext, item, stack.category, x, y, stack.isRotated, alphaMult, force1x1, isBuried)
     if stack.count > 1 then
         -- Draw the item count
         local font = UIFont.Small
@@ -303,7 +312,7 @@ function ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, alphaMul
     end
 end
 
-function ItemGridUI._renderGridItem(drawingContext, item, category, x, y, rotate, alphaMult, force1x1)
+function ItemGridUI._renderGridItem(drawingContext, item, category, x, y, rotate, alphaMult, force1x1, isBuried)
     local w, h = TetrisItemData.getItemSize(item, rotate)
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
@@ -313,8 +322,10 @@ function ItemGridUI._renderGridItem(drawingContext, item, category, x, y, rotate
         w, h = 1, 1
     end
 
+    local bgBright = isBuried and 0.35 or 1
+
     local minDimension = math.min(w, h)
-    drawingContext:drawRect(x+1, y+1, w * CELL_SIZE - w - 1, h * CELL_SIZE - h - 1, 0.24 * alphaMult, unpack(colorsByCategory[category]))
+    drawingContext:drawRect(x+1, y+1, w * CELL_SIZE - w - 1, h * CELL_SIZE - h - 1, 0.3 * alphaMult, unpackColors(colorsByCategory[category], bgBright))
 
     local texture = item:getTex()
     local texW = texture:getWidth()
@@ -340,6 +351,9 @@ function ItemGridUI._renderGridItem(drawingContext, item, category, x, y, rotate
     targetScale = targetScale * minDimension
 
     local r,g,b = ItemGridUI.getItemColor(item)
+    r = r * bgBright
+    g = g * bgBright
+    b = b * bgBright
     
     if rotate then
         if OPT.SCALE == 1.0 and w == 1 and h == 1 and largestDimension <= TEXTURE_SIZE then -- Can only rotate 1x1 items if they fit in the texture perfectly
@@ -360,7 +374,11 @@ function ItemGridUI._renderGridItem(drawingContext, item, category, x, y, rotate
         drawingContext:drawTextureScaledUniform(BROKEN_TEXTURE, x2, y2, targetScale, alphaMult * 0.5, 1, 1, 1);
     end
 
-    drawingContext:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
+    if isBuried then
+        drawingContext:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, 0.5, 0.55, 0.15, 0.15)
+    else
+        drawingContext:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
+    end
 end
 
 

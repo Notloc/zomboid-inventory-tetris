@@ -37,8 +37,7 @@ end
 
 function ItemGrid:getStack(x, y)
     local stack = nil
-
-    if self.stackMap[x] and self.stackMap[x][y] then 
+    if self.stackMap[x] then 
         stack = self.stackMap[x][y] 
     end
 
@@ -48,7 +47,19 @@ function ItemGrid:getStack(x, y)
         end
     end
 
+    -- if do physics
+    if SandboxVars.InventoryTetris.EnableGravity and stack and self:isStackBuried(stack) then
+        return nil
+    end
+
     return stack
+end
+
+function ItemGrid:getStackInternal(x, y)
+    if self.stackMap[x] then 
+        return self.stackMap[x][y] 
+    end
+    return nil
 end
 
 function ItemGrid:getStacks()
@@ -332,7 +343,15 @@ function ItemGrid:_attemptToInsertItem(item, preferRotated, shuffleMode)
         end
     end
 
+    if shuffleMode then
+        preferRotated = ZombRand(0, 2) == 0
+    end
+
     local w, h = TetrisItemData.getItemSize(item, preferRotated)
+    if w == h then
+        preferRotated = false
+    end
+
     if self:_attemptToInsertItem_outerLoop(item, w, h, preferRotated, shuffleMode) then
         return true
     end
@@ -475,6 +494,63 @@ function ItemGrid:_rebuildStackMap(doPhysics)
     if doPhysics then
         self:physicsUpdate()
     end
+end
+
+function ItemGrid:physicsUpdate()
+    local processedStacks = {}
+
+    for y=self.height-2, 0, -1 do -- Skip the bottom row because it can't fall
+        for x=0, self.width - 1 do
+            local stack = self:getStackInternal(x, y)
+            if stack and not processedStacks[stack] then
+                local item = ItemStack.getFrontItem(stack, self.inventory)
+                if item then
+                    local w, h = TetrisItemData.getItemSize(item, stack.isRotated)                    
+                    local canFall = self:_isAreaFree(stack.x, stack.y+1, w, h, stack)
+                    if canFall then
+                        self:_physicsFallPreValidated(stack, w, h)
+                        self:_sendModData()
+                    end
+                    processedStacks[stack] = true
+                end
+            end
+        end
+    end
+end
+
+function ItemGrid:_physicsFallPreValidated(stack, w, h)
+    local item = ItemStack.getFrontItem(stack, self.inventory)
+    for x=stack.x,stack.x+w-1 do
+        for y=stack.y,stack.y+h-1 do
+            self.stackMap[x][y] = nil
+        end
+    end
+
+    stack.y = stack.y + 1
+    for x=stack.x,stack.x+w-1 do
+        for y=stack.y,stack.y+h-1 do
+            self.stackMap[x][y] = stack
+        end
+    end
+end
+
+function ItemGrid:isStackBuried(stack)
+    local dragItem = DragAndDrop.getDraggedItem()
+    local mouseStack = dragItem and self:findStackByItem(dragItem) or nil
+
+    local item = ItemStack.getFrontItem(stack, self.inventory)
+    if item then
+        local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
+        for x=stack.x,stack.x+w-1 do
+            if self:_isInBounds(x, stack.y-1) then 
+                local otherStack = self.stackMap[x][stack.y-1]
+                if otherStack and mouseStack ~= otherStack then
+                    return true
+                end
+            end
+        end
+    end
+    return false
 end
 
 function ItemGrid:_acceptUnpositionedItems(unpositionedItems, useShuffle)    
