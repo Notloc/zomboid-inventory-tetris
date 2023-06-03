@@ -42,3 +42,14 @@ NotUtil.createEvent = function()
     end
     return event
 end
+
+
+NotUtil.Ui = {}
+
+NotUtil.Ui.convertCoordinates = function(x, y, localSpace, targetSpace)
+    local x = x + localSpace:getAbsoluteX()
+    local y = y + localSpace:getAbsoluteY()
+    x = x - targetSpace:getAbsoluteX()
+    y = y - targetSpace:getAbsoluteY()
+    return x, y
+end

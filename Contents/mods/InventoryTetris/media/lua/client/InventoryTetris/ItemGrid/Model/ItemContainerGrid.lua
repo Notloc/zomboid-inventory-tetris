@@ -297,8 +297,10 @@ function ItemContainerGrid:_updateGridPositions(useShuffle)
     end
 
     if self.isOnPlayer then
-        for _, unpositionedItemData in ipairs(remainingItems) do
-            self:_dropUnpositionedItem(unpositionedItemData.item)
+        if getPlayerHotbar(self.playerNum) then -- Wait for the hotbar to be initialized
+            for _, unpositionedItemData in ipairs(remainingItems) do
+                self:_dropUnpositionedItem(unpositionedItemData.item)
+            end
         end
     else
         local i = 1

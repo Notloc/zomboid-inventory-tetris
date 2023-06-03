@@ -165,6 +165,10 @@ Events.OnGameBoot.Add(function()
         self.mode = "grid" -- Let a single frame pass before we start rendering the grid
     end
 
+    local og_doButtons = ISInventoryPane.doButtons
+    function ISInventoryPane:doButtons()
+    end
+
     local og_updateTooltip = ISInventoryPane.updateTooltip
     function ISInventoryPane:updateTooltip()
         if self.mode ~= "grid" or not self.gridContainerUis then

@@ -10,7 +10,10 @@ function ISMoveableSpriteProps:findInInventoryMultiSprite( _character, _spriteNa
         NotUtil.forEachItemOnPlayer(_character, function(item, inventory)
             if isDone then return end
             if instanceof(item, "Moveable") and self.customItem and (item:getFullType() == self.customItem) and (item:getName() == self.name) then
-                return item, inventory;
+                retItem = item;
+                retInv = inventory;
+                isDone = true;
+                return
             end
             if instanceof(item, "Moveable") and item:getCustomNameFull() then
                 if item:getCustomNameFull() == _spriteName then

@@ -140,6 +140,23 @@ end
 function GridOverflowRenderer:onMouseDown(x, y)
 	local stack, data = self:findStackDataUnderMouse(x, y)
     if stack then
+        x, y = NotUtil.Ui.convertCoordinates(x, y, self, data.gridUi)
         return data.gridUi:onMouseDown(x, y, stack)
+    end
+end
+
+function GridOverflowRenderer:onMouseUp(x, y)
+	local stack, data = self:findStackDataUnderMouse(x, y)
+    if stack then
+        x, y = NotUtil.Ui.convertCoordinates(x, y, self, data.gridUi)
+        return data.gridUi:onMouseUp(x, y, stack)
+    end
+end
+
+function GridOverflowRenderer:onRightMouseUp(x, y)
+	local stack, data = self:findStackDataUnderMouse(x, y)
+    if stack then
+        x, y = NotUtil.Ui.convertCoordinates(x, y, self, data.gridUi)
+        return data.gridUi:onRightMouseUp(x, y, stack)
     end
 end

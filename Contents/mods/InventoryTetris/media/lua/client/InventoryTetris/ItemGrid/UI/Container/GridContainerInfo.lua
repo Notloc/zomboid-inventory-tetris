@@ -202,7 +202,7 @@ end
 
 function GridContainerInfo:onMouseUpOutside(x, y)
     if self.containerUi.item then
-        DragAndDrop.cancelDrag(self, self.containerUi.cancelDragDropItem)
+        DragAndDrop.cancelDrag(self, self.cancelDragDropItem)
     end
 end
 

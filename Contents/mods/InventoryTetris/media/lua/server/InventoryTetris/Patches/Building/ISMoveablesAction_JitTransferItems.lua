@@ -1,5 +1,6 @@
 require "BuildingObjects/ISMoveableCursor"
-require "Notloc/Util"
+require "Moveables/ISMoveablesAction"
+require "Notloc/NotUtil"
 
 -- Transfer items to the player's main inventory just in time for MoveablesAction to use them
 

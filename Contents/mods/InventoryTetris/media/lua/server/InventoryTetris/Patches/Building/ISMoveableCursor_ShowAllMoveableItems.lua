@@ -1,5 +1,5 @@
 require "BuildingObjects/ISMoveableCursor"
-require "Notloc/Util"
+require "Notloc/NotUtil"
 
 -- Make all moveable items visible in the moveable cursor
 -- Even if they are not in the player's main inventory

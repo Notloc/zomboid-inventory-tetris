@@ -46,11 +46,11 @@ function ItemGridUI:onMouseDown(x, y, gridStack)
 	return true;
 end
 
-function ItemGridUI:onMouseUp(x, y)
+function ItemGridUI:onMouseUp(x, y, gridStack)
 	if self.playerNum ~= 0 then return end
     
     if not DragAndDrop.isDragging() then
-        self:handleClick(x, y)
+        self:handleClick(x, y, gridStack)
         return true
     end
 
@@ -89,11 +89,11 @@ function ItemGridUI:cancelDragDropItem()
     end
 end
 
-function ItemGridUI:onRightMouseUp(x, y)
+function ItemGridUI:onRightMouseUp(x, y, gridStack)
     if self.playerNum ~= 0 then return end
 
-    local itemStack = self:findGridStackUnderMouse()
-    if not itemStack then 
+    gridStack = gridStack or self:findGridStackUnderMouse()
+    if not gridStack then 
         return
     end
     
@@ -101,7 +101,7 @@ function ItemGridUI:onRightMouseUp(x, y)
 		self.inventoryPane.toolRender:setVisible(false)
 	end
     
-    local item = ItemStack.getFrontItem(itemStack, self.grid.inventory)
+    local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
     local menu = ItemGridUI.openItemContextMenu(self, x, y, item, self.playerNum)
         
     return true;
@@ -243,7 +243,7 @@ function ItemGridUI:openSplitStack(vanillaStack, targetX, targetY)
 
 end
 
-function ItemGridUI:handleClick(x, y)
+function ItemGridUI:handleClick(x, y, gridStack)
     DragAndDrop.endDrag()
 
     if self.grid:isUnsearched(self.playerNum) then
@@ -252,7 +252,7 @@ function ItemGridUI:handleClick(x, y)
         return
     end
 
-    local gridStack = self:findGridStackUnderMouse()
+    gridStack = gridStack or self:findGridStackUnderMouse()
     if gridStack then
         if isQuickMoveDown() then
             self:quickMoveItems(gridStack)
