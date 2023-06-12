@@ -15,6 +15,8 @@ function GridAutoDropSystem._processItems(playerNum, items)
     GridAutoDropSystem._dropProcessing[playerNum] = true
 
     local playerObj = getSpecificPlayer(playerNum)
+    local isOrganized = playerObj:HasTrait("Organized")
+    local isDisorganized = playerObj:HasTrait("Disorganized")
     local containers = NotUtil.getAllEquippedContainers(playerObj)
 
     for _, item in ipairs(items) do
@@ -24,7 +26,7 @@ function GridAutoDropSystem._processItems(playerNum, items)
         if currentContainer then
             local containerGrid = ItemContainerGrid.Create(currentContainer, playerNum)
             if containerGrid:canAddItem(item) then
-                containerGrid:autoPositionItem(item)
+                containerGrid:autoPositionItem(item, isOrganized, isDisoraganized)
                 addedToContainer = true
             else
                 for _, container in ipairs(containers) do

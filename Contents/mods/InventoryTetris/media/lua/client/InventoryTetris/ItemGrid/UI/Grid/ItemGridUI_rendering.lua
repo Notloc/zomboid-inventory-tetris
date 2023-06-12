@@ -61,6 +61,7 @@ local colorsByCategory = {
 
 local containerItemHoverColor = {1, 1, 0}
 local invalidItemHoverColor = {1, 0, 0}
+local actionItemHoverColor = {0, 0.7, 1}
 
 local function unpackColors(cols, brightness)
     if not brightness then
@@ -88,6 +89,58 @@ local function getBackgroundColorByCategory(category)
     else
         return 
     end
+end
+
+local function determineContainerHoverColor(draggedStack, hoveredStack, dragInv, hoverInv)
+    local draggedItem = ItemStack.getFrontItem(draggedStack, dragInv)
+    local containerItem = ItemStack.getFrontItem(hoveredStack, hoverInv)
+
+    if draggedItem and containerItem and containerItem:IsInventoryContainer() then
+        local gridContainer = ItemContainerGrid.CreateTemp(containerItem:getInventory(), self.playerNum)
+        if gridContainer:canAddItem(draggedItem) and container:hasRoomFor(getSpecificPlayer(self.playerNum), draggedItem) then
+            return unpack(containerItemHoverColor)
+        end
+    end
+
+    return unpack(invalidItemHoverColor)
+end
+
+-- Drag category -> hover category -> color
+local StackHoverColorsByCategories = {
+    [TetrisItemCategory.AMMO] = {
+        [TetrisItemCategory.MAGAZINE] = actionItemHoverColor,
+    },
+    ["any"] = {
+        [TetrisItemCategory.CONTAINER] = determineContainerHoverColor
+    }
+}
+
+
+
+function ItemGridUI.getColorForStackHover(draggedStack, hoveredStack, dragInv, hoverInv)
+    local colorProvider = nil
+    
+    if StackHoverColorsByCategories[draggedStack.category] then
+        if StackHoverColorsByCategories[draggedStack.category][hoveredStack.category] then
+            colorProvider = StackHoverColorsByCategories[draggedStack.category][hoveredStack.category]
+        end
+    end
+
+    if not colorProvider then
+        if StackHoverColorsByCategories["any"][hoveredStack.category] then
+            colorProvider = StackHoverColorsByCategories["any"][hoveredStack.category]
+        end
+    end
+
+    if not colorProvider then
+        return unpackColors(invalidItemHoverColor)
+    end
+
+    if type(colorProvider) == "function" then
+        return colorProvider(draggedStack, hoveredStack, dragInv, hoverInv)
+    end
+
+    return unpackColors(colorProvider)
 end
 
 function ItemGridUI:onApplyScale(scale)
@@ -121,6 +174,8 @@ function ItemGridUI:getValidContainerFromStack(stack)
 end
 
 function ItemGridUI:render()
+    ItemGridUI.lineHeight = getTextManager():getFontHeight(UIFont.Small)
+
     if self.grid:isUnsearched(self.playerNum) then
 
         local searchSession = self.grid:getSearchSession(self.playerNum)
@@ -143,10 +198,8 @@ function ItemGridUI:render()
 end
 
 function ItemGridUI:renderUnsearched()
-    local lineHeight = 20 / 2
-
     self:drawRect(1, 1, self:getWidth()-2, self:getHeight()-2, 0.8, 0.2, 0.2, 0.2)
-    self:drawTextCentre("?", self:getWidth()/2, self:getHeight()/2 - lineHeight, 1, 1, 1, 1, UIFont.Large)
+    self:drawTextCentre("?", self:getWidth()/2, self:getHeight()/2 - ItemGridUI.lineHeight, 1, 1, 1, 1, UIFont.Large)
 end
 
 function ItemGridUI:renderBackGrid()
@@ -232,46 +285,34 @@ function ItemGridUI:renderDragItemPreview()
     if not item or not self:isMouseOver() then
         return
     end
-    
-    local stack = self:findGridStackUnderMouse()
-    if stack and not ItemStack.containsItem(stack, item) and ItemStack.canAddItem(stack, item) then
-        local stackItem = ItemStack.getFrontItem(stack, self.grid.inventory)
-        local w, h = TetrisItemData.getItemSize(stackItem, stack.isRotated)
-        self:_renderPlacementPreview(stack.x, stack.y, w, h, 1, 1, 1)
-        return
-    end
 
-    local container = self:getValidContainerFromStack(stack)
-    if container and not ItemStack.containsItem(stack, item) then
-        local containerItem = ItemStack.getFrontItem(stack, self.grid.inventory)
-        local w, h = TetrisItemData.getItemSize(containerItem)
+    local hoveredStack = self:findGridStackUnderMouse()
+    if not hoveredStack then 
+        local x = self:getMouseX()
+        local y = self:getMouseY()
+        local isRotated = DragAndDrop.isDraggedItemRotated()
+        
+        local itemW, itemH = TetrisItemData.getItemSize(item, isRotated)
 
-        local gridContainer = ItemContainerGrid.CreateTemp(container, self.playerNum)
-        if gridContainer:canAddItem(item) and container:hasRoomFor(getSpecificPlayer(self.playerNum), item) then
-            self:_renderPlacementPreview(stack.x, stack.y, w, h, unpack(containerItemHoverColor))
+        local halfCell = OPT.CELL_SIZE / 2
+        local xPos = x + halfCell - itemW * halfCell
+        local yPos = y + halfCell - itemH * halfCell
+
+        local gridX, gridY = ItemGridUiUtil.mousePositionToGridPosition(xPos, yPos)
+        local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated) and self.containerUi.containerGrid:canAddItem(item) and self.grid.inventory:hasRoomFor(getSpecificPlayer(0), item)
+        if canPlace then
+            self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 0, 1, 0)
         else
-            self:_renderPlacementPreview(stack.x, stack.y, w, h, unpack(invalidItemHoverColor))
+            self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 1, 0, 0)
         end
         return
     end
-
-    local x = self:getMouseX()
-    local y = self:getMouseY()
-    local isRotated = DragAndDrop.isDraggedItemRotated()
     
-    local itemW, itemH = TetrisItemData.getItemSize(item, isRotated)
+    local otherContainerGrid = ItemContainerGrid.Create(item:getContainer(), self.playerNum)
+    local draggedStack = otherContainerGrid:findGridStackByVanillaStack(DragAndDrop.getDraggedStack())
 
-    local halfCell = OPT.CELL_SIZE / 2
-    local xPos = x + halfCell - itemW * halfCell
-    local yPos = y + halfCell - itemH * halfCell
-
-    local gridX, gridY = ItemGridUiUtil.mousePositionToGridPosition(xPos, yPos)
-    local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated) and self.containerUi.containerGrid:canAddItem(item) and self.grid.inventory:hasRoomFor(getSpecificPlayer(0), item)
-    if canPlace then
-        self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 0, 1, 0)
-    else
-        self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 1, 0, 0)
-    end
+    local w, h = TetrisItemData.getItemSize(ItemStack.getFrontItem(hoveredStack, self.grid.inventory), hoveredStack.isRotated)
+    self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, ItemGridUI.getColorForStackHover(draggedStack, hoveredStack, otherContainerGrid.inventory, self.grid.inventory))    
 end
 
 function ItemGridUI:_renderPlacementPreview(gridX, gridY, itemW, itemH, r, g, b)
@@ -309,6 +350,21 @@ function ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, alphaMul
         local text = tostring(stack.count)
         drawingContext:drawText(text, x+3, y-1, 0, 0, 0, alphaMult, font)
         drawingContext:drawText(text, x+2, y-2, 1, 1, 1, alphaMult, font)
+    elseif item:getMaxAmmo() > 0 then
+        -- Draw the ammo count
+        local font = UIFont.Small
+        local text = tostring(item:getCurrentAmmoCount())
+
+        local w,h = 1,1
+        if not force1x1 then
+            w,h = TetrisItemData.getItemSize(item, stack.isRotated)
+        end
+
+        x = x + OPT.CELL_SIZE*w - w - 5
+        y = y + OPT.CELL_SIZE*h - h - ItemGridUI.lineHeight
+
+        drawingContext:drawTextRight(text, x+3, y-1, 0, 0, 0, alphaMult, font)
+        drawingContext:drawTextRight(text, x+2, y-2, 1, 1, 1, alphaMult, font)
     end
 end
 

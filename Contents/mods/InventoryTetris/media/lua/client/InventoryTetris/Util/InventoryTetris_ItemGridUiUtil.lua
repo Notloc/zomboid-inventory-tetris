@@ -42,3 +42,39 @@ ItemGridUiUtil.mousePositionToGridPosition = function(x, y)
     local gridY = math.floor(y / effectiveCellSize)
     return gridX, gridY
 end
+
+
+ItemGridUiUtil.getOrderedBackpacks = function(inventoryPage)
+    local orderedBackpacks = {}
+    
+    local selectedBackpack = inventoryPage.inventory
+    if selectedBackpack then
+        table.insert(orderedBackpacks, selectedBackpack)
+    end
+    
+    local sortedButtons = {}
+    for _, button in ipairs(inventoryPage.backpacks) do
+        table.insert(sortedButtons, button)
+    end
+    table.sort(sortedButtons, function(a, b) return a:getY() < b:getY() end)
+    
+    for _, button in ipairs(sortedButtons) do
+        if button.inventory ~= selectedBackpack then
+            table.insert(orderedBackpacks, button.inventory)
+        end
+    end
+
+    return orderedBackpacks
+end
+
+
+local function getPlayerContainers(playerNum)
+    local invPage = getPlayerInventory(playerNum)
+    local targetContainers = { invPage.inventoryPane.inventory }
+    for _, backpack in pairs(invPage.backpacks) do
+        if backpack.inventory ~= invPage.inventoryPane.inventory then
+            table.insert(targetContainers, backpack.inventory)
+        end
+    end
+    return targetContainers
+end

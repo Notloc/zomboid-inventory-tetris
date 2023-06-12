@@ -60,6 +60,17 @@ ItemStack.isSameType = function(stack, item)
     return stack.itemType == item:getFullType()
 end
 
+ItemStack.getAllItems = function(stack, inventory)
+    local items = {}
+
+    for itemID, _ in pairs(stack.itemIDs) do
+        local item = inventory:getItemById(itemID)
+        if item then table.insert(items, item) end
+    end
+
+    return items
+end
+
 ItemStack.convertToVanillaStack = function(stack, inventory)
     local vanillaStack = {}
     vanillaStack.items = {}
@@ -69,12 +80,27 @@ ItemStack.convertToVanillaStack = function(stack, inventory)
     if stack.count == 0 then return vanillaStack end
 
     table.insert(vanillaStack.items, ItemStack.getFrontItem(stack, inventory))
-    table.insert(vanillaStack, ItemStack.getFrontItem(stack, inventory))
     for itemId, _ in pairs(stack.itemIDs) do
         local item = inventory:getItemById(itemId)
         table.insert(vanillaStack.items, item)
         table.insert(vanillaStack, item)
     end
 
-    return vanillaStack
+    return {vanillaStack}
+end
+
+ItemStack.createVanillaStackFromItem = function(item)
+    return ItemStack.createVanillaStackFromItems({item})
+end
+
+ItemStack.createVanillaStackFromItems = function(items)
+    local vanillaStack = {}
+    vanillaStack.items = {}
+
+    table.insert(vanillaStack.items, items[1])
+    for _, item in ipairs(items) do
+        table.insert(vanillaStack.items, item)
+    end
+
+    return {vanillaStack}
 end

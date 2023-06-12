@@ -211,7 +211,7 @@ Events.OnGameBoot.Add(function()
             return
         end
 
-        if item and not ISMouseDrag.dragging then
+        if item and not DragAndDrop.getDraggedStack() then
             if self.toolRender then
                 self.toolRender:setItem(item)
                 self.toolRender:setVisible(true)

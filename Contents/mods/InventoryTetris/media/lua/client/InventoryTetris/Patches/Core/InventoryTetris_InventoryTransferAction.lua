@@ -29,11 +29,24 @@ Events.OnGameBoot.Add(function()
         self.action:setTime(0)
     end
 
+    local og_canMergeAction = ISInventoryTransferAction.canMergeAction
+    function ISInventoryTransferAction:canMergeAction(action)
+        local canMerge = og_canMergeAction(self, action)
+        if not canMerge then return false end
+
+        local tetrisCanMerge = self.tetrisForceAllow == action.tetrisForceAllow
+        tetrisCanMerge = tetrisCanMerge and self.gridX == action.gridX
+        tetrisCanMerge = tetrisCanMerge and self.gridY == action.gridY
+        tetrisCanMerge = tetrisCanMerge and self.gridIndex == action.gridIndex
+        tetrisCanMerge = tetrisCanMerge and self.isRotated == action.isRotated
+        return tetrisCanMerge
+    end
+
     local og_isValid = ISInventoryTransferAction.isValid
     function ISInventoryTransferAction:isValid()
         local valid = og_isValid(self)
         if not valid and (self.srcContainer ~= self.destContainer or not self.gridX or not self.gridY or not self.gridIndex) then
-            return valid
+            return false
         end
 
         if self.tetrisForceAllow or TimedActionSnooper.findUpcomingActionThatHandlesItem(self.character, self.item, self) then
@@ -69,14 +82,7 @@ Events.OnGameBoot.Add(function()
                 local organized = self.character:HasTrait("Organized")
                 local disorganized = self.character:HasTrait("Disorganized")
 
-                local isDisoraganized = nil -- Nil IS a valid value here, it means the container determines if it is disorganized
-                if organized then
-                    isDisoraganized = false
-                elseif disorganized then
-                    isDisoraganized = true
-                end
-
-                destContainerGrid:attemptToInsertItem(item, self.isRotated, isDisoraganized)
+                destContainerGrid:attemptToInsertItem(item, self.isRotated, organized, disorganized)
             end
         end
     end

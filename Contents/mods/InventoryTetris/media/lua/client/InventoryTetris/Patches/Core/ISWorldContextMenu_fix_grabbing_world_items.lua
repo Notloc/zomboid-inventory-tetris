@@ -1,0 +1,3 @@
+--ISWorldObjectContextMenu.onGrabWItem
+--ISWorldObjectContextMenu.onGrabHalfWItems
+--ISWorldObjectContextMenu.onGrabAllWItems

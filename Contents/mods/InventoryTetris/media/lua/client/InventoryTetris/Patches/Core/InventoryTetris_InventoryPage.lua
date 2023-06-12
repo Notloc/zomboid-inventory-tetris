@@ -13,7 +13,7 @@ Events.OnGameBoot.Add(function()
     local og_update = ISInventoryPage.update
     function ISInventoryPage:update()
         og_update(self)
-        if ISMouseDrag.dragging and ISMouseDrag.dragging.items then
+        if DragAndDrop.getDraggedStack() then
             self.collapseCounter = 0;
             if isClient() and self.isCollapsed then
                 self.inventoryPane.inventory:requestSync();

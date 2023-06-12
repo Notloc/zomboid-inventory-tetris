@@ -18,13 +18,11 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, playerNum)
     o.playerNum = playerNum
 
     o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
-    o.isOnPlayer = inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory()
+    o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
     o.isFloor = inventory:getType() == "floor"
 
     o.width = o.gridDefinition.size.width + SandboxVars.InventoryTetris.BonusGridSize
     o.height = o.gridDefinition.size.height + SandboxVars.InventoryTetris.BonusGridSize
-
-    o.overflow = {}
 
     o:refresh()
     return o
@@ -103,16 +101,6 @@ function ItemGrid:removeItem(item)
             end
 
             self:_sendModData()
-            return true
-        end
-    end
-
-    for i, stack in ipairs(self.overflow) do
-        if ItemStack.containsItem(stack, item) then
-            ItemStack.removeItem(stack, item, self.inventory)
-            if stack.count == 0 then
-                table.remove(self.overflow, i)
-            end
             return true
         end
     end
@@ -294,30 +282,6 @@ function ItemGrid:hasFreeSlot()
     return false
 end
 
-function ItemGrid:forceInsertItem(item)
-    local w, h = TetrisItemData.getItemSize(item, false)
-    local xDiff = self.width - w
-    local yDiff = self.height - h
-
-    if true or xDiff <= 0 or yDiff <= 0 then
-        self:addOverflow(item)
-        return
-    end
-end
-
-function ItemGrid:addOverflow(item)
-    for _, stack in ipairs(self.overflow) do
-        if ItemStack.canAddItem(stack, item) then
-            ItemStack.addItem(stack, item)
-            return
-        end
-    end
-
-    local stack = ItemStack.create(0, 0, false, item:getFullType(), TetrisItemCategory.getCategory(item))
-    ItemStack.addItem(stack, item)
-    table.insert(self.overflow, stack)
-end
-
 function ItemGrid:_attemptToStackItem(item)
     for _, stack in ipairs(self.persistentData.stacks) do
         if ItemStack.canAddItem(stack, item) then
@@ -330,20 +294,20 @@ function ItemGrid:_attemptToStackItem(item)
 end
 
 -- Slightly hacky, but shuffleMode can be nil as well, in which case it will be set to (not containerDefinition.isOrganized)
-function ItemGrid:_attemptToInsertItem(item, preferRotated, shuffleMode)
+function ItemGrid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisorganized)
     preferRotated = preferRotated or false
     
-    if shuffleMode == nil then
-        shuffleMode = not self.containerDefinition.isOrganized
+    if not isOrganized then
+        isOrganized = self.containerDefinition.isOrganized
     end
 
-    if not shuffleMode or TetrisItemData.isAlwaysStacks(item) then
+    if not isDisorganized or TetrisItemData.isAlwaysStacks(item) then
         if self:_attemptToStackItem(item) then
             return true
         end
     end
 
-    if shuffleMode then
+    if not isOrganized then
         preferRotated = ZombRand(0, 2) == 0
     end
 
@@ -352,10 +316,11 @@ function ItemGrid:_attemptToInsertItem(item, preferRotated, shuffleMode)
         preferRotated = false
     end
 
-    if self:_attemptToInsertItem_outerLoop(item, w, h, preferRotated, shuffleMode) then
+    local useShuffle = not isOrganized
+    if self:_attemptToInsertItem_outerLoop(item, w, h, preferRotated, useShuffle) then
         return true
     end
-    if self:_attemptToInsertItem_outerLoop(item, h, w, not preferRotated, shuffleMode) then
+    if self:_attemptToInsertItem_outerLoop(item, h, w, not preferRotated, useShuffle) then
         return true
     end
     return false
@@ -553,16 +518,12 @@ function ItemGrid:isStackBuried(stack)
     return false
 end
 
-function ItemGrid:_acceptUnpositionedItems(unpositionedItems, useShuffle)    
-    if #self.overflow > 0 then
-        self.overflow = {}
-    end
-
+function ItemGrid:_acceptUnpositionedItems(unpositionedItems, isOrganized, isDisorganized)    
     local remainingItems = {}
     if self:hasFreeSlot() then
         for _, itemData in ipairs(unpositionedItems) do
             local item = itemData.item
-            if not self:_attemptToInsertItem(item, false, useShuffle) then
+            if not self:_attemptToInsertItem(item, false, isOrganized, isDisoraganized) then
                 table.insert(remainingItems, itemData)
             end
         end
@@ -573,7 +534,7 @@ function ItemGrid:_acceptUnpositionedItems(unpositionedItems, useShuffle)
 end
 
 function ItemGrid:isEmpty()
-    return #self.persistentData.stacks == 0 and #self.overflow == 0
+    return #self.persistentData.stacks == 0
 end
 
 
@@ -682,39 +643,8 @@ function ItemGrid:updateSearch(player, playerNum)
         return false
     end
 
-    local overflow = self.overflow
-    local i = 1
-    while progressTicks >= searchTime do
-        if i > #overflow then
-            break
-        end
-
-        while i <= #overflow do
-            local stack = overflow[i]
-            i = i + 1
-            
-            local frontItem = ItemStack.getFrontItem(stack, self.inventory)
-            local frontItemID = frontItem and frontItem:getID() or nil
-            if frontItemID and not session.searchedStackIDs[frontItemID] then
-                session.searchedStackIDs[frontItemID] = true
-                progressTicks = progressTicks - searchTime
-                break
-            end
-        end
-    end
-
-    for j=i, #overflow do
-        local stack = overflow[j]
-        local frontItem = ItemStack.getFrontItem(stack, self.inventory)
-        local frontItemID = frontItem and frontItem:getID() or nil
-        if frontItemID and not session.searchedStackIDs[frontItemID] then
-            allSearched = false
-            break
-        end
-    end
-
     local stacks = self:getStacks()
-    i = 1
+    local i = 1
     while progressTicks >= searchTime do
         if i > #stacks then
             break
@@ -783,7 +713,6 @@ end
 function ItemGrid:resetGridData()
     self:_getSavedContainerData()[self.gridIndex] = {}
     self.persistentData = self:_getSavedGridData()
-    self.overflow = {}
 end
 
 function ItemGrid:_getSavedGridData()

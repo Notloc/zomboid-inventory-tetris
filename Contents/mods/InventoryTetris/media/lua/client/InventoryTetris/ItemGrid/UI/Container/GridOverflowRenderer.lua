@@ -11,20 +11,8 @@ function GridOverflowRenderer:new(x,y, containerGridUi)
     setmetatable(o, self)
     self.__index = self
     o.containerGridUi = containerGridUi
+    o.containerGrid = containerGridUi.containerGrid
     return o
-end
-
-function GridOverflowRenderer:getOverflowStackData()
-    local overflowStackData = {}
-    
-    for _, gridUi in ipairs(self.containerGridUi.gridUis) do
-        local data = {}
-        data.gridUi = gridUi
-        data.stacks = gridUi.grid.overflow
-        table.insert(overflowStackData, data)
-    end
-
-    return overflowStackData
 end
 
 function GridOverflowRenderer:getYPositionsForOverflow()    
@@ -55,60 +43,43 @@ end
 
 function GridOverflowRenderer:render()
     local inventory = self.containerGridUi.inventory
-    local overflowData = self:getOverflowStackData()
-    
-    local count = 0
-    for _, data in ipairs(overflowData) do
-        count = count + #data.stacks
-    end
+    local overflow = self.containerGrid.overflow
     
     local gridRenderer = self.containerGridUi.gridRenderer
     self:setX(gridRenderer:getX() + gridRenderer:getWidth() + 10)
     self:setY(gridRenderer:getY())
-    self:setWidth(self:calculateOverflowColumnWidth(count))
+    self:setWidth(self:calculateOverflowColumnWidth(#overflow))
     self:setHeight(gridRenderer:getHeight())
-
-    if count == 0 then return end
-
+    
+    if #overflow == 0 then return end
+    
     local yPositions = self:getYPositionsForOverflow()
     local xPos = 0
     local yi = 1
 
-    for _, data in ipairs(overflowData) do
-        local gridUi = data.gridUi
-        local stacks = data.stacks
-        local isUnsearched = gridUi.grid:isUnsearched(gridUi.playerNum)
-        local searchSession = gridUi.grid:getSearchSession(gridUi.playerNum)
+    for _, stack in ipairs(overflow) do
+        local item = ItemStack.getFrontItem(stack, inventory)
+        if item then
+            updateItem(item);
 
-        local doNotShowOverflow = isUnsearched and (not searchSession or not searchSession.isGridRevealed)
-        if not doNotShowOverflow then
-            for _, stack in ipairs(stacks) do
-                local item = ItemStack.getFrontItem(stack, inventory)
-                if item then
-                    updateItem(item);
+            local yPos = yPositions[yi]
 
-                    local yPos = yPositions[yi]
+            if true then --or not isUnsearched or (searchSession and searchSession.searchedStackIDs[item:getID()]) then
+                ItemGridUI._renderGridStack(self, stack, item, xPos, yPos, 1, true)
+            else
+                ItemGridUI._renderHiddenStack(self, stack, item, xPos, yPos, 1, true)
+            end
 
-                    if not isUnsearched or (searchSession and searchSession.searchedStackIDs[item:getID()]) then
-                        ItemGridUI._renderGridStack(self, stack, item, xPos, yPos, 1, true)
-                    else
-                        ItemGridUI._renderHiddenStack(self, stack, item, xPos, yPos, 1, true)
-                    end
-
-                    yi = yi + 1
-                    if yi > #yPositions then
-                        yi = 1
-                        xPos = xPos + OPT.CELL_SIZE + OVERFLOW_MARGIN
-                    end
-                end
+            yi = yi + 1
+            if yi > #yPositions then
+                yi = 1
+                xPos = xPos + OPT.CELL_SIZE + OVERFLOW_MARGIN
             end
         end
     end
 end
 
 function GridOverflowRenderer:findStackDataUnderMouse(x, y)
-    local overflowData = self:getOverflowStackData()
-
     local count = 0
     for _, data in ipairs(overflowData) do
         count = count + #data.stacks

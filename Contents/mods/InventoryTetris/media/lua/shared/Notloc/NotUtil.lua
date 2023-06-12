@@ -25,8 +25,36 @@ NotUtil.getAllEquippedContainers = function(playerObj)
     return containers
 end
 
+NotUtil.createTransferActionWithReturn = function(item, sourceContainer, destinationContainer, playerObj)
+    local transferActions, returnActions = NotUtil.createTransferActionsWithReturns({item}, sourceContainer, destinationContainer, playerObj)
+    return transferActions[1], returnActions[1]
+end
 
-NotUtil.createEvent = function()
+NotUtil.createTransferActionsWithReturns = function(items, sourceContainer, destinationContainer, playerObj)
+    local transferActions = {}
+    local returnActions = {}
+    for _, item in ipairs(items) do
+        local action = ISInventoryTransferAction:new(playerObj, item, sourceContainer, destinationContainer)
+        action.tetrisForceAllow = true
+        table.insert(transferActions, action)
+        
+        local returnAction = ISInventoryTransferAction:new(playerObj, item, destinationContainer, sourceContainer)
+        returnAction.tetrisForceAllow = true
+        table.insert(returnActions, returnAction)
+    end
+    return transferActions, returnActions
+end
+
+
+NotUtil.slice = function(tbl, start, stop)
+    local sliced = {}
+    for i = start, stop do
+        table.insert(sliced, tbl[i])
+    end
+    return sliced
+end
+
+NotUtil.createSimpleEvent = function()
     local event = {}
     event._listeners = {}
     function event:add(func)
@@ -43,6 +71,40 @@ NotUtil.createEvent = function()
     return event
 end
 
+NotUtil.createEvent = function(name)
+    local event = {}
+    event._name = name
+    event._listeners = {}
+    function event:add(func)
+        table.insert(self._listeners, func)
+    end
+    function event:remove(func)
+        table.remove(self._listeners, func)
+    end
+    function event:trigger(...)
+        local e = NotUtil.createEventData(self)
+        for _, func in ipairs(self._listeners) do
+            if e.isConsumed then
+                break
+            end
+            func(e, ...)
+        end
+    end
+    return event
+end
+
+NotUtil.createEventData = function(event)
+    local data = {}
+    data.source = event
+    data.name = event._name
+    
+    data.isConsumed = false
+    data.consume = function(self)
+        self.isConsumed = true
+    end
+
+    return data
+end
 
 NotUtil.Ui = {}
 
@@ -53,3 +115,6 @@ NotUtil.Ui.convertCoordinates = function(x, y, localSpace, targetSpace)
     y = y - targetSpace:getAbsoluteY()
     return x, y
 end
+
+
+

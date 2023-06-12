@@ -2,6 +2,7 @@ local GRID_REFRESH_DELAY = 600 -- A sacred tick rate
 
 ItemContainerGrid = {}
 ItemContainerGrid._tempGrid = {} -- For hovering over items, so we don't create a new grid every frame to evaluate if an item can be placed
+ItemContainerGrid._gridCache = {} -- Just created grids, so we don't have to create a new grid multiple times in a single tick
 
 -- TODO: Remove playerNum from this class, it's not actually used unless the grid is for the player's base inventory
 -- Thankfully grids are pretty much entirely agnostic to the player interacting with them, so it should be easy to remove or ignore
@@ -16,6 +17,8 @@ function ItemContainerGrid:new(inventory, playerNum)
     o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
     o.grids = o:createGrids(inventory, playerNum)
+    o.overflow = {}
+
     o:refresh()
     return o
 end
@@ -74,6 +77,14 @@ ItemContainerGrid.CreateTemp = function(inventory, playerNum)
 end
 
 ItemContainerGrid.FindInstance = function(inventory, playerNum)
+    if ItemContainerGrid._gridCache[playerNum] then
+        for _, grid in ipairs(ItemContainerGrid._gridCache[playerNum]) do
+            if grid.inventory == inventory then
+                return grid
+            end
+        end
+    end
+
     local playerObj = getSpecificPlayer(playerNum)
     if inventory == playerObj:getInventory() then
         return ItemContainerGrid._getPlayerMainGrid(playerNum)
@@ -185,9 +196,9 @@ end
 
 -- isDisoraganized is determined by the player's traits
 -- If it is nil, they have no relevant traits and the container itself determines if it is disorganized
-function ItemContainerGrid:attemptToInsertItem(item, preferRotated, isDisoraganized)
+function ItemContainerGrid:attemptToInsertItem(item, preferRotated, isOrganized, isDisoraganized)
     for _, grid in ipairs(self.grids) do
-        if grid:_attemptToInsertItem(item, preferRotated, isDisoraganized) then
+        if grid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisoraganized) then
             return true
         end
     end
@@ -202,14 +213,6 @@ function ItemContainerGrid:insertItem(item, gridX, gridY, gridIndex, isRotated)
     return grid:insertItem(item, gridX, gridY, isRotated)
 end
 
-function ItemContainerGrid:forceInsertItem(item)
-    local grid = self.grids[1]
-    if not grid then
-        return false
-    end
-    return grid:insertItem(item, 1, 1)
-end
-
 function ItemContainerGrid:removeItem(item)
     for _, grid in pairs(self.grids) do
         if grid:removeItem(item) then
@@ -219,7 +222,7 @@ function ItemContainerGrid:removeItem(item)
     return false
 end
 
-function ItemContainerGrid:autoPositionItem(item)
+function ItemContainerGrid:autoPositionItem(item, isOrganized, isDisorganized)
     for _, grid in ipairs(self.grids) do
         if grid:removeItem(item) then
             print("ohno")
@@ -227,7 +230,7 @@ function ItemContainerGrid:autoPositionItem(item)
     end
 
     for _, grid in ipairs(self.grids) do
-        if grid:_attemptToInsertItem(item) then
+        if grid:_attemptToInsertItem(item, false, isOrganized, isDisoraganized) then
             return true
         end
     end
@@ -243,6 +246,8 @@ function ItemContainerGrid:canItemBeStacked(item, xPos, yPos, gridIndex)
 end
 
 function ItemContainerGrid:findGridStackByVanillaStack(vanillaStack)
+    if not vanillaStack then return nil end
+
     local item = vanillaStack.items[1]
     if not item then return nil end
     
@@ -256,8 +261,17 @@ function ItemContainerGrid:findGridStackByVanillaStack(vanillaStack)
 end
 
 
-function ItemContainerGrid:_updateGridPositions(useShuffle)
+function ItemContainerGrid:_updateGridPositions()
+    self.overflow = {}
     local unpositionedItems = self:_getUnpositionedItems()
+
+    local isOrganized = false
+    local isDisorganized = false
+    if self.isOnPlayer then
+        local player = getSpecificPlayer(self.playerNum)
+        isOrganized = player:HasTrait("Organized")
+        isDisorganized = player:HasTrait("Disorganized")
+    end
 
     -- Sort the unpositioned items by size, so we can place the biggest ones first
     table.sort(unpositionedItems, function(a, b) return a.size < b.size end)
@@ -276,7 +290,7 @@ function ItemContainerGrid:_updateGridPositions(useShuffle)
                 gridIndex = 1
             end
 
-            unplaced = grid:_acceptUnpositionedItems({item}, useShuffle)
+            unplaced = grid:_acceptUnpositionedItems({item}, isOrganized, isDisorganized)
             if #unplaced == 0 then
                 break
             end
@@ -296,23 +310,32 @@ function ItemContainerGrid:_updateGridPositions(useShuffle)
         return
     end
 
+    for _, unpositionedItemData in ipairs(remainingItems) do
+        local item = unpositionedItemData.item
+        if not self:_stackIntoOverflow(item) then
+            local stack = ItemStack.create(0, 0, false, item:getFullType(), TetrisItemCategory.getCategory(item))
+            ItemStack.addItem(stack, item)
+            table.insert(self.overflow, stack)
+        end
+    end
+
     if self.isOnPlayer then
         if getPlayerHotbar(self.playerNum) then -- Wait for the hotbar to be initialized
             for _, unpositionedItemData in ipairs(remainingItems) do
                 self:_dropUnpositionedItem(unpositionedItemData.item)
             end
         end
-    else
-        local i = 1
-        for _, unpositionedItemData in ipairs(remainingItems) do
-            local grid = self.grids[i]
-            grid:forceInsertItem(unpositionedItemData.item)
-            i = i + 1
-            if i > #self.grids then
-                i = 1
-            end
+    end
+end
+
+function ItemContainerGrid:_stackIntoOverflow(item)
+    for _, stack in ipairs(self.overflow) do
+        if ItemStack.canAddItem(stack, item) then
+            ItemStack.addItem(stack, item)
+            return true
         end
     end
+    return false
 end
 
 function ItemContainerGrid:_getUnpositionedItems()
@@ -400,5 +423,9 @@ Events.OnTick.Add(function()
                 grid:refresh()
             end
         end
+    end
+
+    for playerNum, grids in pairs(ItemContainerGrid._gridCache) do
+        grids[1] = nil
     end
 end)

@@ -178,7 +178,7 @@ function GridContainerInfo:onMouseMoveOutside(dx, dy)
 end
 
 function GridContainerInfo:onMouseUp(x, y)
-    local stack = ISMouseDrag.dragging
+    local stack = DragAndDrop.getDraggedStack()
     if stack and stack.items then
         local item = stack.items[1]
         local playerObj = getSpecificPlayer(self.containerUi.playerNum)
@@ -207,7 +207,7 @@ function GridContainerInfo:onMouseUpOutside(x, y)
 end
 
 function GridContainerInfo:cancelDragDropItem()
-    local stack = ISMouseDrag.dragging
+    local stack = DragAndDrop.getDraggedStack()
     if not stack or not stack.items then return end
 
     local item = stack.items[1]
