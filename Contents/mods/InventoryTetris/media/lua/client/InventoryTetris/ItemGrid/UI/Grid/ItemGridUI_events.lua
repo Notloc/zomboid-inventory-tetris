@@ -295,7 +295,9 @@ function ItemGridUI:doAction(gridStack, action)
         self:quickMoveItems(gridStack)
     elseif action == "equip" then
         local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
-        self:quickEquipItem(item)
+        if item then
+            self:quickEquipItem(item)
+        end
     elseif action == "drop" then
         self:drop(gridStack)
     end
@@ -326,7 +328,8 @@ end
 function ItemGridUI:quickMoveItemToContainer(gridStack, targetContainers)
     local playerObj = getSpecificPlayer(self.playerNum)
     local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
-    
+    if not item then return end
+
     local targetContainer = nil
     for _, testContainer in ipairs(targetContainers) do
         local gridContainer = ItemContainerGrid.Create(testContainer, self.playerNum)
@@ -396,10 +399,10 @@ function ItemGridUI:_canEquipItem(item)
     return true
 end
 
-function ItemGridUI:handleDoubleClick(x, y)
+function ItemGridUI:handleDoubleClick(x, y, gridStack)
     DragAndDrop.endDrag()
     
-    local gridStack = self:findGridStackUnderMouse()
+    gridStack = gridStack or self:findGridStackUnderMouse()
     if not gridStack then 
         return
     end
@@ -471,8 +474,9 @@ end
 
 function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, playerNum)
     local item = ItemStack.getFrontItem(gridStack, inventory)
+    if not item then return end
+    
     local items = ItemStack.getAllItems(gridStack, inventory)
-
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
     local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItems(items), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)

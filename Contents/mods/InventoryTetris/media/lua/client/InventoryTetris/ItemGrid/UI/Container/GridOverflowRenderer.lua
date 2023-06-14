@@ -1,5 +1,7 @@
 
 require "ISUI/ISUIElement"
+require "Notloc/NotUtil"
+
 local OPT = require "InventoryTetris/Settings"
 local OVERFLOW_MARGIN = 3
 local OVERFLOW_RENDERER_SPACING = 8
@@ -24,7 +26,7 @@ function GridOverflowRenderer:getYPositionsForOverflow()
     
     local y = 0
     local yPositions = {}
-    while height > 0 do
+    while height > (OPT.CELL_SIZE + OVERFLOW_MARGIN * 0.8) do
         table.insert(yPositions, y)
         y = y + OPT.CELL_SIZE + OVERFLOW_MARGIN
         height = height - OPT.CELL_SIZE - OVERFLOW_MARGIN
@@ -125,5 +127,13 @@ function GridOverflowRenderer:onRightMouseUp(x, y)
     if stack then
         x, y = NotUtil.Ui.convertCoordinates(x, y, self, self.gridUi)
         return self.gridUi:onRightMouseUp(x, y, stack)
+    end
+end
+
+function GridOverflowRenderer:onMouseDoubleClick(x, y)
+    local stack = self:findStackDataUnderMouse(x, y)
+    if stack then
+        x, y = NotUtil.Ui.convertCoordinates(x, y, self, self.gridUi)
+        return self.gridUi:handleDoubleClick(x, y, stack)
     end
 end

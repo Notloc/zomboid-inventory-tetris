@@ -376,6 +376,7 @@ function ItemGridContainerUI:prerender()
     local infoWidth = (ICON_SIZE + ICON_PADDING_X * 2) * OPT.CONTAINER_INFO_SCALE
     local overflowPadding = #self.containerGrid.overflow > 0 and 8 or 0
     self:setWidth(self.gridRenderer:getWidth() + infoWidth+2 + self.overflowRenderer:getWidth() + overflowPadding)
+    self:setHeight(self.gridRenderer:getHeight())
 
     if self.showTitle then
         local invName = ""
@@ -429,11 +430,14 @@ end
 function ItemGridContainerUI:onMouseDoubleClick(x, y)
     if self.infoRenderer:isMouseOver(x, y) then
         self.infoRenderer:onMouseDoubleClick(self.infoRenderer:getMouseX(), self.infoRenderer:getMouseY())
-    else
-        local gridUi = ItemGridUiUtil.findGridUiUnderMouse(self.gridUis, x, y)
-        if gridUi then
-            gridUi:onMouseDoubleClick(gridUi:getMouseX(), gridUi:getMouseY())
-            return
-        end
+        return
     end
+    
+    local gridUi = ItemGridUiUtil.findGridUiUnderMouse(self.gridUis, x, y)
+    if gridUi then
+        gridUi:onMouseDoubleClick(gridUi:getMouseX(), gridUi:getMouseY())
+        return
+    end
+
+    self.overflowRenderer:onMouseDoubleClick(self.overflowRenderer:getMouseX(), self.overflowRenderer:getMouseY())
 end

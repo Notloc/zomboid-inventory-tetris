@@ -74,6 +74,10 @@ function ItemGrid:findStackByItem(item)
 end
 
 function ItemGrid:insertItem(item, xPos, yPos, isRotated)
+    if not self:_isInBounds(xPos, yPos) then
+        return false
+    end
+
     local stack = self.stackMap[xPos][yPos]
     if stack then
         if not ItemStack.canAddItem(stack, item) then 
