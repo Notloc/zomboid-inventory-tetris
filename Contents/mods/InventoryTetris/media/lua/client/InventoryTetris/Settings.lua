@@ -9,6 +9,9 @@ if not INVENTORY_TETRIS_SETTINGS then
         self.CELL_SIZE = self.TEXTURE_SIZE + self.TEXTURE_PAD * 2 + 1
         self.ICON_SCALE = self.TEXTURE_SIZE / 32
 
+        self.DOUBLE_CLICK_ACTION = "interact"
+
+
         self.OnApplyGridScale:trigger(scale)
     end
 
@@ -21,6 +24,24 @@ if not INVENTORY_TETRIS_SETTINGS then
         self.OnApplyContainerInfoScale:trigger(scale)
     end
     INVENTORY_TETRIS_SETTINGS:applyContainerInfoScale(1)
+
+
+    INVENTORY_TETRIS_SETTINGS.applyDoubleClickAction = function(self, action)
+        self.DOUBLE_CLICK_ACTION = action
+    end
+
+    INVENTORY_TETRIS_SETTINGS.applyCtrlClickAction = function(self, action)
+        self.CTRL_CLICK_ACTION = action
+    end
+
+    INVENTORY_TETRIS_SETTINGS.applyAltClickAction = function(self, action)
+        self.ALT_CLICK_ACTION = action
+    end
+
+    INVENTORY_TETRIS_SETTINGS.applyShiftClickAction = function(self, action)
+        self.SHIFT_CLICK_ACTION = action
+    end
+
 end
 
 return INVENTORY_TETRIS_SETTINGS

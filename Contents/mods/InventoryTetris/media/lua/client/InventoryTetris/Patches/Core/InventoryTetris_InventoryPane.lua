@@ -7,7 +7,7 @@ require "ISUI/ISInventoryPane"
 local OPT = require "InventoryTetris/Settings"
 
 -- Aggressively ensure we load last
--- If the user has this mod enabled, I safe to assume they want it to take priority
+-- If the user has this mod enabled, I think its safe to assume they want it to take priority
 Events.OnGameBoot.Add(function()
     local og_new = ISInventoryPane.new
     function ISInventoryPane:new(x, y, width, height, inventory, player)
@@ -290,7 +290,8 @@ Events.OnGameBoot.Add(function()
 
     local og_onMouseWheel = ISInventoryPane.onMouseWheel
     function ISInventoryPane:onMouseWheel(del)
-        return false
+        return false -- Disabled scrolling to rotate items because of scrollviews
+
         --if DragAndDrop.isDragging() then
         --   DragAndDrop.rotateDraggedItem()
         --  return true;

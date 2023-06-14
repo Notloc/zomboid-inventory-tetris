@@ -22,12 +22,16 @@ if not ItemGridUI then
     end
 end
 
-local function isQuickMoveDown()
-    return isKeyDown(getCore():getKey("tetris_quick_move"))
+local function isCtrlButtonDown()
+    return isKeyDown(getCore():getKey("tetris_ctrl_button"))
 end
 
-local function isQuickEquipDown()
-    return isKeyDown(getCore():getKey("tetris_quick_equip"))
+local function isAltButtonDown()
+    return isKeyDown(getCore():getKey("tetris_alt_button"))
+end
+
+local function isShiftButtonDown()
+    return isKeyDown(getCore():getKey("tetris_shift_button"))
 end
 
 local function isStackSplitDown()
@@ -39,8 +43,8 @@ function ItemGridUI:onMouseDown(x, y, gridStack)
 	getSpecificPlayer(self.playerNum):nullifyAiming();
     gridStack = gridStack or self:findGridStackUnderMouse()
     if gridStack then 
-        local vanillaStack = ItemStack.convertToVanillaStack(gridStack, self.grid.inventory)
-        DragAndDrop.prepareDrag(self, vanillaStack, x, y)
+        local vanillaStacks = ItemStack.convertToVanillaStacks(gridStack, self.grid.inventory)
+        DragAndDrop.prepareDrag(self, vanillaStacks, x, y)
     end
 
 	return true;
@@ -126,8 +130,8 @@ function ItemGridUI:handleDragAndDrop(x, y)
     if not vanillaStack or not vanillaStack.items[1] then return end
 
     local dragInventory = vanillaStack.items[1]:getContainer()
-    local otherContainerGrid = ItemContainerGrid.Create(dragInventory, self.playerNum)
-    local gridStack, otherGrid = otherContainerGrid:findGridStackByVanillaStack(vanillaStack)
+    local dragContainerGrid = ItemContainerGrid.Create(dragInventory, self.playerNum)
+    local gridStack, otherGrid = dragContainerGrid:findGridStackByVanillaStack(vanillaStack)
 
     local isSameInventory = self.grid.inventory == dragInventory
     local isSameGrid = self.grid == otherGrid
@@ -136,7 +140,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
         luautils.walkToContainer(self.grid.inventory, self.playerNum)
 
         local stackUnderMouse = self:findGridStackUnderMouse()
-        local isSameStack = gridStack == stackUnderMouse
+        local isSameStack = stackUnderMouse and gridStack == stackUnderMouse
 
         if not isSameStack and stackUnderMouse and ItemStack.canAddItem(stackUnderMouse, vanillaStack.items[1]) then
             local x, y = ItemGridUiUtil.mousePositionToGridPosition(x, y)
@@ -150,16 +154,26 @@ function ItemGridUI:handleDragAndDrop(x, y)
         end
 
         if stackUnderMouse and not isSameStack then
-            TetrisEvents.OnStackDroppedOnStack:trigger(gridStack, otherGrid, stackUnderMouse, self.grid, self.playerNum)
+            local targetStack = ItemStack.convertToVanillaStacks(stackUnderMouse, self.grid.inventory)[1]
+            TetrisEvents.OnStackDroppedOnStack:trigger(vanillaStack, dragInventory, targetStack, self.grid.inventory, self.playerNum)
             return
         end
 
         local x, y = ItemGridUiUtil.findGridPositionOfMouse(self, vanillaStack.items[1], DragAndDrop.isDraggedItemRotated())
-        if isSameGrid then
+        if isSameInventory then
             if isStackSplitDown() then
                 self:openSplitStack(vanillaStack, x, y)
             else
-                self.grid:moveStack(gridStack, x, y, DragAndDrop.isDraggedItemRotated())
+                if isSameGrid then
+                    self.grid:moveStack(gridStack, x, y, DragAndDrop.isDraggedItemRotated())
+                else
+                    for i=2, #vanillaStack.items do
+                        local item = vanillaStack.items[i]
+                        if self.grid:insertItem(item, x, y, DragAndDrop.isDraggedItemRotated()) then
+                            otherGrid:removeItem(item)
+                        end
+                    end
+                end
             end
         else
             self:handleDragAndDropTransfer(playerObj, x, y)
@@ -194,6 +208,10 @@ function ItemGridUI:handleDragAndDropTransfer(playerObj, gridX, gridY, targetSta
     local vanillaStack = DragAndDrop.getDraggedStack()
     local frontItem = vanillaStack.items[1]
     
+    if frontItem:IsInventoryContainer() and frontItem:getInventory() == self.grid.inventory then
+        return
+    end
+
     if not targetStack and not self.grid:doesItemFit(frontItem, gridX, gridY, DragAndDrop.isDraggedItemRotated()) then
         return
     end
@@ -258,13 +276,32 @@ function ItemGridUI:handleClick(x, y, gridStack)
 
     gridStack = gridStack or self:findGridStackUnderMouse()
     if gridStack then
-        if isQuickMoveDown() then
-            self:quickMoveItems(gridStack)
-        elseif isQuickEquipDown() then
-            local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
-            self:quickEquipItem(item)
+        if isCtrlButtonDown() then
+            self:doAction(gridStack, OPT.CTRL_CLICK_ACTION)
+        elseif isAltButtonDown() then
+            self:doAction(gridStack, OPT.ALT_CLICK_ACTION)
+        elseif isShiftButtonDown() then
+            self:doAction(gridStack, OPT.SHIFT_CLICK_ACTION)
         end
     end
+end
+
+function ItemGridUI:doAction(gridStack, action)
+    if action == "interact" then
+        self:interact(gridStack)
+    elseif action == "move" then
+        self:quickMoveItems(gridStack)
+    elseif action == "equip" then
+        local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
+        self:quickEquipItem(item)
+    elseif action == "drop" then
+        self:drop(gridStack)
+    end
+end
+
+function ItemGridUI:drop(gridStack)
+    local items = ItemStack.getAllItems(gridStack, self.grid.inventory)
+    ISInventoryPaneContextMenu.onDropItems(items, self.playerNum)
 end
 
 function ItemGridUI:quickMoveItems(gridStack)
@@ -360,20 +397,39 @@ end
 function ItemGridUI:handleDoubleClick(x, y)
     DragAndDrop.endDrag()
     
-    local itemStack = self:findGridStackUnderMouse()
-    if not itemStack then 
+    local gridStack = self:findGridStackUnderMouse()
+    if not gridStack then 
         return
     end
 
-    local item = ItemStack.getFrontItem(itemStack, self.grid.inventory)
+    self:doAction(gridStack, OPT.DOUBLE_CLICK_ACTION)
+end
+
+function ItemGridUI:interact(gridStack)
+    local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
+    if not item then return end
+    
+    local vanillaStack = ItemStack.convertToVanillaStacks(gridStack, item:getContainer())[1]    
     if item:IsInventoryContainer() then
         self.inventoryPane.tetrisWindowManager:openContainerPopup(item, self.playerNum, self.inventoryPane)
+        return
+    end
+
+    if GenericSingleItemRecipeHandler.call(nil, vanillaStack, item:getContainer(), self.playerNum) then
+        return
     end
 
     local maxStack = TetrisItemData.getMaxStackSize(item)
     if maxStack > 1 then
-        self.grid:gatherSameItems(itemStack)
+        self.grid:gatherSameItems(gridStack)
+        return
     end
+
+    if item:IsFood() and not item:getScriptItem():isCantEat() then
+        ISInventoryPaneContextMenu.onEatItems({item}, 1, self.playerNum)
+        return
+    end
+
 end
 
 local function rotateDraggedItem(key)
@@ -401,7 +457,7 @@ Events.OnKeyStartPressed.Add(debugOpenEquipmentWindow)
 function ItemGridUI.openItemContextMenu(uiContext, x, y, item, playerNum)
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
-    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStackFromItem(item), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
+    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItem(item), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
     --+self:getYScroll());
     if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
         menu.origin = self.inventoryPage
@@ -417,7 +473,7 @@ function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, 
 
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
-    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStackFromItems(items), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
+    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItems(items), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
     --+self:getYScroll());
     if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
         menu.origin = self.inventoryPage

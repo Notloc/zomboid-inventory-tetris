@@ -19,6 +19,12 @@ ItemStack.copyWithoutItems = function(stack)
     return ItemStack.create(stack.x, stack.y, stack.isRotated, stack.itemType, stack.category)
 end
 
+ItemStack.createTempStack = function(item)
+    local stack = ItemStack.create(0, 0, false, item:getFullType(), TetrisItemCategory.getCategory(item))
+    ItemStack.addItem(stack, item)
+    return stack
+end
+
 ItemStack.getFrontItem = function(stack, inventory)
     for itemID, _ in pairs(stack.itemIDs) do
         local item = inventory:getItemById(itemID)
@@ -71,7 +77,7 @@ ItemStack.getAllItems = function(stack, inventory)
     return items
 end
 
-ItemStack.convertToVanillaStack = function(stack, inventory)
+ItemStack.convertToVanillaStacks = function(stack, inventory)
     local vanillaStack = {}
     vanillaStack.items = {}
     vanillaStack.count = stack.count
@@ -89,11 +95,11 @@ ItemStack.convertToVanillaStack = function(stack, inventory)
     return {vanillaStack}
 end
 
-ItemStack.createVanillaStackFromItem = function(item)
-    return ItemStack.createVanillaStackFromItems({item})
+ItemStack.createVanillaStacksFromItem = function(item)
+    return ItemStack.createVanillaStacksFromItems({item})
 end
 
-ItemStack.createVanillaStackFromItems = function(items)
+ItemStack.createVanillaStacksFromItems = function(items)
     local vanillaStack = {}
     vanillaStack.items = {}
 

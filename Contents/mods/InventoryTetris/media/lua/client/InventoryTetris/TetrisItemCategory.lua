@@ -13,6 +13,7 @@ TetrisItemCategory = {
     KEY = "KEY",
     MISC = "MISC",
     SEED = "SEED",
+    MOVEABLE = "MOVEABLE",
 }
 
 local list = {}
@@ -25,7 +26,10 @@ TetrisItemCategory.getCategory = function(item)
     local category = item:getDisplayCategory()
     local type = item:getFullType()
 
-    if item:IsInventoryContainer() then
+    if instanceof(item, "Moveable") then
+        return TetrisItemCategory.MOVEABLE
+
+    elseif item:IsInventoryContainer() then
         return TetrisItemCategory.CONTAINER
 
     elseif item:IsWeapon() or category == "Weapon" then

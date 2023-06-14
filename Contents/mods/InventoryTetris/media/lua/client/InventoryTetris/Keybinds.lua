@@ -8,13 +8,18 @@ bind.key = Keyboard.KEY_R;
 table.insert(keyBinding, bind);
 
 bind = {};
-bind.value = "tetris_quick_move";
+bind.value = "tetris_ctrl_button";
 bind.key = Keyboard.KEY_LCONTROL;
 table.insert(keyBinding, bind);
 
 bind = {};
-bind.value = "tetris_quick_equip";
+bind.value = "tetris_alt_button";
 bind.key = Keyboard.KEY_LMENU;
+table.insert(keyBinding, bind);
+
+bind = {};
+bind.value = "tetris_shift_button";
+bind.key = Keyboard.KEY_LSHIFT;
 table.insert(keyBinding, bind);
 
 bind = {};

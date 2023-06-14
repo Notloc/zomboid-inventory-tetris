@@ -2,7 +2,7 @@
 require "ISUI/ISUIElement"
 local OPT = require "InventoryTetris/Settings"
 local OVERFLOW_MARGIN = 3
-
+local OVERFLOW_RENDERER_SPACING = 8
 
 GridOverflowRenderer = ISUIElement:derive("GridOverflowRenderer")
 
@@ -12,6 +12,7 @@ function GridOverflowRenderer:new(x,y, containerGridUi)
     self.__index = self
     o.containerGridUi = containerGridUi
     o.containerGrid = containerGridUi.containerGrid
+    o.gridUi = o.containerGridUi.gridUis[1]
     return o
 end
 
@@ -46,7 +47,7 @@ function GridOverflowRenderer:render()
     local overflow = self.containerGrid.overflow
     
     local gridRenderer = self.containerGridUi.gridRenderer
-    self:setX(gridRenderer:getX() + gridRenderer:getWidth() + 10)
+    self:setX(gridRenderer:getX() + gridRenderer:getWidth() + OVERFLOW_RENDERER_SPACING)
     self:setY(gridRenderer:getY())
     self:setWidth(self:calculateOverflowColumnWidth(#overflow))
     self:setHeight(gridRenderer:getHeight())
@@ -80,54 +81,49 @@ function GridOverflowRenderer:render()
 end
 
 function GridOverflowRenderer:findStackDataUnderMouse(x, y)
-    local count = 0
-    for _, data in ipairs(overflowData) do
-        count = count + #data.stacks
-    end
-    if count == 0 then return end
+    local overflow = self.containerGrid.overflow
+    if #overflow == 0 then return end
 
     local yPositions = self:getYPositionsForOverflow()
     local xPos = 0
     local yi = 1
 
-    for _, data in ipairs(overflowData) do
-        local gridUi = data.gridUi
-        local stacks = data.stacks
-        for _, stack in ipairs(stacks) do
-            local yPos = yPositions[yi]
-            if x >= xPos and x < xPos + OPT.CELL_SIZE and y >= yPos and y < yPos + OPT.CELL_SIZE then
-                return stack, data
-            end
-            
-            yi = yi + 1
-            if yi > #yPositions then
-                yi = 1
-                xPos = xPos + OPT.CELL_SIZE + OVERFLOW_MARGIN
-            end
+    for _, stack in ipairs(overflow) do
+        local yPos = yPositions[yi]
+        if x >= xPos and x < xPos + OPT.CELL_SIZE and y >= yPos and y < yPos + OPT.CELL_SIZE then
+            return stack
+        end
+        
+        yi = yi + 1
+        if yi > #yPositions then
+            yi = 1
+            xPos = xPos + OPT.CELL_SIZE + OVERFLOW_MARGIN
         end
     end
+
+    return nil
 end
 
 function GridOverflowRenderer:onMouseDown(x, y)
-	local stack, data = self:findStackDataUnderMouse(x, y)
+	local stack = self:findStackDataUnderMouse(x, y)
     if stack then
-        x, y = NotUtil.Ui.convertCoordinates(x, y, self, data.gridUi)
-        return data.gridUi:onMouseDown(x, y, stack)
+        x, y = NotUtil.Ui.convertCoordinates(x, y, self, self.gridUi)
+        return self.gridUi:onMouseDown(x, y, stack)
     end
 end
 
 function GridOverflowRenderer:onMouseUp(x, y)
-	local stack, data = self:findStackDataUnderMouse(x, y)
+	local stack = self:findStackDataUnderMouse(x, y)
     if stack then
-        x, y = NotUtil.Ui.convertCoordinates(x, y, self, data.gridUi)
-        return data.gridUi:onMouseUp(x, y, stack)
+        x, y = NotUtil.Ui.convertCoordinates(x, y, self, self.gridUi)
+        return self.gridUi:onMouseUp(x, y, stack)
     end
 end
 
 function GridOverflowRenderer:onRightMouseUp(x, y)
-	local stack, data = self:findStackDataUnderMouse(x, y)
+	local stack = self:findStackDataUnderMouse(x, y)
     if stack then
-        x, y = NotUtil.Ui.convertCoordinates(x, y, self, data.gridUi)
-        return data.gridUi:onRightMouseUp(x, y, stack)
+        x, y = NotUtil.Ui.convertCoordinates(x, y, self, self.gridUi)
+        return self.gridUi:onRightMouseUp(x, y, stack)
     end
 end

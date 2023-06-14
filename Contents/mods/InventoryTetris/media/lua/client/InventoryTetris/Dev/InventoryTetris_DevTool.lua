@@ -916,7 +916,7 @@ end
 local og_createMenu = ISInventoryPaneContextMenu.createMenu
 ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
     local menu = og_createMenu(player, isInPlayerInventory, items, x, y, origin)
-    
+    if not isDebugEnabled() then return menu end
     
     local item = items[1]
     if not item then return end
@@ -926,9 +926,20 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
     end
     if not item then return end
 
+    print("item display name: " .. item:getDisplayName())
     print("item CLASS: " .. TetrisItemCategory.getCategory(item))
     print("item full type: " .. item:getFullType())
-    print("item weight: " .. tostring(item:getActualWeight()))
+
+    if item:IsFood() then
+        print("item base hunger: " .. item:getBaseHunger())
+        print("item hunger change: " .. item:getHungerChange())
+    end
+
+    if item:IsDrainable() then
+        print("item use delta: " .. item:getUseDelta())
+        print("item used delta: " .. item:getUsedDelta())
+        print("item delta: " .. item:getDelta())
+    end
 
     local mediaData = item:getMediaData()
     if mediaData then

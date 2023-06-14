@@ -1,4 +1,5 @@
-local GRID_REFRESH_DELAY = 600 -- A sacred tick rate
+local GRID_REFRESH_DELAY = 600
+local PHYSICS_DELAY = 600
 
 ItemContainerGrid = {}
 ItemContainerGrid._tempGrid = {} -- For hovering over items, so we don't create a new grid every frame to evaluate if an item can be placed
@@ -135,6 +136,29 @@ function ItemContainerGrid:doesItemFit(item, gridX, gridY, gridIndex, rotate)
     return grid:doesItemFit(item, gridX, gridY, rotate)
 end
 
+function ItemContainerGrid:doesItemFitAnywhere(item, w, h, ignoreItems)
+    local ignoreMap = {}
+
+    for _, grid in ipairs(self.grids) do
+        for _, item in ipairs(ignoreItems) do
+            local stack = grid:findStackByItem(item)
+            if stack then
+                ignoreMap[stack] = true
+            end
+        end
+    end
+
+    for _, grid in ipairs(self.grids) do
+        if grid:doesItemFitAnywhere(item, w, h, ignoreMap) then
+            return true
+        end
+        if w ~= h and grid:doesItemFitAnywhere(item, h, w, ignoreMap) then
+            return true
+        end
+    end
+    return false
+end
+
 function ItemContainerGrid:_getCapacity()
     local player = getSpecificPlayer(self.playerNum)
     local hasOrganizedTrait = player:HasTrait("Organized")
@@ -150,13 +174,17 @@ function ItemContainerGrid:_getCapacity()
     return capacity
 end
 
+function ItemContainerGrid:isItemAllowed(item)
+    return self:_validateOnlyAcceptCategory(item)
+end
+
 function ItemContainerGrid:canAddItem(item)
     if not self:_validateOnlyAcceptCategory(item) then
         return false
     end
 
     local capacity = self:_getCapacity()
-    if capacity < item:getActualWeight() + self.inventory:getCapacityWeight() then
+    if item:getContainer() ~= self.inventory and capacity < item:getActualWeight() + self.inventory:getCapacityWeight() then
         return false
     end
 
@@ -179,19 +207,31 @@ function ItemContainerGrid:_validateOnlyAcceptCategory(item)
 end
 
 function ItemContainerGrid:refresh()
-    local doPhysics = SandboxVars.InventoryTetris.EnableGravity and self:shouldRefresh()  
+    local doPhysics = SandboxVars.InventoryTetris.EnableGravity and self:shouldDoPhysics()  
     for _, grid in ipairs(self.grids) do
         grid:refresh(doPhysics)
     end
     self:_updateGridPositions()
+
     self.lastRefresh = getTimestampMs()
+    if doPhysics then
+        self.lastPhysics = self.lastRefresh
+    end
 end
 
 function ItemContainerGrid:shouldRefresh()
     if not self.lastRefresh then
         return true
     end
-    return getTimestampMs() - self.lastRefresh >= GRID_REFRESH_DELAY
+    local delay = self.isPlayerInventory and 100 or GRID_REFRESH_DELAY -- main inventory is more responsive
+    return getTimestampMs() - self.lastRefresh >= delay
+end
+
+function ItemContainerGrid:shouldDoPhysics()
+    if not self.lastPhysics then
+        return true
+    end
+    return getTimestampMs() - self.lastPhysics >= PHYSICS_DELAY
 end
 
 -- isDisoraganized is determined by the player's traits
@@ -247,8 +287,10 @@ end
 
 function ItemContainerGrid:findGridStackByVanillaStack(vanillaStack)
     if not vanillaStack then return nil end
+    return self:findStackByItem(vanillaStack.items[1])
+end
 
-    local item = vanillaStack.items[1]
+function ItemContainerGrid:findStackByItem(item)
     if not item then return nil end
     
     for _, grid in ipairs(self.grids) do

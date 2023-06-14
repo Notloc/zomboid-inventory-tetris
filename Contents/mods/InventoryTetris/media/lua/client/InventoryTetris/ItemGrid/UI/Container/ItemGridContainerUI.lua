@@ -374,7 +374,8 @@ function ItemGridContainerUI:prerender()
     end
 
     local infoWidth = (ICON_SIZE + ICON_PADDING_X * 2) * OPT.CONTAINER_INFO_SCALE
-    self:setWidth(self.gridRenderer:getWidth() + infoWidth+2 + self.overflowRenderer:getWidth())
+    local overflowPadding = #self.containerGrid.overflow > 0 and 8 or 0
+    self:setWidth(self.gridRenderer:getWidth() + infoWidth+2 + self.overflowRenderer:getWidth() + overflowPadding)
 
     if self.showTitle then
         local invName = ""

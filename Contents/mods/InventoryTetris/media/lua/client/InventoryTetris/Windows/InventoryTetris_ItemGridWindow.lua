@@ -169,6 +169,10 @@ end
 
 function ItemGridWindow:prerender()
     local titleBarHeight = self:titleBarHeight()
+    
+    self:setWidth(self.gridContainerUi:getWidth())
+    self:setHeight(self.gridContainerUi:getHeight() + 10 + titleBarHeight)
+
     local height = self:getHeight();
     if self.isCollapsed then
         height = titleBarHeight;

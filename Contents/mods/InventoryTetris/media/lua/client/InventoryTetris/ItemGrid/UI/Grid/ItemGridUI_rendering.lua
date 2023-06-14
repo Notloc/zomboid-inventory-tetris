@@ -57,11 +57,13 @@ local colorsByCategory = {
     [TetrisItemCategory.KEY] = {0.5, 0.5, 0.5},
     [TetrisItemCategory.MISC] = {0.5, 0.5, 0.5},
     [TetrisItemCategory.SEED] = {0.5, 0.5, 0.5},
+    [TetrisItemCategory.MOVEABLE] = {0.7, 0.7, 0.7},
 }
+
+ItemGridUI.GENERIC_ACTION_COLOR = {0, 0.7, 1}
 
 local containerItemHoverColor = {1, 1, 0}
 local invalidItemHoverColor = {1, 0, 0}
-local actionItemHoverColor = {0, 0.7, 1}
 
 local function unpackColors(cols, brightness)
     if not brightness then
@@ -91,13 +93,14 @@ local function getBackgroundColorByCategory(category)
     end
 end
 
-local function determineContainerHoverColor(draggedStack, hoveredStack, dragInv, hoverInv)
+local function determineContainerHoverColor(draggedStack, hoveredStack, dragInv, hoverInv, playerNum)
     local draggedItem = ItemStack.getFrontItem(draggedStack, dragInv)
     local containerItem = ItemStack.getFrontItem(hoveredStack, hoverInv)
 
     if draggedItem and containerItem and containerItem:IsInventoryContainer() then
-        local gridContainer = ItemContainerGrid.CreateTemp(containerItem:getInventory(), self.playerNum)
-        if gridContainer:canAddItem(draggedItem) and container:hasRoomFor(getSpecificPlayer(self.playerNum), draggedItem) then
+        local container = containerItem:getInventory()
+        local gridContainer = ItemContainerGrid.CreateTemp(container, playerNum)
+        if gridContainer:canAddItem(draggedItem) and container:hasRoomFor(getSpecificPlayer(playerNum), draggedItem) then
             return unpack(containerItemHoverColor)
         end
     end
@@ -107,17 +110,20 @@ end
 
 -- Drag category -> hover category -> color
 local StackHoverColorsByCategories = {
-    [TetrisItemCategory.AMMO] = {
-        [TetrisItemCategory.MAGAZINE] = actionItemHoverColor,
-    },
     ["any"] = {
         [TetrisItemCategory.CONTAINER] = determineContainerHoverColor
     }
 }
 
+function ItemGridUI.registerItemHoverColor(dragCategory, hoverCategory, color)
+    if not StackHoverColorsByCategories[dragCategory] then
+        StackHoverColorsByCategories[dragCategory] = {}
+    end
 
+    StackHoverColorsByCategories[dragCategory][hoverCategory] = color
+end
 
-function ItemGridUI.getColorForStackHover(draggedStack, hoveredStack, dragInv, hoverInv)
+function ItemGridUI:getColorForStackHover(draggedStack, hoveredStack, dragInv, hoverInv)
     local colorProvider = nil
     
     if StackHoverColorsByCategories[draggedStack.category] then
@@ -137,10 +143,10 @@ function ItemGridUI.getColorForStackHover(draggedStack, hoveredStack, dragInv, h
     end
 
     if type(colorProvider) == "function" then
-        return colorProvider(draggedStack, hoveredStack, dragInv, hoverInv)
+        return colorProvider(draggedStack, hoveredStack, dragInv, hoverInv, self.playerNum)
+    else
+        return unpackColors(colorProvider)
     end
-
-    return unpackColors(colorProvider)
 end
 
 function ItemGridUI:onApplyScale(scale)
@@ -237,16 +243,15 @@ function updateItem(item)
 end
 
 function ItemGridUI:renderGridItems(searchSession)
-    local draggedItem = DragAndDrop.getDraggedItem()
     local inventory = self.grid.inventory
     local stacks = self.grid:getStacks()
-
     self:renderStackLoop(inventory, stacks, 1, searchSession)
 end
 
 function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local CELL_SIZE = OPT.CELL_SIZE
     local gravityEnabled = SandboxVars.InventoryTetris.EnableGravity
+    local draggedItem = DragAndDrop.getDraggedItem()
 
     local count = #stacks
     for i=count,1,-1 do
@@ -287,7 +292,9 @@ function ItemGridUI:renderDragItemPreview()
     end
 
     local hoveredStack = self:findGridStackUnderMouse()
-    if not hoveredStack then 
+    local hoveredItem = hoveredStack and ItemStack.getFrontItem(hoveredStack, self.grid.inventory) or nil
+
+    if not hoveredStack or hoveredItem == item then 
         local x = self:getMouseX()
         local y = self:getMouseY()
         local isRotated = DragAndDrop.isDraggedItemRotated()
@@ -299,7 +306,11 @@ function ItemGridUI:renderDragItemPreview()
         local yPos = y + halfCell - itemH * halfCell
 
         local gridX, gridY = ItemGridUiUtil.mousePositionToGridPosition(xPos, yPos)
-        local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated) and self.containerUi.containerGrid:canAddItem(item) and self.grid.inventory:hasRoomFor(getSpecificPlayer(0), item)
+        
+        local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated)
+        canPlace = canPlace and self.containerUi.containerGrid:isItemAllowed(item) 
+        canPlace = canPlace and (self.grid.inventory == item:getContainer() or self.grid.inventory:hasRoomFor(getSpecificPlayer(0), item))
+        
         if canPlace then
             self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 0, 1, 0)
         else
@@ -309,10 +320,10 @@ function ItemGridUI:renderDragItemPreview()
     end
     
     local otherContainerGrid = ItemContainerGrid.Create(item:getContainer(), self.playerNum)
-    local draggedStack = otherContainerGrid:findGridStackByVanillaStack(DragAndDrop.getDraggedStack())
+    local draggedStack = otherContainerGrid:findGridStackByVanillaStack(DragAndDrop.getDraggedStack()) or ItemStack.createTempStack(item)
 
     local w, h = TetrisItemData.getItemSize(ItemStack.getFrontItem(hoveredStack, self.grid.inventory), hoveredStack.isRotated)
-    self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, ItemGridUI.getColorForStackHover(draggedStack, hoveredStack, otherContainerGrid.inventory, self.grid.inventory))    
+    self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, self:getColorForStackHover(draggedStack, hoveredStack, otherContainerGrid.inventory, self.grid.inventory))    
 end
 
 function ItemGridUI:_renderPlacementPreview(gridX, gridY, itemW, itemH, r, g, b)
@@ -345,27 +356,100 @@ end
 function ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, alphaMult, force1x1, isBuried)
     ItemGridUI._renderGridItem(drawingContext, item, stack.category, x, y, stack.isRotated, alphaMult, force1x1, isBuried)
     if stack.count > 1 then
-        -- Draw the item count
-        local font = UIFont.Small
         local text = tostring(stack.count)
-        drawingContext:drawText(text, x+3, y-1, 0, 0, 0, alphaMult, font)
-        drawingContext:drawText(text, x+2, y-2, 1, 1, 1, alphaMult, font)
-    elseif item:getMaxAmmo() > 0 then
-        -- Draw the ammo count
-        local font = UIFont.Small
-        local text = tostring(item:getCurrentAmmoCount())
-
-        local w,h = 1,1
-        if not force1x1 then
-            w,h = TetrisItemData.getItemSize(item, stack.isRotated)
-        end
-
-        x = x + OPT.CELL_SIZE*w - w - 5
-        y = y + OPT.CELL_SIZE*h - h - ItemGridUI.lineHeight
-
-        drawingContext:drawTextRight(text, x+3, y-1, 0, 0, 0, alphaMult, font)
-        drawingContext:drawTextRight(text, x+2, y-2, 1, 1, 1, alphaMult, font)
+        ItemGridUI._drawTextOnTopLeft(drawingContext, text, item, x, y, stack.isRotated, alphaMult, force1x1)
     end
+    
+    if item:getMaxAmmo() > 0 then
+        local text = tostring(item:getCurrentAmmoCount())
+        ItemGridUI._drawTextOnBottomRight(drawingContext, text, item, x, y, stack.isRotated, alphaMult, force1x1)
+    elseif item:IsFood() then
+        local percent = item:getHungerChange() / item:getBaseHunger()
+        if percent < 1.0 then
+            ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, stack.isRotated, alphaMult, force1x1)
+        end
+    elseif item:IsDrainable() then
+        local percent = item:getDelta()
+        if percent < 1.0 then
+            ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, stack.isRotated, alphaMult, force1x1)
+        end
+    end
+end
+
+function ItemGridUI._drawTextOnBottomRight(drawingContext, text, item, x, y, isRotated, alphaMult, force1x1)
+    local font = UIFont.Small
+
+    local w,h = 1,1
+    if not force1x1 then
+        w,h = TetrisItemData.getItemSize(item, isRotated)
+    end
+
+    x = x + OPT.CELL_SIZE*w - w - 2
+    y = y + OPT.CELL_SIZE*h - h - ItemGridUI.lineHeight - 1
+
+    drawingContext:drawTextRight(text, x+1, y+1, 0, 0, 0, alphaMult, font)
+    drawingContext:drawTextRight(text, x, y, 1, 1, 1, alphaMult, font)
+end
+
+function ItemGridUI._drawTextOnTopLeft(drawingContext, text, item, x, y, isRotated, alphaMult, force1x1)
+    local font = UIFont.Small
+
+    local w,h = 1,1
+    if not force1x1 then
+        w,h = TetrisItemData.getItemSize(item, isRotated)
+    end
+
+    x = x + 2
+    y = y - 1
+
+    drawingContext:drawText(text, x+1, y+1, 0, 0, 0, alphaMult, font)
+    drawingContext:drawText(text, x, y, 1, 1, 1, alphaMult, font)
+end
+
+local function lerp(value, a, b)
+    if value < 0 then value = 0; end
+    if value > 1 then value = 1; end
+
+    local diff = b - a;
+    return a + (diff * value);
+end
+
+local function lerpColorsARGB(value, col1, col2)
+    return 
+        lerp(value, col1.a, col2.a),
+        lerp(value, col1.r, col2.r),
+        lerp(value, col1.g, col2.g),
+        lerp(value, col1.b, col2.b)
+end
+
+local function triLerpColors(value, col1, col2, col3)
+    if value <= 0.5 then
+        return lerpColorsARGB(value * 2, col1, col2);
+    else
+        return lerpColorsARGB((value - 0.5) * 2, col2, col3);
+    end
+end
+
+
+local fullCol = {r=0, g=1,b=1,a=1}
+local halfCol = {r=1,g=1,b=0,a=1}
+local emptyCol = {r=1,g=0,b=0,a=1}
+function ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, isRotated, alphaMult, force1x1)
+    local font = UIFont.Small
+
+    local w,h = 1,1
+    if not force1x1 then
+        w,h = TetrisItemData.getItemSize(item, isRotated)
+    end
+
+    x = x + OPT.CELL_SIZE*w - w - 3
+    local top = y + 1
+    local bottom = y + OPT.CELL_SIZE*h - h+1
+    local missing = (bottom - top) * (1.0 - percent)
+
+    local a,r,g,b = triLerpColors(percent, emptyCol, halfCol, fullCol)
+    drawingContext:drawRect(x, top, 3, bottom - top - 1, alphaMult,0.1,0.1,0.1)
+    drawingContext:drawRect(x, top + missing, 2, bottom - top - missing, alphaMult*a,r,g,b)
 end
 
 function ItemGridUI._renderGridItem(drawingContext, item, category, x, y, rotate, alphaMult, force1x1, isBuried)

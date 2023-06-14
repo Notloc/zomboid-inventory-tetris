@@ -112,7 +112,7 @@ function ItemGrid:moveStack(stack, x, y, isRotated)
     local item = ItemStack.getFrontItem(stack, self.inventory)
     
     local w, h = TetrisItemData.getItemSize(item, isRotated)
-    if not self:_isAreaFree(x, y, w, h, stack) then
+    if not self:_isAreaFree(x, y, w, h, {[stack] = true}) then
         return false
     end
     
@@ -196,7 +196,7 @@ function ItemGrid:_removeStack(stack)
     end
 end
 
-function ItemGrid:_isAreaFree(xPos, yPos, w, h, ignoreStack)
+function ItemGrid:_isAreaFree(xPos, yPos, w, h, ignoreStacks)
     if not self:_isInBounds(xPos, yPos) or not self:_isInBounds(xPos+w-1, yPos+h-1) then
         return false
     end
@@ -204,7 +204,7 @@ function ItemGrid:_isAreaFree(xPos, yPos, w, h, ignoreStack)
     for x=xPos,xPos+w-1 do
         for y=yPos,yPos+h-1 do
             local stack = self.stackMap[x][y]
-            if stack and stack ~= ignoreStack then
+            if stack and (not ignoreStacks or not ignoreStacks[stack]) then
                 return false
             end
         end
@@ -245,10 +245,21 @@ function ItemGrid:canAddItem(item, isRotated)
 end
 
 function ItemGrid:doesItemFit(item, xPos, yPos, isRotated)
-    local stack = self:findStackByItem(item)
+    local ignoreStack = {[self:findStackByItem(item)] = true}
 
     local w, h = TetrisItemData.getItemSize(item, isRotated)
-    return self:_isAreaFree(xPos, yPos, w, h, stack)
+    return self:_isAreaFree(xPos, yPos, w, h, ignoreStack)
+end
+
+function ItemGrid:doesItemFitAnywhere(item, w, h, ignoreStacks)
+    for x=0,self.width-w do
+        for y=0,self.height-h do
+            if self:_isAreaFree(x, y, w, h, ignoreStacks) then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 function ItemGrid:canItemBeStacked(item, xPos, yPos)
@@ -463,15 +474,18 @@ end
 
 function ItemGrid:physicsUpdate()
     local processedStacks = {}
+    local ignoreMap = {}
 
     for y=self.height-2, 0, -1 do -- Skip the bottom row because it can't fall
         for x=0, self.width - 1 do
             local stack = self:getStackInternal(x, y)
+            ignoreMap[stack] = true
+
             if stack and not processedStacks[stack] then
                 local item = ItemStack.getFrontItem(stack, self.inventory)
                 if item then
                     local w, h = TetrisItemData.getItemSize(item, stack.isRotated)                    
-                    local canFall = self:_isAreaFree(stack.x, stack.y+1, w, h, stack)
+                    local canFall = self:_isAreaFree(stack.x, stack.y+1, w, h, ignoreMap)
                     if canFall then
                         self:_physicsFallPreValidated(stack, w, h)
                         self:_sendModData()
@@ -479,6 +493,8 @@ function ItemGrid:physicsUpdate()
                     processedStacks[stack] = true
                 end
             end
+
+            ignoreMap[stack] = nil
         end
     end
 end
@@ -712,7 +728,7 @@ end
 
 function ItemGrid:resetGridData()
     self:_getSavedContainerData()[self.gridIndex] = {}
-    self.persistentData = self:_getSavedGridData()
+    self:refresh()
 end
 
 function ItemGrid:_getSavedGridData()
