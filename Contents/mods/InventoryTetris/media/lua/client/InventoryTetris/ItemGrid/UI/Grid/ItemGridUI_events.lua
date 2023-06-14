@@ -160,7 +160,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
         end
 
         local x, y = ItemGridUiUtil.findGridPositionOfMouse(self, vanillaStack.items[1], DragAndDrop.isDraggedItemRotated())
-        if isSameInventory then
+        if isSameInventory and not vanillaStack.items[1]:isEquipped() then
             if isStackSplitDown() then
                 self:openSplitStack(vanillaStack, x, y)
             else
@@ -170,7 +170,9 @@ function ItemGridUI:handleDragAndDrop(x, y)
                     for i=2, #vanillaStack.items do
                         local item = vanillaStack.items[i]
                         if self.grid:insertItem(item, x, y, DragAndDrop.isDraggedItemRotated()) then
-                            otherGrid:removeItem(item)
+                            if otherGrid then 
+                                otherGrid:removeItem(item) 
+                            end
                         end
                     end
                 end

@@ -179,17 +179,21 @@ Events.OnGameBoot.Add(function()
             return -- in the main menu
         end
 
-        local item = nil
+        if self.parent:isMouseOverEquipmentUi() then
+            return self.parent.equipmentUi:updateTooltip()
+        else
+            local item = nil
 
-        if not self.doController and not self.dragging and not self.draggingMarquis then
-            local containerGrid = self:findContainerGridUiUnderMouse()
-            if containerGrid then
-                local stack = containerGrid:findGridStackUnderMouse()
-                item = stack and ItemStack.getFrontItem(stack, containerGrid.inventory) or nil
+            if not self.doController and not self.dragging and not self.draggingMarquis then
+                local containerGrid = self:findContainerGridUiUnderMouse()
+                if containerGrid then
+                    local stack = containerGrid:findGridStackUnderMouse()
+                    item = stack and ItemStack.getFrontItem(stack, containerGrid.inventory) or nil
+                end
             end
-        end
 
-        self:doTooltipForItem(item)
+            self:doTooltipForItem(item)
+        end
     end
 
     function ISInventoryPane:doTooltipForItem(item)

@@ -119,7 +119,7 @@ function GridAutoDropSystem._processQueues()
         for item, _ in pairs(itemMap) do
             table.insert(itemsToDrop, item)
         end
-        print("Processing drop queue, " .. #itemsToDrop .. " items to drop")
+        --print("Processing drop queue, " .. #itemsToDrop .. " items to drop")
         GridAutoDropSystem._processItems(playerNum, itemsToDrop)
         GridAutoDropSystem._dropQueues[playerNum] = nil
     end
