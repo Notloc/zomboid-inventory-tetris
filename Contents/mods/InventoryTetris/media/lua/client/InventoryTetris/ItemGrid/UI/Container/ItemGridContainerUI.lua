@@ -226,6 +226,9 @@ function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale)
     for _, gridUi in ipairs(_gridUis) do
         table.insert(gridUis, gridUi)
     end
+    table.sort(gridUis, function(a,b)
+        return a.grid.gridDefinition.position.x < b.grid.gridDefinition.position.x
+    end)
 
     -- Map by y
     local gridUisByY = {}
