@@ -151,6 +151,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
         local container = self:getValidContainerFromStack(stackUnderMouse)
         if not isSameStack and container then
             self:handleDropOnContainer(playerObj, vanillaStack, container)
+            return
         end
 
         if stackUnderMouse and not isSameStack then
@@ -192,6 +193,13 @@ function ItemGridUI:canPutIn(item)
 end
 
 function ItemGridUI:handleDropOnContainer(playerObj, vanillaStack, container)
+    local containerItem = container:getContainingItem()
+    if containerItem then
+        if not self.grid.isOnPlayer and self.grid.inventory:getType() ~= "floor" then
+            return -- Prevent MP duping
+        end
+    end 
+
     local frontItem = vanillaStack.items[1]
     if not TetrisContainerData.validateInsert(container, frontItem) then
         return
