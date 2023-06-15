@@ -77,6 +77,14 @@ function TetrisWindowManager:findWindowByInventory(childWindows, inventory)
 end
 
 function TetrisWindowManager:openContainerPopup(item, playerNum, invPane)
+    if not item or not item:getContainer() then return end
+    
+    local player = getSpecificPlayer(playerNum)
+    local outerContainer = item:getOutermostContainer()
+    if outerContainer ~= player:getInventory() then
+        return
+    end
+
     local itemGridWindow = ItemGridWindow:new(getMouseX(), getMouseY(), item:getInventory(), invPane, playerNum)
     itemGridWindow:initialise()
     itemGridWindow:addToUIManager()

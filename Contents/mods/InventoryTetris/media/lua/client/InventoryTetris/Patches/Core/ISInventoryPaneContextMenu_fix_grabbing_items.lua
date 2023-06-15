@@ -38,7 +38,7 @@ ISInventoryPaneContextMenu.onGrabHalfItems = function(stacks, playerNum)
 end
 
 local ogOnGrabOneItems = ISInventoryPaneContextMenu.onGrabOneItems
-ISInventoryPaneContextMenu.onGrabOneItems = function(stacks, player)
+ISInventoryPaneContextMenu.onGrabOneItems = function(stacks, playerNum)
     local items = ISInventoryPane.getActualItems(stacks)
     quickMoveItems({items[1]}, playerNum)
     ogOnGrabOneItems(stacks, playerNum)
