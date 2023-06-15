@@ -338,8 +338,11 @@ function ItemGridUI:_renderPlacementPreview(gridX, gridY, itemW, itemH, r, g, b)
 end
 
 function ItemGridUI.getItemColor(item, limit)
-    if not item or not item:allowRandomTint() then
+    if not item then
         return 1,1,1
+    end
+    if not item:allowRandomTint() then
+        return item:getR(), item:getG(), item:getB()
     end
 
     local colorInfo = item:getColorInfo()
