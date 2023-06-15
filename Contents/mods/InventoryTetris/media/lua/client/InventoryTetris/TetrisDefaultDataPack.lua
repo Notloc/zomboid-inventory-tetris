@@ -350,11 +350,6 @@ local itemPack = {
         ["width"] = 2,
         ["maxStackSize"] = 4,
     },
-    ["Radio.RadioBlack"] = {
-        ["height"] = 1,
-        ["width"] = 2,
-        ["maxStackSize"] = 2,
-    },
     ["Base.BucketEmpty"] = {
         ["height"] = 2,
         ["width"] = 2,
@@ -364,11 +359,6 @@ local itemPack = {
         ["height"] = 4,
         ["width"] = 1,
         ["maxStackSize"] = 1,
-    },
-    ["Base.Cigarettes"] = {
-        ["width"] = 1,
-        ["height"] = 1,
-        ["maxStackSize"] = 50,
     },
     ["Radio.RadioRed"] = {
         ["width"] = 2,
@@ -836,11 +826,6 @@ local itemPack = {
         ["maxStackSize"] = 1,
     },
     ["Base.PetrolBleachBottle"] = {
-        ["height"] = 2,
-        ["width"] = 1,
-        ["maxStackSize"] = 1,
-    },
-    ["Base.Drumstick"] = {
         ["height"] = 2,
         ["width"] = 1,
         ["maxStackSize"] = 1,
@@ -1506,9 +1491,9 @@ local itemPack = {
         ["maxStackSize"] = 2,
     },
     ["Base.SmallSheetMetal"] = {
-        ["height"] = 2,
-        ["width"] = 2,
-        ["maxStackSize"] = 3,
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
     },
     ["Base.Screws"] = {
         ["height"] = 1,
@@ -1805,16 +1790,6 @@ local itemPack = {
         ["width"] = 3,
         ["maxStackSize"] = 1,
     },
-    ["Base.Bag_FannyPackFront"] = {
-        ["height"] = 1,
-        ["width"] = 2,
-        ["maxStackSize"] = 1,
-    },
-    ["Base.Bag_FannyPackBack"] = {
-        ["height"] = 1,
-        ["width"] = 2,
-        ["maxStackSize"] = 1,
-    },
     ["Base.FirstAidKit"] = {
         ["height"] = 2,
         ["width"] = 2,
@@ -1829,6 +1804,26 @@ local itemPack = {
         ["height"] = 1,
         ["width"] = 2,
         ["maxStackSize"] = 1,
+    },
+    ["Base.Drumstick"] = {
+        ["height"] = 2,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.Bag_FannyPackFront"] = {
+        ["height"] = 1,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.Bag_FannyPackBack"] = {
+        ["height"] = 1,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.SheetMetal"] = {
+        ["height"] = 1,
+        ["width"] = 2,
+        ["maxStackSize"] = 3,
     },
 }
 
@@ -1924,34 +1919,6 @@ local containerPack = {
                 ["size"] = {
                     ["width"] = 3,
                     ["height"] = 5,
-                },
-                ["position"] = {
-                    ["x"] = 0,
-                    ["y"] = 0,
-                },
-            },
-        },
-    },
-    ["Bag_FannyPackFront_1"] = {
-        ["gridDefinitions"] = {
-            [1] = {
-                ["size"] = {
-                    ["width"] = 3,
-                    ["height"] = 3,
-                },
-                ["position"] = {
-                    ["x"] = 0,
-                    ["y"] = 0,
-                },
-            },
-        },
-    },
-    ["Bag_FannyPackBack_1"] = {
-        ["gridDefinitions"] = {
-            [1] = {
-                ["size"] = {
-                    ["width"] = 3,
-                    ["height"] = 2,
                 },
                 ["position"] = {
                     ["x"] = 0,
@@ -3502,6 +3469,34 @@ local containerPack = {
             [24] = "MISC",
             [25] = "ENTERTAINMENT",
             [26] = "FOOD",
+        },
+    },
+    ["Bag_FannyPackBack_1"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+    },
+    ["Bag_FannyPackFront_1"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
         },
     },
 }

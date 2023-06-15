@@ -64,6 +64,7 @@ ItemGridUI.GENERIC_ACTION_COLOR = {0, 0.7, 1}
 
 local containerItemHoverColor = {1, 1, 0}
 local invalidItemHoverColor = {1, 0, 0}
+local stackableColor = {0.4, 0.6, 0.6}
 
 local function unpackColors(cols, brightness)
     if not brightness then
@@ -125,7 +126,7 @@ end
 
 function ItemGridUI:getColorForStackHover(draggedStack, hoveredStack, dragInv, hoverInv)
     local colorProvider = nil
-    
+
     if StackHoverColorsByCategories[draggedStack.category] then
         if StackHoverColorsByCategories[draggedStack.category][hoveredStack.category] then
             colorProvider = StackHoverColorsByCategories[draggedStack.category][hoveredStack.category]
@@ -319,10 +320,16 @@ function ItemGridUI:renderDragItemPreview()
         return
     end
     
+    local w, h = TetrisItemData.getItemSize(ItemStack.getFrontItem(hoveredStack, self.grid.inventory), hoveredStack.isRotated)
+    
+    if ItemStack.canAddItem(hoveredStack, item) then
+        self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, unpackColors(stackableColor))
+        return
+    end
+
     local otherContainerGrid = ItemContainerGrid.Create(item:getContainer(), self.playerNum)
     local draggedStack = otherContainerGrid:findGridStackByVanillaStack(DragAndDrop.getDraggedStack()) or ItemStack.createTempStack(item)
 
-    local w, h = TetrisItemData.getItemSize(ItemStack.getFrontItem(hoveredStack, self.grid.inventory), hoveredStack.isRotated)
     self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, self:getColorForStackHover(draggedStack, hoveredStack, otherContainerGrid.inventory, self.grid.inventory))    
 end
 
