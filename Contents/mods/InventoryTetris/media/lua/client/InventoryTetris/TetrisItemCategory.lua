@@ -39,13 +39,11 @@ TetrisItemCategory.getCategory = function(item)
             return TetrisItemCategory.MELEE
         end
 
-    elseif category == "Ammo" then
-        local maxAmmoCount = item:getMaxAmmo()
-        if maxAmmoCount > 0 then
+    elseif item:getMaxAmmo() > 0 then
             return TetrisItemCategory.MAGAZINE
-        else
-            return TetrisItemCategory.AMMO
-        end
+    
+    elseif category == "Ammo" then
+        return TetrisItemCategory.AMMO
 
     elseif category == "Clothing" then
         return TetrisItemCategory.CLOTHING
