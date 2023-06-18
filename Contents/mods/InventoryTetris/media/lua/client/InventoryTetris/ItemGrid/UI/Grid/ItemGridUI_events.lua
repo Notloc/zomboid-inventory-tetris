@@ -105,7 +105,7 @@ function ItemGridUI:onRightMouseUp(x, y, gridStack)
 		self.inventoryPane.toolRender:setVisible(false)
 	end
     
-    local menu = ItemGridUI.openStackContextMenu(self, x, y, gridStack, self.grid.inventory, self.playerNum)
+    local menu = ItemGridUI.openStackContextMenu(self, x, y, gridStack, self.grid.inventory, self.inventoryPane, self.playerNum)
     return true;
 end
 
@@ -251,7 +251,7 @@ function ItemGridUI:handleDragAndDropTransfer(playerObj, gridX, gridY, targetSta
 end
 
 function ItemGridUI:openSplitStack(vanillaStack, targetX, targetY)
-    if not vanillaStack or vanillaStack.count < 2 then return end
+    if not vanillaStack or vanillaStack.count < 3 then return end
 
     local dragInventory = vanillaStack.items[1]:getContainer()
     local isSameInventory = self.grid.inventory == dragInventory
@@ -271,9 +271,9 @@ function ItemGridUI:openSplitStack(vanillaStack, targetX, targetY)
     if vanillaStack.count <= 3 then
         window:onOK()
     end
-
-
 end
+
+
 
 function ItemGridUI:handleClick(x, y, gridStack)
     DragAndDrop.endDrag()
@@ -467,10 +467,10 @@ end
 Events.OnKeyStartPressed.Add(rotateDraggedItem)
 Events.OnKeyStartPressed.Add(debugOpenEquipmentWindow)
 
-function ItemGridUI.openItemContextMenu(uiContext, x, y, item, playerNum)
+function ItemGridUI.openItemContextMenu(uiContext, x, y, item, inventoryPane, playerNum)
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
-    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItem(item), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
+    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItem(item, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
     --+self:getYScroll());
     if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
         menu.origin = self.inventoryPage
@@ -480,14 +480,14 @@ function ItemGridUI.openItemContextMenu(uiContext, x, y, item, playerNum)
     return menu
 end
 
-function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, playerNum)
+function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, inventoryPane, playerNum)
     local item = ItemStack.getFrontItem(gridStack, inventory)
     if not item then return end
     
     local items = ItemStack.getAllItems(gridStack, inventory)
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
-    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItems(items), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
+    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItems(items, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
     --+self:getYScroll());
     if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
         menu.origin = self.inventoryPage

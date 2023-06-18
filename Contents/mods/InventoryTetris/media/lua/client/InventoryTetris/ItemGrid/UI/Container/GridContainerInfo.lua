@@ -150,7 +150,7 @@ end
 
 function GridContainerInfo:onRightMouseUp(x, y)
     if self.containerUi.item and isPointOverContainerIcon(x, y) then
-        local menu = ItemGridUI.openItemContextMenu(self, x, y, self.containerUi.item, self.containerUi.playerNum)
+        local menu = ItemGridUI.openItemContextMenu(self, x, y, self.containerUi.item, self.containerUi.inventoryPane, self.containerUi.playerNum)
         TetrisDevTool.insertContainerDebugOptions(menu, self.containerUi)
     else
         local menu = ISContextMenu.get(0, getMouseX(), getMouseY());

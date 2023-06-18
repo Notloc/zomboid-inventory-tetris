@@ -77,36 +77,35 @@ ItemStack.getAllItems = function(stack, inventory)
     return items
 end
 
-ItemStack.convertToVanillaStacks = function(stack, inventory)
+ItemStack.convertToVanillaStacks = function(stack, inventory, inventoryPane)
+    local items = ItemStack.getAllItems(stack, inventory)
+    local vanillaStacks = ItemStack.createVanillaStacksFromItems(items, inventoryPane)
+    vanillaStacks[1].isRotated = stack.isRotated
+    return vanillaStacks
+end
+
+ItemStack.createVanillaStacksFromItem = function(item, inventoryPane)
+    return ItemStack.createVanillaStacksFromItems({item}, inventoryPane)
+end
+
+ItemStack.createVanillaStacksFromItems = function(items, inventoryPane)
     local vanillaStack = {}
     vanillaStack.items = {}
-    vanillaStack.count = stack.count
-    vanillaStack.isRotated = stack.isRotated
+    vanillaStack.invPanel = inventoryPane
 
-    if stack.count == 0 then return vanillaStack end
-
-    table.insert(vanillaStack.items, ItemStack.getFrontItem(stack, inventory))
-    for itemId, _ in pairs(stack.itemIDs) do
-        local item = inventory:getItemById(itemId)
-        table.insert(vanillaStack.items, item)
-        table.insert(vanillaStack, item)
+    if items[1] then
+        vanillaStack.name = items[1]:getName()
+        vanillaStack.cat = items[1]:getDisplayCategory() or items[1]:getCategory();
     end
 
-    return {vanillaStack}
-end
-
-ItemStack.createVanillaStacksFromItem = function(item)
-    return ItemStack.createVanillaStacksFromItems({item})
-end
-
-ItemStack.createVanillaStacksFromItems = function(items)
-    local vanillaStack = {}
-    vanillaStack.items = {}
-
+    local weight = 0
     table.insert(vanillaStack.items, items[1])
     for _, item in ipairs(items) do
         table.insert(vanillaStack.items, item)
+        weight = weight + item:getUnequippedWeight()
     end
+    vanillaStack.weight = weight
+    vanillaStack.count = #items
 
     return {vanillaStack}
 end
