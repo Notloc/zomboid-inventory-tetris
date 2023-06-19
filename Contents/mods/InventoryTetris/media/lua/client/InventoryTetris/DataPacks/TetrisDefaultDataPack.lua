@@ -1,7 +1,7 @@
 require "InventoryTetris/TetrisItemData"
 require "InventoryTetris/TetrisContainerData"
 
--- All packs except these defaults should be registered in the OnGameBoot event.
+-- All packs except this default should be registered in the OnGameBoot event.
 -- I go first so that you can overwrite my defaults with your own.
 
 local itemPack = {
@@ -243,7 +243,7 @@ local itemPack = {
     ["Base.WineEmpty"] = {
         ["height"] = 2,
         ["width"] = 1,
-        ["maxStackSize"] = 3,
+        ["maxStackSize"] = 1,
     },
     ["Base.Broom"] = {
         ["height"] = 4,
@@ -351,9 +351,9 @@ local itemPack = {
         ["maxStackSize"] = 4,
     },
     ["Base.BucketEmpty"] = {
-        ["height"] = 2,
+        ["height"] = 3,
         ["width"] = 2,
-        ["maxStackSize"] = 2,
+        ["maxStackSize"] = 5,
     },
     ["Base.Katana"] = {
         ["height"] = 4,
@@ -696,99 +696,99 @@ local itemPack = {
         ["maxStackSize"] = 1,
     },
     ["Base.PaintBlack"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.WaterPaintbucket"] = {
-        ["height"] = 3,
-        ["width"] = 3,
-        ["maxStackSize"] = 2,
+        ["height"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
     },
     ["Base.PaintBrown"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintCyan"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintBlue"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintPurple"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintPink"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintWhite"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintLightBlue"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintGrey"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintTurquoise"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintRed"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintGreen"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintOrange"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintLightBrown"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.PaintYellow"] = {
-        ["height"] = 3,
-        ["width"] = 3,
+        ["height"] = 2,
+        ["width"] = 2,
         ["maxStackSize"] = 1,
     },
     ["Base.BucketConcreteFull"] = {
         ["height"] = 3,
-        ["width"] = 3,
-        ["maxStackSize"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
     },
     ["Base.BucketWaterFull"] = {
         ["height"] = 3,
-        ["width"] = 3,
-        ["maxStackSize"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
     },
     ["Base.BucketPlasterFull"] = {
         ["height"] = 3,
-        ["width"] = 3,
-        ["maxStackSize"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
     },
     ["Base.WaterBowl"] = {
         ["height"] = 1,
@@ -804,11 +804,6 @@ local itemPack = {
         ["height"] = 2,
         ["width"] = 1,
         ["maxStackSize"] = 1,
-    },
-    ["Base.WaterBottleEmpty"] = {
-        ["height"] = 2,
-        ["width"] = 1,
-        ["maxStackSize"] = 3,
     },
     ["Base.BeerWaterFull"] = {
         ["height"] = 2,
@@ -993,7 +988,7 @@ local itemPack = {
     ["Base.SpearCrafted"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.Flute"] = {
         ["height"] = 1,
@@ -1001,7 +996,7 @@ local itemPack = {
         ["maxStackSize"] = 1,
     },
     ["Base.Football2"] = {
-        ["height"] = 1,
+        ["height"] = 2,
         ["width"] = 2,
         ["maxStackSize"] = 1,
     },
@@ -1203,67 +1198,67 @@ local itemPack = {
     ["Base.SpearHuntingKnife"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearBreadKnife"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearScalpel"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearScissors"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearButterKnife"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearFork"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearIcePick"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearHandFork"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearKnife"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearScrewdriver"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearSpoon"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearLetterOpener"] = {
         ["height"] = 5,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.SpearMachete"] = {
         ["height"] = 6,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 4,
     },
     ["Base.PickAxeHandleSpiked"] = {
         ["height"] = 4,
@@ -1288,7 +1283,7 @@ local itemPack = {
     ["Base.WoodenLance"] = {
         ["height"] = 4,
         ["width"] = 1,
-        ["maxStackSize"] = 1,
+        ["maxStackSize"] = 5,
     },
     ["Radio.RadioMakeShift"] = {
         ["height"] = 1,
@@ -1358,7 +1353,7 @@ local itemPack = {
     ["Base.ChessWhite"] = {
         ["height"] = 1,
         ["width"] = 1,
-        ["maxStackSize"] = 8,
+        ["maxStackSize"] = 16,
     },
     ["Base.OldTire1"] = {
         ["height"] = 5,
@@ -1489,11 +1484,6 @@ local itemPack = {
         ["height"] = 2,
         ["width"] = 2,
         ["maxStackSize"] = 2,
-    },
-    ["Base.SmallSheetMetal"] = {
-        ["height"] = 1,
-        ["width"] = 1,
-        ["maxStackSize"] = 5,
     },
     ["Base.Screws"] = {
         ["height"] = 1,
@@ -1688,7 +1678,7 @@ local itemPack = {
     ["Base.GolfBall"] = {
         ["height"] = 1,
         ["width"] = 1,
-        ["maxStackSize"] = 5,
+        ["maxStackSize"] = 2,
     },
     ["Base.FurbertSquirrel"] = {
         ["height"] = 2,
@@ -1731,7 +1721,7 @@ local itemPack = {
         ["maxStackSize"] = 1,
     },
     ["Base.Football"] = {
-        ["height"] = 1,
+        ["height"] = 2,
         ["width"] = 2,
         ["maxStackSize"] = 1,
     },
@@ -1741,9 +1731,9 @@ local itemPack = {
         ["maxStackSize"] = 1,
     },
     ["Base.PaintbucketEmpty"] = {
-        ["height"] = 3,
-        ["width"] = 3,
-        ["maxStackSize"] = 2,
+        ["height"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
     },
     ["Base.SpiffoBig"] = {
         ["height"] = 4,
@@ -1825,6 +1815,146 @@ local itemPack = {
         ["width"] = 2,
         ["maxStackSize"] = 3,
     },
+    ["Base.SmallSheetMetal"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
+    },
+    ["Base.SoccerBall"] = {
+        ["height"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.GunPowder"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
+    },
+    ["Base.PetrolPopBottle"] = {
+        ["height"] = 2,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.WaterBottleEmpty"] = {
+        ["height"] = 2,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
+    },
+    ["Base.PopBottleEmpty"] = {
+        ["height"] = 2,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
+    },
+    ["Base.BleachEmpty"] = {
+        ["height"] = 2,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
+    },
+    ["Base.WineEmpty2"] = {
+        ["height"] = 2,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.WaterPopBottle"] = {
+        ["height"] = 2,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["farming.WateredCan"] = {
+        ["height"] = 2,
+        ["width"] = 3,
+        ["maxStackSize"] = 1,
+    },
+    ["farming.GardeningSprayEmpty"] = {
+        ["height"] = 2,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.MugWhite"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.MugRed"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.Mugl"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.MugSpiffo"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.AlarmClock2"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.Basketball"] = {
+        ["height"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.PoolBall"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.Baseball"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.TennisBall"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.Fork"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
+    },
+    ["Base.BreadKnife"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
+    },
+    ["Base.Spoon"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
+    },
+    ["Base.ButterKnife"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 5,
+    },
+    ["Base.WaterPotRice"] = {
+        ["height"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.WaterPotPasta"] = {
+        ["height"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.ChessBlack"] = {
+        ["height"] = 1,
+        ["width"] = 1,
+        ["maxStackSize"] = 16,
+    },
+    ["Base.CheckerBoard"] = {
+        ["height"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 5,
+    },
 }
 
 local containerPack = {
@@ -1832,8 +1962,8 @@ local containerPack = {
         ["gridDefinitions"] = {
             [1] = {
                 ["size"] = {
-                    ["width"] = 6,
-                    ["height"] = 6,
+                    ["width"] = 8,
+                    ["height"] = 8,
                 },
                 ["position"] = {
                     ["x"] = 0,
@@ -1856,62 +1986,6 @@ local containerPack = {
             },
         },
         ["isOrganized"] = false,
-    },
-    ["none"] = {
-        ["gridDefinitions"] = {
-            [1] = {
-                ["size"] = {
-                    ["width"] = 1,
-                    ["height"] = 1,
-                },
-                ["position"] = {
-                    ["x"] = 4,
-                    ["y"] = 0,
-                },
-            },
-            [2] = {
-                ["size"] = {
-                    ["width"] = 1,
-                    ["height"] = 2,
-                },
-                ["position"] = {
-                    ["x"] = 0,
-                    ["y"] = 0,
-                },
-            },
-            [3] = {
-                ["size"] = {
-                    ["width"] = 1,
-                    ["height"] = 2,
-                },
-                ["position"] = {
-                    ["x"] = 1,
-                    ["y"] = 0,
-                },
-            },
-            [4] = {
-                ["size"] = {
-                    ["width"] = 1,
-                    ["height"] = 2,
-                },
-                ["position"] = {
-                    ["x"] = 2,
-                    ["y"] = 0,
-                },
-            },
-            [5] = {
-                ["size"] = {
-                    ["width"] = 1,
-                    ["height"] = 2,
-                },
-                ["position"] = {
-                    ["x"] = 3,
-                    ["y"] = 0,
-                },
-            },
-        },
-        ["centerMode"] = "vertical",
-        ["isOrganized"] = true,
     },
     ["Guitarcase_5"] = {
         ["gridDefinitions"] = {
@@ -3118,6 +3192,7 @@ local containerPack = {
             [24] = "MISC",
             [25] = "SEED",
             [26] = "SEED",
+            [27] = "MOVEABLE",
         },
     },
     ["shelves_50"] = {
@@ -3469,6 +3544,7 @@ local containerPack = {
             [24] = "MISC",
             [25] = "ENTERTAINMENT",
             [26] = "FOOD",
+            [27] = "MOVEABLE",
         },
     },
     ["Bag_FannyPackBack_1"] = {
@@ -3498,6 +3574,62 @@ local containerPack = {
                 },
             },
         },
+    },
+    ["none"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 1,
+                },
+                ["position"] = {
+                    ["x"] = 4,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+            [4] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 2,
+                    ["y"] = 0,
+                },
+            },
+            [5] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 3,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["centerMode"] = "vertical",
+        ["isOrganized"] = true,
     },
 }
 
