@@ -1,8 +1,3 @@
-local WORLD_ITEM_DATA = "INVENTORYTETRIS_WorldItemData"
-local WORLD_ITEM_PARTIAL = "INVENTORYTETRIS_WorldItemPartial"
-
-
-
 ItemGrid = {}
 
 function ItemGrid:new(containerGrid, gridIndex, inventory, playerNum)
@@ -781,38 +776,21 @@ function ItemGrid:_getParentModData()
         return ItemGrid._floorModData, nil
     end
 
-    local item = self.inventory:getContainingItem()
-    if item then
-        local worldItem = item:getWorldItem()
-
-        local worldItemData = ModData.getOrCreate(WORLD_ITEM_DATA)
-        local worldData = worldItemData[item:getID()]
-        
-        if not worldData then
-            return item:getModData(), worldItem
-        end
-
-        local itemData = item:getModData().gridContainers
-        if not itemData then
-            item:getModData().gridContainers = worldData
-        else
-            local itemTime = item:getModData().gridContainers.lastModified or 0
-            local worldTime = worldData.lastModified or 0
-
-            if worldTime > itemTime then
-                item:getModData().gridContainers = worldData
-            end
-        end
-
-        return item:getModData(), item:getWorldItem()
+    local itemContainer = self.inventory:getContainingItem()
+    if itemContainer then
+        return TetrisClient.getInventoryContainerModData(itemContainer)
     end
 
     local isoObject = self.inventory:getParent()
     if isoObject then
+        if instanceof(isoObject, "BaseVehicle") then
+            return TetrisClient.getVehicleModData(isoObject)
+        end
+
         return isoObject:getModData(), isoObject
     end
 
-    print("Error: ItemGrid:_getParentModData() An invalid container setup was found. Contact Notloc and tell him what you were doing when this happened.")
+    print("Error: ItemGrid:_getParentModData() An invalid container setup was found. Data will not be saved.")
     return {} -- Return an empty table so we don't error out
 end
 
@@ -824,95 +802,17 @@ function ItemGrid._getPlayerUUID(playerNum)
     if not uuid then
         uuid = getRandomUUID()
         player:getModData()[TETRIS_UUID] = uuid
-        ItemGrid._modDataSyncQueue[player] = true
+        TetrisClient.queueModDataSync(player)
     end
 
     return uuid
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Events.OnLoad.Add(function()
-    ModData.request(WORLD_ITEM_DATA)
-end);
-
-Events.OnReceiveGlobalModData.Add(function(key, data)
-    if isServer() then return end
-
-    if key == WORLD_ITEM_DATA then
-        ModData.add(WORLD_ITEM_DATA, data)
-        return
-    end
-
-    if key == WORLD_ITEM_PARTIAL then
-        local worldItemData = ModData.getOrCreate(WORLD_ITEM_DATA)
-        worldItemData[data.id] = data
-        ModData.remove(WORLD_ITEM_PARTIAL)
-    end
-end);
-
-local function transmitWorldInventoryObjectData(worldInvObject)
-    local item = worldInvObject:getItem();
-    local gridData = item and item:getModData().gridContainers;
-    if not gridData then return end
-
-    gridData.id = item:getID()
-
-    local worldItemData = ModData.getOrCreate(WORLD_ITEM_DATA)
-    worldItemData[item:getID()] = gridData
-
-    ModData.add(WORLD_ITEM_PARTIAL, gridData)
-    ModData.transmit(WORLD_ITEM_PARTIAL)
-    --ModData.remove(WORLD_ITEM_PARTIAL)
-end
-
-
-
-
-
-ItemGrid._modDataSyncQueue = {}
-
 function ItemGrid:_sendModData()
     if isClient() then
         local _, parent = self:_getParentModData()
         if parent then
-            ItemGrid._modDataSyncQueue[parent] = true
+            TetrisClient.queueModDataSync(parent)
         end
     end
-end
-
-function serverStampModData(parent)
-    local modData = parent:getModData().gridContainers
-    if not modData then return end
-    modData.lastModified = GameTime.getServerTimeMills()
-end
-
-if isClient() then
-    Events.OnTick.Add(function()
-        for parent,_ in pairs(ItemGrid._modDataSyncQueue) do
-            if instanceof(parent, "IsoWorldInventoryObject") then
-                transmitWorldInventoryObjectData(parent)
-            elseif parent.transmitModData then
-                serverStampModData(parent)
-                parent:transmitModData()
-            end
-        end
-        ItemGrid._modDataSyncQueue = {}
-    end)
 end

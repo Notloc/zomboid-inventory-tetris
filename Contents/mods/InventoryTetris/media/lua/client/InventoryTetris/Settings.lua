@@ -15,9 +15,6 @@ if not INVENTORY_TETRIS_SETTINGS then
         self.OnApplyGridScale:trigger(scale)
     end
 
-    INVENTORY_TETRIS_SETTINGS:applyGridScale(1)
-
-
     INVENTORY_TETRIS_SETTINGS.OnApplyContainerInfoScale = NotUtil.createSimpleEvent()
     INVENTORY_TETRIS_SETTINGS.applyContainerInfoScale = function(self, scale)
         self.CONTAINER_INFO_SCALE = scale
@@ -41,6 +38,15 @@ if not INVENTORY_TETRIS_SETTINGS then
     INVENTORY_TETRIS_SETTINGS.applyShiftClickAction = function(self, action)
         self.SHIFT_CLICK_ACTION = action
     end
+
+
+
+    -- Load Default Settings
+    INVENTORY_TETRIS_SETTINGS:applyGridScale(1)
+    INVENTORY_TETRIS_SETTINGS:applyDoubleClickAction("interact")
+    INVENTORY_TETRIS_SETTINGS:applyCtrlClickAction("move")
+    INVENTORY_TETRIS_SETTINGS:applyAltClickAction("equip")
+    INVENTORY_TETRIS_SETTINGS:applyShiftClickAction("drop")
 
 end
 
