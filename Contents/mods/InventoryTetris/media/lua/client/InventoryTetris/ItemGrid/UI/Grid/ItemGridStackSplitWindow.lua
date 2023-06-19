@@ -65,10 +65,23 @@ function ItemGridStackSplitWindow:onOK()
     local playerObj = getSpecificPlayer(self.playerNum)
 
     local count = self.splitSlider:getCurrentValue()
-    for i = 2, count+1 do
-        local action = ISInventoryTransferAction:new(playerObj, vanillaStack.items[i], dragInventory, self.grid.inventory, 1)
-        action:setTetrisTarget(targetX, targetY, self.grid.gridIndex, isRotated)
-        ISTimedActionQueue.add(action)
+
+    if isSameInventory then
+        local containerGrid = ItemContainerGrid.Create(self.grid.inventory, self.playerNum)
+        for i=2, count+1 do
+            local item = vanillaStack.items[i]
+            if self.grid:canAddItemAt(item, targetX, targetY, isRotated) and containerGrid:removeItem(item) then
+                self.grid:insertItem(item, targetX, targetY, isRotated)
+            else
+                break
+            end
+        end
+    else
+        for i=2, count+1 do
+            local action = ISInventoryTransferAction:new(playerObj, vanillaStack.items[i], dragInventory, self.grid.inventory, 1)
+            action:setTetrisTarget(targetX, targetY, self.grid.gridIndex, isRotated)
+            ISTimedActionQueue.add(action)
+        end
     end
 
     self:close()

@@ -1,7 +1,10 @@
+require "ISUI/ISInventoryPaneContextMenu"
+
 local function quickMoveItems(items, playerNum)
     local invPage = getPlayerInventory(playerNum)
     local targetContainers = ItemGridUiUtil.getOrderedBackpacks(invPage)
     
+    local retVal = nil
     local playerObj = getSpecificPlayer(playerNum)
     for _, item in ipairs(items) do
         local targetContainer = nil
@@ -16,14 +19,22 @@ local function quickMoveItems(items, playerNum)
         if not targetContainer then return end
         
         local transfer = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), targetContainer)
+        transfer.enforceTetrisRules = true
         ISTimedActionQueue.add(transfer)
+
+        if retVal == nil then
+            retVal = transfer:isValid()
+        end
     end
+
+    return retVal
 end
 
 local ogOnGrabItems = ISInventoryPaneContextMenu.onGrabItems
 ISInventoryPaneContextMenu.onGrabItems = function(stacks, playerNum)
-    quickMoveItems(ISInventoryPane.getActualItems(stacks), playerNum)
-    ogOnGrabItems(stacks, playerNum)
+    if quickMoveItems(ISInventoryPane.getActualItems(stacks), playerNum) then
+        ogOnGrabItems(stacks, playerNum)
+    end
 end
 
 
@@ -33,13 +44,15 @@ ISInventoryPaneContextMenu.onGrabHalfItems = function(stacks, playerNum)
     local count = math.ceil(#halfItems/2)
     halfItems[count] = nil -- remove this index so ipairs stops here
 
-    quickMoveItems(halfItems, playerNum)
-    ogOnGrabHalfItems(stacks, playerNum)
+    if quickMoveItems(halfItems, playerNum) then
+        ogOnGrabHalfItems(stacks, playerNum)
+    end
 end
 
 local ogOnGrabOneItems = ISInventoryPaneContextMenu.onGrabOneItems
 ISInventoryPaneContextMenu.onGrabOneItems = function(stacks, playerNum)
     local items = ISInventoryPane.getActualItems(stacks)
-    quickMoveItems({items[1]}, playerNum)
-    ogOnGrabOneItems(stacks, playerNum)
+    if quickMoveItems({items[1]}, playerNum) then
+        ogOnGrabOneItems(stacks, playerNum)
+    end
 end

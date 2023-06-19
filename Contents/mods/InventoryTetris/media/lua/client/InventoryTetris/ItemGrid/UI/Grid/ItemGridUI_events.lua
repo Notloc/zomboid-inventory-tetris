@@ -5,13 +5,13 @@ local OPT = require "InventoryTetris/Settings"
 if not ItemGridUI then
     ItemGridUI = ISPanel:derive("ItemGridUI")
 
-    function ItemGridUI:new(grid, inventoryPane, containerUi, playerNum)
+    function ItemGridUI:new(grid, containerGrid, inventoryPane, playerNum)
         local o = ISPanel:new(0, 0, 0, 0)
         setmetatable(o, self)
         self.__index = self
 
         o.grid = grid
-        o.containerUi = containerUi
+        o.containerGrid = containerGrid
         o.inventoryPane = inventoryPane
         o.playerNum = playerNum
 
@@ -125,32 +125,38 @@ function ItemGridUI:onMouseMoveOutside(dx, dy)
 end
 
 function ItemGridUI:handleDragAndDrop(x, y)
-    local playerObj = getSpecificPlayer(self.playerNum)
     local vanillaStack = DragAndDrop.getDraggedStack()
     if not vanillaStack or not vanillaStack.items[1] then return end
 
-    local dragInventory = vanillaStack.items[1]:getContainer()
+    local dragItem = vanillaStack.items[1]
+    local dragInventory = dragItem:getContainer()
     local dragContainerGrid = ItemContainerGrid.Create(dragInventory, self.playerNum)
     local gridStack, otherGrid = dragContainerGrid:findGridStackByVanillaStack(vanillaStack)
 
     local isSameInventory = self.grid.inventory == dragInventory
     local isSameGrid = self.grid == otherGrid
 
-    if isSameInventory or self:canPutIn(vanillaStack.items[1]) then
+    if isSameInventory or self:canPutIn(dragItem) then
+        local gridX, gridY = ItemGridUiUtil.findGridPositionOfMouse(self, dragItem, DragAndDrop.isDraggedItemRotated())
+        
+        if isStackSplitDown() then
+            self:openSplitStack(vanillaStack, gridX, gridY)
+            return
+        end
+        
         luautils.walkToContainer(self.grid.inventory, self.playerNum)
-
+        
         local stackUnderMouse = self:findGridStackUnderMouse()
         local isSameStack = stackUnderMouse and gridStack == stackUnderMouse
 
-        if not isSameStack and stackUnderMouse and ItemStack.canAddItem(stackUnderMouse, vanillaStack.items[1]) then
-            local x, y = ItemGridUiUtil.mousePositionToGridPosition(x, y)
-            self:handleDragAndDropTransfer(playerObj, x, y, stackUnderMouse)
+        if not isSameStack and stackUnderMouse and ItemStack.canAddItem(stackUnderMouse, dragItem) then
+            self:handleDropOnStack(vanillaStack, stackUnderMouse, gridX, gridY)
             return
         end
         
         local container = self:getValidContainerFromStack(stackUnderMouse)
         if not isSameStack and container then
-            self:handleDropOnContainer(playerObj, vanillaStack, container)
+            self:handleDropOnContainer(vanillaStack, container)
             return
         end
 
@@ -160,26 +166,51 @@ function ItemGridUI:handleDragAndDrop(x, y)
             return
         end
 
-        local x, y = ItemGridUiUtil.findGridPositionOfMouse(self, vanillaStack.items[1], DragAndDrop.isDraggedItemRotated())
-        if isSameInventory and not vanillaStack.items[1]:isEquipped() then
-            if isStackSplitDown() then
-                self:openSplitStack(vanillaStack, x, y)
-            else
-                if isSameGrid then
-                    self.grid:moveStack(gridStack, x, y, DragAndDrop.isDraggedItemRotated())
-                else
-                    for i=2, #vanillaStack.items do
-                        local item = vanillaStack.items[i]
-                        if self.grid:insertItem(item, x, y, DragAndDrop.isDraggedItemRotated()) then
+        if not isSameInventory then
+            self:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
+            return
+        end
+
+        if isSameGrid then
+            self.grid:moveStack(gridStack, gridX, gridY, DragAndDrop.isDraggedItemRotated())
+        else
+            self:handleSameContainerDifferentGrid(vanillaStack, gridX, gridY, otherGrid)
+        end
+    end
+end
+
+function ItemGridUI:handleSameContainerDifferentGrid(vanillaStack, gridX, gridY, otherGrid)
+    local playerObj = getSpecificPlayer(self.playerNum)
+    local hotbar = getPlayerHotbar(self.playerNum)
+
+    for i=2, #vanillaStack.items do
+        local item = vanillaStack.items[i]
+        if not item:isEquipped() and not hotbar:isItemAttached(item) then
+            if self.grid:insertItem(item, gridX, gridY, DragAndDrop.isDraggedItemRotated()) then
+                if otherGrid then 
+                    otherGrid:removeItem(item) 
+                end
+            end
+        else 
+            if item:isEquipped() then
+                ISTimedActionQueue.add(ISUnequipAction:new(playerObj, item, 50))
+            end
+            if hotbar:isItemAttached(item) then
+                ISTimedActionQueue.add(ISDetachItemHotbar:new(playerObj, item))
+            end
+            
+            local rotated = DragAndDrop.isDraggedItemRotated()
+            ISTimedActionQueue.add(
+                TetrisLambdaAction:new(playerObj, 
+                    function()
+                        if self.grid:insertItem(item, gridX, gridY, rotated) then
                             if otherGrid then 
                                 otherGrid:removeItem(item) 
                             end
                         end
                     end
-                end
-            end
-        else
-            self:handleDragAndDropTransfer(playerObj, x, y)
+                )
+            );
         end
     end
 end
@@ -192,7 +223,7 @@ function ItemGridUI:canPutIn(item)
     return canPutIn --TODO: item type restrictions and anti-TARDIS stacking
 end
 
-function ItemGridUI:handleDropOnContainer(playerObj, vanillaStack, container)
+function ItemGridUI:handleDropOnContainer(vanillaStack, container)
     local containerItem = container:getContainingItem()
     if containerItem then
         if not self.grid.isOnPlayer and self.grid.inventory:getType() ~= "floor" then
@@ -205,53 +236,94 @@ function ItemGridUI:handleDropOnContainer(playerObj, vanillaStack, container)
         return
     end
 
+    local playerObj = getSpecificPlayer(self.playerNum)
     for i=2, #vanillaStack.items do
         local item = vanillaStack.items[i]
         if item:isEquipped() then
             ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
         end
-        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), container, 1))
+        local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), container, 1)
+        action.enforceTetrisRules = true
+        ISTimedActionQueue.add(action)
     end
 end
 
-function ItemGridUI:handleDragAndDropTransfer(playerObj, gridX, gridY, targetStack)
-    local vanillaStack = DragAndDrop.getDraggedStack()
+function ItemGridUI:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
     local frontItem = vanillaStack.items[1]
-    
     if frontItem:IsInventoryContainer() and frontItem:getInventory() == self.grid.inventory then
         return
     end
 
-    if not targetStack and not self.grid:doesItemFit(frontItem, gridX, gridY, DragAndDrop.isDraggedItemRotated()) then
+    if not self.grid:doesItemFit(frontItem, gridX, gridY, DragAndDrop.isDraggedItemRotated()) then
         return
     end
 
-    if not targetStack then
-        -- Verify the item can be put in this particular container
-        -- We'll let stacking happen even if the item type is wrong, since the stack being there is already wrong
-        if not TetrisContainerData.validateInsert(self.grid.containerDefinition, frontItem) then
-            return
-        end
+    if not TetrisContainerData.validateInsert(self.grid.containerDefinition, frontItem) then
+        return
     end
 
-    if isStackSplitDown() then
-        self:openSplitStack(vanillaStack, gridX, gridY)
-    else 
-        for i, item in ipairs(vanillaStack.items) do
-            if i > 1 then
-                if item:isEquipped() then
-                    ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
-                end
-                local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1)
-                action:setTetrisTarget(gridX, gridY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated())
-                ISTimedActionQueue.add(action)
-            end
+    local playerObj = getSpecificPlayer(self.playerNum)
+    for i=2, #vanillaStack.items do
+        local item = vanillaStack.items[i]
+        if item:isEquipped() then
+            ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
+        end
+        local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1)
+        action:setTetrisTarget(gridX, gridY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated())
+        ISTimedActionQueue.add(action)
+    end
+end
+
+function ItemGridUI:handleDropOnStack(vanillaStack, targetStack)
+    -- Prevent placing a container inside itself
+    local frontItem = vanillaStack.items[1]
+    if frontItem:IsInventoryContainer() and frontItem:getInventory() == self.grid.inventory then
+        return
+    end
+
+    local isSameContainer = frontItem:getContainer() == self.grid.inventory
+    if isSameContainer then
+        self:handleDropOnStackSameContainer(vanillaStack, targetStack)
+    else
+        self:handleDropOnStackDifferentContainer(vanillaStack, targetStack)
+    end
+end
+
+function ItemGridUI:handleDropOnStackSameContainer(vanillaStack, targetStack)
+    local frontItem = vanillaStack.items[1]
+    local fromStack, fromGrid = self.containerGrid:findStackByItem(frontItem)
+    
+    if not fromStack then
+        self:sameContainerDifferentGrid(vanillaStack, targetStack.x, targetStack.y, nil)
+        return
+    end
+    
+    if fromStack == targetStack then return end
+
+    for i=2, #vanillaStack.items do
+        local item = vanillaStack.items[i]
+        if ItemStack.canAddItem(targetStack, item) and fromGrid:removeItem(item) then 
+            self.grid:insertItem(item, targetStack.x, targetStack.y, targetStack.isRotated)
         end
     end
 end
 
+function ItemGridUI:handleDropOnStackDifferentContainer(vanillaStack, targetStack)
+    for i=2, #vanillaStack.items do
+        local item = vanillaStack.items[i]
+        if item:isEquipped() then
+            ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
+        end
+        
+        local playerObj = getSpecificPlayer(self.playerNum)
+        local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1)
+        action:setTetrisTarget(targetStack.x, targetStack.y, self.grid.gridIndex, targetStack.isRotated)
+        ISTimedActionQueue.add(action)
+    end
+end
+
 function ItemGridUI:openSplitStack(vanillaStack, targetX, targetY)
-    if not vanillaStack or vanillaStack.count < 3 then return end
+    if not vanillaStack or vanillaStack.count-1 < 2 then return end
 
     local dragInventory = vanillaStack.items[1]:getContainer()
     local isSameInventory = self.grid.inventory == dragInventory
@@ -268,7 +340,7 @@ function ItemGridUI:openSplitStack(vanillaStack, targetX, targetY)
     window:setX(getMouseX() - window:getWidth() / 2)
     window:setY(getMouseY() - window:getHeight() / 2)
 
-    if vanillaStack.count <= 3 then
+    if vanillaStack.count-1 <= 2 then
         window:onOK()
     end
 end

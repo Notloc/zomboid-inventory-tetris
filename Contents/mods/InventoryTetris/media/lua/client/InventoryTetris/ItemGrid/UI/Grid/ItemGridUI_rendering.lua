@@ -5,13 +5,13 @@ require "InventoryTetris/TetrisItemCategory"
 if not ItemGridUI then
     ItemGridUI = ISPanel:derive("ItemGridUI")
 
-    function ItemGridUI:new(grid, inventoryPane, containerUi, playerNum)
+    function ItemGridUI:new(grid, containerGrid, inventoryPane, playerNum)
         local o = ISPanel:new(0, 0, 0, 0)
         setmetatable(o, self)
         self.__index = self
 
         o.grid = grid
-        o.containerUi = containerUi
+        o.containerGrid = containerGrid
         o.inventoryPane = inventoryPane
         o.playerNum = playerNum
 
@@ -260,7 +260,14 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
         local item = ItemStack.getFrontItem(stack, inventory)
 
         if item then
-            updateItem(item);
+            if stack.count > 1 and stack.category == TetrisItemCategory.FOOD then
+                for itemId, _ in pairs(stack.itemIDs) do
+                    local item = inventory:getItemById(itemId)
+                    updateItem(item)
+                end
+            else
+                updateItem(item);
+            end
 
             local x, y = stack.x, stack.y
             if x and y then
@@ -309,7 +316,7 @@ function ItemGridUI:renderDragItemPreview()
         local gridX, gridY = ItemGridUiUtil.mousePositionToGridPosition(xPos, yPos)
         
         local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated)
-        canPlace = canPlace and self.containerUi.containerGrid:isItemAllowed(item) 
+        canPlace = canPlace and self.containerGrid:isItemAllowed(item) 
         canPlace = canPlace and (self.grid.inventory == item:getContainer() or self.grid.inventory:hasRoomFor(getSpecificPlayer(0), item))
         
         if canPlace then

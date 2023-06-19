@@ -30,9 +30,9 @@ function TetrisWindowManager:addBringToFrontOnMouseDown(window)
         window.onMouseDown_preWindowManager = window.onMouseDown
     end
     -- Bring the window to the top of the stack when it is clicked
-    window.onMouseDown = function(window, x, y)
+    window.onMouseDown = function(window, ...)
         window:bringToTop()
-        window:onMouseDown_preWindowManager(x, y)
+        window:onMouseDown_preWindowManager(...)
     end
 end
 
@@ -81,7 +81,7 @@ function TetrisWindowManager:openContainerPopup(item, playerNum, invPane)
     
     local player = getSpecificPlayer(playerNum)
     local outerContainer = item:getOutermostContainer()
-    if outerContainer ~= player:getInventory() then
+    if outerContainer ~= player:getInventory() and outerContainer ~= nil then
         return
     end
 

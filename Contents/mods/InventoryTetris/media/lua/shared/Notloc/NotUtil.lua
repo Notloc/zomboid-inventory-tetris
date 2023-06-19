@@ -19,7 +19,7 @@ NotUtil.getAllEquippedContainers = function(playerObj)
     local containers = {selectedContainer}
     
     for _, button in ipairs(playerInv.backpacks) do
-        if not selectedContainer then
+        if button.inventory ~= selectedContainer then
             table.insert(containers, button.inventory)
         end
     end

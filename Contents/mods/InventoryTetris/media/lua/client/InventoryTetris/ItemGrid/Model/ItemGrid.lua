@@ -248,6 +248,16 @@ function ItemGrid:canAddItem(item, isRotated)
     return false
 end
 
+function ItemGrid:canAddItemAt(item, x, y, isRotated)
+    local stack = self:getStack(x,y)
+    if stack and ItemStack.canAddItem(stack, item) then
+        return true
+    end
+
+    local w, h = TetrisItemData.getItemSize(item, isRotated)
+    return self:_isAreaFree(x, y, w, h)
+end
+
 function ItemGrid:doesItemFit(item, xPos, yPos, isRotated)
     local ignoreStack = {[self:findStackByItem(item)] = true}
 

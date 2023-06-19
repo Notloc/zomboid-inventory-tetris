@@ -3,6 +3,8 @@ require "Notloc/NotUtil"
 
 -- We really need to be the last one to load for this one
 Events.OnGameBoot.Add(function()
+    ISInventoryTransferAction.globalTetrisRules = false
+    
     local og_new = ISInventoryTransferAction.new
     function ISInventoryTransferAction:new (character, item, srcContainer, destContainer, time, ...)
         local o = og_new(self, character, item, srcContainer, destContainer, time, ...)
@@ -13,6 +15,11 @@ Events.OnGameBoot.Add(function()
         -- Make the transfers instant
         -- The user's personal time spent arranging items in the grid "replaces" the time spent moving the items
         o.maxTime = 0
+
+        if ISInventoryTransferAction.globalTetrisRules then
+            o.enforceTetrisRules = true
+        end
+
         return o
     end
 
@@ -80,7 +87,7 @@ Events.OnGameBoot.Add(function()
         if itemContainer and TetrisItemData.isSquishable(itemContainer) then
             local parentInventory = itemContainer:getContainer()
             if parentInventory then
-                
+
                 local equippedContainers = NotUtil.getAllEquippedContainers(self.character)
                 for _, container in ipairs(equippedContainers) do
                     if container == destContainer then

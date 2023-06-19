@@ -311,6 +311,13 @@ Events.OnGameBoot.Add(function()
         return og_getActualItems(items)
     end
 
+    local og_transferItemsByWeight = ISInventoryPane.transferItemsByWeight
+    function ISInventoryPane:transferItemsByWeight(items, container)
+        ISInventoryTransferAction.globalTetrisRules = true
+        og_transferItemsByWeight(self, items, container)
+        ISInventoryTransferAction.globalTetrisRules = false
+    end
+
     function ISInventoryPane:getChildWindows()
         if self.tetrisWindowManager then
             return self.tetrisWindowManager.childWindows

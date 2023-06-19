@@ -82,7 +82,7 @@ TetrisItemData._calculateRangedWeaponSize = function(item)
     local width = 2
     local height = 1
 
-    local weight = item:getActualWeight()
+    local weight = item:getWeight()
 
     if weight >= 4 then
         width = 5
@@ -102,7 +102,7 @@ TetrisItemData._calculateMeleeWeaponSize = function(item)
     local width = 1
     local height = 2
 
-    local weight = item:getActualWeight()
+    local weight = item:getWeight()
 
     if weight >= 4 then
         width = 2
@@ -139,7 +139,7 @@ TetrisItemData._calculateItemSizeClothing = function(item)
         width = 3
         height = 3
     else
-        local weight = item:getActualWeight()
+        local weight = item:getWeight()
         if weight >= 3.0 then
             width = 3
             height = 3
@@ -178,7 +178,7 @@ TetrisItemData._calculateItemSizeWeightBased = function(item)
     local width = 1
     local height = 1
 
-    local weight = item:getActualWeight()
+    local weight = item:getWeight()
     
     if weight >= 60 then
         width = 10
@@ -243,7 +243,7 @@ TetrisItemData._calculateMoveableSize = function(item)
     local width = 1
     local height = 1
 
-    local weight = item:getActualWeight()
+    local weight = item:getWeight()
     
     if weight >= 50 then
         width = 10
@@ -331,7 +331,7 @@ end
 TetrisItemData._calculateAmmoStackability = function(item)
     local maxStack = 30
 
-    local weight = item:getActualWeight()
+    local weight = item:getWeight()
     if weight >= 0.0375 then
         maxStack = 12
     elseif weight >= 0.025 then
@@ -362,7 +362,7 @@ TetrisItemData._calculateMiscStackability = function(item)
         return 1;
     end
 
-    local weight = item:getActualWeight()
+    local weight = item:getWeight()
     if weight <= 0.025 then
         maxStack = 50
     elseif weight <= 0.05 then
@@ -403,6 +403,14 @@ TetrisItemData._calculateMoveableStackability = function(item)
     return 1
 end
 
+TetrisItemData._calculateFoodStackability = function(item)
+    local weight = item:getWeight()
+    if weight >= 0.11 then
+        return 1
+    end
+    return 5
+end
+
 TetrisItemData._itemClassToStackabilityCalculation = {
     [TetrisItemCategory.CONTAINER] = 1,
     
@@ -411,7 +419,7 @@ TetrisItemData._itemClassToStackabilityCalculation = {
     [TetrisItemCategory.MAGAZINE] = 1,
     [TetrisItemCategory.AMMO] = TetrisItemData._calculateAmmoStackability,
     
-    [TetrisItemCategory.FOOD] = 1,
+    [TetrisItemCategory.FOOD] = TetrisItemData._calculateFoodStackability,
     [TetrisItemCategory.DRINK] = 1,
     
     [TetrisItemCategory.CLOTHING] = 1,

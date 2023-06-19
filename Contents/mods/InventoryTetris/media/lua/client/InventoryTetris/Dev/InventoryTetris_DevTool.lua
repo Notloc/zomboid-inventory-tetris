@@ -930,6 +930,9 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
     print("item CLASS: " .. TetrisItemCategory.getCategory(item))
     print("item full type: " .. item:getFullType())
 
+    print("item weight: " .. item:getWeight())
+    print("item actual weight: " .. item:getActualWeight())
+
     if item:IsFood() then
         print("item base hunger: " .. item:getBaseHunger())
         print("item hunger change: " .. item:getHungerChange())

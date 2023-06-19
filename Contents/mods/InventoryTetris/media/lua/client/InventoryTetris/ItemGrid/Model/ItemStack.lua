@@ -88,6 +88,7 @@ ItemStack.createVanillaStacksFromItem = function(item, inventoryPane)
     return ItemStack.createVanillaStacksFromItems({item}, inventoryPane)
 end
 
+-- Assumes all items are the same type
 ItemStack.createVanillaStacksFromItems = function(items, inventoryPane)
     local vanillaStack = {}
     vanillaStack.items = {}
@@ -105,7 +106,7 @@ ItemStack.createVanillaStacksFromItems = function(items, inventoryPane)
         weight = weight + item:getUnequippedWeight()
     end
     vanillaStack.weight = weight
-    vanillaStack.count = #items
+    vanillaStack.count = #items + 1 -- Vanilla stacks count as 1 over their actual count
 
     return {vanillaStack}
 end
