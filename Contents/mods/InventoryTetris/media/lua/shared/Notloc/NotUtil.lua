@@ -14,12 +14,13 @@ NotUtil.forEachItemOnPlayer = function(playerObj, callbackFunc)
 end
 
 NotUtil.getAllEquippedContainers = function(playerObj)
-    local containers = { playerObj:getInventory() }
-    local wornItems = playerObj:getWornItems()
-    for i = 0, wornItems:size()-1 do
-        local wornItem = wornItems:get(i):getItem()
-        if wornItem:IsInventoryContainer() then
-            table.insert(containers, wornItem:getInventory())
+    local playerInv = getPlayerInventory(playerObj:getPlayerNum())
+    local selectedContainer = playerInv.inventory
+    local containers = {selectedContainer}
+    
+    for _, button in ipairs(playerInv.backpacks) do
+        if not selectedContainer then
+            table.insert(containers, button.inventory)
         end
     end
     return containers
