@@ -43,7 +43,7 @@ function ItemGridUI:onMouseDown(x, y, gridStack)
 	getSpecificPlayer(self.playerNum):nullifyAiming();
     gridStack = gridStack or self:findGridStackUnderMouse()
     if gridStack then 
-        local vanillaStacks = ItemStack.convertToVanillaStacks(gridStack, self.grid.inventory)
+        local vanillaStacks = ItemStack.convertToVanillaStacks(gridStack, self.grid.inventory, self.inventoryPane)
         DragAndDrop.prepareDrag(self, vanillaStacks, x, y)
     end
 
@@ -161,7 +161,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
         end
 
         if stackUnderMouse and not isSameStack then
-            local targetStack = ItemStack.convertToVanillaStacks(stackUnderMouse, self.grid.inventory)[1]
+            local targetStack = ItemStack.convertToVanillaStacks(stackUnderMouse, self.grid.inventory, self.inventoryPane)[1]
             TetrisEvents.OnStackDroppedOnStack:trigger(vanillaStack, dragInventory, targetStack, self.grid.inventory, self.playerNum)
             return
         end
@@ -494,7 +494,7 @@ function ItemGridUI:interact(gridStack)
     local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
     if not item then return end
     
-    local vanillaStack = ItemStack.convertToVanillaStacks(gridStack, item:getContainer())[1]    
+    local vanillaStack = ItemStack.convertToVanillaStacks(gridStack, item:getContainer(), self.inventoryPane)[1]    
     if item:IsInventoryContainer() then
         self.inventoryPane.tetrisWindowManager:openContainerPopup(item, self.playerNum, self.inventoryPane)
         return
