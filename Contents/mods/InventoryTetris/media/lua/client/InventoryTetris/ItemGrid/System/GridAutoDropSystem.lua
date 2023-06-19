@@ -3,10 +3,14 @@ GridAutoDropSystem = {}
 GridAutoDropSystem._dropQueues = {}
 GridAutoDropSystem._dropProcessing = {}
 
-function GridAutoDropSystem.queueItemForDrop(item, playerNum)
-    if GridAutoDropSystem._dropProcessing[playerNum] then return end
-    if not GridAutoDropSystem._dropQueues[playerNum] then GridAutoDropSystem._dropQueues[playerNum] = {} end
-    GridAutoDropSystem._dropQueues[playerNum][item] = true
+function GridAutoDropSystem.queueItemForDrop(item, playerObj)
+    local queueIsEmpty = #ISTimedActionQueue.getTimedActionQueue(playerObj).queue == 0
+    if queueIsEmpty then
+        local playerNum = playerObj:getPlayerNum()
+        if GridAutoDropSystem._dropProcessing[playerNum] then return end
+        if not GridAutoDropSystem._dropQueues[playerNum] then GridAutoDropSystem._dropQueues[playerNum] = {} end
+        GridAutoDropSystem._dropQueues[playerNum][item] = true
+    end
 end
 
 -- PRIVATE FUNCTIONS --

@@ -1,4 +1,5 @@
 require "TimedActions/ISInventoryTransferAction"
+require "Notloc/NotUtil"
 
 -- We really need to be the last one to load for this one
 Events.OnGameBoot.Add(function()
@@ -20,6 +21,7 @@ Events.OnGameBoot.Add(function()
         self.gridY = y
         self.gridIndex = i
         self.isRotated = r
+        self.enforceTetrisRules = true
     end
 
     local og_start = ISInventoryTransferAction.start
@@ -34,8 +36,7 @@ Events.OnGameBoot.Add(function()
         local canMerge = og_canMergeAction(self, action)
         if not canMerge then return false end
 
-        local tetrisCanMerge = self.tetrisForceAllow == action.tetrisForceAllow
-        tetrisCanMerge = tetrisCanMerge and self.gridX == action.gridX
+        local tetrisCanMerge = self.gridX == action.gridX
         tetrisCanMerge = tetrisCanMerge and self.gridY == action.gridY
         tetrisCanMerge = tetrisCanMerge and self.gridIndex == action.gridIndex
         tetrisCanMerge = tetrisCanMerge and self.isRotated == action.isRotated
@@ -45,14 +46,14 @@ Events.OnGameBoot.Add(function()
     local og_isValid = ISInventoryTransferAction.isValid
     function ISInventoryTransferAction:isValid()
         local valid = og_isValid(self)
-        if not valid and (self.srcContainer ~= self.destContainer or not self.gridX or not self.gridY or not self.gridIndex) then
-            return false
+        if not valid or not self.enforceTetrisRules then
+            return valid
         end
 
-        if self.tetrisForceAllow or TimedActionSnooper.findUpcomingActionThatHandlesItem(self.character, self.item, self) then
-            return true
-        end
+        return self:validateTetrisRules()
+    end
 
+    function ISInventoryTransferAction:validateTetrisRules()
         if not self:validateTetrisSquishable(self.destContainer, self.item) then
             return false
         end
@@ -60,7 +61,7 @@ Events.OnGameBoot.Add(function()
         local containerGrid = ItemContainerGrid.Create(self.destContainer, self.character:getPlayerNum())
         if self.gridX and self.gridY and self.gridIndex then
             local doesFit = containerGrid:doesItemFit(self.item, self.gridX, self.gridY, self.gridIndex, self.isRotated) or containerGrid:canItemBeStacked(self.item, self.gridX, self.gridY, self.gridIndex)
-            if not doesFit and not self.tetrisPlaceAnywhere then
+            if not doesFit then
                 return false
             end
         end
@@ -79,10 +80,10 @@ Events.OnGameBoot.Add(function()
         if itemContainer and TetrisItemData.isSquishable(itemContainer) then
             local parentInventory = itemContainer:getContainer()
             if parentInventory then
-            
-                local playerInv = getPlayerInventory(self.character:getPlayerNum())
-                for _, button in ipairs(playerInv.backpacks) do
-                    if button.inventory == destContainer then
+                
+                local equippedContainers = NotUtil.getAllEquippedContainers(self.character)
+                for _, container in ipairs(equippedContainers) do
+                    if container == destContainer then
                         return true -- The container will self correct
                     end
                 end
@@ -98,11 +99,12 @@ Events.OnGameBoot.Add(function()
     local og_transferItem = ISInventoryTransferAction.transferItem
     function ISInventoryTransferAction:transferItem(item)
         local originalItemCount = self.destContainer:getItems():size()
-        
+        local wasAlreadyTransferred = self:isAlreadyTransferred(item)
+
         og_transferItem(self, item)
 
         -- The Item made it to the destination container
-        if self:isAlreadyTransferred(item) then
+        if not wasAlreadyTransferred and self:isAlreadyTransferred(item) then
             -- Only need to remove the item from the source grid if it's actively displayed in the UI
             local oldContainerGrid = ItemContainerGrid.FindInstance(self.srcContainer, self.character:getPlayerNum())
             if oldContainerGrid then
@@ -118,6 +120,7 @@ Events.OnGameBoot.Add(function()
                 destContainerGrid:attemptToInsertItem(item, self.isRotated, organized, disorganized)
             end
 
+            -- Handle squishable items changing size
             local newItemCount = self.destContainer:getItems():size()
             if originalItemCount == 0 and newItemCount > 0 or newItemCount == 0 and originalItemCount > 0 then
                 local itemContainer = self.destContainer:getContainingItem()

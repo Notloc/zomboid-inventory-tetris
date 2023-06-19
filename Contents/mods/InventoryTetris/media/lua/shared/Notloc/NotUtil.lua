@@ -35,11 +35,9 @@ NotUtil.createTransferActionsWithReturns = function(items, sourceContainer, dest
     local returnActions = {}
     for _, item in ipairs(items) do
         local action = ISInventoryTransferAction:new(playerObj, item, sourceContainer, destinationContainer)
-        action.tetrisForceAllow = true
         table.insert(transferActions, action)
         
         local returnAction = ISInventoryTransferAction:new(playerObj, item, destinationContainer, sourceContainer)
-        returnAction.tetrisForceAllow = true
         table.insert(returnActions, returnAction)
     end
     return transferActions, returnActions

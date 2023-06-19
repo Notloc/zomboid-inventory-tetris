@@ -55,7 +55,6 @@ ammoMagazineHandler.call = function(eventData, droppedStack, fromInventory, targ
         local magStack, grid = containerGrid:findStackByItem(magazine)
         
         transferMag, returnMag = NotUtil.createTransferActionWithReturn(magazine, targetInventory, playerInv, playerObj)
-        transferMag.tetrisForceAllow = true
         if magStack then
             returnMag:setTetrisTarget(magStack.x, magStack.y, grid.gridIndex, magStack.isRotated)
         end
@@ -65,7 +64,6 @@ ammoMagazineHandler.call = function(eventData, droppedStack, fromInventory, targ
     if fromInventory ~= playerInv then
         for _, bullet in ipairs(bullets) do
             local transferBullet = ISInventoryTransferAction:new(playerObj, bullet, fromInventory, playerInv)
-            transferBullet.tetrisForceAllow = true
             ISTimedActionQueue.add(transferBullet)
         end
     end

@@ -362,9 +362,10 @@ function ItemContainerGrid:_updateGridPositions()
     end
 
     if self.isOnPlayer then
+        local playerObj = getSpecificPlayer(self.playerNum)
         if getPlayerHotbar(self.playerNum) then -- Wait for the hotbar to be initialized
             for _, unpositionedItemData in ipairs(remainingItems) do
-                self:_dropUnpositionedItem(unpositionedItemData.item)
+                GridAutoDropSystem.queueItemForDrop(unpositionedItemData.item, playerObj)
             end
         end
     end
@@ -412,29 +413,6 @@ function ItemContainerGrid:_getPositionedItems()
         end
     end
     return positionedItems
-end
-
-function ItemContainerGrid:_dropUnpositionedItem(item)
-    local playerNum = self.playerNum
-    local playerObj = getSpecificPlayer(playerNum)
-    local action = TimedActionSnooper.findUpcomingActionThatHandlesItem(playerObj, item)
-    if action then
-        if action.autoDropInjected then
-            return -- Already injected
-        end
-        
-        -- If the player is about to use the item, don't drop it
-        -- Inject an auto drop if they cancel the action
-        local og_stop = action.stop
-        action.stop = function(self)
-            og_stop(self)
-            GridAutoDropSystem.queueItemForDrop(item, playerNum)
-        end
-        action.autoDropInjected = true
-        return
-    end
-
-    GridAutoDropSystem.queueItemForDrop(item, playerNum)
 end
 
 function ItemContainerGrid:_isItemValid(item)

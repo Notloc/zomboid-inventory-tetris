@@ -30,7 +30,6 @@ local function jitTransferItems(playerObj, moveProps, _origSpriteName)
                 if item:getWorldSprite() == _origSpriteName then
                     if container ~= playerInv then
                         local action = ISInventoryTransferAction:new(playerObj, item, container, playerInv)
-                        action.tetrisForceAllow = true
                         ISTimedActionQueue.add(action)
                     else
                         ISInventoryPaneContextMenu.unequipItem(item, playerNum)
