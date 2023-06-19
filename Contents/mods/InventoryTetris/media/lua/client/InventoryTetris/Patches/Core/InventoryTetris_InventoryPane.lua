@@ -157,6 +157,12 @@ Events.OnGameBoot.Add(function()
         og_prerender(self);
         self.nameHeader:setVisible(false)
         self.typeHeader:setVisible(false)
+        
+        -- Draw the version at the bottom left
+        if self.parent.onCharacter then
+            local version = "Inventory Tetris - " .. InventoryTetris.version
+            self:drawText(version, 8, self.height - 18, 0.3, 0.3, 0.3, 0.82, UIFont.Small)
+        end
     end
 
     local og_render = ISInventoryPane.render

@@ -1,6 +1,6 @@
 version=1
 id=2982070344
-title=Inventory Tetris - Grid Based Inventory Overhaul [BETA 4]
+title=Inventory Tetris - Grid Based Inventory Overhaul [BETA 5]
 description=[h1]THIS MOD IS IN BETA AND UPDATES WEEKLY ON MONDAY OR TUESDAY.[/h1]
 description=[h2]Expect fixes, improvements, and balance changes[/h2]
 description=[img]https://i.imgur.com/agDCBaI.png[/img]
