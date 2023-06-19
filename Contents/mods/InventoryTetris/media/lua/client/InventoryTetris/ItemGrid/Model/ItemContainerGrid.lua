@@ -323,8 +323,9 @@ function ItemContainerGrid:_updateGridPositions()
 
     local gridIndex = 1
     for _, item in ipairs(unpositionedItems) do
+        gridIndex = self.isOnPlayer and 1 or gridIndex
         local startIndex = gridIndex
-        local unplaced = nil
+        local placedItem = false
         repeat
             local grid = self.grids[gridIndex]
             gridIndex = gridIndex + 1
@@ -332,13 +333,13 @@ function ItemContainerGrid:_updateGridPositions()
                 gridIndex = 1
             end
 
-            unplaced = grid:_acceptUnpositionedItems({item}, isOrganized, isDisorganized)
-            if #unplaced == 0 then
+            if grid:_acceptUnpositionedItem(item.item, isOrganized, isDisorganized) then
+                placedItem = true
                 break
             end
         until gridIndex == startIndex
 
-        if unplaced and #unplaced > 0 then
+        if not placedItem then
             remainingItems[#remainingItems+1] = item
         end
 

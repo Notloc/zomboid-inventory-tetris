@@ -313,7 +313,6 @@ function ItemGrid:_attemptToStackItem(item)
     return false
 end
 
--- Slightly hacky, but shuffleMode can be nil as well, in which case it will be set to (not containerDefinition.isOrganized)
 function ItemGrid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisorganized)
     preferRotated = preferRotated or false
     
@@ -325,6 +324,10 @@ function ItemGrid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisor
         if self:_attemptToStackItem(item) then
             return true
         end
+    end
+
+    if not self:hasFreeSlot() then
+        return false
     end
 
     if not isOrganized then
@@ -543,25 +546,14 @@ function ItemGrid:isStackBuried(stack)
     return false
 end
 
-function ItemGrid:_acceptUnpositionedItems(unpositionedItems, isOrganized, isDisorganized)    
-    local remainingItems = {}
-    if self:hasFreeSlot() then
-        for _, itemData in ipairs(unpositionedItems) do
-            local item = itemData.item
-            if not self:_attemptToInsertItem(item, false, isOrganized, isDisoraganized) then
-                table.insert(remainingItems, itemData)
-            end
-        end
-    else
-        remainingItems = unpositionedItems
-    end
-    return remainingItems
+-- TODO: Either remove this method or make it batch several items at once with minimal checks
+function ItemGrid:_acceptUnpositionedItem(item, isOrganized, isDisorganized)    
+    return self:_attemptToInsertItem(item, false, isOrganized, isDisoraganized)
 end
 
 function ItemGrid:isEmpty()
     return #self.persistentData.stacks == 0
 end
-
 
 
 
