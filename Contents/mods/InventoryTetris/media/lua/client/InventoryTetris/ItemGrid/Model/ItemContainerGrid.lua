@@ -36,11 +36,14 @@ local function searchInventoryPageForContainerGrid(invPage, targetInventory)
             end
         end
     end
-    for _, childWindow in ipairs(invPage.inventoryPane:getChildWindows()) do
-        if childWindow.gridContainerUi and targetInventory == childWindow.gridContainerUi.inventory then
-            return childWindow.gridContainerUi.containerGrid
+
+    if invPage.inventoryPane.tetrisWindowManager then
+        local window = invPage.inventoryPane.tetrisWindowManager:findWindowByInventory(targetInventory)
+        if window then
+            return window.gridContainerUi.containerGrid
         end
     end
+
     return nil
 end
 

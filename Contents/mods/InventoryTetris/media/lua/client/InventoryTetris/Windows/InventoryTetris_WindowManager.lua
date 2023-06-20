@@ -11,6 +11,22 @@ function TetrisWindowManager:new(parent)
     return o
 end
 
+function TetrisWindowManager:findWindowByInventory(inventory)
+    return self:_findWindowByInventory(self.childWindows, inventory)
+end
+
+function TetrisWindowManager:_findWindowByInventory(childWindows, inventory)
+    for _, child in ipairs(childWindows) do
+        if child.inventory == inventory then
+            return child
+        end
+        local recur = self:_findWindowByInventory(child.childWindows, inventory)
+        if recur then
+            return recur
+        end
+    end
+end
+
 function TetrisWindowManager:addBaseChildWindow(window)
     table.insert(self.childWindows, window)
 
@@ -64,25 +80,15 @@ function TetrisWindowManager:keepChildWindowsOnTop()
     end
 end
 
-function TetrisWindowManager:findWindowByInventory(childWindows, inventory)
-    for _, child in ipairs(childWindows) do
-        if child.inventory == inventory then
-            return child
-        end
-        local recur = self:findWindowByInventory(child.childWindows, inventory)
-        if recur then
-            return recur
-        end
-    end
-end
-
 function TetrisWindowManager:openContainerPopup(item, playerNum, invPane)
     if not item or not item:getContainer() then return end
     
-    local player = getSpecificPlayer(playerNum)
-    local outerContainer = item:getOutermostContainer()
-    if outerContainer ~= player:getInventory() and outerContainer ~= nil then
-        return
+    if isClient() then -- Prevent multiplayer dupe glitch
+        local playerObj = getSpecificPlayer(playerNum)
+        local outerContainer = item:getOutermostContainer()
+        if outerContainer ~= playerObj:getInventory() and outerContainer ~= nil then
+            return
+        end
     end
 
     local itemGridWindow = ItemGridWindow:new(getMouseX(), getMouseY(), item:getInventory(), invPane, playerNum)
@@ -93,7 +99,7 @@ function TetrisWindowManager:openContainerPopup(item, playerNum, invPane)
     itemGridWindow.parentInventory = item:getContainer()
     itemGridWindow.item = item
 
-    local parentWindow = self:findWindowByInventory(self.childWindows, item:getContainer())
+    local parentWindow = self:findWindowByInventory(item:getContainer())
     if parentWindow then
         table.insert(parentWindow.childWindows, itemGridWindow)
     else

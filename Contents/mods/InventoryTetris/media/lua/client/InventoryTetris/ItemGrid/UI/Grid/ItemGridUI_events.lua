@@ -224,12 +224,13 @@ function ItemGridUI:canPutIn(item)
 end
 
 function ItemGridUI:handleDropOnContainer(vanillaStack, container)
-    local containerItem = container:getContainingItem()
-    if containerItem then
-        if not self.grid.isOnPlayer and self.grid.inventory:getType() ~= "floor" then
-            return -- Prevent MP duping
-        end
-    end 
+    if isClient() then -- Prevent MP duping
+        if container:getContainingItem() then
+            if not self.grid.isOnPlayer and self.grid.inventory:getType() ~= "floor" then
+                return 
+            end
+        end 
+    end
 
     local frontItem = vanillaStack.items[1]
     if not TetrisContainerData.validateInsert(container, frontItem) then
