@@ -520,6 +520,7 @@ end
 local function rotateDraggedItem(key)
     if key == getCore():getKey("tetris_rotate_item") then
         if DragAndDrop.isDragging() then
+            GameKeyboard.eatKeyPress(key)
             DragAndDrop.rotateDraggedItem()
         end
     end
