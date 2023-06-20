@@ -39,7 +39,9 @@ function DragItemRenderer:render()
     local xPos = x - itemW * OPT.CELL_SIZE / 2
     local yPos = y - itemH * OPT.CELL_SIZE / 2
 
+    local playerObj = getSpecificPlayer(self.playerNum)
+
     self:suspendStencil()
-    ItemGridUI._renderGridItem(self, item, TetrisItemCategory.getCategory(item), xPos, yPos, DragAndDrop.isDraggedItemRotated(), 1, force1x1)
+    ItemGridUI._renderGridItem(self, playerObj, item, ItemStack.createTempStack(item), xPos, yPos, DragAndDrop.isDraggedItemRotated(), 1, force1x1)
     self:resumeStencil()
 end

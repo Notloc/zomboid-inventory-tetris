@@ -254,6 +254,8 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local gravityEnabled = SandboxVars.InventoryTetris.EnableGravity
     local draggedItem = DragAndDrop.getDraggedItem()
 
+    local playerObj = getSpecificPlayer(self.playerNum)
+
     local count = #stacks
     for i=count,1,-1 do
         local stack = stacks[i]
@@ -277,15 +279,15 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                 if searchSession then
                     local revealed = searchSession.searchedStackIDs[item:getID()]
                     if revealed then
-                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false, isBuried)
+                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false, isBuried)
                     else
-                        self:_renderHiddenStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false)
+                        self:_renderHiddenStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false)
                     end
                 else
                     if item ~= draggedItem then
-                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false, isBuried)
+                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false, isBuried)
                     else
-                        self:_renderGridStack(stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult, false, isBuried)
+                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult, false, isBuried)
                     end
                 end
             end
@@ -370,8 +372,8 @@ function ItemGridUI.getItemColor(item, limit)
     return r,g,b
 end
 
-function ItemGridUI._renderGridStack(drawingContext, stack, item, x, y, alphaMult, force1x1, isBuried)
-    ItemGridUI._renderGridItem(drawingContext, item, stack.category, x, y, stack.isRotated, alphaMult, force1x1, isBuried)
+function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, alphaMult, force1x1, isBuried)
+    ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, stack.isRotated, alphaMult, force1x1, isBuried)
     if stack.count > 1 then
         local text = tostring(stack.count)
         ItemGridUI._drawTextOnTopLeft(drawingContext, text, item, x, y, stack.isRotated, alphaMult, force1x1)
@@ -469,7 +471,7 @@ function ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, isRota
     drawingContext:drawRect(x, top + missing, 2, bottom - top - missing, alphaMult*a,r,g,b)
 end
 
-function ItemGridUI._renderGridItem(drawingContext, item, category, x, y, rotate, alphaMult, force1x1, isBuried)
+function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, rotate, alphaMult, force1x1, isBuried)
     local w, h = TetrisItemData.getItemSize(item, rotate)
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
@@ -482,7 +484,7 @@ function ItemGridUI._renderGridItem(drawingContext, item, category, x, y, rotate
     local bgBright = isBuried and 0.35 or 1
 
     local minDimension = math.min(w, h)
-    drawingContext:drawRect(x+1, y+1, w * CELL_SIZE - w - 1, h * CELL_SIZE - h - 1, 0.3 * alphaMult, unpackColors(colorsByCategory[category], bgBright))
+    drawingContext:drawRect(x+1, y+1, w * CELL_SIZE - w - 1, h * CELL_SIZE - h - 1, 0.3 * alphaMult, unpackColors(colorsByCategory[stack.category], bgBright))
 
     local texture = item:getTex()
     local texW = texture:getWidth()
@@ -531,11 +533,15 @@ function ItemGridUI._renderGridItem(drawingContext, item, category, x, y, rotate
         drawingContext:drawTextureScaledUniform(BROKEN_TEXTURE, x2, y2, targetScale, alphaMult * 0.5, 1, 1, 1);
     end
 
+    local totalWidth = w * CELL_SIZE - w + 1
+    local totalHeight = h * CELL_SIZE - h + 1
     if isBuried then
-        drawingContext:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, 0.5, 0.55, 0.15, 0.15)
+        drawingContext:drawRectBorder(x, y, totalWidth, totalHeight, 0.5, 0.55, 0.15, 0.15)
     else
-        drawingContext:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
+        drawingContext:drawRectBorder(x, y, totalWidth, totalHeight, alphaMult, 0.55, 0.55, 0.55)
     end
+
+    TetrisEvents.OnPostRenderGridItem:trigger(drawingContext, item, stack, x, y, totalWidth, totalHeight, playerObj)
 end
 
 

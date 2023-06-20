@@ -56,6 +56,7 @@ function GridOverflowRenderer:render()
     
     if #overflow == 0 then return end
     
+    local playerObj = getSpecificPlayer(self.containerGridUi.playerNum)
     local yPositions = self:getYPositionsForOverflow()
     local xPos = 0
     local yi = 1
@@ -68,9 +69,9 @@ function GridOverflowRenderer:render()
             local yPos = yPositions[yi]
 
             if true then --or not isUnsearched or (searchSession and searchSession.searchedStackIDs[item:getID()]) then
-                ItemGridUI._renderGridStack(self, stack, item, xPos, yPos, 1, true)
+                ItemGridUI._renderGridStack(self, playerObj, stack, item, xPos, yPos, 1, true)
             else
-                ItemGridUI._renderHiddenStack(self, stack, item, xPos, yPos, 1, true)
+                ItemGridUI._renderHiddenStack(self, playerObj, stack, item, xPos, yPos, 1, true)
             end
 
             yi = yi + 1
