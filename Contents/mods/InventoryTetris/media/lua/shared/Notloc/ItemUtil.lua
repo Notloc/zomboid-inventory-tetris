@@ -32,7 +32,7 @@ ItemUtil.canEat = function(item)
 end
 
 ItemUtil.canEquipItem = function(item)
-    return not ItemUtil:canEat(item) and not item:IsClothing() and not item:isBroken()
+    return not ItemUtil.canEat(item) and not item:IsClothing() and not item:isBroken()
 end
 
 

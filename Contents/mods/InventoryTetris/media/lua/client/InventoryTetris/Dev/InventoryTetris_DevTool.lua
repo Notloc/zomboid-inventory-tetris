@@ -624,7 +624,6 @@ function TetrisDevTool.onItemRestriction(editWindow, index, state, offset)
         if not contains(category, def.invalidCategories) then
             table.insert(def.invalidCategories, category);
         end
-        table.insert(editWindow.newContainerDefinition.invalidCategories, category);
     else
         if not def.invalidCategories then
             return;

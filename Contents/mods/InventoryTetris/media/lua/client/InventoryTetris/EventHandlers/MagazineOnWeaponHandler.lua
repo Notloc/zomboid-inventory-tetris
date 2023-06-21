@@ -1,6 +1,5 @@
 require "InventoryTetris/Events"
 require "InventoryTetris/ItemGrid/UI/Grid/ItemGridUI_rendering"
-require "Notloc/NotUtil"
 
 ItemGridUI.registerItemHoverColor(TetrisItemCategory.MAGAZINE, TetrisItemCategory.RANGED, ItemGridUI.GENERIC_ACTION_COLOR)
 
@@ -30,7 +29,6 @@ magazineWeaponHandler.validate = function(eventData, droppedStack, fromInventory
     return true;
 end
 
--- The stacks are vanilla item stacks, not TetrisItemStacks, as drops may be sourced from outside of the Tetris grids
 magazineWeaponHandler.call = function(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
     local magazine = droppedStack.items[1]
     local weapon = targetStack.items[1]
@@ -39,10 +37,7 @@ magazineWeaponHandler.call = function(eventData, droppedStack, fromInventory, ta
     if weapon:getMagazineType() ~= magazine:getFullType() then return end
 
     local playerObj = getSpecificPlayer(playerNum)
-
-    NotUtil.withItemReturns(playerObj, {weapon}, function()
-        ISInventoryPaneContextMenu.onInsertMagazine(playerObj, weapon, magazine)
-    end)
+    ISInventoryPaneContextMenu.onInsertMagazine(playerObj, weapon, magazine)
 end
 
 TetrisEvents.OnStackDroppedOnStack:add(magazineWeaponHandler)

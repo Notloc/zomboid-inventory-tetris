@@ -484,7 +484,6 @@ function ItemGridUI:interact(gridStack)
     local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
     if not item then return end
     
-    
     if item:IsInventoryContainer() then
         self.inventoryPane.tetrisWindowManager:openContainerPopup(item, self.playerNum, self.inventoryPane)
         return
@@ -506,7 +505,9 @@ function ItemGridUI:interact(gridStack)
     end
     
     local items = ItemStack.getAllItems(gridStack, self.grid.inventory)
-    TetrisEvents.OnItemInteract:trigger(items, self.playerNum)
+    if TetrisEvents.OnItemInteract:trigger(items, self.playerNum) then
+        return
+    end
 
     local maxStack = TetrisItemData.getMaxStackSize(item)
     if maxStack > 1 then

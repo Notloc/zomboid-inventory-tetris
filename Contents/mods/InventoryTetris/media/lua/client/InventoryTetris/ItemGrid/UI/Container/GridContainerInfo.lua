@@ -21,8 +21,8 @@ local SELECTED_TEXTURE = getTexture("media/ui/FavoriteStar.png")
 
 local CONTAINER_BG = getTexture("media/textures/InventoryTetris/ContainerBG.png")
 
-local ORGANIZED_TEXT = getText("trait_Organized")
-local DISORGANIZED_TEXT = getText("trait_Disorganized")
+local ORGANIZED_TEXT = getText("UI_trait_Organized")
+local DISORGANIZED_TEXT = getText("UI_trait_Disorganized")
 
 local OPT = require "InventoryTetris/Settings"
 
