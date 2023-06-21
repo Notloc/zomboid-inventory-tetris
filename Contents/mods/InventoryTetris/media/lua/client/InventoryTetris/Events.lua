@@ -19,6 +19,8 @@ TetrisEvents._genericConsumableTrigger = function(event, ...)
             break
         end
     end
+
+    return data.isConsumed
 end
 
 TetrisEvents.createEvent = function(name, triggerFunc)
@@ -45,12 +47,14 @@ TetrisEvents.createEventData = function(event)
 end
 
 
--- Call Signature: (eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
+TetrisEvents.OnItemInteract = TetrisEvents.createEvent("OnItemInteract", function(self, itemStack, playerNum)
+    TetrisEvents._genericConsumableTrigger(self, itemStack, playerNum)
+end)
+
 TetrisEvents.OnStackDroppedOnStack = TetrisEvents.createEvent("OnStackDroppedOnStack", function(self, dragStack, fromInv, targetStack, targetInv, playerNum)
     TetrisEvents._genericConsumableTrigger(self, dragStack, fromInv, targetStack, targetInv, playerNum)
 end)
 
--- Call Signature: (eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
 TetrisEvents.OnPostRenderGridItem = TetrisEvents.createEvent("OnPostRenderGridItem", function(self, drawingContext, item, gridStack, x, y, width, height, playerObj)
     TetrisEvents._genericTrigger(self, drawingContext, item, gridStack, x, y, width, height, playerObj)
 end)

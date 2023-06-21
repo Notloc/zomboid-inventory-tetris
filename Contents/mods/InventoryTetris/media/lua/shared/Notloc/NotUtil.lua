@@ -79,6 +79,3 @@ NotUtil.Ui.convertCoordinates = function(x, y, localSpace, targetSpace)
     y = y - targetSpace:getAbsoluteY()
     return x, y
 end
-
-
-

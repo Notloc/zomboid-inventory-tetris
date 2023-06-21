@@ -1,5 +1,6 @@
 require "ISUI/ISPanel"
 local OPT = require "InventoryTetris/Settings"
+local ItemUtil = require "Notloc/ItemUtil"
 
 -- PARTIAL CLASS
 if not ItemGridUI then
@@ -381,6 +382,8 @@ function ItemGridUI:doAction(gridStack, action)
         end
     elseif action == "drop" then
         self:drop(gridStack)
+    elseif action == "contextualAction" then
+        self:contextualAction(gridStack)
     end
 end
 
@@ -432,19 +435,18 @@ end
 
 function ItemGridUI:quickEquipItem(item)
     if item:IsClothing() then
-        self:quickEquipClothes(item)
+        self:wearClothes(item)
     end
 
-    self:quickEquipWeapon(item)
+    self:equipItem(item)
 end
 
-function ItemGridUI:quickEquipClothes(item)
-    local playerObj = getSpecificPlayer(self.playerNum)
-    -- TODO: equip quick equip clothes
+function ItemGridUI:wearClothes(item)
+    ISInventoryPaneContextMenu.wearItem(item, self.playerNum)
 end
 
-function ItemGridUI:quickEquipWeapon(item)
-    if not self:_canEquipItem(item) then return end
+function ItemGridUI:equipItem(item)
+    if not ItemUtil.canEquipItem(item) then return end
 
     local playerObj = getSpecificPlayer(self.playerNum)
     local hasPrimaryHand = playerObj:getPrimaryHandItem()
@@ -466,20 +468,6 @@ function ItemGridUI:quickEquipWeapon(item)
     end
 end
 
-function ItemGridUI:_canEquipItem(item)
-    local isFood = item:getCategory() == "Food" and not item:getScriptItem():isCantEat()
-    if isFood then
-        return false
-    end
-
-    local isClothes = item:getCategory() == "Clothing"
-    if isClothes then
-        return false
-    end
-
-    return true
-end
-
 function ItemGridUI:handleDoubleClick(x, y, gridStack)
     DragAndDrop.endDrag()
     
@@ -491,31 +479,62 @@ function ItemGridUI:handleDoubleClick(x, y, gridStack)
     self:doAction(gridStack, OPT.DOUBLE_CLICK_ACTION)
 end
 
+-- Mirrors the vanilla behavior of double clicking an item in the inventory with a few exceptions
 function ItemGridUI:interact(gridStack)
     local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
     if not item then return end
     
-    local vanillaStack = ItemStack.convertToVanillaStacks(gridStack, item:getContainer(), self.inventoryPane)[1]    
+    
     if item:IsInventoryContainer() then
         self.inventoryPane.tetrisWindowManager:openContainerPopup(item, self.playerNum, self.inventoryPane)
         return
     end
 
-    if GenericSingleItemRecipeHandler.call(nil, vanillaStack, item:getContainer(), self.playerNum) then
+    if not self.grid.isOnPlayer then
+        self:quickMoveItems(gridStack)
         return
     end
+    
+    if item:IsClothing() then
+        self:wearClothes(item)
+        return
+    end
+    
+    if item:IsWeapon() then
+        self:equipItem(item)
+        return
+    end
+    
+    local items = ItemStack.getAllItems(gridStack, self.grid.inventory)
+    TetrisEvents.OnItemInteract:trigger(items, self.playerNum)
 
     local maxStack = TetrisItemData.getMaxStackSize(item)
     if maxStack > 1 then
         self.grid:gatherSameItems(gridStack)
         return
     end
+end
 
-    if item:IsFood() and not item:getScriptItem():isCantEat() then
+function ItemGridUI:contextualAction(gridStack)
+    local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
+    if not item then return end
+    
+    local playerObj = getSpecificPlayer(self.playerNum)
+
+    if ItemUtil.canBeRead(item, playerObj) then
+        ISInventoryPaneContextMenu.readItem(item, self.playerNum)
+        return
+    end
+
+    if ItemUtil.canEat(item) then
         ISInventoryPaneContextMenu.onEatItems({item}, 1, self.playerNum)
         return
     end
 
+    local vanillaStack = ItemStack.convertToVanillaStacks(gridStack, item:getContainer(), self.inventoryPane)[1]    
+    if GenericSingleItemRecipeHandler.call(nil, vanillaStack, item:getContainer(), self.playerNum) then
+        return
+    end
 end
 
 local function rotateDraggedItem(key)
@@ -527,19 +546,8 @@ local function rotateDraggedItem(key)
     end
 end
 
-local function debugOpenEquipmentWindow(key)
-    -- open with zero
-    if key == Keyboard.KEY_0 then
-        --local playerObj = getSpecificPlayer(0)
-        local equipmentWindow = EquipmentUIParentWindow:new(0, 0, 0)
-        equipmentWindow:initialise()
-        equipmentWindow:addToUIManager()
-        equipmentWindow:setVisible(true)
-    end
-end
 
 Events.OnKeyStartPressed.Add(rotateDraggedItem)
-Events.OnKeyStartPressed.Add(debugOpenEquipmentWindow)
 
 function ItemGridUI.openItemContextMenu(uiContext, x, y, item, inventoryPane, playerNum)
     local container = item:getContainer()
