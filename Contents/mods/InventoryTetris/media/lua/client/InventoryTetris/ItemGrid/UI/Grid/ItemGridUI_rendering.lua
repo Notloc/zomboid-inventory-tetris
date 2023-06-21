@@ -546,7 +546,7 @@ end
 
 
 
-function ItemGridUI._renderHiddenStack(drawingContext, stack, item, x, y, alphaMult, force1x1)
+function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x, y, alphaMult, force1x1)
     local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
     if force1x1 then
         w, h = 1, 1
