@@ -124,7 +124,7 @@ local type_func_map = {
   [ "boolean" ] = tostring,
 }
 
-encode = function(val, stack)
+function encode(val, stack)
   local t = type(val)
   local f = type_func_map[t]
   if f then
@@ -352,7 +352,7 @@ local char_func_map = {
   [ "{" ] = parse_object,
 }
 
-parse = function(str, idx)
+function parse(str, idx)
   local chr = str:sub(idx, idx)
   local f = char_func_map[chr]
   if f then

@@ -2,9 +2,7 @@ local OPT = require "InventoryTetris/Settings"
 
 ItemGridUiUtil = {}
 
-ItemGridUiUtil.findGridUiUnderMouse = function(gridUis)
-    local x = getMouseX()
-    local y = getMouseY()
+function ItemGridUiUtil.findGridUiUnderMouse(gridUis, x, y)
     for _, gridUi in pairs(gridUis) do
         if gridUi:isMouseOver(x, y) then
             return gridUi
@@ -13,7 +11,7 @@ ItemGridUiUtil.findGridUiUnderMouse = function(gridUis)
     return nil
 end
 
-ItemGridUiUtil.findGridStackUnderMouse = function(gridUis, x, y)
+function ItemGridUiUtil.findGridStackUnderMouse(gridUis, x, y)
     local gridUi = ItemGridUiUtil.findGridUiUnderMouse(gridUis, x, y)
     if gridUi then
         return gridUi:findGridStackUnderMouse()
@@ -22,7 +20,7 @@ ItemGridUiUtil.findGridStackUnderMouse = function(gridUis, x, y)
 end
 
 -- Get the mouse position relative to the top left corner of the item being dragged
-ItemGridUiUtil.findGridPositionOfMouse = function(gridUi, item, isRotated)
+function ItemGridUiUtil.findGridPositionOfMouse(gridUi, item, isRotated)
     local xOff = 0
     local yOff = 0
 
@@ -36,7 +34,7 @@ ItemGridUiUtil.findGridPositionOfMouse = function(gridUi, item, isRotated)
 end
 
 -- Rounds a mouse position to the nearest grid position, for the top left corner of the item
-ItemGridUiUtil.mousePositionToGridPosition = function(x, y)
+function ItemGridUiUtil.mousePositionToGridPosition(x, y)
     local effectiveCellSize = OPT.CELL_SIZE - 1
     local gridX = math.floor(x / effectiveCellSize)
     local gridY = math.floor(y / effectiveCellSize)
@@ -44,20 +42,20 @@ ItemGridUiUtil.mousePositionToGridPosition = function(x, y)
 end
 
 
-ItemGridUiUtil.getOrderedBackpacks = function(inventoryPage)
+function ItemGridUiUtil.getOrderedBackpacks(inventoryPage)
     local orderedBackpacks = {}
-    
+
     local selectedBackpack = inventoryPage.inventory
     if selectedBackpack then
         table.insert(orderedBackpacks, selectedBackpack)
     end
-    
+
     local sortedButtons = {}
     for _, button in ipairs(inventoryPage.backpacks) do
         table.insert(sortedButtons, button)
     end
     table.sort(sortedButtons, function(a, b) return a:getY() < b:getY() end)
-    
+
     for _, button in ipairs(sortedButtons) do
         if button.inventory ~= selectedBackpack then
             table.insert(orderedBackpacks, button.inventory)
@@ -65,16 +63,4 @@ ItemGridUiUtil.getOrderedBackpacks = function(inventoryPage)
     end
 
     return orderedBackpacks
-end
-
-
-local function getPlayerContainers(playerNum)
-    local invPage = getPlayerInventory(playerNum)
-    local targetContainers = { invPage.inventoryPane.inventory }
-    for _, backpack in pairs(invPage.backpacks) do
-        if backpack.inventory ~= invPage.inventoryPane.inventory then
-            table.insert(targetContainers, backpack.inventory)
-        end
-    end
-    return targetContainers
 end

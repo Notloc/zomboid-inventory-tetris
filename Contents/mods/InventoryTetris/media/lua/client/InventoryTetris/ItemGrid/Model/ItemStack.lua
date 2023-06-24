@@ -12,7 +12,7 @@
 ItemStack = {}
 
 ---@return ItemStack
-ItemStack.create = function(x, y, isRotated, itemFullType, category)
+function ItemStack.create(x, y, isRotated, itemFullType, category)
     local stack = {}
     stack.itemIDs = {}
     stack.count = 0
@@ -24,17 +24,17 @@ ItemStack.create = function(x, y, isRotated, itemFullType, category)
     return stack
 end
 
-ItemStack.copyWithoutItems = function(stack)
+function ItemStack.copyWithoutItems(stack)
     return ItemStack.create(stack.x, stack.y, stack.isRotated, stack.itemType, stack.category)
 end
 
-ItemStack.createTempStack = function(item)
+function ItemStack.createTempStack(item)
     local stack = ItemStack.create(0, 0, false, item:getFullType(), TetrisItemCategory.getCategory(item))
     ItemStack.addItem(stack, item)
     return stack
 end
 
-ItemStack.getFrontItem = function(stack, inventory)
+function ItemStack.getFrontItem(stack, inventory)
     for itemID, _ in pairs(stack.itemIDs) do
         local item = inventory:getItemById(itemID)
         if item then return item end
@@ -42,7 +42,7 @@ ItemStack.getFrontItem = function(stack, inventory)
     return nil
 end
 
-ItemStack.addItem = function(stack, item)
+function ItemStack.addItem(stack, item)
     if stack.itemIDs[item:getID()] then
         return -- Already in stack
     end
@@ -50,7 +50,7 @@ ItemStack.addItem = function(stack, item)
     stack.count = stack.count + 1
 end
 
-ItemStack.removeItem = function(stack, item)
+function ItemStack.removeItem(stack, item)
     if not stack.itemIDs[item:getID()] then
         return -- Not in stack
     end
@@ -58,11 +58,11 @@ ItemStack.removeItem = function(stack, item)
     stack.count = stack.count - 1
 end
 
-ItemStack.containsItem = function(stack, item)
+function ItemStack.containsItem(stack, item)
     return stack.itemIDs[item:getID()] ~= nil
 end
 
-ItemStack.canAddItem = function(stack, item)
+function ItemStack.canAddItem(stack, item)
     if stack.count == 0 then return true end
     
     if not ItemStack.isSameType(stack, item) then return false end
@@ -71,11 +71,11 @@ ItemStack.canAddItem = function(stack, item)
     return true
 end
 
-ItemStack.isSameType = function(stack, item)
+function ItemStack.isSameType(stack, item)
     return stack.itemType == item:getFullType()
 end
 
-ItemStack.getAllItems = function(stack, inventory)
+function ItemStack.getAllItems(stack, inventory)
     local items = {}
 
     for itemID, _ in pairs(stack.itemIDs) do
@@ -86,19 +86,19 @@ ItemStack.getAllItems = function(stack, inventory)
     return items
 end
 
-ItemStack.convertToVanillaStacks = function(stack, inventory, inventoryPane)
+function ItemStack.convertToVanillaStacks(stack, inventory, inventoryPane)
     local items = ItemStack.getAllItems(stack, inventory)
     local vanillaStacks = ItemStack.createVanillaStacksFromItems(items, inventoryPane)
     vanillaStacks[1].isRotated = stack.isRotated
     return vanillaStacks
 end
 
-ItemStack.createVanillaStacksFromItem = function(item, inventoryPane)
+function ItemStack.createVanillaStacksFromItem(item, inventoryPane)
     return ItemStack.createVanillaStacksFromItems({item}, inventoryPane)
 end
 
 -- Assumes all items are the same type
-ItemStack.createVanillaStacksFromItems = function(items, inventoryPane)
+function ItemStack.createVanillaStacksFromItems(items, inventoryPane)
     local vanillaStack = {}
     vanillaStack.items = {}
     vanillaStack.invPanel = inventoryPane

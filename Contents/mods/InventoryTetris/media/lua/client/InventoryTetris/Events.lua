@@ -1,13 +1,13 @@
 TetrisEvents = {}
 
-TetrisEvents._genericTrigger = function(event, ...)
+function TetrisEvents._genericTrigger(event, ...)
     local data = TetrisEvents.createEventData(event)
     for _, handler in ipairs(event._eventHandlers) do
         handler.call(data, ...)
     end
 end
 
-TetrisEvents._genericConsumableTrigger = function(event, ...)
+function TetrisEvents._genericConsumableTrigger(event, ...)
     local data = TetrisEvents.createEventData(event)
     for _, handler in ipairs(event._eventHandlers) do
         if handler.validate(data, ...) then
@@ -23,7 +23,7 @@ TetrisEvents._genericConsumableTrigger = function(event, ...)
     return data.isConsumed
 end
 
-TetrisEvents.createEvent = function(name, triggerFunc)
+function TetrisEvents.createEvent(name, triggerFunc)
     local event = {}
     event._name = name
     event.trigger = triggerFunc
@@ -39,7 +39,7 @@ TetrisEvents.createEvent = function(name, triggerFunc)
     return event
 end
 
-TetrisEvents.createEventData = function(event)
+function TetrisEvents.createEventData(event)
     local data = {}
     data.name = event._name
     data.isConsumed = false

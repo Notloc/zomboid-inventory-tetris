@@ -2,7 +2,7 @@ if not NotUtil then
     NotUtil = {}
 end
 
-NotUtil.forEachItemOnPlayer = function(playerObj, callbackFunc)
+function NotUtil.forEachItemOnPlayer(playerObj, callbackFunc)
     local containers = NotUtil.getAllEquippedContainers(playerObj)
     for _, container in ipairs(containers) do
         local _items = container:getItems()
@@ -13,7 +13,7 @@ NotUtil.forEachItemOnPlayer = function(playerObj, callbackFunc)
     end
 end
 
-NotUtil.getAllEquippedContainers = function(playerObj)
+function NotUtil.getAllEquippedContainers(playerObj)
     local playerInv = getPlayerInventory(playerObj:getPlayerNum())
     local selectedContainer = playerInv.inventory
     local containers = {selectedContainer}
@@ -26,12 +26,12 @@ NotUtil.getAllEquippedContainers = function(playerObj)
     return containers
 end
 
-NotUtil.createTransferActionWithReturn = function(item, sourceContainer, destinationContainer, playerObj)
+function NotUtil.createTransferActionWithReturn(item, sourceContainer, destinationContainer, playerObj)
     local transferActions, returnActions = NotUtil.createTransferActionsWithReturns({item}, sourceContainer, destinationContainer, playerObj)
     return transferActions[1], returnActions[1]
 end
 
-NotUtil.createTransferActionsWithReturns = function(items, sourceContainer, destinationContainer, playerObj)
+function NotUtil.createTransferActionsWithReturns(items, sourceContainer, destinationContainer, playerObj)
     local transferActions = {}
     local returnActions = {}
     for _, item in ipairs(items) do
@@ -45,7 +45,7 @@ NotUtil.createTransferActionsWithReturns = function(items, sourceContainer, dest
 end
 
 
-NotUtil.slice = function(tbl, start, stop)
+function NotUtil.slice(tbl, start, stop)
     local sliced = {}
     for i = start, stop do
         table.insert(sliced, tbl[i])
@@ -53,7 +53,7 @@ NotUtil.slice = function(tbl, start, stop)
     return sliced
 end
 
-NotUtil.createSimpleEvent = function()
+function NotUtil.createSimpleEvent()
     local event = {}
     event._listeners = {}
     function event:add(func)
@@ -72,7 +72,7 @@ end
 
 NotUtil.Ui = {}
 
-NotUtil.Ui.convertCoordinates = function(x, y, localSpace, targetSpace)
+function NotUtil.Ui.convertCoordinates(x, y, localSpace, targetSpace)
     local x = x + localSpace:getAbsoluteX()
     local y = y + localSpace:getAbsoluteY()
     x = x - targetSpace:getAbsoluteX()

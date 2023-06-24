@@ -4,22 +4,10 @@ local ICON_PADDING_X = 12
 local ICON_PADDING_Y = 8
 local ICON_SIZE = 64
 
-local GRID_PADDING = 5
-
-local CONTAINER_PADDING_X = 4
-local CONTAINER_PADDING_Y = 10
-local TITLE_Y_PADDING = 4
-
-
-
-local BASIC_INV_TEXTURE = getTexture("media/ui/Icon_InventoryBasic.png")
-local SHELF_TEXTURE = getTexture("media/ui/Container_Shelf.png")
 local WEIGHT_TEXTURE = getTexture("media/textures/InventoryTetris/weight.png")
 local ORGANIZED_TEXTURE = getTexture("media/textures/InventoryTetris/Organized.png")
 local DISORGANIZED_TEXTURE = getTexture("media/textures/InventoryTetris/Disorganized.png")
 local SELECTED_TEXTURE = getTexture("media/ui/FavoriteStar.png")
-
-local CONTAINER_BG = getTexture("media/textures/InventoryTetris/ContainerBG.png")
 
 local ORGANIZED_TEXT = getText("UI_trait_Organized")
 local DISORGANIZED_TEXT = getText("UI_trait_Disorganized")

@@ -150,6 +150,7 @@ function TetrisDevTool.openEditItem(item)
 
     editWindow.itemRenderer = itemRenderer;
 
+    ---@diagnostic disable-next-line: duplicate-set-field
     editWindow.render = function(self)
         ISPanel.render(self);
         self:setWidth(math.max(itemRenderer:getWidth(), 250))
@@ -471,6 +472,7 @@ function TetrisDevTool.openContainerEdit(containerUi)
     editWindow:addChild(exportButton);
 
     local og_prerender = editWindow.prerender
+    ---@diagnostic disable-next-line: duplicate-set-field
     editWindow.prerender = function(self)
         og_prerender(self);
         -- Much darker background
@@ -552,6 +554,7 @@ function TetrisDevTool.openContainerEdit(containerUi)
     end
 
     local og_render = editWindow.render
+    ---@diagnostic disable-next-line: duplicate-set-field
     editWindow.render = function(self)
         og_render(self);
         -- Draw the size and position of each grid
@@ -816,15 +819,18 @@ function TetrisDevTool.createDragHandle(uiElement, pixelIncrement, onReleaseCall
     uiElement.dragHandle = handle;
 
     if col then
+        ---@diagnostic disable-next-line: duplicate-set-field
         handle.prerender = function(self)
             self:drawRect(0, 0, self:getWidth(), self:getHeight(), col.a, col.r, col.g, col.b);
         end
     else
+        ---@diagnostic disable-next-line: duplicate-set-field
         handle.prerender = function(self)
             self:drawRect(0, 0, self:getWidth(), self:getHeight(), 1, 1, 0, 0);
         end
     end
 
+    ---@diagnostic disable-next-line: duplicate-set-field
     handle.render = function(self)
         if self.moving then
             -- Draw a rect from the 0,0 of the parent to the handles bottom right corner
@@ -892,7 +898,7 @@ function TetrisDevTool.recalculateContainerData(containerGrid)
     TetrisDevTool.containerEdits[TetrisContainerData._getContainerKey(containerGrid.inventory)] = nil;
     writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
     
-    TetrisContainerData.recalculateContainerData(containerGrid.inventory);
+    TetrisContainerData.recalculateContainerData();
     
     local playerNum = containerGrid.playerNum
     getPlayerInventory(playerNum).inventoryPane:refreshItemGrids(true)
@@ -910,6 +916,7 @@ function TetrisDevTool.resetGridData(containerGrid)
 end
 
 local og_createMenu = ISInventoryPaneContextMenu.createMenu
+---@diagnostic disable-next-line: duplicate-set-field
 ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
     local menu = og_createMenu(player, isInPlayerInventory, items, x, y, origin)
     if not isDebugEnabled() then return menu end

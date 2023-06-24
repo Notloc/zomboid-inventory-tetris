@@ -5,9 +5,9 @@ require "Notloc/NotUtil"
 --ItemGridUI.registerItemHoverColor(TetrisItemCategory.AMMO, TetrisItemCategory.MAGAZINE, ItemGridUI.GENERIC_ACTION_COLOR)
 
 
-local genericRecipeHandler = {}
+local GenericRecipeHandler = {}
 
-genericRecipeHandler.validate = function(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
+function GenericRecipeHandler.validate(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
     local playerObj = getSpecificPlayer(playerNum)
     if playerObj:isDriving() then return false end
     
@@ -29,43 +29,43 @@ genericRecipeHandler.validate = function(eventData, droppedStack, fromInventory,
         end
         
         --local subOption = subMenuCraft:addOption(getText("ContextMenu_One"), targetItem, ISInventoryPaneContextMenu.OnCraft, recipe, playerNum, false);
-        if false then
-            local recipeName = recipe:getName()
-            local tooltip = CraftTooltip.addToolTip();
-            tooltip.character = playerObj
-            tooltip.recipe = recipe
-            -- add it to our current option
-            tooltip:setName(recipe:getName());
-            if resultItem:getTexture() and resultItem:getTexture():getName() ~= "Question_On" then
-                tooltip:setTexture(resultItem:getTexture():getName());
-            end
-            --subOption.toolTip = tooltip;
+        -- if false then
+        --     local recipeName = recipe:getName()
+        --     local tooltip = CraftTooltip.addToolTip();
+        --     tooltip.character = playerObj
+        --     tooltip.recipe = recipe
+        --     -- add it to our current option
+        --     tooltip:setName(recipe:getName());
+        --     if resultItem:getTexture() and resultItem:getTexture():getName() ~= "Question_On" then
+        --         tooltip:setTexture(resultItem:getTexture():getName());
+        --     end
+        --     --subOption.toolTip = tooltip;
 
             
-            -- limit doing a recipe that add multiple items if the dest container has an item limit
-            if false and not ISInventoryPaneContextMenu.canAddManyItems(recipe, selectedItem, playerObj) then
-                option.notAvailable = true;
-                if subMenuCraft then
-                    for i,v in ipairs(subMenuCraft.options) do
-                        v.notAvailable = true;
-                        local tooltip = ISInventoryPaneContextMenu.addToolTip();
-                        tooltip.description = getText("Tooltip_CantCraftDriving"); -- FIXME: wrong translation
-                        v.toolTip = tooltip;
-                    end
-                end
-                local tooltip = ISInventoryPaneContextMenu.addToolTip();
-                tooltip.description = getText("Tooltip_CantCraftDriving"); -- FIXME: wrong translation
-                option.toolTip = tooltip;
-                return;
-            end
-        end
+        --     -- limit doing a recipe that add multiple items if the dest container has an item limit
+        --     if false and not ISInventoryPaneContextMenu.canAddManyItems(recipe, selectedItem, playerObj) then
+        --         option.notAvailable = true;
+        --         if subMenuCraft then
+        --             for i,v in ipairs(subMenuCraft.options) do
+        --                 v.notAvailable = true;
+        --                 local tooltip = ISInventoryPaneContextMenu.addToolTip();
+        --                 tooltip.description = getText("Tooltip_CantCraftDriving"); -- FIXME: wrong translation
+        --                 v.toolTip = tooltip;
+        --             end
+        --         end
+        --         local tooltip = ISInventoryPaneContextMenu.addToolTip();
+        --         tooltip.description = getText("Tooltip_CantCraftDriving"); -- FIXME: wrong translation
+        --         option.toolTip = tooltip;
+        --         return;
+        --     end
+        -- end
 	end
 
     return false
 end
 
 
-genericRecipeHandler.call = function(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
+function GenericRecipeHandler.call(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
     local playerObj = getSpecificPlayer(playerNum)
     if playerObj:isDriving() then return false end
     
@@ -139,4 +139,4 @@ genericRecipeHandler.call = function(eventData, droppedStack, fromInventory, tar
     -- end
 end
 
-TetrisEvents.OnStackDroppedOnStack:add(genericRecipeHandler)
+TetrisEvents.OnStackDroppedOnStack:add(GenericRecipeHandler)

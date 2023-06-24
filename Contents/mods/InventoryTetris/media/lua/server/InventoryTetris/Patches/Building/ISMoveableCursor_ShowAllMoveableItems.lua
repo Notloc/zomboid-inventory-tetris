@@ -5,6 +5,7 @@ require "Notloc/NotUtil"
 -- Even if they are not in the player's main inventory
 
 local og_getInventoryObjectList = ISMoveableCursor.getInventoryObjectList
+---@diagnostic disable-next-line: duplicate-set-field
 function ISMoveableCursor:getInventoryObjectList()
     local objects = {};
     local spriteBuffer = {};

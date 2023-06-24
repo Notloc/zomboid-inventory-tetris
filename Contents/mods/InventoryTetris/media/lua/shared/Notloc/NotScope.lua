@@ -5,7 +5,7 @@ NotScope = {};
 NotScope._returnActions = {}
 NotScope._validReturnItems = {}
 
-NotScope.withItemReturns = function(playerObj, returnableItems, callback)
+function NotScope.withItemReturns(playerObj, returnableItems, callback)
     local items = {}
     for _, item in ipairs(returnableItems) do
         items[item] = true
@@ -22,7 +22,7 @@ NotScope.withItemReturns = function(playerObj, returnableItems, callback)
     end
 end
 
-NotScope._createReturnAction = function(playerObj, action)
+function NotScope._createReturnAction(playerObj, action)
     if not NotScope._validReturnItems[action.item] then
         return
     end
@@ -31,14 +31,14 @@ NotScope._createReturnAction = function(playerObj, action)
     NotScope._registerReturnAction(playerObj, returnAction)
 end
 
-NotScope._registerReturnAction = function(playerObj, action)
+function NotScope._registerReturnAction(playerObj, action)
     if not NotScope._returnActions[playerObj] then
         NotScope._returnActions[playerObj] = {}
     end
     table.insert(NotScope._returnActions[playerObj], action)
 end
 
-NotScope._popReturnActions = function(playerObj)
+function NotScope._popReturnActions(playerObj)
     local returnActions = NotScope._returnActions[playerObj]
     NotScope._returnActions[playerObj] = {}
     return returnActions or {}
@@ -46,18 +46,16 @@ end
 
 Events.OnGameBoot.Add(function()
     local og_new = ISInventoryTransferAction.new
-    
-    ISInventoryTransferAction.new = function(self, character, ...)
+    ---@diagnostic disable-next-line: duplicate-set-field
+    function ISInventoryTransferAction.new(self, character, ...)
         local o = og_new(self, character, ...)
-        
         if ISInventoryTransferAction.NotScope_enableReturnActions then
             NotScope._createReturnAction(character, o)
         end
-        
         return o
     end
 
-    ISInventoryTransferAction.newReturnAction = function(self, character, ...)
+    function ISInventoryTransferAction.newReturnAction(self, character, ...)
         return og_new(self, character, ...)
     end
 end)

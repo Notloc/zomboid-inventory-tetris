@@ -4,7 +4,7 @@ require "InventoryTetris/ItemGrid/UI/Grid/ItemGridUI_rendering"
 ItemGridUI.registerItemHoverColor(TetrisItemCategory.MAGAZINE, TetrisItemCategory.RANGED, ItemGridUI.GENERIC_ACTION_COLOR)
 
 
-local magazineWeaponHandler = {}
+local MagazineWeaponHandler = {}
 
 -- Used to determine if this handler should be called for these particular items
 -- Additional checks may be done in the call function,
@@ -12,7 +12,7 @@ local magazineWeaponHandler = {}
 
 -- In this case, we only validate that bullets are being dropped on a magazine, as we want this handler to "own" this interaction
 -- The specific checks for the magazine and bullets are done in the call function
-magazineWeaponHandler.validate = function(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
+function MagazineWeaponHandler.validate(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
     local dropItem = droppedStack.items[1]
     local targetItem = targetStack.items[1]
     
@@ -29,7 +29,7 @@ magazineWeaponHandler.validate = function(eventData, droppedStack, fromInventory
     return true;
 end
 
-magazineWeaponHandler.call = function(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
+function MagazineWeaponHandler.call(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
     local magazine = droppedStack.items[1]
     local weapon = targetStack.items[1]
     
@@ -40,4 +40,4 @@ magazineWeaponHandler.call = function(eventData, droppedStack, fromInventory, ta
     ISInventoryPaneContextMenu.onInsertMagazine(playerObj, weapon, magazine)
 end
 
-TetrisEvents.OnStackDroppedOnStack:add(magazineWeaponHandler)
+TetrisEvents.OnStackDroppedOnStack:add(MagazineWeaponHandler)

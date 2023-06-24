@@ -17,12 +17,10 @@ TestFramework.RegisterModule("Inventory Tetris", "Item Grid Tests", function ()
         TestUtils.assert(conntainerGrid.inventory == inv)
         TestUtils.assert(conntainerGrid.containerDefinition)
     end
-    
+
 
     -- Async test
     Tests.async_test_name = function ()
-        
-        
         return AsyncTest:new()
             :next(function ()
                 TestUtils.assert(true)

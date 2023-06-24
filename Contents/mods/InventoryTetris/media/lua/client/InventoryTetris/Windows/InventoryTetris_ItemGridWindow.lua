@@ -10,7 +10,7 @@ ItemGridWindow = ISPanel:derive("ItemGridWindow");
 
 ItemGridWindow._globalInstances = {};
 
-ItemGridWindow.getTopWindow = function()
+function ItemGridWindow.getTopWindow()
     return ItemGridWindow._globalInstances[#ItemGridWindow._globalInstances];
 end
 

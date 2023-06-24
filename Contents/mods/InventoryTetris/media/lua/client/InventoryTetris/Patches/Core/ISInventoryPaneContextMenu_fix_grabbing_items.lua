@@ -3,7 +3,7 @@ require "ISUI/ISInventoryPaneContextMenu"
 local function quickMoveItems(items, playerNum)
     local invPage = getPlayerInventory(playerNum)
     local targetContainers = ItemGridUiUtil.getOrderedBackpacks(invPage)
-    
+
     local retVal = nil
     local playerObj = getSpecificPlayer(playerNum)
     for _, item in ipairs(items) do
@@ -17,7 +17,7 @@ local function quickMoveItems(items, playerNum)
         end
 
         if not targetContainer then return end
-        
+
         local transfer = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), targetContainer)
         transfer.enforceTetrisRules = true
         ISTimedActionQueue.add(transfer)
@@ -31,7 +31,8 @@ local function quickMoveItems(items, playerNum)
 end
 
 local ogOnGrabItems = ISInventoryPaneContextMenu.onGrabItems
-ISInventoryPaneContextMenu.onGrabItems = function(stacks, playerNum)
+---@diagnostic disable-next-line: duplicate-set-field
+function ISInventoryPaneContextMenu.onGrabItems(stacks, playerNum)
     if quickMoveItems(ISInventoryPane.getActualItems(stacks), playerNum) then
         ogOnGrabItems(stacks, playerNum)
     end
@@ -39,7 +40,8 @@ end
 
 
 local ogOnGrabHalfItems = ISInventoryPaneContextMenu.onGrabHalfItems
-ISInventoryPaneContextMenu.onGrabHalfItems = function(stacks, playerNum)
+---@diagnostic disable-next-line: duplicate-set-field
+function ISInventoryPaneContextMenu.onGrabHalfItems(stacks, playerNum)
     local halfItems = ISInventoryPane.getActualItems(stacks)
     local count = math.ceil(#halfItems/2)
     halfItems[count] = nil -- remove this index so ipairs stops here
@@ -50,7 +52,8 @@ ISInventoryPaneContextMenu.onGrabHalfItems = function(stacks, playerNum)
 end
 
 local ogOnGrabOneItems = ISInventoryPaneContextMenu.onGrabOneItems
-ISInventoryPaneContextMenu.onGrabOneItems = function(stacks, playerNum)
+---@diagnostic disable-next-line: duplicate-set-field
+function ISInventoryPaneContextMenu.onGrabOneItems(stacks, playerNum)
     local items = ISInventoryPane.getActualItems(stacks)
     if quickMoveItems({items[1]}, playerNum) then
         ogOnGrabOneItems(stacks, playerNum)

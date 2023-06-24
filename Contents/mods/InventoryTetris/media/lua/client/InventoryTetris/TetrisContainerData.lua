@@ -140,12 +140,12 @@ function TetrisContainerData._calculateDimensions(target)
     return bestX, bestY
 end
 
-TetrisContainerData.recalculateContainerData = function()
+function TetrisContainerData.recalculateContainerData()
     TetrisContainerData._containerDefinitions = {}
     TetrisContainerData._onInitWorld()
 end
 
-TetrisContainerData.validateInsert = function(containerDef, item)
+function TetrisContainerData.validateInsert(containerDef, item)
     if not containerDef.invalidCategories then
         return true
     end
@@ -162,7 +162,7 @@ end
 
 -- Vehicle Storage Registration
 
-TetrisContainerData.registerLargeVehicleStorageContainers = function(containerTypes)
+function TetrisContainerData.registerLargeVehicleStorageContainers(containerTypes)
     for _, type in ipairs(containerTypes) do
         TetrisContainerData._vehicleStorageNames[type] = true
     end
@@ -171,27 +171,27 @@ end
 -- Container Pack Registration
 TetrisContainerData._containerDataPacks = {}
 
-TetrisContainerData.registerContainerDefinitions = function(containerPack)
+function TetrisContainerData.registerContainerDefinitions(containerPack)
     table.insert(TetrisContainerData._containerDataPacks, containerPack)
     if TetrisContainerData._packsLoaded then
         TetrisContainerData._processContainerPack(containerPack) -- You're late.
     end
 end
 
-TetrisContainerData._initializeContainerPacks = function()
+function TetrisContainerData._initializeContainerPacks()
     for _, containerPack in ipairs(TetrisContainerData._containerDataPacks) do
         TetrisContainerData._processContainerPack(containerPack)
     end
     TetrisContainerData._packsLoaded = true
 end
 
-TetrisContainerData._processContainerPack = function(containerPack)
+function TetrisContainerData._processContainerPack(containerPack)
     for key, containerDef in pairs(containerPack) do
         TetrisContainerData._containerDefinitions[key] = containerDef
     end
 end
 
-TetrisContainerData._onInitWorld = function()
+function TetrisContainerData._onInitWorld()
     TetrisContainerData._initializeContainerPacks()
 end
 Events.OnInitWorld.Add(TetrisContainerData._onInitWorld)

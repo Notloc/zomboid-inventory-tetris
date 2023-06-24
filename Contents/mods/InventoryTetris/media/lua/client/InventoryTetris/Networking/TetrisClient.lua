@@ -10,12 +10,12 @@ local VEHICLE_ITEM_PARTIAL = "INVENTORYTETRIS_VehicleItemPartial"
 TetrisClient = {}
 TetrisClient._modDataSyncQueue = {}
 
-TetrisClient.queueModDataSync = function(obj)
+function TetrisClient.queueModDataSync(obj)
     TetrisClient._modDataSyncQueue[obj] = true
 end
 
 
-TetrisClient.getMostRecentModData = function(isoModData, isoKey, worldModData, worldKey)
+function TetrisClient.getMostRecentModData(isoModData, isoKey, worldModData, worldKey)
     local worldData = worldModData[worldKey]
     if not worldData then
         return isoModData
@@ -35,16 +35,16 @@ TetrisClient.getMostRecentModData = function(isoModData, isoKey, worldModData, w
     return isoModData
 end
 
-TetrisClient.getInventoryContainerModData = function(item)
+function TetrisClient.getInventoryContainerModData(item)
     return TetrisClient.getMostRecentModData(item:getModData(), "gridContainers", ModData.getOrCreate(WORLD_ITEM_DATA), item:getID()), item:getWorldItem()
 end
 
-TetrisClient.getVehicleModData = function(vehicle)
+function TetrisClient.getVehicleModData(vehicle)
     return TetrisClient.getMostRecentModData(vehicle:getModData(), "gridContainers", ModData.getOrCreate(VEHICLE_ITEM_DATA), vehicle:getKeyId()), vehicle
 end
 
 
-TetrisClient.transmitPartialData = function(fullKey, partialKey, data)
+function TetrisClient.transmitPartialData(fullKey, partialKey, data)
     local fullData = ModData.getOrCreate(fullKey)
     fullData[data[TETRIS_UUID]] = data
 
@@ -52,7 +52,7 @@ TetrisClient.transmitPartialData = function(fullKey, partialKey, data)
     ModData.transmit(partialKey)
 end
 
-TetrisClient.transmitWorldInventoryObjectData = function(worldInvObject)
+function TetrisClient.transmitWorldInventoryObjectData(worldInvObject)
     local item = worldInvObject:getItem();
     local gridData = item and item:getModData().gridContainers;
     if not gridData then return end
@@ -61,7 +61,7 @@ TetrisClient.transmitWorldInventoryObjectData = function(worldInvObject)
     TetrisClient.transmitPartialData(WORLD_ITEM_DATA, WORLD_ITEM_PARTIAL, gridData)
 end
 
-TetrisClient.transmitVehicleInventoryData = function(vehicleObj)
+function TetrisClient.transmitVehicleInventoryData(vehicleObj)
     local gridData = vehicleObj:getModData().gridContainers;
     if not gridData then return end
 

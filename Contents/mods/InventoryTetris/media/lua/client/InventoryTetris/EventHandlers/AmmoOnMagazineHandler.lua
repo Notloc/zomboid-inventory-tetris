@@ -13,7 +13,7 @@ local ammoMagazineHandler = {}
 
 -- In this case, we only validate that bullets are being dropped on a magazine, as we want this handler to "own" this interaction
 -- The specific checks for the magazine and bullets are done in the call function
-ammoMagazineHandler.validate = function(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
+function ammoMagazineHandler.validate(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
     local dropItem = droppedStack.items[1]
     local targetItem = targetStack.items[1]
     
@@ -31,7 +31,7 @@ ammoMagazineHandler.validate = function(eventData, droppedStack, fromInventory, 
 end
 
 -- The stacks are vanilla item stacks, not TetrisItemStacks, as drops may be sourced from outside of the Tetris grids
-ammoMagazineHandler.call = function(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
+function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
     local magazine = targetStack.items[1]
     local bullets = droppedStack.items
     

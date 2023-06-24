@@ -143,7 +143,7 @@ Events.OnTick.Add(GridAutoDropSystem._processQueues)
 TetrisHandMonitor = {}
 TetrisHandMonitor.ticksByPlayer = {}
 
-TetrisHandMonitor.validateEquippedItems = function(playerObj)
+function TetrisHandMonitor.validateEquippedItems(playerObj)
     local playerNum = playerObj:getPlayerNum()
     if not playerNum or playerNum >= 4 then return end -- Some NPC mod or something
 

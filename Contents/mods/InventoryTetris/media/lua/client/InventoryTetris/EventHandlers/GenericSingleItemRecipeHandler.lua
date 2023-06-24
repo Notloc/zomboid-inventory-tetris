@@ -1,5 +1,5 @@
 GenericSingleItemRecipeHandler = {}
-GenericSingleItemRecipeHandler.call = function(eventData, stack, inventory, playerNum)    
+function GenericSingleItemRecipeHandler.call(eventData, stack, inventory, playerNum)    
     local playerObj = getSpecificPlayer(playerNum)
     if playerObj:isDriving() then return false end
     

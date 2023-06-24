@@ -1,7 +1,7 @@
 local ItemUtil = {}
 
 
-ItemUtil.canBeRead = function(item, playerObj)
+function ItemUtil.canBeRead(item, playerObj)
     -- Not a book
     if not item or item:getCategory() ~= "Literature" or item:canBeWrite() then
         return false
@@ -27,11 +27,11 @@ ItemUtil.canBeRead = function(item, playerObj)
     return true
 end
 
-ItemUtil.canEat = function(item)
+function ItemUtil.canEat(item)
     return item:getCategory() == "Food" and not item:getScriptItem():isCantEat()
 end
 
-ItemUtil.canEquipItem = function(item)
+function ItemUtil.canEquipItem(item)
     return not ItemUtil.canEat(item) and not item:IsClothing() and not item:isBroken()
 end
 

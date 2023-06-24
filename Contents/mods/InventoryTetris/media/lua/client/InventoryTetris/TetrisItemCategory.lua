@@ -24,7 +24,7 @@ for _, category in pairs(TetrisItemCategory) do
 end
 TetrisItemCategory.list = list
 
-TetrisItemCategory.getCategory = function(item)
+function TetrisItemCategory.getCategory(item)
     local category = item:getDisplayCategory()
     local type = item:getFullType()
 
