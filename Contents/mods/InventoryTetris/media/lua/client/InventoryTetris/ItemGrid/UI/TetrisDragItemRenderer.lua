@@ -24,7 +24,7 @@ function DragItemRenderer:render()
     if not item then
         return
     end
-    
+
     local x = self:getMouseX()
     local y = self:getMouseY()
 

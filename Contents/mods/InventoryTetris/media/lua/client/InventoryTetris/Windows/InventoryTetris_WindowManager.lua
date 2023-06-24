@@ -1,13 +1,13 @@
 TetrisWindowManager = {}
 
 function TetrisWindowManager:new(parent)
-    o = {}
+    local o = {}
     setmetatable(o, self)
     self.__index = self
-    
+
     o.parent = parent
     o.childWindows = {}
-  
+
     return o
 end
 

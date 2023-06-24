@@ -23,7 +23,7 @@ function GridOverflowRenderer:getYPositionsForOverflow()
     if self.lastHeight == height then
         return self.lastYPositions
     end
-    
+
     local y = 0
     local yPositions = {}
     while height > (OPT.CELL_SIZE + OVERFLOW_MARGIN * 0.8) do
@@ -64,7 +64,7 @@ function GridOverflowRenderer:render()
     for _, stack in ipairs(overflow) do
         local item = ItemStack.getFrontItem(stack, inventory)
         if item then
-            updateItem(item);
+            ItemGridUI.updateItem(item);
 
             local yPos = yPositions[yi]
 

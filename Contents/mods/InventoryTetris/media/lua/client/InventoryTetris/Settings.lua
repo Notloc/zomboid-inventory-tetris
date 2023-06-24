@@ -1,6 +1,6 @@
 if not INVENTORY_TETRIS_SETTINGS then
     INVENTORY_TETRIS_SETTINGS = {}
-    
+
     INVENTORY_TETRIS_SETTINGS.OnApplyGridScale = NotUtil.createSimpleEvent()
     INVENTORY_TETRIS_SETTINGS.applyGridScale = function(self, scale)
         self.SCALE = scale

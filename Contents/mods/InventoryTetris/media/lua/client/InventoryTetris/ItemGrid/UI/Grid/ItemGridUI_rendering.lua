@@ -218,7 +218,7 @@ function ItemGridUI:renderBackGrid()
     self.javaObject:DrawTextureTiled(lineTex, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
 end
 
-function updateItem(item)
+function ItemGridUI.updateItem(item)
     if instanceof(item, 'InventoryItem') then
         item:updateAge()
     end
@@ -249,10 +249,10 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
             if stack.count > 1 and stack.category == TetrisItemCategory.FOOD then
                 for itemId, _ in pairs(stack.itemIDs) do
                     local item = inventory:getItemById(itemId)
-                    updateItem(item)
+                    ItemGridUI.updateItem(item)
                 end
             else
-                updateItem(item);
+                ItemGridUI.updateItem(item);
             end
 
             local x, y = stack.x, stack.y
@@ -362,7 +362,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         local text = tostring(stack.count)
         ItemGridUI._drawTextOnTopLeft(drawingContext, text, item, x, y, stack.isRotated, alphaMult, force1x1)
     end
-    
+
     if item:getMaxAmmo() > 0 then
         local text = tostring(item:getCurrentAmmoCount())
         ItemGridUI._drawTextOnBottomRight(drawingContext, text, item, x, y, stack.isRotated, alphaMult, force1x1)
@@ -477,7 +477,7 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
 
     local x2, y2 = nil, nil
     local targetScale = OPT.ICON_SCALE
-    
+
     local precisionFactor = 8
     if largestDimension > TEXTURE_SIZE + TEXTURE_PAD then -- Handle large textures
         local mult = precisionFactor * largestDimension / TEXTURE_SIZE 
@@ -497,7 +497,7 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     r = r * bgBright
     g = g * bgBright
     b = b * bgBright
-    
+
     if rotate then
         if OPT.SCALE == 1.0 and w == 1 and h == 1 and largestDimension <= TEXTURE_SIZE then -- Can only rotate 1x1 items if they fit in the texture perfectly
             local half = TEXTURE_SIZE / 2
@@ -535,7 +535,7 @@ function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x
     if force1x1 then
         w, h = 1, 1
     end
-    
+
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
     local TEXTURE_PAD = OPT.TEXTURE_PAD
@@ -554,4 +554,3 @@ function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x
     drawingContext:drawTextureCenteredAndSquare(HIDDEN_ITEM, x2, y2, size, alphaMult, 1,1,1);
     drawingContext:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
 end
-

@@ -210,21 +210,21 @@ function TetrisDevTool.getGridXYFromHandle(handle)
     return ItemGridUiUtil.mousePositionToGridPosition(x, y)
 end
 
-function createAddGridButton(context)
+local function createAddGridButton(context)
     local button = ISButton:new(0, 0, 20, 20, "+", context, TetrisDevTool.onAddGridButton);
     button:initialise();
     button:instantiate();
     return button;
 end
 
-function createRemoveGridButton(context)
+local function createRemoveGridButton(context)
     local button = ISButton:new(0, 0, 20, 20, "X", context, TetrisDevTool.onRemoveGridButton);
     button:initialise();
     button:instantiate();
     return button;
 end
 
-function getQuickButton(context, quickId, factory)
+local function getQuickButton(context, quickId, factory)
     if not context[quickId.."pool"] then
         context[quickId.."pool"] = {}
     end
@@ -247,7 +247,7 @@ function getQuickButton(context, quickId, factory)
     return button;
 end
 
-function clearQuickButtons(context, quickId)
+local function clearQuickButtons(context, quickId)
     if not context[quickId] then return end
 
     if not context[quickId.."pool"] then

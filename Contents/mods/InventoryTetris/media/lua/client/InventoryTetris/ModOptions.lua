@@ -136,5 +136,4 @@ if ModOptions and ModOptions.getInstance then
         OPT:applyShiftClickAction(action)
     end
     shiftClickAction:OnApplyInGame(INVENTORY_TETRIS_MOD_OPTIONS.options.TETRIS_SHIFT_CLICK_ACTION_INDEX)
-
 end
