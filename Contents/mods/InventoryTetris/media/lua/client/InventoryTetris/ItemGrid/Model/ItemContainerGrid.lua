@@ -1,9 +1,18 @@
 local GRID_REFRESH_DELAY = 600
 local PHYSICS_DELAY = 600
 
+---@class ItemContainerGrid
+---@field inventory ItemContainer
+---@field playerNum number
+---@field containerDefinition ContainerGridDefinition
+---@field isPlayerInventory boolean
+---@field isOnPlayer boolean
+---@field grids ItemGrid[]
+---@field overflow ItemGrid
 ItemContainerGrid = {}
+
 ItemContainerGrid._tempGrid = {} -- For hovering over items, so we don't create a new grid every frame to evaluate if an item can be placed
-ItemContainerGrid._gridCache = {} -- Just created grids, so we don't have to create a new grid multiple times in a single tick
+ItemContainerGrid._gridCache = {} -- Just created grids, so we don't end up creating a new grid multiple times in a single tick when looping or something
 
 -- TODO: Remove playerNum from this class, it's not actually used unless the grid is for the player's base inventory
 -- Thankfully grids are pretty much entirely agnostic to the player interacting with them, so it should be easy to remove or ignore
@@ -47,7 +56,9 @@ local function searchInventoryPageForContainerGrid(invPage, targetInventory)
     return nil
 end
 
-ItemContainerGrid.Create = function(inventory, playerNum)
+
+---@return ItemContainerGrid
+function ItemContainerGrid.Create(inventory, playerNum)
     local containerGrid = ItemContainerGrid.FindInstance(inventory, playerNum)
     if containerGrid then
         return containerGrid
@@ -63,7 +74,8 @@ ItemContainerGrid.Create = function(inventory, playerNum)
     return ItemContainerGrid:new(inventory, playerNum)
 end
 
-ItemContainerGrid.CreateTemp = function(inventory, playerNum)
+---@return ItemContainerGrid
+function ItemContainerGrid.CreateTemp(inventory, playerNum)
     local containerGrid = ItemContainerGrid.FindInstance(inventory, playerNum)
     if containerGrid then
         return containerGrid
@@ -80,7 +92,8 @@ ItemContainerGrid.CreateTemp = function(inventory, playerNum)
     return tempGrid
 end
 
-ItemContainerGrid.FindInstance = function(inventory, playerNum)
+---@return ItemContainerGrid?
+function ItemContainerGrid.FindInstance(inventory, playerNum)
     if ItemContainerGrid._gridCache[playerNum] then
         for _, grid in ipairs(ItemContainerGrid._gridCache[playerNum]) do
             if grid.inventory == inventory then
@@ -118,10 +131,13 @@ function ItemContainerGrid._getPlayerMainGrid(playerNum)
     return ItemContainerGrid._playerMainGrids[playerNum]
 end
 
-function ItemContainerGrid:createGrids(inventory, playerNum)
+function ItemContainerGrid:createGrids(container, playerNum)
+    local playerObj = getSpecificPlayer(playerNum)
+    local isPlayerInventory = container == playerObj:getInventory()
+
     local grids = {}
     for index, gridDef in ipairs(self.containerDefinition.gridDefinitions) do
-        local grid = ItemGrid:new(self, index, inventory, playerNum)
+        local grid = ItemGrid:new(self, index, container, isPlayerInventory)
         grids[index] = grid
     end
     return grids
@@ -177,10 +193,12 @@ function ItemContainerGrid:_getCapacity()
     return capacity
 end
 
+---@return boolean
 function ItemContainerGrid:isItemAllowed(item)
     return self:_validateOnlyAcceptCategory(item)
 end
 
+---@return boolean
 function ItemContainerGrid:canAddItem(item)
     if not self:_validateOnlyAcceptCategory(item) then
         return false
@@ -273,7 +291,7 @@ function ItemContainerGrid:autoPositionItem(item, isOrganized, isDisorganized)
     end
 
     for _, grid in ipairs(self.grids) do
-        if grid:_attemptToInsertItem(item, false, isOrganized, isDisoraganized) then
+        if grid:_attemptToInsertItem(item, false, isOrganized, isDisorganized) then
             return true
         end
     end

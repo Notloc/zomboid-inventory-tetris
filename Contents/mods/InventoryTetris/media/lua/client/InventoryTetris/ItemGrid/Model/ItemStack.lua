@@ -1,8 +1,17 @@
 -- Purely static code as these need to be serialized into modData
--- TODO: see if we can remove the rep later once things are more stable
+
+---@class ItemStack
+---@field public itemIDs table<number, boolean>
+---@field public count number
+---@field public x number
+---@field public y number
+---@field public isRotated boolean
+---@field public itemType string
+---@field public category string
 
 ItemStack = {}
 
+---@return ItemStack
 ItemStack.create = function(x, y, isRotated, itemFullType, category)
     local stack = {}
     stack.itemIDs = {}

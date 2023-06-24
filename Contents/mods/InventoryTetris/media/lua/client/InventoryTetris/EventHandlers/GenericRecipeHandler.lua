@@ -21,19 +21,16 @@ genericRecipeHandler.validate = function(eventData, droppedStack, fromInventory,
 
     for i=0,recipeList:size() -1 do
         local recipe = recipeList:get(i)
-        local numberOfTimes = RecipeManager.getNumberOfTimesRecipeCanBeDone(recipe, playerObj, containerList, selectedItem)
 		local resultItem = InventoryItemFactory.CreateItem(recipe:getResult():getFullType());
-
-        local recipeName = recipe:getName()
         local neededItems = recipe:getNumberOfNeededItem()
-
+        
         if neededItems == 2 then
             return true
         end
-
+        
         --local subOption = subMenuCraft:addOption(getText("ContextMenu_One"), targetItem, ISInventoryPaneContextMenu.OnCraft, recipe, playerNum, false);
-
         if false then
+            local recipeName = recipe:getName()
             local tooltip = CraftTooltip.addToolTip();
             tooltip.character = playerObj
             tooltip.recipe = recipe
@@ -63,8 +60,6 @@ genericRecipeHandler.validate = function(eventData, droppedStack, fromInventory,
             end
         end
 	end
-
-
 
     return false
 end

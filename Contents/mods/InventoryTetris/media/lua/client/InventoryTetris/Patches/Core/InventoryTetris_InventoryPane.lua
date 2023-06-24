@@ -9,7 +9,9 @@ local OPT = require "InventoryTetris/Settings"
 -- Aggressively ensure we load last
 -- If the user has this mod enabled, I think its safe to assume they want it to take priority
 Events.OnGameBoot.Add(function()
+
     local og_new = ISInventoryPane.new
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:new(x, y, width, height, inventory, player)
         local o = og_new(self, x, y, width, height, inventory, player)
         o.tetrisWindowManager = TetrisWindowManager:new(o)
@@ -18,10 +20,12 @@ Events.OnGameBoot.Add(function()
     end
 
     local og_createChildren = ISInventoryPane.createChildren
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:createChildren()
         og_createChildren(self)
 
-        self.scrollView = NotlocScrollView:new(0,0, self.width, self.height)
+        ---@diagnostic disable-next-line: undefined-global
+        self.scrollView = NotlocScrollView:new(0,0, self.width, self.height) -- From EquipmentUI mod
         self.scrollView:initialise()
         self:addChild(self.scrollView)
         self.scrollView:setAnchorLeft(true)
@@ -73,6 +77,7 @@ Events.OnGameBoot.Add(function()
     end
 
     local og_refreshContainer = ISInventoryPane.refreshContainer
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:refreshContainer()
         -- Do this for mod compatibility only, tetris has no use for this
         og_refreshContainer(self)
@@ -153,6 +158,7 @@ Events.OnGameBoot.Add(function()
     end
 
     local og_prerender = ISInventoryPane.prerender
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:prerender()
         og_prerender(self);
         self.nameHeader:setVisible(false)
@@ -166,16 +172,19 @@ Events.OnGameBoot.Add(function()
     end
 
     local og_render = ISInventoryPane.render
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:render()
         og_render(self)
         self.mode = "grid" -- Let a single frame pass before we start rendering the grid
     end
 
     local og_doButtons = ISInventoryPane.doButtons
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:doButtons()
     end
 
     local og_updateTooltip = ISInventoryPane.updateTooltip
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:updateTooltip()
         if self.mode ~= "grid" or not self.gridContainerUis then
             return og_updateTooltip(self)
@@ -256,11 +265,12 @@ Events.OnGameBoot.Add(function()
         local lootPage = getPlayerLoot(self.player)
         local lootTooltip = lootPage and lootPage.inventoryPane.toolRender
         UIManager.setPlayerInventoryTooltip(self.player,
-            inventoryTooltip and inventoryTooltip.javaObject or nil,
-            lootTooltip and lootTooltip.javaObject or nil)
+            inventoryTooltip and inventoryTooltip.javaObject,
+            lootTooltip and lootTooltip.javaObject)
     end
 
     local og_onMouseDown = ISInventoryPane.onMouseDown
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:onMouseDown(x, y)
         if self.mode ~= "grid" then
             return og_onMouseDown(self, x, y)
@@ -269,6 +279,7 @@ Events.OnGameBoot.Add(function()
     end
 
     local og_mouseUp = ISInventoryPane.onMouseUp
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:onMouseUp(x, y)
         if self.mode ~= "grid" then
             return og_mouseUp(self, x, y)
@@ -277,6 +288,7 @@ Events.OnGameBoot.Add(function()
     end
 
     local og_onRightMouseUp = ISInventoryPane.onRightMouseUp
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:onRightMouseUp(x, y)
         if self.mode ~= "grid" then
             return og_onRightMouseUp(self, x, y)
@@ -285,6 +297,7 @@ Events.OnGameBoot.Add(function()
     end
 
     local og_onMouseDoubleClick = ISInventoryPane.onMouseDoubleClick
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:onMouseDoubleClick(x, y)
         if self.mode ~= "grid" then
             return og_onMouseDoubleClick(self, x, y)
@@ -299,6 +312,7 @@ Events.OnGameBoot.Add(function()
     end
 
     local og_onMouseWheel = ISInventoryPane.onMouseWheel
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:onMouseWheel(del)
         return false -- Disabled scrolling to rotate items because of scrollviews
 
@@ -310,6 +324,7 @@ Events.OnGameBoot.Add(function()
     end
 
     local og_getActualItems = ISInventoryPane.getActualItems
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane.getActualItems(items)
         if items.items then
             return og_getActualItems(items.items)
@@ -318,6 +333,7 @@ Events.OnGameBoot.Add(function()
     end
 
     local og_transferItemsByWeight = ISInventoryPane.transferItemsByWeight
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISInventoryPane:transferItemsByWeight(items, container)
         ISInventoryTransferAction.globalTetrisRules = true
         og_transferItemsByWeight(self, items, container)

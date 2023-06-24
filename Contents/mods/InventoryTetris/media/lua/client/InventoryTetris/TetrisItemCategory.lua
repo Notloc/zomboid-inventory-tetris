@@ -1,3 +1,5 @@
+---@enum TetrisItemCategory
+
 TetrisItemCategory = {
     MELEE = "MELEE_WEAPON",
     RANGED = "RANGED_WEAPON",

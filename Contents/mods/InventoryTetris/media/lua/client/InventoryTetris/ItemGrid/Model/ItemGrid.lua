@@ -1,6 +1,22 @@
+---@class ItemGrid
+---@field containerGrid ItemContainerGrid
+---@field containerDefinition ContainerGridDefinition
+---@field gridDefinition GridDefinition
+---@field gridIndex number
+---@field inventory ItemContainer
+---@field isPlayerInventory boolean
+---@field isOnPlayer boolean
+---@field isFloor boolean
+---@field width number
+---@field height number
 ItemGrid = {}
 
-function ItemGrid:new(containerGrid, gridIndex, inventory, playerNum)
+---@param containerGrid ItemContainerGrid
+---@param gridIndex number
+---@param inventory ItemContainer
+---@param isPlayerInventory boolean
+---@return ItemGrid
+function ItemGrid:new(containerGrid, gridIndex, inventory, isPlayerInventory)
     local o = {}
     setmetatable(o, self)
     self.__index = self
@@ -10,9 +26,8 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, playerNum)
     o.gridDefinition = o.containerDefinition.gridDefinitions[gridIndex]
     o.gridIndex = gridIndex
     o.inventory = inventory
-    o.playerNum = playerNum
 
-    o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
+    o.isPlayerInventory = isPlayerInventory
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
     o.isFloor = inventory:getType() == "floor"
 
@@ -28,14 +43,14 @@ function ItemGrid:getItem(x, y)
     return stack and ItemStack.getFrontItem(stack, self.inventory) or nil
 end
 
-function ItemGrid:getStack(x, y)
+function ItemGrid:getStack(x, y, playerNum)
     local stack = nil
-    if self.stackMap[x] then 
-        stack = self.stackMap[x][y] 
+    if self.stackMap[x] then
+        stack = self.stackMap[x][y]
     end
 
     if stack then
-        if not self:_validateStackIsSearched(stack, self.playerNum) then
+        if not self:_validateStackIsSearched(stack, playerNum) then
             return nil
         end
     end
@@ -94,7 +109,7 @@ end
 function ItemGrid:removeItem(item)
     for _, stack in ipairs(self.persistentData.stacks) do
         if ItemStack.containsItem(stack, item) then
-            ItemStack.removeItem(stack, item, self.inventory)
+            ItemStack.removeItem(stack, item)
             if stack.count == 0 then
                 self:_removeStack(stack)
             end
@@ -183,13 +198,6 @@ function ItemGrid:_removeStack(stack)
             table.remove(self.persistentData.stacks, i)
             self:_rebuildStackMap()
             self:_sendModData()
-            return
-        end
-    end
-
-    for i, s in ipairs(self.overflow) do
-        if s == stack then
-            table.remove(self.overflow, i)
             return
         end
     end
@@ -491,9 +499,9 @@ function ItemGrid:physicsUpdate()
     for y=self.height-2, 0, -1 do -- Skip the bottom row because it can't fall
         for x=0, self.width - 1 do
             local stack = self:getStackInternal(x, y)
-            ignoreMap[stack] = true
-
             if stack and not processedStacks[stack] then
+                ignoreMap[stack] = true
+
                 local item = ItemStack.getFrontItem(stack, self.inventory)
                 if item then
                     local w, h = TetrisItemData.getItemSize(item, stack.isRotated)                    
@@ -504,9 +512,9 @@ function ItemGrid:physicsUpdate()
                     end
                     processedStacks[stack] = true
                 end
-            end
 
-            ignoreMap[stack] = nil
+                ignoreMap[stack] = nil
+            end
         end
     end
 end
@@ -548,7 +556,7 @@ end
 
 -- TODO: Either remove this method or make it batch several items at once with minimal checks
 function ItemGrid:_acceptUnpositionedItem(item, isOrganized, isDisorganized)    
-    return self:_attemptToInsertItem(item, false, isOrganized, isDisoraganized)
+    return self:_attemptToInsertItem(item, false, isOrganized, isDisorganized)
 end
 
 function ItemGrid:isEmpty()
@@ -760,7 +768,7 @@ ItemGrid._floorModData = {} -- No need to save floor grids, but we do allow user
 
 function ItemGrid:_getParentModData()
     if self.isPlayerInventory then
-        local player = getSpecificPlayer(self.playerNum)
+        local player = self.inventory:getParent()
         return player:getModData(), player
     end
 

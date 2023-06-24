@@ -1,5 +1,14 @@
 require "InventoryTetris/TetrisItemCategory"
 
+---@class ContainerGridDefinition
+---@field gridDefinitions GridDefinition[]
+---@field invalidCategories TetrisItemCategory[]
+---@field isOrganized boolean
+
+---@class GridDefinition
+---@field size Size2D
+---@field position Vector2Lua
+
 local MAX_ITEM_HEIGHT = 30
 local MAX_ITEM_WIDTH = 10
 
@@ -89,7 +98,7 @@ end
 function TetrisContainerData._calculateWorldContainerDefinition(container)
     local capacity = container:getCapacity()
 
-    local size = 1 + math.ceil(math.pow(capacity, 0.55))
+    local size = 1 + math.ceil(capacity^0.55)
     return {
         gridDefinitions = {{
             size = {width=size, height=size},

@@ -30,7 +30,7 @@ function GridAutoDropSystem._processItems(playerNum, items)
         if currentContainer then
             local containerGrid = ItemContainerGrid.Create(currentContainer, playerNum)
             if containerGrid:canAddItem(item) then
-                containerGrid:autoPositionItem(item, isOrganized, isDisoraganized)
+                containerGrid:autoPositionItem(item, isOrganized, isDisorganized)
                 addedToContainer = true
             else
                 for _, container in ipairs(containers) do

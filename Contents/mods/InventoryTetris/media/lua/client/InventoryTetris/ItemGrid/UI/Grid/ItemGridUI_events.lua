@@ -6,6 +6,7 @@ local ItemUtil = require "Notloc/ItemUtil"
 if not ItemGridUI then
     ItemGridUI = ISPanel:derive("ItemGridUI")
 
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ItemGridUI:new(grid, containerGrid, inventoryPane, playerNum)
         local o = ISPanel:new(0, 0, 0, 0)
         setmetatable(o, self)
@@ -151,7 +152,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
         local isSameStack = stackUnderMouse and gridStack == stackUnderMouse
 
         if not isSameStack and stackUnderMouse and ItemStack.canAddItem(stackUnderMouse, dragItem) then
-            self:handleDropOnStack(vanillaStack, stackUnderMouse, gridX, gridY)
+            self:handleDropOnStack(vanillaStack, stackUnderMouse)
             return
         end
         
@@ -554,8 +555,10 @@ function ItemGridUI.openItemContextMenu(uiContext, x, y, item, inventoryPane, pl
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
     local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItem(item, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
-    --+self:getYScroll());
+
+    -- TODO: Joypad support for these menus
     if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
+        local self = {} -- Suppresses warning
         menu.origin = self.inventoryPage
         menu.mouseOver = 1
         setJoypadFocus(playerNum, menu)
@@ -566,13 +569,15 @@ end
 function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, inventoryPane, playerNum)
     local item = ItemStack.getFrontItem(gridStack, inventory)
     if not item then return end
-    
+
     local items = ItemStack.getAllItems(gridStack, inventory)
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
     local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItems(items, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
-    --+self:getYScroll());
-    if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
+
+    -- TODO: Joypad support for these menus
+    if false and menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
+        local self = {} -- Suppresses warning
         menu.origin = self.inventoryPage
         menu.mouseOver = 1
         setJoypadFocus(playerNum, menu)

@@ -93,7 +93,6 @@ function TetrisDevTool.openEditItem(item)
     nameLabel:instantiate();
     editWindow:addChild(nameLabel);
     
-    local currentX, currentY = TetrisItemData.getItemSize(item, false)
     local maxStackSize = TetrisItemData.getMaxStackSize(item)
 
     local maxStackLabel = ISLabel:new(10, 25, 10, "Max Stack:", 1, 1, 1, 1, UIFont.Small, true);
@@ -109,8 +108,6 @@ function TetrisDevTool.openEditItem(item)
     maxStackInput:setText(tostring(maxStackSize));
     editWindow:addChild(maxStackInput);
 
-    editWindow.widthInput = widthInput;
-    editWindow.heightInput = heightInput;
     editWindow.maxStackInput = maxStackInput;
     editWindow.item = item;
 

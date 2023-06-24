@@ -5,6 +5,7 @@ require "InventoryTetris/TetrisItemCategory"
 if not ItemGridUI then
     ItemGridUI = ISPanel:derive("ItemGridUI")
 
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ItemGridUI:new(grid, containerGrid, inventoryPane, playerNum)
         local o = ISPanel:new(0, 0, 0, 0)
         setmetatable(o, self)
@@ -77,23 +78,6 @@ local OPT = require "InventoryTetris/Settings"
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
 local HIDDEN_ITEM = getTexture("media/textures/InventoryTetris/Hidden.png")
 
-local function getBackgroundColorByCategory(category)
-    local itemType = item:getDisplayCategory()
-    if itemType == "Ammo" then
-        return 0.5, 0.5, 0.5
-    elseif itemType == "Weapon" then
-        return 0.8, 0.2, 0.2
-    elseif itemType == "Clothing" then
-        return 0.8, 0.8, 0.1
-    elseif itemType == "Food" then
-        return 0.1, 0.7, 0.9
-    elseif itemType == "Medical" then
-        return 
-    else
-        return 
-    end
-end
-
 local function determineContainerHoverColor(draggedStack, hoveredStack, dragInv, hoverInv, playerNum)
     local draggedItem = ItemStack.getFrontItem(draggedStack, dragInv)
     local containerItem = ItemStack.getFrontItem(hoveredStack, hoverInv)
@@ -102,11 +86,11 @@ local function determineContainerHoverColor(draggedStack, hoveredStack, dragInv,
         local container = containerItem:getInventory()
         local gridContainer = ItemContainerGrid.CreateTemp(container, playerNum)
         if gridContainer:canAddItem(draggedItem) and container:hasRoomFor(getSpecificPlayer(playerNum), draggedItem) then
-            return unpack(containerItemHoverColor)
+            return table.unpack(containerItemHoverColor)
         end
     end
 
-    return unpack(invalidItemHoverColor)
+    return table.unpack(invalidItemHoverColor)
 end
 
 -- Drag category -> hover category -> color

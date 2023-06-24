@@ -1,1 +1,1 @@
-InventoryTetris = { version = "BETA 5.1" } 
+InventoryTetris = { version = "BETA 6.0.0" }

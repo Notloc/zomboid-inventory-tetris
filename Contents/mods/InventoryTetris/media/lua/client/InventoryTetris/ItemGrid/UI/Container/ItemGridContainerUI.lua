@@ -430,12 +430,12 @@ function ItemGridContainerUI:onCollapseButtonClick(button)
 end
 
 function ItemGridContainerUI:onMouseDoubleClick(x, y)
-    if self.infoRenderer:isMouseOver(x, y) then
+    if self.infoRenderer:isMouseOver() then
         self.infoRenderer:onMouseDoubleClick(self.infoRenderer:getMouseX(), self.infoRenderer:getMouseY())
         return
     end
-    
-    local gridUi = ItemGridUiUtil.findGridUiUnderMouse(self.gridUis, x, y)
+
+    local gridUi = ItemGridUiUtil.findGridUiUnderMouse(self.gridUis)
     if gridUi then
         gridUi:onMouseDoubleClick(gridUi:getMouseX(), gridUi:getMouseY())
         return

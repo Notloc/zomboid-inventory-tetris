@@ -10,7 +10,6 @@ function DragItemRenderer:new(equipmentUi, playerNum)
     setmetatable(o, self)
     self.__index = self
 
-    o.grid = grid
     o.equipmentUi = equipmentUi
     o.playerNum = playerNum
     return o
