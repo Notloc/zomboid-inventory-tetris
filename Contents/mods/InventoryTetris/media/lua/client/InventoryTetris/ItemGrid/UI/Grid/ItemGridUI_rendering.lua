@@ -476,7 +476,7 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     local largestDimension = math.max(texW, texH)
 
     local x2, y2 = nil, nil
-    local targetScale = OPT.ICON_SCALE
+    local targetScale = TEXTURE_SIZE / 32
 
     local precisionFactor = 8
     if largestDimension > TEXTURE_SIZE + TEXTURE_PAD then -- Handle large textures

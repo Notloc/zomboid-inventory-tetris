@@ -72,10 +72,16 @@ end
 
 NotUtil.Ui = {}
 
+---@param x number
+---@param y number
+---@param localSpace ISUIElement
+---@param targetSpace ISUIElement
+---@return number
+---@return number
 function NotUtil.Ui.convertCoordinates(x, y, localSpace, targetSpace)
-    local x = x + localSpace:getAbsoluteX()
-    local y = y + localSpace:getAbsoluteY()
-    x = x - targetSpace:getAbsoluteX()
-    y = y - targetSpace:getAbsoluteY()
-    return x, y
+    local x2 = x + localSpace:getAbsoluteX()
+    local y2 = y + localSpace:getAbsoluteY()
+    x2 = x2 - targetSpace:getAbsoluteX()
+    y2 = y2 - targetSpace:getAbsoluteY()
+    return x2, y2
 end

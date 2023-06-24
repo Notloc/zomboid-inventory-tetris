@@ -42,12 +42,12 @@ Events.OnGameBoot.Add(function()
         self.onApplyGridScaleCallback = function(scale)
             self:onApplyGridScale(scale)
         end
-        OPT.OnApplyGridScale:add(self.onApplyGridScaleCallback)
+        OPT.OnValueChanged.SCALE:add(self.onApplyGridScaleCallback)
 
         self.onApplyContainerInfoScaleCallback = function(scale)
             self:onApplyContainerInfoScale(scale)
         end
-        OPT.OnApplyContainerInfoScale:add(self.onApplyContainerInfoScaleCallback)
+        OPT.OnValueChanged.CONTAINER_INFO_SCALE:add(self.onApplyContainerInfoScaleCallback)
     end
 
     function ISInventoryPane:onApplyGridScale(scale)
