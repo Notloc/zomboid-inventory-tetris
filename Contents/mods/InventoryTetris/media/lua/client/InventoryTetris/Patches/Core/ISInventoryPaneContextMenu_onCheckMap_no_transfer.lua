@@ -1,9 +1,11 @@
+---@diagnostic disable: duplicate-set-field
+
 require "ISUI/ISInventoryPaneContextMenu"
+local ModScope = require "Notloc/ModScope/ModScope"
 
 local og_onCheckMap = ISInventoryPaneContextMenu.onCheckMap
----@diagnostic disable-next-line: duplicate-set-field
 function ISInventoryPaneContextMenu.onCheckMap(map, player)
-    luautils.tetrisTransferOverride = true
-    og_onCheckMap(map, player)
-    luautils.tetrisTransferOverride = false
+    ModScope.withoutTransferNeededOnSelf(function()
+        og_onCheckMap(map, player)
+    end)
 end

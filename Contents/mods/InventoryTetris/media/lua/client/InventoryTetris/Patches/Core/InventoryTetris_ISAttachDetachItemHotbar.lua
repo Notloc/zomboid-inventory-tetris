@@ -1,3 +1,5 @@
+---@diagnostic disable: duplicate-set-field
+
 local og_attach_perform = ISAttachItemHotbar.perform
 function ISAttachItemHotbar:perform()
 	og_attach_perform(self)

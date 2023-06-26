@@ -1,5 +1,5 @@
-if not INVENTORY_TETRIS_SETTINGS then
-    local EasySettings = require("Notloc/EasySettings")
+if not INVENTORY_TETRIS_OPTIONS then
+    local EasyOptionsBuilder = require("Notloc/EasyOptions/EasyOptionsBuilder")
 
     local gridScaleOptions = {
         {value=0.5,  name="0.5x"},
@@ -28,26 +28,40 @@ if not INVENTORY_TETRIS_SETTINGS then
         {value="drop",     name="UI_tetris_options_do_drop"},
     }
 
-    local SETTING_DEFINITIONS = {
-        SCALE = EasySettings.defineDropdown(1.0, gridScaleOptions, "UI_tetris_options_grid_scale"),
-        TEXTURE_SIZE = EasySettings.defineHidden(32),
-        TEXTURE_PAD = EasySettings.defineHidden(2),
-        CELL_SIZE = EasySettings.defineHidden(35),
-        CONTAINER_INFO_SCALE = EasySettings.defineDropdown(1.0, containerInfoScaleOptions, "UI_tetris_options_container_info_scale"),
-        DOUBLE_CLICK_ACTION = EasySettings.defineDropdown("interact", clickDropdownOptions, "UI_tetris_options_double_click_action"),
-        CTRL_CLICK_ACTION = EasySettings.defineDropdown("move", clickDropdownOptions, "UI_tetris_options_ctrl_click_action"),
-        ALT_CLICK_ACTION = EasySettings.defineDropdown("equip", clickDropdownOptions, "UI_tetris_options_alt_click_action"),
-        SHIFT_CLICK_ACTION = EasySettings.defineDropdown("drop", clickDropdownOptions, "UI_tetris_options_shift_click_action"),
+    -- Define the options
+    local optionDefinitions = {
+        SCALE = EasyOptionsBuilder.defineDropdown(1.0, gridScaleOptions, "UI_tetris_options_grid_scale"),
+        TEXTURE_SIZE = EasyOptionsBuilder.defineHidden(32),
+        TEXTURE_PAD = EasyOptionsBuilder.defineHidden(2),
+        CELL_SIZE = EasyOptionsBuilder.defineHidden(35),
+        CONTAINER_INFO_SCALE = EasyOptionsBuilder.defineDropdown(1.0, containerInfoScaleOptions, "UI_tetris_options_container_info_scale"),
+        DOUBLE_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("interact", clickDropdownOptions, "UI_tetris_options_double_click_action"),
+        CTRL_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("move", clickDropdownOptions, "UI_tetris_options_ctrl_click_action"),
+        ALT_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("equip", clickDropdownOptions, "UI_tetris_options_alt_click_action"),
+        SHIFT_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("drop", clickDropdownOptions, "UI_tetris_options_shift_click_action"),
     }
 
-    local SETTINGS = EasySettings.build(SETTING_DEFINITIONS, "INVENTORY_TETRIS", getText("UI_optionscreen_binding_InventoryTetris"))
-    SETTINGS.OnValueChanged.SCALE:add(function(scale)
-        SETTINGS.TEXTURE_SIZE = 32 * scale
-        SETTINGS.TEXTURE_PAD = 2 * scale
-        SETTINGS.CELL_SIZE = SETTINGS.TEXTURE_SIZE + SETTINGS.TEXTURE_PAD * 2 + 1
-    end)
+    -- Build the options object
+    INVENTORY_TETRIS_OPTIONS = EasyOptionsBuilder.build(optionDefinitions, "INVENTORY_TETRIS", "UI_optionscreen_binding_InventoryTetris")
 
-    INVENTORY_TETRIS_SETTINGS = SETTINGS
+    -- Register a callback for when the scale changes and apply it immediately
+    INVENTORY_TETRIS_OPTIONS.OnValueChanged.SCALE:addAndApply(function(scale)
+        INVENTORY_TETRIS_OPTIONS.TEXTURE_SIZE = 32 * scale
+        INVENTORY_TETRIS_OPTIONS.TEXTURE_PAD = 2 * scale
+        INVENTORY_TETRIS_OPTIONS.CELL_SIZE = INVENTORY_TETRIS_OPTIONS.TEXTURE_SIZE + INVENTORY_TETRIS_OPTIONS.TEXTURE_PAD * 2 + 1
+    end)
 end
 
-return INVENTORY_TETRIS_SETTINGS
+---@class InventoryTetrisOptions : EasyOptions
+---@field SCALE number
+---@field TEXTURE_SIZE number
+---@field TEXTURE_PAD number
+---@field CELL_SIZE number
+---@field CONTAINER_INFO_SCALE number
+---@field DOUBLE_CLICK_ACTION string
+---@field CTRL_CLICK_ACTION string
+---@field ALT_CLICK_ACTION string
+---@field SHIFT_CLICK_ACTION string
+local tetrisOptions = INVENTORY_TETRIS_OPTIONS
+
+return tetrisOptions

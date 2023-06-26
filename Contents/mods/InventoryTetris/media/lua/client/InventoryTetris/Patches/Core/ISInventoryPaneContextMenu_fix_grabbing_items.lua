@@ -1,10 +1,12 @@
+---@diagnostic disable: duplicate-set-field
+
 require "ISUI/ISInventoryPaneContextMenu"
 
 local function quickMoveItems(items, playerNum)
     local invPage = getPlayerInventory(playerNum)
     local targetContainers = ItemGridUiUtil.getOrderedBackpacks(invPage)
 
-    local retVal = nil
+    local movedItem = nil
     local playerObj = getSpecificPlayer(playerNum)
     for _, item in ipairs(items) do
         local targetContainer = nil
@@ -22,16 +24,15 @@ local function quickMoveItems(items, playerNum)
         transfer.enforceTetrisRules = true
         ISTimedActionQueue.add(transfer)
 
-        if retVal == nil then
-            retVal = transfer:isValid()
+        if movedItem == nil then
+            movedItem = transfer:isValid()
         end
     end
 
-    return retVal
+    return movedItem
 end
 
 local ogOnGrabItems = ISInventoryPaneContextMenu.onGrabItems
----@diagnostic disable-next-line: duplicate-set-field
 function ISInventoryPaneContextMenu.onGrabItems(stacks, playerNum)
     if quickMoveItems(ISInventoryPane.getActualItems(stacks), playerNum) then
         ogOnGrabItems(stacks, playerNum)
@@ -40,7 +41,6 @@ end
 
 
 local ogOnGrabHalfItems = ISInventoryPaneContextMenu.onGrabHalfItems
----@diagnostic disable-next-line: duplicate-set-field
 function ISInventoryPaneContextMenu.onGrabHalfItems(stacks, playerNum)
     local halfItems = ISInventoryPane.getActualItems(stacks)
     local count = math.ceil(#halfItems/2)
@@ -52,7 +52,6 @@ function ISInventoryPaneContextMenu.onGrabHalfItems(stacks, playerNum)
 end
 
 local ogOnGrabOneItems = ISInventoryPaneContextMenu.onGrabOneItems
----@diagnostic disable-next-line: duplicate-set-field
 function ISInventoryPaneContextMenu.onGrabOneItems(stacks, playerNum)
     local items = ISInventoryPane.getActualItems(stacks)
     if quickMoveItems({items[1]}, playerNum) then

@@ -53,20 +53,39 @@ function NotUtil.slice(tbl, start, stop)
     return sliced
 end
 
+function NotUtil.toTruthMap(tbl)
+    local truthMap = {}
+    for _, value in pairs(tbl) do
+        truthMap[value] = true
+    end
+    return truthMap
+end
+
+---@class SimpleEvent
+---@field add fun(self:SimpleEvent, listener: function)
+---@field remove fun(self:SimpleEvent, listener: function)
+---@field trigger function
+---@field private _listeners function[]
+
+---@return SimpleEvent
 function NotUtil.createSimpleEvent()
     local event = {}
     event._listeners = {}
+    
     function event:add(func)
         table.insert(self._listeners, func)
     end
+    
     function event:remove(func)
         table.remove(self._listeners, func)
     end
+
     function event:trigger(...)
         for _, func in ipairs(self._listeners) do
             func(...)
         end
     end
+
     return event
 end
 

@@ -1,3 +1,5 @@
+---@diagnostic disable: duplicate-set-field
+
 require "TimedActions/ISInventoryTransferAction"
 require "Notloc/NotUtil"
 
@@ -91,7 +93,10 @@ Events.OnGameBoot.Add(function()
                 local equippedContainers = NotUtil.getAllEquippedContainers(self.character)
                 for _, container in ipairs(equippedContainers) do
                     if container == destContainer then
-                        return true -- The container will self correct
+                        --return true -- The container will self correct
+                        -- DISABLED
+                        -- The item gets dropped or repostioned in the inventory
+                        -- But users keep thinking the item is getting deleted
                     end
                 end
 
@@ -137,7 +142,7 @@ Events.OnGameBoot.Add(function()
                         local parentContainerGrid = ItemContainerGrid.Create(parentInventory, self.character:getPlayerNum())
                         local stack, grid = parentContainerGrid:findStackByItem(itemContainer)
                         parentContainerGrid:removeItem(itemContainer)
-                        if not stack or not parentContainerGrid:insertItem(itemContainer, stack.x, stack.y, grid.gridIndex, stack.isRotated) then
+                        if not stack or (grid and not parentContainerGrid:insertItem(itemContainer, stack.x, stack.y, grid.gridIndex, stack.isRotated)) then
                             parentContainerGrid:attemptToInsertItem(itemContainer, self.isRotated, true, false)
                         end
                         parentInventory:setDrawDirty(true)

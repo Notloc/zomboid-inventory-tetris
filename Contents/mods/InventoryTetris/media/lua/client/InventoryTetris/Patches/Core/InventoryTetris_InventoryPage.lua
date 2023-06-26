@@ -1,3 +1,5 @@
+---@diagnostic disable: duplicate-set-field
+
 Events.OnGameBoot.Add(function()
     local og_createChildren = ISInventoryPage.createChildren
     function ISInventoryPage:createChildren()
@@ -44,7 +46,9 @@ Events.OnGameBoot.Add(function()
         if (container:getType() == "KeyRing") then
             self:removeChild(button)
             self.backpacks[#self.backpacks] = nil
-            -- Prepend the button to buttonPool
+            -- Prepend the button to buttonPool.
+            --   There is an awkward bug where the selected backpack is double refresh and
+            --   if the button objects are not in the exact same order between refreshes a different backpack will be opened.
             table.insert(self.buttonPool, 1, button)
         end
 

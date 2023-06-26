@@ -1,3 +1,9 @@
+---@class ItemGridUI : ISPanel
+---@field grid ItemGrid
+---@field containerGrid ItemContainerGrid
+---@field inventoryPane ISInventoryPane
+---@field playerNum number
+
 require "ISUI/ISPanel"
 local OPT = require "InventoryTetris/Settings"
 local ItemUtil = require "Notloc/ItemUtil"
@@ -6,6 +12,11 @@ local ItemUtil = require "Notloc/ItemUtil"
 if not ItemGridUI then
     ItemGridUI = ISPanel:derive("ItemGridUI")
 
+    ---@param grid ItemGrid
+    ---@param containerGrid ItemContainerGrid
+    ---@param inventoryPane ISInventoryPane
+    ---@param playerNum number
+    ---@return ItemGridUI
     ---@diagnostic disable-next-line: duplicate-set-field
     function ItemGridUI:new(grid, containerGrid, inventoryPane, playerNum)
         local o = ISPanel:new(0, 0, 0, 0)
@@ -20,6 +31,7 @@ if not ItemGridUI then
         o:setWidth(o:calculateWidth())
         o:setHeight(o:calculateHeight())
 
+        ---@diagnostic disable-next-line: return-type-mismatch
         return o
     end
 end
