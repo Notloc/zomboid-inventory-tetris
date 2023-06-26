@@ -62,7 +62,14 @@ function SearchGridAction:perform()
 		self.character:getEmitter():stopSound(self.sound)
 	end
 
-    self.grid:completeSearch(self.character:getPlayerNum())
+	local num = self.character:getPlayerNum()
+	
+    self.grid:completeSearch(num)
+
+	-- we need to update our needSearch variable when a search is completed
+	---- TODO: Possibly a better way to propagate this?
+	getPlayerInventory(num):checkNeedSearch()
+	getPlayerLoot(num):checkNeedSearch()
 
     -- needed to remove from queue / start next.
 	ISBaseTimedAction.perform(self);

@@ -26,4 +26,5 @@ UI_EN = {
 	UI_tetris_options_do_equip = "Equip",
 	UI_tetris_options_do_drop = "Drop",
 
+	UI_tetris_buttons_search = "Search",
 }

@@ -147,6 +147,26 @@ function ItemContainerGrid:isOrganized()
     return self.containerDefinition.isOrganized
 end
 
+--- Check if any grids are unsearched
+function ItemContainerGrid:areAnyUnsearched()
+    for _, grid in ipairs(self.grids) do
+        if grid:isUnsearched(self.playerNum) then 
+            return true 
+        end
+    end
+    return false
+end
+
+--- Perform search on all unsearched
+function ItemContainerGrid:searchAll()
+    local player = getSpecificPlayer(self.playerNum)
+    for _, grid in ipairs(self.grids) do
+        if grid:isUnsearched(self.playerNum) then 
+            ISTimedActionQueue.add(SearchGridAction:new(player, grid))
+        end
+    end
+end
+
 function ItemContainerGrid:doesItemFit(item, gridX, gridY, gridIndex, rotate)
     local grid = self.grids[gridIndex]
     if not grid then
