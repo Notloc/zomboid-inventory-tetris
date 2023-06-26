@@ -38,11 +38,10 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, isPlayerInventory)
     return o
 end
 
-function ItemGrid:getItem(x, y)
-    local stack = self:getStack(x, y)
-    return stack and ItemStack.getFrontItem(stack, self.inventory) or nil
-end
-
+---@param x number
+---@param y number
+---@param playerNum number
+---@return table?
 function ItemGrid:getStack(x, y, playerNum)
     local stack = nil
     if self.stackMap[x] then
@@ -53,19 +52,18 @@ function ItemGrid:getStack(x, y, playerNum)
         if not self:_validateStackIsSearched(stack, playerNum) then
             return nil
         end
-    end
 
-    -- if do physics
-    if SandboxVars.InventoryTetris.EnableGravity and stack and self:isStackBuried(stack) then
-        return nil
+        if SandboxVars.InventoryTetris.EnableGravity and self:isStackBuried(stack) then
+            return nil
+        end
     end
 
     return stack
 end
 
 function ItemGrid:getStackInternal(x, y)
-    if self.stackMap[x] then 
-        return self.stackMap[x][y] 
+    if self.stackMap[x] then
+        return self.stackMap[x][y]
     end
     return nil
 end
@@ -252,7 +250,7 @@ function ItemGrid:canAddItem(item, isRotated)
 end
 
 function ItemGrid:canAddItemAt(item, x, y, isRotated)
-    local stack = self:getStack(x,y)
+    local stack = self:getStackInternal(x,y)
     if stack and ItemStack.canAddItem(stack, item) then
         return true
     end
@@ -280,7 +278,7 @@ function ItemGrid:doesItemFitAnywhere(item, w, h, ignoreStacks)
 end
 
 function ItemGrid:canItemBeStacked(item, xPos, yPos)
-    local stack = self:getStack(xPos, yPos)
+    local stack = self:getStackInternal(xPos, yPos)
     if stack then
         return ItemStack.canAddItem(stack, item)
     end
@@ -389,7 +387,7 @@ function ItemGrid:_attemptToInsertItem_outerLoop(item, w, h, isRotated, shuffleM
 end
 
 function ItemGrid:_attemptToInsertItem_innerLoop(item, w, h, xPos, yPos, isRotated)
-    local stack = self:getStack(xPos, yPos)
+    local stack = self:getStackInternal(xPos, yPos)
     if stack and ItemStack.canAddItem(stack, item) then
         ItemStack.addItem(stack, item)
         self:_sendModData()

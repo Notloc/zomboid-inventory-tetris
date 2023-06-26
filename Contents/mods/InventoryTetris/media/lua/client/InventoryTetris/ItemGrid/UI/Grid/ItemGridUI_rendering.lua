@@ -153,9 +153,11 @@ function ItemGridUI:calculateHeight()
     return self.grid.height * OPT.CELL_SIZE - self.grid.height + 1
 end
 
-function ItemGridUI:findGridStackUnderMouse()
-    local rawX, rawY = ItemGridUiUtil.mousePositionToGridPosition(self:getMouseX(), self:getMouseY())
-    return self.grid:getStack(rawX, rawY)
+function ItemGridUI:findGridStackUnderMouse(x, y)
+    local effectiveCellSize = OPT.CELL_SIZE - 1
+    local gridX = math.floor(x / effectiveCellSize)
+    local gridY = math.floor(y / effectiveCellSize)
+    return self.grid:getStack(gridX, gridY, self.playerNum)
 end
 
 function ItemGridUI:getValidContainerFromStack(stack)
@@ -291,7 +293,7 @@ function ItemGridUI:renderDragItemPreview()
         return
     end
 
-    local hoveredStack = self:findGridStackUnderMouse()
+    local hoveredStack = self:findGridStackUnderMouse(self:getMouseX(), self:getMouseY())
     local hoveredItem = hoveredStack and ItemStack.getFrontItem(hoveredStack, self.grid.inventory) or nil
 
     if not hoveredStack or hoveredItem == item then 

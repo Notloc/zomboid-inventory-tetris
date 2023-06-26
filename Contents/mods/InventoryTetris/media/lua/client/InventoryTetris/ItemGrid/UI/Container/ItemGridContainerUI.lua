@@ -194,7 +194,7 @@ end
 function ItemGridContainerUI:findGridStackUnderMouse()
     for _, gridUi in pairs(self.gridUis) do
         if gridUi:isMouseOver() then
-            return gridUi:findGridStackUnderMouse()
+            return gridUi:findGridStackUnderMouse(gridUi:getMouseX(), gridUi:getMouseY())
         end
     end
     return nil

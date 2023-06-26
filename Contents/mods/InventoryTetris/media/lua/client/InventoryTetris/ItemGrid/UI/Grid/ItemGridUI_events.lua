@@ -55,7 +55,7 @@ end
 function ItemGridUI:onMouseDown(x, y, gridStack)
 	if self.playerNum ~= 0 then return end
 	getSpecificPlayer(self.playerNum):nullifyAiming();
-    gridStack = gridStack or self:findGridStackUnderMouse()
+    gridStack = gridStack or self:findGridStackUnderMouse(x, y)
     if gridStack then 
         local vanillaStacks = ItemStack.convertToVanillaStacks(gridStack, self.grid.inventory, self.inventoryPane)
         DragAndDrop.prepareDrag(self, vanillaStacks, x, y)
@@ -110,7 +110,7 @@ end
 function ItemGridUI:onRightMouseUp(x, y, gridStack)
     if self.playerNum ~= 0 then return end
 
-    gridStack = gridStack or self:findGridStackUnderMouse()
+    gridStack = gridStack or self:findGridStackUnderMouse(x, y)
     if not gridStack then 
         return
     end
@@ -160,7 +160,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
         
         luautils.walkToContainer(self.grid.inventory, self.playerNum)
         
-        local stackUnderMouse = self:findGridStackUnderMouse()
+        local stackUnderMouse = self:findGridStackUnderMouse(x, y)
         local isSameStack = stackUnderMouse and gridStack == stackUnderMouse
 
         if not isSameStack and stackUnderMouse and ItemStack.canAddItem(stackUnderMouse, dragItem) then
@@ -371,7 +371,7 @@ function ItemGridUI:handleClick(x, y, gridStack)
         return
     end
 
-    gridStack = gridStack or self:findGridStackUnderMouse()
+    gridStack = gridStack or self:findGridStackUnderMouse(x, y)
     if gridStack then
         if isCtrlButtonDown() then
             self:doAction(gridStack, OPT.CTRL_CLICK_ACTION)
@@ -483,9 +483,9 @@ end
 
 function ItemGridUI:handleDoubleClick(x, y, gridStack)
     DragAndDrop.endDrag()
-    
-    gridStack = gridStack or self:findGridStackUnderMouse()
-    if not gridStack then 
+
+    gridStack = gridStack or self:findGridStackUnderMouse(x, y)
+    if not gridStack then
         return
     end
 
@@ -496,7 +496,7 @@ end
 function ItemGridUI:interact(gridStack)
     local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
     if not item then return end
-    
+
     if item:IsInventoryContainer() then
         self.inventoryPane.tetrisWindowManager:openContainerPopup(item, self.playerNum, self.inventoryPane)
         return
