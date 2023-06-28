@@ -194,37 +194,12 @@ function ItemGridUI:handleDragAndDrop(x, y)
 end
 
 function ItemGridUI:handleSameContainerDifferentGrid(vanillaStack, gridX, gridY, otherGrid)
-    local playerObj = getSpecificPlayer(self.playerNum)
-    local hotbar = getPlayerHotbar(self.playerNum)
-
     for i=2, #vanillaStack.items do
         local item = vanillaStack.items[i]
-        if not item:isEquipped() and not hotbar:isItemAttached(item) then
-            if self.grid:insertItem(item, gridX, gridY, DragAndDrop.isDraggedItemRotated()) then
-                if otherGrid then 
-                    otherGrid:removeItem(item) 
-                end
+        if self.grid:insertItem(item, gridX, gridY, DragAndDrop.isDraggedItemRotated()) then
+            if otherGrid then
+                otherGrid:removeItem(item)
             end
-        else 
-            if item:isEquipped() then
-                ISTimedActionQueue.add(ISUnequipAction:new(playerObj, item, 50))
-            end
-            if hotbar:isItemAttached(item) then
-                ISTimedActionQueue.add(ISDetachItemHotbar:new(playerObj, item))
-            end
-            
-            local rotated = DragAndDrop.isDraggedItemRotated()
-            ISTimedActionQueue.add(
-                TetrisLambdaAction:new(playerObj, 
-                    function()
-                        if self.grid:insertItem(item, gridX, gridY, rotated) then
-                            if otherGrid then 
-                                otherGrid:removeItem(item) 
-                            end
-                        end
-                    end
-                )
-            );
         end
     end
 end
@@ -254,9 +229,9 @@ function ItemGridUI:handleDropOnContainer(vanillaStack, container)
     local playerObj = getSpecificPlayer(self.playerNum)
     for i=2, #vanillaStack.items do
         local item = vanillaStack.items[i]
-        if item:isEquipped() then
-            ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
-        end
+
+        self:unequipIfNeeded(playerObj, item)
+
         local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), container, 1)
         action.enforceTetrisRules = true
         ISTimedActionQueue.add(action)
@@ -280,9 +255,9 @@ function ItemGridUI:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
     local playerObj = getSpecificPlayer(self.playerNum)
     for i=2, #vanillaStack.items do
         local item = vanillaStack.items[i]
-        if item:isEquipped() then
-            ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
-        end
+
+        self:unequipIfNeeded(playerObj, item)
+
         local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1)
         action:setTetrisTarget(gridX, gridY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated())
         ISTimedActionQueue.add(action)
@@ -326,11 +301,10 @@ end
 function ItemGridUI:handleDropOnStackDifferentContainer(vanillaStack, targetStack)
     for i=2, #vanillaStack.items do
         local item = vanillaStack.items[i]
-        if item:isEquipped() then
-            ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
-        end
         
         local playerObj = getSpecificPlayer(self.playerNum)
+        self:unequipIfNeeded(playerObj, item)
+        
         local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1)
         action:setTetrisTarget(targetStack.x, targetStack.y, self.grid.gridIndex, targetStack.isRotated)
         ISTimedActionQueue.add(action)
@@ -437,7 +411,7 @@ function ItemGridUI:quickMoveItemToContainer(gridStack, targetContainers)
     end
 
     if not targetContainer then return end
-    
+
     for itemId, _ in pairs(gridStack.itemIDs) do
         local item = self.grid.inventory:getItemById(itemId)
         local transfer = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), targetContainer)
@@ -550,6 +524,14 @@ function ItemGridUI:contextualAction(gridStack)
         return
     end
 end
+
+function ItemGridUI:unequipIfNeeded(playerObj, item)
+    -- Formality for clothes, we skip hands because items in your hands are already in your hands...
+    if item:isEquipped() and not playerObj:isPrimaryHandItem(item) and not playerObj:isSecondaryHandItem(item) then
+        ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
+    end
+end
+
 
 local function rotateDraggedItem(key)
     if key == getCore():getKey("tetris_rotate_item") then
