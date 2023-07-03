@@ -930,6 +930,7 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
     if not item then return end
 
     print("item display name: " .. item:getDisplayName())
+    print("item display category: " .. item:getDisplayCategory())
     print("item CLASS: " .. TetrisItemCategory.getCategory(item))
     print("item full type: " .. item:getFullType())
 

@@ -3,10 +3,9 @@ local TestFramework = require("TestFramework/TestFramework")
 local TestUtils = require("TestFramework/TestUtils")
 local AsyncTest = require("TestFramework/AsyncTest")
 
-TestFramework.RegisterModule("Inventory Tetris", "Item Grid Tests", function ()
+TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function ()
     local Tests = {}
-
-
+    TestFramework.addCodeCoverage(Tests, ItemGrid, "ItemGrid")
 
     Tests.create_grid = function ()
         local playerObj = getSpecificPlayer(0)
@@ -17,7 +16,6 @@ TestFramework.RegisterModule("Inventory Tetris", "Item Grid Tests", function ()
         TestUtils.assert(conntainerGrid.inventory == inv)
         TestUtils.assert(conntainerGrid.containerDefinition)
     end
-
 
     -- Async test
     Tests.async_test_name = function ()
