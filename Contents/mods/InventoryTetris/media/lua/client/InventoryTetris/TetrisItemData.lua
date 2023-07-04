@@ -33,8 +33,9 @@ function TetrisItemData._getItemData(item, noSquish)
         return {width = 1, height = 1, maxStackSize = 1}
     end
 
-    if TetrisDevTool.itemEdits[fType] then
-        return TetrisDevTool.itemEdits[fType]
+    local devToolOverride = TetrisDevTool.getItemOverride(fType)
+    if devToolOverride then
+        return devToolOverride
     end
 
     if not TetrisItemData._itemData[fType] then

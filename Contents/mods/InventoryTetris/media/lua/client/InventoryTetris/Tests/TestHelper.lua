@@ -11,8 +11,11 @@ TestHelper.containers = {
 TestHelper.items = {
     ["1x1"] = {name="Base.Bandage", x=1, y=1, stack=1},
     ["2x2"] = {name="Base.Pot", x=2, y=2, stack=1},
-    ["1x1_s"] = {name="Base.Cigarettes", x=1, y=1, stack=99},
+    ["1x3"] = {name="Base.BaseballBat", x=1, y=3, stack=1},
+    ["1x1_s"] = {name="Base.Paperclip", x=1, y=1, stack=99},
 }
+
+TestHelper.devToolOverrideStack = {}
 
 -- Overrides the data pack definitions with known values for testing
 function TestHelper.applyDataPackOverrides()
@@ -39,6 +42,14 @@ function TestHelper.applyDataPackOverrides()
             maxStackSize = data.stack,
         }
     end
+
+    TestHelper.devToolOverrideStack[#TestHelper.devToolOverrideStack+1] = {
+        disableItemOverrides = TetrisDevTool.disableItemOverrides,
+        disableContainerOverrides = TetrisDevTool.disableContainerOverrides,
+    }
+
+    TetrisDevTool.disableItemOverrides = true
+    TetrisDevTool.disableContainerOverrides = true
 end
 
 function TestHelper.removeDataPackOverrides()
@@ -56,7 +67,35 @@ function TestHelper.removeDataPackOverrides()
         local item = InventoryItemFactory.CreateItem(data.name)
         TetrisItemData._itemData[item:getFullType()] = nil
     end
+
+    local overrides = TestHelper.devToolOverrideStack[#TestHelper.devToolOverrideStack]
+    TestHelper.devToolOverrideStack[#TestHelper.devToolOverrideStack] = nil
+    TetrisDevTool.disableItemOverrides = overrides.disableItemOverrides
+    TetrisDevTool.disableContainerOverrides = overrides.disableContainerOverrides
 end
+
+
+TestHelper.sandboxOverrideStack = {}
+function TestHelper.applySandboxOverrides(searchMode, gravityMode)
+    TestHelper.sandboxOverrideStack[#TestHelper.sandboxOverrideStack+1] = {
+        searchMode = SandboxVars.InventoryTetris.EnableSearch,
+        gravityMode = SandboxVars.InventoryTetris.EnableGravity
+    }
+
+    SandboxVars.InventoryTetris.EnableSearch = searchMode
+    SandboxVars.InventoryTetris.EnableGravity = gravityMode
+end
+
+function TestHelper.removeSandboxOverrides()
+    local overrides = TestHelper.sandboxOverrideStack[#TestHelper.sandboxOverrideStack]
+    TestHelper.sandboxOverrideStack[#TestHelper.sandboxOverrideStack] = nil
+
+    if not overrides then return end
+
+    SandboxVars.InventoryTetris.EnableSearch = overrides.searchMode
+    SandboxVars.InventoryTetris.EnableGravity = overrides.gravityMode
+end
+
 
 ---@return ItemContainerGrid
 function TestHelper.createContainerGridFromItem(item)
@@ -92,6 +131,11 @@ end
 ---@return InventoryItem
 function TestHelper.createItem_2x2(inventory)
     return inventory:AddItem(TestHelper.items["2x2"].name)
+end
+
+---@return InventoryItem
+function TestHelper.createItem_1x3(inventory)
+    return inventory:AddItem(TestHelper.items["1x3"].name)
 end
 
 ---@return InventoryItem

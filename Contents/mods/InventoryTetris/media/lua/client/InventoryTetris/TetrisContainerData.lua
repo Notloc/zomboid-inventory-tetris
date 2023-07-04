@@ -44,10 +44,11 @@ end
 function TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
     --print("containerKey: " .. containerKey)
 
-    if TetrisDevTool.containerEdits[containerKey] then
-        return TetrisDevTool.containerEdits[containerKey]
+    local devToolOverride = TetrisDevTool.getContainerOverride(containerKey)
+    if devToolOverride then
+        return devToolOverride
     end
-    
+
     if not TetrisContainerData._containerDefinitions[containerKey] then
         TetrisContainerData._containerDefinitions[containerKey] = TetrisContainerData._calculateContainerDefinition(container)
     end

@@ -48,6 +48,23 @@ end
 
 TetrisDevTool = {}
 
+TetrisDevTool.disableItemOverrides = false;
+TetrisDevTool.disableContainerOverrides = false;
+
+function TetrisDevTool.getContainerOverride(key)
+    if TetrisDevTool.disableContainerOverrides or not isDebugEnabled() then
+        return nil;
+    end
+    return TetrisDevTool.containerEdits[key];
+end
+
+function TetrisDevTool.getItemOverride(key)
+    if TetrisDevTool.disableItemOverrides or not isDebugEnabled() then
+        return nil;
+    end
+    return TetrisDevTool.itemEdits[key];
+end
+
 local ITEM_FILENAME = "InventoryTetris_ItemData"
 local CONTAINER_FILENAME = "InventoryTetris_ContainerData"
 
