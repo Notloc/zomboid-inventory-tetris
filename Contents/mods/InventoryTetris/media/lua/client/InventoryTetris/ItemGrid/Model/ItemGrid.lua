@@ -41,7 +41,7 @@ end
 ---@param x number
 ---@param y number
 ---@param playerNum number
----@return table?
+---@return ItemStack?
 function ItemGrid:getStack(x, y, playerNum)
     local stack = nil
     if self.stackMap[x] then
@@ -81,7 +81,12 @@ function ItemGrid:findStackByItem(item)
     return nil
 end
 
+---@param item InventoryItem
 function ItemGrid:insertItem(item, xPos, yPos, isRotated)
+    if item:getContainer() ~= self.inventory then
+        return false
+    end
+
     if not self:_isInBounds(xPos, yPos) then
         return false
     end
