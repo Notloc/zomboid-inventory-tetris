@@ -7,3 +7,6 @@
 ---@class Size2D
 ---@field width number
 ---@field height number
+
+---@class ISMouseDrag
+---@field dragging any

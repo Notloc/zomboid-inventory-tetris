@@ -35,6 +35,14 @@ local function writeJsonFile(fileName, json)
     writer:close();
 end
 
+local function writeText(fileName, text)
+    local createFile = true
+    local appendToFile = false
+    local writer = getFileWriter(fileName, createFile, appendToFile);
+
+    writer:write(text);
+    writer:close();
+end
 
 local function contains(needle, haystack)
     for _, item in ipairs(haystack) do
@@ -47,6 +55,8 @@ end
 
 
 TetrisDevTool = {}
+
+TetrisDevTool.writeText = writeText;
 
 TetrisDevTool.disableItemOverrides = false;
 TetrisDevTool.disableContainerOverrides = false;

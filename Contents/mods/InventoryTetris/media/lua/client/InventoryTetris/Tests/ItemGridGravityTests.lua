@@ -6,11 +6,11 @@ local AsyncTest = require("TestFramework/AsyncTest")
 local TestHelper = require("InventoryTetris/Tests/TestHelper")
 
 TestFramework.registerTestModule("Inventory Tetris", "Item Grid Gravity Tests", function ()
-    local Tests = {}
+    local Tests = TestUtils.newTestModule("client/InventoryTetris/Tests/ItemGridGravityTests.lua")
 
     function Tests._setup()
         TestHelper.applyDataPackOverrides()
-        TestHelper.applySandboxOverrides(false, true)
+        TestHelper.applySandboxOverrides(false, true, 45)
     end
 
     function Tests._teardown()
@@ -58,6 +58,50 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Gravity Tests", 
 
         TestUtils.assert(grid:getStack(0, 0, playerNum) == nil)
         TestUtils.assert(grid:getStack(0, 1, playerNum))
+
+        for i=1,10 do
+            containerGrid.lastPhysics = nil
+            containerGrid:refresh()
+        end
+
+        local stack = grid:getStack(0, 4, playerNum)
+        TestUtils.assert(ItemStack.containsItem(stack, item))
+
+        local stack2 = grid:getStack(1, 4, playerNum)
+        TestUtils.assert(ItemStack.containsItem(stack2, item2))
+
+        local stack3 = grid:getStack(2, 4, playerNum)
+        TestUtils.assert(ItemStack.containsItem(stack3, item3))
+
+        local stack4 = grid:getStack(3, 4, playerNum)
+        TestUtils.assert(ItemStack.containsItem(stack4, item4))
+    end
+
+    function Tests.test_stacksBury()
+        local containerGrid = TestHelper.createContainerGrid_5x5()
+        local grid = containerGrid.grids[1]
+
+        local item = TestHelper.createItem_1x1(containerGrid.inventory)
+        TestUtils.assert(containerGrid:insertItem(item, 0, 4, firstGrid, false))
+
+        local item2 = TestHelper.createItem_1x1(containerGrid.inventory)
+        TestUtils.assert(containerGrid:insertItem(item2, 0, 2, firstGrid, false))
+
+        local stack = grid:getStack(0, 4, playerNum)
+        TestUtils.assert(not grid:isStackBuried(stack))
+
+        containerGrid.lastPhysics = nil -- Force a refresh without waiting for the next tick
+        containerGrid:refresh()
+
+        stack = grid:getStack(0, 4, playerNum)
+        TestUtils.assertNil(stack)
+
+        stack = grid:getStackInternal(0, 4)
+        TestUtils.assert(grid:isStackBuried(stack))
+
+        grid:removeItem(item2)
+
+        TestUtils.assert(not grid:isStackBuried(stack))
     end
 
     TestFramework.addCodeCoverage(Tests, ItemGrid, "ItemGrid")

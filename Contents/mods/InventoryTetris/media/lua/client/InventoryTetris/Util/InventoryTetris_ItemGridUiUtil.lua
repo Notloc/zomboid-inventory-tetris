@@ -19,20 +19,6 @@ function ItemGridUiUtil.findGridStackUnderMouse(gridUis, x, y)
     return nil
 end
 
--- Get the mouse position relative to the top left corner of the item being dragged
-function ItemGridUiUtil.findGridPositionOfMouse(gridUi, item, isRotated)
-    local xOff = 0
-    local yOff = 0
-
-    if item then
-        local w, h = TetrisItemData.getItemSize(item, isRotated)
-        xOff = OPT.CELL_SIZE * w / 2 - OPT.CELL_SIZE / 2
-        yOff = OPT.CELL_SIZE * h / 2 - OPT.CELL_SIZE / 2
-    end
-
-    return ItemGridUiUtil.mousePositionToGridPosition(gridUi:getMouseX() - xOff, gridUi:getMouseY() - yOff)
-end
-
 -- Rounds a mouse position to the nearest grid position, for the top left corner of the item
 function ItemGridUiUtil.mousePositionToGridPosition(x, y)
     local effectiveCellSize = OPT.CELL_SIZE - 1

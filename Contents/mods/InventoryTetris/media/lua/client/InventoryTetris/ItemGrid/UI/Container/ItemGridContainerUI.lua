@@ -17,6 +17,13 @@ local CONTAINER_BG = getTexture("media/textures/InventoryTetris/ContainerBG.png"
 
 local OPT = require "InventoryTetris/Settings"
 
+---@class ItemGridContainerUI : ISPanel
+---@field inventory ItemContainer
+---@field inventoryPane table
+---@field playerNum number
+---@field player IsoPlayer
+---@field gridUis ItemGridUI[]
+---@field containerGrid ItemContainerGrid
 function ItemGridContainerUI:new(inventory, inventoryPane, playerNum)
     local o = ISPanel:new(0, 0, 0, 0)
     setmetatable(o, self)

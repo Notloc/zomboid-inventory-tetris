@@ -1,3 +1,6 @@
+local TestFramework = require("TestFramework/TestFramework")
+TestFramework.registerFileForReload("client/InventoryTetris/Tests/TestHelper.lua")
+
 local TestHelper = {}
 
 TestHelper.playerNum = 0
@@ -76,14 +79,16 @@ end
 
 
 TestHelper.sandboxOverrideStack = {}
-function TestHelper.applySandboxOverrides(searchMode, gravityMode)
+function TestHelper.applySandboxOverrides(searchMode, gravityMode, searchTime)
     TestHelper.sandboxOverrideStack[#TestHelper.sandboxOverrideStack+1] = {
         searchMode = SandboxVars.InventoryTetris.EnableSearch,
-        gravityMode = SandboxVars.InventoryTetris.EnableGravity
+        gravityMode = SandboxVars.InventoryTetris.EnableGravity,
+        searchTime = SandboxVars.InventoryTetris.SearchTime,
     }
 
     SandboxVars.InventoryTetris.EnableSearch = searchMode
     SandboxVars.InventoryTetris.EnableGravity = gravityMode
+    SandboxVars.InventoryTetris.SearchTime = searchTime
 end
 
 function TestHelper.removeSandboxOverrides()
@@ -94,6 +99,7 @@ function TestHelper.removeSandboxOverrides()
 
     SandboxVars.InventoryTetris.EnableSearch = overrides.searchMode
     SandboxVars.InventoryTetris.EnableGravity = overrides.gravityMode
+    SandboxVars.InventoryTetris.SearchTime = overrides.searchTime
 end
 
 
@@ -104,7 +110,7 @@ function TestHelper.createContainerGridFromItem(item)
     end
 
     local container = item:getItemContainer()
-    local containerGrid =  ItemContainerGrid.Create(container, TestHelper.playerNum)
+    local containerGrid =  ItemContainerGrid.CreateTemp(container, TestHelper.playerNum)
     return containerGrid
 end
 
@@ -141,6 +147,11 @@ end
 ---@return InventoryItem
 function TestHelper.createItem_1x1_stackable(inventory)
     return inventory:AddItem(TestHelper.items["1x1_s"].name)
+end
+
+
+function TestHelper.isTimedActionQueueEmpty(playerNum)
+    return #ISTimedActionQueue.getTimedActionQueue(playerNum).queue == 0
 end
 
 return TestHelper

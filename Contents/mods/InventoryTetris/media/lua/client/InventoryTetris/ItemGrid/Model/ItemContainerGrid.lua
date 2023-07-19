@@ -15,7 +15,7 @@ ItemContainerGrid._tempGrid = {} -- For hovering over items, so we don't create 
 ItemContainerGrid._gridCache = {} -- Just created grids, so we don't end up creating a new grid multiple times in a single tick when looping or something
 
 -- TODO: Remove playerNum from this class, it's not actually used unless the grid is for the player's base inventory
--- Thankfully grids are pretty much entirely agnostic to the player interacting with them, so it should be easy to remove or ignore
+-- Thankfully grids are pretty much entirely agnostic to the player interacting with them, so it should be easy to remove
 function ItemContainerGrid:new(inventory, playerNum)
     local o = {}
     setmetatable(o, self)
@@ -37,7 +37,7 @@ local function searchInventoryPageForContainerGrid(invPage, targetInventory)
     if not invPage then
         return nil
     end
-    
+
     if invPage.inventoryPane.gridContainerUis then
         for _, containerGridUi in pairs(invPage.inventoryPane.gridContainerUis) do
             if containerGridUi.inventory == targetInventory then
@@ -71,7 +71,11 @@ function ItemContainerGrid.Create(inventory, playerNum)
         end
     end
 
-    return ItemContainerGrid:new(inventory, playerNum)
+    local containerGrid = ItemContainerGrid:new(inventory, playerNum)
+
+    ItemContainerGrid._gridCache[playerNum] = ItemContainerGrid._gridCache[playerNum] or {}
+    table.insert(ItemContainerGrid._gridCache[playerNum], containerGrid)
+    return containerGrid
 end
 
 ---@return ItemContainerGrid
@@ -243,7 +247,7 @@ function ItemContainerGrid:_validateOnlyAcceptCategory(item)
             return false
         end
     end
-    
+
     return TetrisContainerData.validateInsert(self.containerDefinition, item)
 end
 
@@ -275,8 +279,6 @@ function ItemContainerGrid:shouldDoPhysics()
     return getTimestampMs() - self.lastPhysics >= PHYSICS_DELAY
 end
 
--- isDisoraganized is determined by the player's traits
--- If it is nil, they have no relevant traits and the container itself determines if it is disorganized
 function ItemContainerGrid:attemptToInsertItem(item, preferRotated, isOrganized, isDisoraganized)
     for _, grid in ipairs(self.grids) do
         if grid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisoraganized) then
@@ -488,6 +490,6 @@ Events.OnTick.Add(function()
     end
 
     for playerNum, grids in pairs(ItemContainerGrid._gridCache) do
-        grids[1] = nil
+        table.wipe(grids)
     end
 end)

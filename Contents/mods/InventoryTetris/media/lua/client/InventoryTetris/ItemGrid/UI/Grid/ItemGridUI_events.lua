@@ -31,7 +31,7 @@ if not ItemGridUI then
         o:setWidth(o:calculateWidth())
         o:setHeight(o:calculateHeight())
 
-        ---@diagnostic disable-next-line: return-type-mismatch
+        ---@cast o ItemGridUI
         return o
     end
 end
@@ -138,6 +138,17 @@ function ItemGridUI:onMouseMoveOutside(dx, dy)
     DragAndDrop.startDrag(self)
 end
 
+-- Get the mouse position relative to the top left corner of the item being dragged
+function ItemGridUI.covertItemAndLocalMouseToGridPosition(x, y, item, isRotated)
+    if item then
+        local w, h = TetrisItemData.getItemSize(item, isRotated)
+        x = x + OPT.CELL_SIZE * w / 2 - OPT.CELL_SIZE / 2
+        y = y + OPT.CELL_SIZE * h / 2 - OPT.CELL_SIZE / 2
+    end
+
+    return ItemGridUiUtil.mousePositionToGridPosition(x, y)
+end
+
 function ItemGridUI:handleDragAndDrop(x, y)
     local vanillaStack = DragAndDrop.getDraggedStack()
     if not vanillaStack or not vanillaStack.items[1] then return end
@@ -151,7 +162,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
     local isSameGrid = self.grid == otherGrid
 
     if isSameInventory or self:canPutIn(dragItem) then
-        local gridX, gridY = ItemGridUiUtil.findGridPositionOfMouse(self, dragItem, DragAndDrop.isDraggedItemRotated())
+        local gridX, gridY = ItemGridUI.covertItemAndLocalMouseToGridPosition(x, y, dragItem, DragAndDrop.isDraggedItemRotated())
         
         if isStackSplitDown() then
             self:openSplitStack(vanillaStack, gridX, gridY)

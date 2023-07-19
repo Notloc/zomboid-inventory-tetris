@@ -6,11 +6,11 @@ local AsyncTest = require("TestFramework/AsyncTest")
 local TestHelper = require("InventoryTetris/Tests/TestHelper")
 
 TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function ()
-    local Tests = {}
+    local Tests = TestUtils.newTestModule("client/InventoryTetris/Tests/ItemGridTests.lua")
 
     function Tests._setup()
         TestHelper.applyDataPackOverrides()
-        TestHelper.applySandboxOverrides(false, false)
+        TestHelper.applySandboxOverrides(false, false, 45)
     end
 
     function Tests._teardown()
