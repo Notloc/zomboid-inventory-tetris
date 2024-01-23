@@ -188,7 +188,7 @@ end
 
 TetrisDevTool.onEditItem = function(self, button)
     if button.internal == "OK" then
-        local x = self.itemRenderer.w 
+        local x = self.itemRenderer.w
         local y = self.itemRenderer.h
         local maxStack = tonumber(self.maxStackInput:getText());
         if x and y and maxStack and x > 0 and y > 0 and maxStack > 0 then
@@ -200,6 +200,10 @@ end
 
 function TetrisDevTool.applyEdits(item, x, y, maxStack)
     local fType = item:getFullType();
+    if TetrisItemData.isSquished(item) then
+        fType = TetrisItemData.getSquishedFullType(item);
+    end
+
     local oldData = TetrisItemData._itemData[fType] or {};
 
     local newData = {}

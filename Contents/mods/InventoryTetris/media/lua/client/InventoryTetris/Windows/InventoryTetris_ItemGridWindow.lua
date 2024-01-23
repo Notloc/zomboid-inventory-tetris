@@ -14,7 +14,7 @@ function ItemGridWindow.getTopWindow()
     return ItemGridWindow._globalInstances[#ItemGridWindow._globalInstances];
 end
 
-function ItemGridWindow:new (x, y, inventory, inventoryPane, playerNum)
+function ItemGridWindow:new(x, y, inventory, inventoryPane, playerNum)
 	local o = ISPanel:new(x, y, 100, 100);
     setmetatable(o, self)
     self.__index = self

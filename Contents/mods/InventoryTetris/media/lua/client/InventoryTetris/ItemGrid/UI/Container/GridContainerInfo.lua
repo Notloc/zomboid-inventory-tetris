@@ -183,7 +183,7 @@ end
 
 function GridContainerInfo:onMouseDoubleClick(x, y)
     if self.containerUi.item and isPointOverContainerIcon(x, y) then
-        self.containerUi.inventoryPane.tetrisWindowManager:openContainerPopup(self.containerUi.item, self.containerUi.playerNum, self.containerUi.inventoryPane)
+        self.containerUi.inventoryPane.tetrisWindowManager:openContainerPopup(self.containerUi.item)
     end
     DragAndDrop.endDrag(self)
 end

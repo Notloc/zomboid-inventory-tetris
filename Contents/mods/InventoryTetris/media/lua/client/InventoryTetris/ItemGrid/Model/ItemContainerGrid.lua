@@ -8,10 +8,10 @@ local PHYSICS_DELAY = 600
 ---@field isPlayerInventory boolean
 ---@field isOnPlayer boolean
 ---@field grids ItemGrid[]
----@field overflow ItemGrid
+---@field overflow ItemStack[]
 ItemContainerGrid = {}
 
-ItemContainerGrid._tempGrid = {} -- For hovering over items, so we don't create a new grid every frame to evaluate if an item can be placed
+ItemContainerGrid._tempGrid = {} -- For hovering over container items, so we don't create a new grid every frame to evaluate if an item can be placed into a hovered backpack
 ItemContainerGrid._gridCache = {} -- Just created grids, so we don't end up creating a new grid multiple times in a single tick when looping or something
 
 -- TODO: Remove playerNum from this class, it's not actually used unless the grid is for the player's base inventory

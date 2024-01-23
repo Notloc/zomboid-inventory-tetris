@@ -6,29 +6,21 @@ require "ISUI/ISMouseDrag"
 require "ISUI/ISLayoutManager"
 require "defines"
 
-local CompatibilityPopupWindow = ISPanel:derive("CompatibilityPopupWindow");
+local Window =  ISPanel:derive("Window");
 
-function CompatibilityPopupWindow:new (x, y, inventory, inventoryPane, playerNum)
-	local o = ISPanel:new(x, y, 100, 100);
+function Window:new(x, y, width, height, title, playerNum)
+	local o = ISPanel:new(x, y, width, height);
     setmetatable(o, self)
     self.__index = self
 
-	o.x = x;
-	o.y = y;
+    o.player = playerNum or 0;
     o.anchorLeft = true;
     o.anchorRight = true;
     o.anchorTop = true;
     o.anchorBottom = true;
 	o.borderColor = {r=0.4, g=0.4, b=0.4, a=1};
 	o.backgroundColor = {r=0, g=0, b=0, a=0.8};
-	o.width = 100;
-	o.height = 100;
 	o.anchorLeft = true;
-
-	o.inventory = inventory;
-    o.inventoryPane = inventoryPane;
-    o.playerNum = playerNum;
-    o.player = playerNum;
 
     o.titlebarbkg = getTexture("media/ui/Panel_TitleBar.png");
     o.infoBtn = getTexture("media/ui/Panel_info_button.png");
@@ -39,39 +31,31 @@ function CompatibilityPopupWindow:new (x, y, inventory, inventoryPane, playerNum
     o.collapsebutton = getTexture("media/ui/Panel_Icon_Collapse.png");
     o.pinbutton = getTexture("media/ui/Panel_Icon_Pin.png");
 
-    o.conDefault = getTexture("media/ui/Container_Shelf.png");
     o.highlightColors = {r=0.98,g=0.56,b=0.11};
-
-    o.containerIconMaps = ContainerButtonIcons
-    o.capacity = inventory:getCapacity();
 
     o.pin = true;
     o.isCollapsed = false;
     o.collapseCounter = 0;
-	o.title = inventory:getContainingItem():getName();
+	o.title = title
 	o.titleFont = UIFont.Small
 	o.titleFontHgt = getTextManager():getFontHeight(o.titleFont)
    return o
 end
 
-function CompatibilityPopupWindow:initialise()
+function Window:initialise()
 	ISPanel.initialise(self);
 end
 
-function CompatibilityPopupWindow:titleBarHeight(selected)
+function Window:titleBarHeight(selected)
 	return math.max(16, self.titleFontHgt + 1)
 end
 
-function CompatibilityPopupWindow:createChildren()
+function Window:createChildren()
     self.minimumHeight = 50;
-    self.minimumWidth = 50;
+    self.minimumWidth = 50
 
     local titleBarHeight = self:titleBarHeight()
     local closeBtnSize = titleBarHeight
-    local lootButtonHeight = titleBarHeight
-
-    local textWid = getTextManager():MeasureStringX(UIFont.Small, getText("IGUI_invpage_Transfer_all"))
-    local weightWid = getTextManager():MeasureStringX(UIFont.Small, "99.99 / 99")
 
     -- Do corner x + y widget
 	local resizeWidget = ISResizeWidget:new(self.width-10, self.height-10, 10, 10, self);
@@ -89,18 +73,27 @@ function CompatibilityPopupWindow:createChildren()
 
     self.resizeWidget2 = resizeWidget;
 
-    self.closeButton = ISButton:new(3, 0, closeBtnSize, closeBtnSize, "", self, self.onCloseButton);
+    self.closeButton = ISButton:new(3, 0, closeBtnSize, closeBtnSize, "", self, Window.onCloseButton);
     self.closeButton:initialise();
     self.closeButton.borderColor.a = 0.0;
     self.closeButton.backgroundColor.a = 0;
     self.closeButton.backgroundColorMouseOver.a = 0;
     self.closeButton:setImage(self.closebutton);
     self:addChild(self.closeButton);
+
+    self.pinButton = ISButton:new(self.width - closeBtnSize - 3, 0, closeBtnSize, closeBtnSize, "", self, Window.setPinned);
+    self.pinButton.anchorRight = true;
+    self.pinButton.anchorLeft = false;
+
+    self.pinButton:initialise();
+    self.pinButton.borderColor.a = 0.0;
+    self.pinButton.backgroundColor.a = 0;
+    self.pinButton.backgroundColorMouseOver.a = 0;
 end
 
-function CompatibilityPopupWindow:prerender()
+function Window:prerender()
     local titleBarHeight = self:titleBarHeight()
-    
+
     local height = self:getHeight();
     if self.isCollapsed then
         height = titleBarHeight;
@@ -113,15 +106,13 @@ function CompatibilityPopupWindow:prerender()
     if self.title then
         self:drawText(self.title, self.closeButton:getRight() + 1, 0, 1,1,1,1);
     end
-    
-    self:setStencilRect(0,0,self.width+1, height);
 end
 
-function CompatibilityPopupWindow:onCloseButton()
+function Window:onCloseButton()
     self:close()
 end
 
-function CompatibilityPopupWindow:close()
+function Window:close()
 	ISPanel.close(self)
 	if JoypadState.players[self.player+1] then
 		setJoypadFocus(self.player, nil)
@@ -130,24 +121,17 @@ function CompatibilityPopupWindow:close()
 	end
 end
 
-function CompatibilityPopupWindow:render()
+function Window:render()
 	local titleBarHeight = self:titleBarHeight()
     local height = self:getHeight();
     if self.isCollapsed then
         height = titleBarHeight
     end
-    -- Draw backpack border over backpacks....
-    if not self.isCollapsed then
-        self:drawRectBorder(0, height-9, self:getWidth(), 9, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
-        self:drawTextureScaled(self.statusbarbkg, 2,  height-7, self:getWidth() - 4, 6, 1, 1, 1, 1);
-        self:drawTexture(self.resizeimage, self:getWidth()-9, height-8, 1, 1, 1, 1);
-    end
 
-    self:clearStencilRect();
     self:drawRectBorder(0, 0, self:getWidth(), height, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
 end
 
-function CompatibilityPopupWindow:onMouseMove(dx, dy)
+function Window:onMouseMove(dx, dy)
 	self.mouseOver = true;
 	if self.moving then
 		self:setX(self.x + dx);
@@ -155,7 +139,7 @@ function CompatibilityPopupWindow:onMouseMove(dx, dy)
     end
 end
 
-function CompatibilityPopupWindow:onMouseMoveOutside(dx, dy)
+function Window:onMouseMoveOutside(dx, dy)
 	self.mouseOver = false;
 	if self.moving then
 		self:setX(self.x + dx);
@@ -163,12 +147,12 @@ function CompatibilityPopupWindow:onMouseMoveOutside(dx, dy)
     end
 end
 
-function CompatibilityPopupWindow:onMouseUp(x, y)
+function Window:onMouseUp(x, y)
 	self.moving = false;
 	self:setCapture(false);
 end
 
-function CompatibilityPopupWindow:onMouseDown(x, y)
+function Window:onMouseDown(x, y)
 	getSpecificPlayer(self.player):nullifyAiming();
 
 	self.downX = self:getMouseX();
@@ -177,11 +161,9 @@ function CompatibilityPopupWindow:onMouseDown(x, y)
 	self:setCapture(true);
 end
 
-function CompatibilityPopupWindow:onMouseUpOutside(x, y)
+function Window:onMouseUpOutside(x, y)
 	self.moving = false;
 	self:setCapture(false);
 end
 
-
-return CompatibilityPopupWindow
-
+return Window

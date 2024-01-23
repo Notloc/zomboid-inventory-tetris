@@ -39,6 +39,10 @@ function DragItemRenderer:render()
     local yPos = y - itemH * OPT.CELL_SIZE / 2
 
     local playerObj = getSpecificPlayer(self.playerNum)
+    if playerObj:isDead() then
+        DragAndDrop.endDrag()
+        return
+    end
 
     self:suspendStencil()
     ItemGridUI._renderGridItem(self, playerObj, item, ItemStack.createTempStack(item), xPos, yPos, DragAndDrop.isDraggedItemRotated(), 1, force1x1)

@@ -83,6 +83,7 @@ end
 local OPT = require "InventoryTetris/Settings"
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
 local HIDDEN_ITEM = getTexture("media/textures/InventoryTetris/Hidden.png")
+local SQUISHED_TEXTURE = getTexture("media/textures/InventoryTetris/Squished.png")
 
 local function determineContainerHoverColor(draggedStack, hoveredStack, dragInv, hoverInv, playerNum)
     local draggedItem = ItemStack.getFrontItem(draggedStack, dragInv)
@@ -300,7 +301,7 @@ function ItemGridUI:renderDragItemPreview()
         local x = self:getMouseX()
         local y = self:getMouseY()
         local isRotated = DragAndDrop.isDraggedItemRotated()
-        
+
         local itemW, itemH = TetrisItemData.getItemSize(item, isRotated)
 
         local halfCell = OPT.CELL_SIZE / 2
@@ -308,11 +309,11 @@ function ItemGridUI:renderDragItemPreview()
         local yPos = y + halfCell - itemH * halfCell
 
         local gridX, gridY = ItemGridUiUtil.mousePositionToGridPosition(xPos, yPos)
-        
+
         local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated)
         canPlace = canPlace and self.containerGrid:isItemAllowed(item) 
         canPlace = canPlace and (self.grid.inventory == item:getContainer() or self.grid.inventory:hasRoomFor(getSpecificPlayer(0), item))
-        
+
         if canPlace then
             self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 0, 1, 0)
         else
@@ -320,9 +321,9 @@ function ItemGridUI:renderDragItemPreview()
         end
         return
     end
-    
+
     local w, h = TetrisItemData.getItemSize(ItemStack.getFrontItem(hoveredStack, self.grid.inventory), hoveredStack.isRotated)
-    
+
     if ItemStack.canAddItem(hoveredStack, item) then
         self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, unpackColors(stackableColor))
         return
@@ -383,6 +384,13 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         local percent = item:getDelta()
         if percent < 1.0 then
             ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, stack.isRotated, alphaMult, force1x1)
+        end
+    elseif stack.category == TetrisItemCategory.CONTAINER then
+        if TetrisItemData.isSquished(item) then
+            local w,h = TetrisItemData.getItemSize(item, stack.isRotated)
+            local x2 = x + OPT.CELL_SIZE*w - w - 16
+            local y2 = y + 1
+            drawingContext:drawTexture(SQUISHED_TEXTURE, x2, y2, alphaMult, 1, 1, 1);
         end
     end
 end

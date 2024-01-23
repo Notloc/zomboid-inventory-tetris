@@ -1,13 +1,23 @@
+---@class TetrisWindowManager
+---@field parent table
+---@field playerNum number
 TetrisWindowManager = {}
 
-function TetrisWindowManager:new(parent)
+TetrisWindowManager._instances = {}
+
+---@param inventoryPane table
+---@param playerNum number
+---@return TetrisWindowManager
+function TetrisWindowManager:new(inventoryPane, playerNum)
     local o = {}
     setmetatable(o, self)
     self.__index = self
 
-    o.parent = parent
+    o.parent = inventoryPane
+    o.playerNum = playerNum
     o.childWindows = {}
 
+    TetrisWindowManager._instances[o] = true
     return o
 end
 
@@ -27,9 +37,7 @@ function TetrisWindowManager:_findWindowByInventory(childWindows, inventory)
     end
 end
 
-function TetrisWindowManager:addBaseChildWindow(window)
-    table.insert(self.childWindows, window)
-
+function TetrisWindowManager:setupChildWindow(window)
     self:addBringToFrontOnMouseDown(window)
     self:addRemoveOnClose(window)
 
@@ -65,13 +73,24 @@ function TetrisWindowManager:addRemoveOnClose(window)
 end
 
 function TetrisWindowManager:removeChildWindow(window)
-    for i, child in ipairs(self.childWindows) do
-        if child == window then
-            table.remove(self.childWindows, i)
-            window:removeFromUIManager()
-            break
+    window:removeFromUIManager()
+
+    local parent = window.parentWindow
+    if parent then
+        for i, child in ipairs(parent.childWindows) do
+            if child == window then
+                table.remove(parent.childWindows, i)
+                break
+            end
+        end
+
+        for _, child in ipairs(window.childWindows) do
+            child.parentWindow = parent
+            table.insert(parent.childWindows, child)
         end
     end
+
+    window.parentWindow = nil
 end
 
 function TetrisWindowManager:keepChildWindowsOnTop()
@@ -80,46 +99,53 @@ function TetrisWindowManager:keepChildWindowsOnTop()
     end
 end
 
-function TetrisWindowManager:openContainerPopup(item, playerNum, invPane)
-    if not item or not item:getContainer() then return end
-    
+---@param item InventoryContainer
+function TetrisWindowManager:openContainerPopup(item)
+    if not item or not item:IsInventoryContainer() then return end
+
     if isClient() then -- Prevent multiplayer dupe glitch
-        local playerObj = getSpecificPlayer(playerNum)
+        local playerObj = getSpecificPlayer(self.playerNum)
         local outerContainer = item:getOutermostContainer()
         if outerContainer ~= playerObj:getInventory() and outerContainer ~= nil then
             return
         end
     end
 
-    local itemGridWindow = ItemGridWindow:new(getMouseX(), getMouseY(), item:getInventory(), invPane, playerNum)
+    local itemGridWindow = ItemGridWindow:new(getMouseX(), getMouseY(), item:getInventory(), self.parent, self.playerNum)
     itemGridWindow:initialise()
     itemGridWindow:addToUIManager()
     itemGridWindow:bringToTop()
     itemGridWindow.childWindows = {}
     itemGridWindow.parentInventory = item:getContainer()
     itemGridWindow.item = item
+    self:setupChildWindow(itemGridWindow)
 
-    local parentWindow = self:findWindowByInventory(item:getContainer())
-    if parentWindow then
-        table.insert(parentWindow.childWindows, itemGridWindow)
-    else
-        self:addBaseChildWindow(itemGridWindow)
-    end
+    local parent = self:findWindowByInventory(item:getContainer()) or self
+    itemGridWindow.parentWindow = parent
+
+    table.insert(parent.childWindows, itemGridWindow)
 end
 
-function TetrisWindowManager:closeIfNotInMap(validInventoryMap)    
+function TetrisWindowManager:closeIfInvalid(invPage)
+    local inventoryMap = {}
+    for _, backpack in ipairs(invPage.backpacks) do
+        inventoryMap[backpack.inventory] = true
+    end
+
     -- Loop backwards so we can remove items from the list
+    -- Closes top level windows no longer visible from the inventory page
     for i = #self.childWindows, 1, -1 do
         local child = self.childWindows[i]
         local inv = child.parentInventory
         
-        if not validInventoryMap[inv] or not inv:contains(child.item) then
+        if not inventoryMap[inv] or not inv:contains(child.item) then
             child:removeFromUIManager()
             table.remove(self.childWindows, i)
             self:closeChildWindowsRecursive(child)
         end
     end
 
+    -- Handles the window tree when a container is moved to a different container
     for _, child in ipairs(self.childWindows) do
         self:closeIfMovedRecursive(child)
     end
@@ -130,7 +156,7 @@ function TetrisWindowManager:closeIfMovedRecursive(window)
     for i = #window.childWindows, 1, -1 do
         local child = window.childWindows[i]
         local inv = child.parentInventory
-        
+
         if not inv:contains(child.item) then
             child:removeFromUIManager()
             table.remove(window.childWindows, i)
@@ -150,6 +176,7 @@ end
 
 function TetrisWindowManager:closeAll()
     for _, child in ipairs(self.childWindows) do
+        self:closeChildWindowsRecursive(child)
         child:removeFromUIManager()
     end
     self.childWindows = {}
@@ -161,3 +188,18 @@ function TetrisWindowManager:closeTopWindow()
     window:close()
     return true
 end
+
+---@param player IsoPlayer
+function TetrisWindowManager:onPlayerDeath(player)
+    if player:getPlayerNum() == self.playerNum then
+        self:closeAll()
+        TetrisWindowManager._instances[self] = nil
+    end
+end
+
+Events.OnPlayerDeath.Add(function(player)
+    local instances = TetrisWindowManager._instances
+    for windowManager, _ in pairs(instances) do
+        windowManager:onPlayerDeath(player)
+    end
+end)

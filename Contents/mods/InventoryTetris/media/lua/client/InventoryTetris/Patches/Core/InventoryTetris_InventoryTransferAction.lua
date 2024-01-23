@@ -6,7 +6,7 @@ require "Notloc/NotUtil"
 -- We really need to be the last one to load for this one
 Events.OnGameBoot.Add(function()
     ISInventoryTransferAction.globalTetrisRules = false
-    
+
     local og_new = ISInventoryTransferAction.new
     function ISInventoryTransferAction:new (character, item, srcContainer, destContainer, time, ...)
         local o = og_new(self, character, item, srcContainer, destContainer, time, ...)
@@ -74,7 +74,7 @@ Events.OnGameBoot.Add(function()
                 return false
             end
         end
-        
+
         if self.destContainer:getType() == "floor" then
             return true
         else
@@ -86,9 +86,18 @@ Events.OnGameBoot.Add(function()
         if not destContainer:isEmpty() then return true end
 
         local itemContainer = self.destContainer:getContainingItem()
+
+        -- No need to validate if the destContainer is equipped, it doesn't need space
+        if itemContainer and itemContainer:isEquipped() then
+            return true
+        end
+
         if itemContainer and TetrisItemData.isSquishable(itemContainer) then
             local parentInventory = itemContainer:getContainer()
             if parentInventory then
+                if parentInventory:getType() == "floor" then
+                    return true
+                end
 
                 local equippedContainers = NotUtil.getAllEquippedContainers(self.character)
                 for _, container in ipairs(equippedContainers) do

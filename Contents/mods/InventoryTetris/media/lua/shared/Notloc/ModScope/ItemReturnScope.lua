@@ -33,6 +33,7 @@ if not __GLOBAL_ITEM_RETURN_SCOPE then
 
     Events.OnGameStart.Add(function()
         local og_new = ISInventoryTransferAction.new
+        
         ---@diagnostic disable-next-line: duplicate-set-field
         function ISInventoryTransferAction.new(self, character, ...)
             local o = og_new(self, character, ...)

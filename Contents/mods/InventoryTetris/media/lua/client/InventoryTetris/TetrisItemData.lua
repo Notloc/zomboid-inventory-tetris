@@ -1,8 +1,11 @@
 require "InventoryTetris/TetrisItemCategory"
 
+local SQUISHED_SUFFIX = "__squished"
+local SQUISH_FACTOR = 2.25
+
 TetrisItemData = {}
 TetrisItemData._itemData = {}
-TetrisItemData._squishableItems = {}
+TetrisItemData._unsquishableItems = {}
 
 function TetrisItemData.getItemSize(item, isRotated)
     local data = TetrisItemData._getItemData(item)
@@ -27,10 +30,16 @@ function TetrisItemData.getMaxStackSize(item)
     return data.maxStackSize or 1
 end
 
+function TetrisItemData.getSquishedFullType(item)
+    return item:getFullType() .. SQUISHED_SUFFIX
+end
+
 function TetrisItemData._getItemData(item, noSquish)
     local fType = item:getFullType()
-    if not noSquish and TetrisItemData.isSquished(item) then
-        return {width = 1, height = 1, maxStackSize = 1}
+    local isSquished = not noSquish and TetrisItemData.isSquished(item)
+
+    if isSquished then
+        fType = fType .. SQUISHED_SUFFIX
     end
 
     local devToolOverride = TetrisDevTool.getItemOverride(fType)
@@ -39,12 +48,12 @@ function TetrisItemData._getItemData(item, noSquish)
     end
 
     if not TetrisItemData._itemData[fType] then
-        TetrisItemData._calculateAndCacheItemInfo(item, fType)
+        TetrisItemData._calculateAndCacheItemInfo(item, fType, isSquished)
     end
     return TetrisItemData._itemData[fType]
 end
 
-function TetrisItemData._calculateAndCacheItemInfo(item, fType)
+function TetrisItemData._calculateAndCacheItemInfo(item, fType, isSquished)
     local data = {}
 
     local category = TetrisItemCategory.getCategory(item)
@@ -54,6 +63,11 @@ function TetrisItemData._calculateAndCacheItemInfo(item, fType)
     if data.height > 12 then data.height = 12 end
 
     data.maxStackSize = TetrisItemData._calculateItemStackability(item, category)
+
+    if isSquished then
+        data.width = math.ceil(data.width / SQUISH_FACTOR)
+        data.height = math.ceil(data.height / SQUISH_FACTOR)
+    end
 
     TetrisItemData._itemData[fType] = data
 end
@@ -167,12 +181,12 @@ function TetrisItemData._calculateItemSizeContainer(item)
         local x,y = gridDef.size.width, gridDef.size.height
         x = x + SandboxVars.InventoryTetris.BonusGridSize
         y = y + SandboxVars.InventoryTetris.BonusGridSize
-        return math.ceil(x/2), math.ceil(y/2)
+        return x, y
     end
 
     local innerSize = TetrisContainerData.calculateInnerSize(item)
     local x, y = TetrisContainerData._calculateDimensions(innerSize)
-    return math.ceil(x/2), math.ceil(y/2)
+    return x, y
 end
 
 function TetrisItemData._calculateItemSizeWeightBased(item)
@@ -467,25 +481,18 @@ function TetrisItemData._onInitWorld()
 end
 Events.OnInitWorld.Add(TetrisItemData._onInitWorld)
 
-
-
 function TetrisItemData.isSquishable(item)
-    return TetrisItemData._squishableItems[item:getFullType()] or false
+    -- All containers are now squishable unless they are exempted
+    return item:IsInventoryContainer() and not TetrisItemData._unsquishableItems[item:getFullType()]
 end
 
-function TetrisItemData.registerSquishableItems(itemNames)
+function TetrisItemData.registerUnsquishableContainers(itemNames)
     for _, itemName in ipairs(itemNames) do
-        TetrisItemData._squishableItems[itemName] = true
+        TetrisItemData._unsquishableItems[itemName] = true
     end
 end
 
 
-TetrisItemData.registerSquishableItems({
-    "Base.Garbagebag",
-    "Base.GroceryBag1",
-    "Base.GroceryBag2",
-    "Base.GroceryBag3",
-    "Base.GroceryBag4",
-    "Base.GroceryBag5",
-    "Base.Plasticbag",
+TetrisItemData.registerUnsquishableContainers({
+    -- TODO: Metal cases and stuff that should be unsquishable
 })

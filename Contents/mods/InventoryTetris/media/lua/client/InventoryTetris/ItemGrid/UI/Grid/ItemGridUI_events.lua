@@ -138,12 +138,11 @@ function ItemGridUI:onMouseMoveOutside(dx, dy)
     DragAndDrop.startDrag(self)
 end
 
--- Get the mouse position relative to the top left corner of the item being dragged
 function ItemGridUI.covertItemAndLocalMouseToGridPosition(x, y, item, isRotated)
     if item then
         local w, h = TetrisItemData.getItemSize(item, isRotated)
-        x = x + OPT.CELL_SIZE * w / 2 - OPT.CELL_SIZE / 2
-        y = y + OPT.CELL_SIZE * h / 2 - OPT.CELL_SIZE / 2
+        x = x - OPT.CELL_SIZE * w / 2 + OPT.CELL_SIZE / 2
+        y = y - OPT.CELL_SIZE * h / 2 + OPT.CELL_SIZE / 2
     end
 
     return ItemGridUiUtil.mousePositionToGridPosition(x, y)
@@ -483,7 +482,7 @@ function ItemGridUI:interact(gridStack)
     if not item then return end
 
     if item:IsInventoryContainer() then
-        self.inventoryPane.tetrisWindowManager:openContainerPopup(item, self.playerNum, self.inventoryPane)
+        self.inventoryPane.tetrisWindowManager:openContainerPopup(item)
         return
     end
 

@@ -1,5 +1,7 @@
 ---@diagnostic disable: duplicate-set-field
 
+local Version = require "Notloc/Versioning/Version"
+
 require "ISUI/ISPanel"
 require "ISUI/ISButton"
 require "ISUI/ISMouseDrag"
@@ -13,9 +15,8 @@ local OPT = require "InventoryTetris/Settings"
 Events.OnGameBoot.Add(function()
 
     local og_new = ISInventoryPane.new
-    function ISInventoryPane:new(x, y, width, height, inventory, player)
-        local o = og_new(self, x, y, width, height, inventory, player)
-        o.tetrisWindowManager = TetrisWindowManager:new(o)
+    function ISInventoryPane:new(x, y, width, height, inventory, zoom)
+        local o = og_new(self, x, y, width, height, inventory, zoom)
         o.gridContainerUis = {}
         return o
     end
@@ -24,8 +25,12 @@ Events.OnGameBoot.Add(function()
     function ISInventoryPane:createChildren()
         og_createChildren(self)
 
+        self.tetrisWindowManager = TetrisWindowManager:new(self, self.player)
+
         ---@diagnostic disable-next-line: undefined-global
         self.scrollView = NotlocScrollView:new(0,0, self.width, self.height) -- From EquipmentUI mod
+        self.scrollView.addHorizontalScrollbar = true
+
         self.scrollView:initialise()
         self:addChild(self.scrollView)
         self.scrollView:setAnchorLeft(true)
@@ -120,6 +125,7 @@ Events.OnGameBoot.Add(function()
             inventories[1] = self.inventory
         end
 
+        local x = 10
         local y = 10
         for _, inventory in ipairs(inventories) do
             local itemGridContainerUi = not forceFullRefresh and oldGridContainerUis[inventory] or nil
@@ -132,11 +138,13 @@ Events.OnGameBoot.Add(function()
             itemGridContainerUi:setX(10)
             self.scrollView:addScrollChild(itemGridContainerUi)
 
+            x = math.max(x, itemGridContainerUi:getX() + itemGridContainerUi:getWidth() + 8)
             y = y + itemGridContainerUi:getHeight() + 8
 
             table.insert(self.gridContainerUis, itemGridContainerUi)
         end
 
+        self.scrollView:setScrollWidth(x)
         self.scrollView:setScrollHeight(y)
     end
 
@@ -165,7 +173,7 @@ Events.OnGameBoot.Add(function()
         
         -- Draw the version at the bottom left
         if self.parent.onCharacter then
-            local version = "Inventory Tetris - " .. InventoryTetris.version
+            local version = "Inventory Tetris - " .. Version.format(InventoryTetris.version)
             self:drawText(version, 8, self.height - 18, 0.3, 0.3, 0.3, 0.82, UIFont.Small)
         end
     end

@@ -78,11 +78,7 @@ Events.OnGameBoot.Add(function()
 	function ISInventoryPage:refreshBackpacks()
 		og_refreshBackpacks(self)
 		if self.inventoryPane.tetrisWindowManager then
-			local inventoryMap = {}
-			for _, backpack in ipairs(self.backpacks) do
-				inventoryMap[backpack.inventory] = true
-			end
-			self.inventoryPane.tetrisWindowManager:closeIfNotInMap(inventoryMap)
+			self.inventoryPane.tetrisWindowManager:closeIfInvalid(self)
 		end
 	end
 

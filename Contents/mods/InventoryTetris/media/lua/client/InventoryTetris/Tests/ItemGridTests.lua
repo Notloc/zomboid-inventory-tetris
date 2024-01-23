@@ -10,7 +10,7 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function
 
     function Tests._setup()
         TestHelper.applyDataPackOverrides()
-        TestHelper.applySandboxOverrides(false, false, 45)
+        TestHelper.applySandboxOverrides(false, false, 10)
     end
 
     function Tests._teardown()
