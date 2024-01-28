@@ -1,6 +1,7 @@
-# zomboid-inventory-tetris
-Escape From Knox
+# Inventory Tetris - Full Inventory Replacer Mod
+https://steamcommunity.com/sharedfiles/filedetails/?id=2982070344
 
+This mods completely replaces Zomboid's vanilla list style inventory system with a grid based system.
+Heavily inspired by Escape from Tarkov's implementation.
 
-Soon
-![image](https://user-images.githubusercontent.com/23246298/205765441-85a31dd7-8b83-419f-965b-0ae25cbb5352.png)
+![](https://i.imgur.com/1VLU2Tn.gif)
