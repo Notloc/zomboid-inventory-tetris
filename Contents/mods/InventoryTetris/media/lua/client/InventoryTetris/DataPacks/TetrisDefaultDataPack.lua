@@ -3552,50 +3552,10 @@ local containerPack = {
                     ["height"] = 1,
                 },
                 ["position"] = {
-                    ["x"] = 4,
-                    ["y"] = 0,
-                },
-            },
-            [2] = {
-                ["size"] = {
-                    ["width"] = 1,
-                    ["height"] = 2,
-                },
-                ["position"] = {
                     ["x"] = 0,
                     ["y"] = 0,
                 },
-            },
-            [3] = {
-                ["size"] = {
-                    ["width"] = 1,
-                    ["height"] = 2,
-                },
-                ["position"] = {
-                    ["x"] = 1,
-                    ["y"] = 0,
-                },
-            },
-            [4] = {
-                ["size"] = {
-                    ["width"] = 1,
-                    ["height"] = 2,
-                },
-                ["position"] = {
-                    ["x"] = 2,
-                    ["y"] = 0,
-                },
-            },
-            [5] = {
-                ["size"] = {
-                    ["width"] = 1,
-                    ["height"] = 2,
-                },
-                ["position"] = {
-                    ["x"] = 3,
-                    ["y"] = 0,
-                },
-            },
+            }
         },
         ["centerMode"] = "vertical",
         ["isOrganized"] = true,
