@@ -594,6 +594,9 @@ end
 -- Only completion of a search is saved
 ItemGrid._searchSessions = {}
 
+-- Didn't foresee you guys modding in containers with so many grids, but I like the enthusiasm
+ItemGrid.SESSION_MEMORY_LIMIT = 100
+
 function ItemGrid._getSearchSession(playerNum, grid)
     if not ItemGrid._searchSessions[playerNum] then
         ItemGrid._searchSessions[playerNum] = {}
@@ -620,7 +623,7 @@ function ItemGrid._getOrCreateSearchSession(playerNum, grid)
     sessions[grid.inventory][grid.gridIndex] = ItemGrid._createSearchSession(grid)
     table.insert(sessions, sessions[grid.inventory][grid.gridIndex])
 
-    if #sessions > 10 then
+    if #sessions > ItemGrid.SESSION_MEMORY_LIMIT then
         local session = sessions[1]
         table.remove(sessions, 1)
         sessions[session.inventory] = nil

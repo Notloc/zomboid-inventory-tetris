@@ -55,14 +55,19 @@ end
 
 function TetrisItemData._calculateAndCacheItemInfo(item, fType, isSquished)
     local data = {}
-
-    local category = TetrisItemCategory.getCategory(item)
-
-    data.width, data.height = TetrisItemData._calculateItemSize(item, category)
-    if data.width > 10 then data.width = 10 end
-    if data.height > 12 then data.height = 12 end
-
-    data.maxStackSize = TetrisItemData._calculateItemStackability(item, category)
+    
+    if isSquished then
+        local regData = TetrisItemData._getItemData(item, true)
+        data.width = regData.width
+        data.height = regData.height
+        data.maxStackSize = regData.maxStackSize
+    else
+        local category = TetrisItemCategory.getCategory(item)
+        data.maxStackSize = TetrisItemData._calculateItemStackability(item, category)
+        data.width, data.height = TetrisItemData._calculateItemSize(item, category)
+        if data.width > 10 then data.width = 10 end
+        if data.height > 12 then data.height = 12 end
+    end
 
     if isSquished then
         data.width = math.ceil(data.width / SQUISH_FACTOR)
@@ -73,7 +78,7 @@ function TetrisItemData._calculateAndCacheItemInfo(item, fType, isSquished)
 end
 
 function TetrisItemData._calculateItemSize(item, category)
-    local calculation = TetrisItemData._itemClassToSizeCalculation[category]    
+    local calculation = TetrisItemData._itemClassToSizeCalculation[category]
     if type(calculation) == "function" then
         return calculation(item)
     else

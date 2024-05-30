@@ -1,3 +1,5 @@
+if not getActivatedMods():contains("TEST_FRAMEWORK") or not isDebugEnabled() then return end
+
 local TestFramework = require("TestFramework/TestFramework")
 TestFramework.registerFileForReload("client/InventoryTetris/Tests/TestHelper.lua")
 
