@@ -75,16 +75,25 @@ function TetrisDevTool.getItemOverride(key)
     return TetrisDevTool.itemEdits[key];
 end
 
+function TetrisDevTool.getPocketOverride(key)
+    if TetrisDevTool.disableItemOverrides or not isDebugEnabled() then
+        return nil;
+    end
+    return TetrisDevTool.pocketEdits[key];
+end
+
 local ITEM_FILENAME = "InventoryTetris_ItemData"
 local CONTAINER_FILENAME = "InventoryTetris_ContainerData"
-
+local POCKET_FILENAME = "InventoryTetris_PocketData"
 
 if isDebugEnabled() then
     TetrisDevTool.itemEdits = readJsonFile(ITEM_FILENAME..".json") or {}
     TetrisDevTool.containerEdits = readJsonFile(CONTAINER_FILENAME..".json") or {}
+    TetrisDevTool.pocketEdits = readJsonFile(POCKET_FILENAME..".json") or {}
 else
     TetrisDevTool.itemEdits = {}
     TetrisDevTool.containerEdits = {}
+    TetrisDevTool.pocketEdits = {}
 end
 
 function TetrisDevTool.insertDebugOptions(menu, item)
@@ -92,18 +101,47 @@ function TetrisDevTool.insertDebugOptions(menu, item)
         return;
     end
 
-    menu:addOptionOnTop("Recalculate Item Data", item, TetrisDevTool.recalculateItemData);
-    menu:addOptionOnTop("Edit Item Data", item, TetrisDevTool.openEditItem);
+    local subMenu = TetrisDevTool._findOrCreateTetrisSubMenu(menu);
+    subMenu:addOption("Edit Item Data", item, TetrisDevTool.openEditItem);
+    subMenu:addOption("Recalculate Item Data", item, TetrisDevTool.recalculateItemData);
+
+    if item:IsClothing() then
+        subMenu:addOption("Edit Pocket Data", item, TetrisDevTool.openPocketEdit);
+    end
+
 end
 
+
+---@param menu ISContextMenu
 function TetrisDevTool.insertContainerDebugOptions(menu, containerUi)
     if not isDebugEnabled() then
         return;
     end
 
-    menu:addOptionOnTop("Reset Grid Data", containerUi.containerGrid, TetrisDevTool.resetGridData);
-    menu:addOptionOnTop("Recalculate Container Data", containerUi.containerGrid, TetrisDevTool.recalculateContainerData);
-    menu:addOptionOnTop("Edit Container Data", containerUi, TetrisDevTool.openContainerEdit);
+    local subMenu = TetrisDevTool._findOrCreateTetrisSubMenu(menu);
+    subMenu:addOption("Edit Container Data", containerUi, TetrisDevTool.openContainerEdit);
+    subMenu:addOption("Reset Grid Data", containerUi.containerGrid, TetrisDevTool.resetGridData);
+    subMenu:addOption("Recalculate Container Data", containerUi.containerGrid, TetrisDevTool.recalculateContainerData);
+end
+
+local lastMenu = nil;
+local lastSubMenu = nil;
+
+---@param menu ISContextMenu
+function TetrisDevTool._findOrCreateTetrisSubMenu(menu)
+    local tetris = menu:getOptionFromName("Tetris");
+    if tetris == lastMenu and lastSubMenu then
+        return lastSubMenu;
+    end
+
+    tetris = menu:addOptionOnTop("Tetris", nil, nil)
+    local subMenu = ISContextMenu:getNew(menu);
+    menu:addSubMenu(tetris, subMenu);
+
+    lastMenu = tetris;
+    lastSubMenu = subMenu;
+
+    return subMenu;
 end
 
 function TetrisDevTool.openEditItem(item)
@@ -298,68 +336,110 @@ function TetrisDevTool.remakeContainerUi(editWindow)
         editWindow.containerUi = nil;
     end
 
-    local existingEdit = TetrisDevTool.containerEdits[editWindow.containerDataKey];
-    TetrisDevTool.containerEdits[editWindow.containerDataKey] = editWindow.newContainerDefinition;
-
-    local containerUi = ItemGridContainerUI:new(editWindow.inventory, editWindow.inventoryPane, 0);
-    containerUi.containerGrid = ItemContainerGrid:new(editWindow.inventory, 0)
+    local containerUi = ItemGridContainerUI:new(editWindow.inventory, editWindow.inventoryPane, 0, editWindow.newContainerDefinition);
     containerUi:initialise();
 
-    editWindow.containerUi = containerUi;
-
-    TetrisDevTool.containerEdits[editWindow.containerDataKey] = existingEdit;
+    containerUi:removeChild(containerUi.overflowRenderer);
 
     editWindow:addChild(containerUi);
     containerUi:setY(200);
+    editWindow.containerUi = containerUi;
 
     -- Resize handles
-    for _, gridUi in pairs(containerUi.gridUis) do
-        local dragHandle = TetrisDevTool.createDragHandle(gridUi, OPT.CELL_SIZE, function(handle)
-            local x, y = TetrisDevTool.getGridXYFromHandle(handle);
+    for _, renderer in pairs(containerUi.multiGridRenderer.renderers) do
+        for _, gridUi in pairs(renderer.grids) do
+            local dragHandle = TetrisDevTool.createDragHandle(gridUi, OPT.CELL_SIZE, function(handle)
+                local x, y = TetrisDevTool.getGridXYFromHandle(handle);
 
-            print("Drag handle at: " .. x .. ", " .. y);
+                print("Drag handle at: " .. x .. ", " .. y);
 
-            handle:setX(x * OPT.CELL_SIZE - x);
-            handle:setY(y * OPT.CELL_SIZE - y);
+                handle:setX(x * OPT.CELL_SIZE - x);
+                handle:setY(y * OPT.CELL_SIZE - y);
 
-            local index = gridUi.grid.gridIndex
+                local index = gridUi.grid.gridIndex
 
-            editWindow.newContainerDefinition.gridDefinitions[index] = {
-                size = {
-                    width = x+1,
-                    height = y+1,
-                },
-                position = {
-                    x = editWindow.newContainerDefinition.gridDefinitions[index].position.x,
-                    y = editWindow.newContainerDefinition.gridDefinitions[index].position.y,
+                editWindow.newContainerDefinition.gridDefinitions[index] = {
+                    size = {
+                        width = x+1,
+                        height = y+1,
+                    },
+                    position = {
+                        x = editWindow.newContainerDefinition.gridDefinitions[index].position.x,
+                        y = editWindow.newContainerDefinition.gridDefinitions[index].position.y,
+                    }
                 }
-            }
 
-            TetrisDevTool.remakeContainerUi(editWindow);
-            editWindow:reflow();
-        end);
+                TetrisDevTool.remakeContainerUi(editWindow);
+                editWindow:reflow();
+            end);
 
-        gridUi:addChild(dragHandle);
-        dragHandle:setX(gridUi:getWidth() - OPT.CELL_SIZE);
-        dragHandle:setY(gridUi:getHeight() - OPT.CELL_SIZE);
+            gridUi:addChild(dragHandle);
+            dragHandle:setX(gridUi:getWidth() - OPT.CELL_SIZE);
+            dragHandle:setY(gridUi:getHeight() - OPT.CELL_SIZE);
+        end
     end
 end
 
 function TetrisDevTool.openContainerEdit(containerUi)
     local inventory = containerUi.inventory;
     local inventoryPane = containerUi.inventoryPane;
+    local containerDef = TetrisContainerData.getContainerDefinition(inventory);
+    local dataKey = TetrisContainerData._getContainerKey(inventory);
+    local dataTable = TetrisDevTool.containerEdits;
 
+    TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, containerDef, dataKey, dataTable, "CONTAINER");
+end
+
+function TetrisDevTool.openPocketEdit(item)
+    local inventory = getSpecificPlayer(0):getInventory();
+    local inventoryPane = getPlayerData(0).playerInventory.inventoryPane;
+    local containerDef = TetrisContainerData.getPocketDefinition(item);
+    if not containerDef then
+        containerDef = {
+            gridDefinitions = {
+                {
+                    size = {
+                        width = 1,
+                        height = 1,
+                    },
+                    position = {
+                        x = 0,
+                        y = 0,
+                    }
+                }
+            }
+        }
+    end
+
+    local dataKey = item:getFullType();
+    local dataTable = TetrisDevTool.pocketEdits;
+
+    local baseKey = inventory:getType() .. "_" .. inventory:getCapacity()
+    local og_override = TetrisDevTool.containerEdits[baseKey]
+    TetrisDevTool.containerEdits[baseKey] = containerDef;
+
+    local editWindow = TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, containerDef, dataKey, dataTable, "POCKET");
+    editWindow.containerUi.multiGridRenderer.renderers[inventory].previewTex = nil
+    editWindow.containerUi.multiGridRenderer.renderers[inventory].secondaryTarget = item
+
+    TetrisDevTool.containerEdits[baseKey] = og_override
+end
+
+function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, containerDef, dataKey, dataTable, type)
     local editWindow = ISPanel:new(getMouseX(), getMouseY(), 50, 50);
     editWindow:initialise();
     editWindow.inventory = inventory;
     editWindow.inventoryPane = inventoryPane;
     
-    editWindow.containerDataKey = TetrisContainerData._getContainerKey(editWindow.inventory);
-    editWindow.newContainerDefinition = {}
-    local originalContainerDef = TetrisContainerData.getContainerDefinition(editWindow.inventory);
-    copyTable(originalContainerDef, editWindow.newContainerDefinition);
+    editWindow.dataTable = dataTable;
 
-    TetrisDevTool.remakeContainerUi(editWindow);    
+    editWindow.containerDataKey = dataKey;
+    editWindow.newContainerDefinition = {}
+    copyTable(containerDef, editWindow.newContainerDefinition);
+
+    editWindow.type = type;
+
+    TetrisDevTool.remakeContainerUi(editWindow);
 
     editWindow.reflow = function(self)
         self.containerUi:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
@@ -519,17 +599,20 @@ function TetrisDevTool.openContainerEdit(containerUi)
         -- Find all the grids on the right and bottom edges based only on their position
         local rightGrids = {};
         local bottomGrids = {};
-        for _, gridUi in pairs(self.containerUi.gridUis) do
-            local gridDef = gridUi.grid.gridDefinition;
-            local x = gridDef.position.x;
-            local y = gridDef.position.y;
 
-            if not rightGrids[y] or rightGrids[y].grid.gridDefinition.position.x < x then
-                rightGrids[y] = gridUi;
-            end
-
-            if not bottomGrids[x] or bottomGrids[x].grid.gridDefinition.position.y < y then
-                bottomGrids[x] = gridUi;
+        for _, renderer in pairs(self.containerUi.multiGridRenderer.renderers) do
+            for _, gridUi in pairs(renderer.grids) do
+                local gridDef = gridUi.grid.gridDefinition;
+                local x = gridDef.position.x;
+                local y = gridDef.position.y;
+    
+                if not rightGrids[y] or rightGrids[y].grid.gridDefinition.position.x < x then
+                    rightGrids[y] = gridUi;
+                end
+    
+                if not bottomGrids[x] or bottomGrids[x].grid.gridDefinition.position.y < y then
+                    bottomGrids[x] = gridUi;
+                end
             end
         end
 
@@ -537,8 +620,8 @@ function TetrisDevTool.openContainerEdit(containerUi)
 
         clearQuickButtons(self, "ADD");
 
-        local containerX = self.containerUi:getX() + self.containerUi.gridRenderer:getX();
-        local containerY = self.containerUi:getY() + self.containerUi.gridRenderer:getY();
+        local containerX = self.containerUi:getX() + self.containerUi.multiGridRenderer:getX();
+        local containerY = self.containerUi:getY() + self.containerUi.multiGridRenderer:getY();
 
         for _, rightGrid in pairs(rightGrids) do
             local gridX = rightGrid:getX();
@@ -569,18 +652,20 @@ function TetrisDevTool.openContainerEdit(containerUi)
         end
 
         clearQuickButtons(self, "REMOVE");
-        for _, gridUi in pairs(self.containerUi.gridUis) do
-            local gridX = gridUi:getX();
-            local gridY = gridUi:getY();
+        for _, renderer in pairs(self.containerUi.multiGridRenderer.renderers) do
+            for _, gridUi in pairs(renderer.grids) do
+                local gridX = gridUi:getX();
+                local gridY = gridUi:getY();
 
-            local gridDef = gridUi.grid.gridDefinition;
-            local x = gridDef.position.x;
-            local y = gridDef.position.y;
+                local gridDef = gridUi.grid.gridDefinition;
+                local x = gridDef.position.x;
+                local y = gridDef.position.y;
 
-            local button = getQuickButton(self, "REMOVE", createRemoveGridButton);
-            button:setX(containerX + gridX)
-            button:setY(containerY + gridY);
-            button.grid = gridUi;
+                local button = getQuickButton(self, "REMOVE", createRemoveGridButton);
+                button:setX(containerX + gridX)
+                button:setY(containerY + gridY);
+                button.grid = gridUi;
+            end
         end
     end
 
@@ -589,22 +674,24 @@ function TetrisDevTool.openContainerEdit(containerUi)
     editWindow.render = function(self)
         og_render(self);
         -- Draw the size and position of each grid
-        for _, gridUi in pairs(self.containerUi.gridUis) do
-            local grid = gridUi.grid;
-            local gridDef = grid.gridDefinition;
-            local w = gridDef.size.width;
-            local h = gridDef.size.height;
-            local x = gridDef.position.x;
-            local y = gridDef.position.y;
-
-            if gridUi.dragHandle.moving then
-                w, h = TetrisDevTool.getGridXYFromHandle(gridUi.dragHandle);
-                w = w + 1;
-                h = h + 1;
+        for _, renderer in pairs(self.containerUi.multiGridRenderer.renderers) do
+            for _, gridUi in pairs(renderer.grids) do
+                local grid = gridUi.grid;
+                local gridDef = grid.gridDefinition;
+                local w = gridDef.size.width;
+                local h = gridDef.size.height;
+                local x = gridDef.position.x;
+                local y = gridDef.position.y;
+    
+                if gridUi.dragHandle.moving then
+                    w, h = TetrisDevTool.getGridXYFromHandle(gridUi.dragHandle);
+                    w = w + 1;
+                    h = h + 1;
+                end
+    
+                gridUi:drawText(w .. "x" .. h, 4, 22, 1, 1, 1, 1, UIFont.Medium);
+                --gridUi:drawText("Pos: " .. x .. "," .. y, 4, 20, 1, 1, 1, 1, UIFont.Medium);
             end
-
-            gridUi:drawText(w .. "x" .. h, 4, 22, 1, 1, 1, 1, UIFont.Medium);
-            --gridUi:drawText("Pos: " .. x .. "," .. y, 4, 20, 1, 1, 1, 1, UIFont.Medium);
         end
     end
 
@@ -612,6 +699,8 @@ function TetrisDevTool.openContainerEdit(containerUi)
     
     editWindow:reflow();
     editWindow:addToUIManager();
+
+    return editWindow;
 end
 
 function TetrisDevTool.onEditContainer(self, button)
@@ -633,7 +722,11 @@ function TetrisDevTool.onEditContainer(self, button)
     end
 
     if button.internal == "ACCEPT" then
-        TetrisDevTool.applyContainerEdit(self.containerDataKey, self.newContainerDefinition);
+        if self.type == "CONTAINER" then
+            TetrisDevTool.applyContainerEdit(self.containerDataKey, self.newContainerDefinition);
+        else
+            TetrisDevTool.applyPocketEdit(self.containerDataKey, self.newContainerDefinition);
+        end
         self:removeFromUIManager();
     end
 
@@ -877,10 +970,17 @@ end
 
 function TetrisDevTool.applyContainerEdit(key, newDef)
     TetrisDevTool.containerEdits[key] = newDef;
-
     writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
+    TetrisDevTool.forceRefreshAllGrids();
+end
 
-    -- Force refresh all the grids
+function TetrisDevTool.applyPocketEdit(key, newDef)
+    TetrisDevTool.pocketEdits[key] = newDef;
+    writeJsonFile(POCKET_FILENAME..".json", TetrisDevTool.pocketEdits);
+    TetrisDevTool.forceRefreshAllGrids();
+end
+
+function TetrisDevTool.forceRefreshAllGrids()
     ItemContainerGrid._playerMainGrids = {}
     ItemContainerGrid._getPlayerMainGrid(0)
     getPlayerInventory(0).inventoryPane:refreshItemGrids(true)

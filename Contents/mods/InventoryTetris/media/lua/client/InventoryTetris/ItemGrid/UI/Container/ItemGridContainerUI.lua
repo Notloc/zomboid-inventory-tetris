@@ -24,7 +24,7 @@ local OPT = require "InventoryTetris/Settings"
 ---@field player IsoPlayer
 ---@field gridUis ItemGridUI[]
 ---@field containerGrid ItemContainerGrid
-function ItemGridContainerUI:new(inventory, inventoryPane, playerNum)
+function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerDefOverride)
     local o = ISPanel:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
@@ -43,7 +43,10 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum)
         o.invTexture = o.item and o.item:getTex() or BASIC_INV_TEXTURE;
     end
 
-    o.containerGrid = ItemContainerGrid.Create(inventory, playerNum)
+    o.containerGrid = ItemContainerGrid.Create(inventory, playerNum, containerDefOverride)
+    o.containerGrid:addOnSecondaryGridsAdded(o, o._onSecondaryGridsAdded)
+    o.containerGrid:addOnSecondaryGridsRemoved(o, o._onSecondaryGridsRemoved)
+
     o.keepOnScreen = false -- Keep on screen is a menace inside scroll panes and these are always inside scroll panes or other panels
 
     local player = getSpecificPlayer(playerNum)
@@ -98,38 +101,67 @@ end
 function ItemGridContainerUI:initialise()
     ISPanel.initialise(self)
 
-    self.gridUis = self:createItemGridUIs()
-    
+    local multiGridRenderer = ISPanel:new(0, 0, 5000, 5000)
+    multiGridRenderer:initialise()
+    multiGridRenderer.renderers = {}
+    multiGridRenderer.sortedRenderers = {}
+
+    self.gridUis = self:initItemGridUIs()
+    local grids = self.gridUis[self.inventory]
+    local gridRenderer = self:createGridRenderer(grids, self.inventory)
+    multiGridRenderer:addChild(gridRenderer)
+    multiGridRenderer.renderers[self.inventory] = gridRenderer
+    multiGridRenderer.sortedRenderers[1] = gridRenderer
+ 
     local infoRenderer = GridContainerInfo:new(self)
     infoRenderer:initialise()
-
-    local gridRenderer = ISUIElement:new(0, 0, 5000, 5000)
-    gridRenderer:initialise()
-    for _, gridUi in ipairs(self.gridUis) do
-        gridRenderer:addChild(gridUi)
-    end
-    gridRenderer.containerUi = self
-    gridRenderer.prerender = ItemGridContainerUI.prerenderGrids
-
-    local overflowRenderer = GridOverflowRenderer:new(0, 0, self)
+    
+    local overflowRenderer = GridOverflowRenderer:new(0, 0, self, self.gridUis[self.inventory][1])
     overflowRenderer:initialise()
     
     local collapseButton = ISButton:new(0, 0, 16, 16, "V", self, ItemGridContainerUI.onCollapseButtonClick)
     collapseButton:initialise()
     collapseButton.borderColor = {r=1, g=1, b=1, a=0.1}
     collapseButton.backgroundColor = {r=1, g=1, b=1, a=0.1}
-
+    
     self.infoRenderer = infoRenderer
-    self.gridRenderer = gridRenderer
+    self.multiGridRenderer = multiGridRenderer
     self.overflowRenderer = overflowRenderer
     self.collapseButton = collapseButton
 
-    self:addChild(gridRenderer)
+    self:addChild(multiGridRenderer)
     self:addChild(infoRenderer)
     self:addChild(overflowRenderer)
     self:addChild(collapseButton)
 
     self:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
+
+    self.containerGrid:refreshSecondaryGrids()
+    self.initialized = true
+end
+
+function ItemGridContainerUI:createGridRenderer(gridUis, target)
+    local gridRenderer = ISUIElement:new(0, 0, 5000, 5000)
+    gridRenderer:initialise()
+    for _, gridUi in ipairs(gridUis) do
+        gridRenderer:addChild(gridUi)
+    end
+
+    gridRenderer.containerUi = self
+    gridRenderer.prerender = self.isPlayerInventory and gridRenderer.prerender or ItemGridContainerUI.prerenderGrids
+    gridRenderer.render = self.isPlayerInventory and ItemGridContainerUI.renderItemPreview or gridRenderer.render
+    gridRenderer.grids = gridUis
+    gridRenderer.secondaryTarget = target
+
+    if instanceof(target, "ItemContainer") then
+        gridRenderer.previewTex = BASIC_INV_TEXTURE
+    end
+
+    gridRenderer.onRightMouseUp = function(self, x, y)
+        self.containerUi:onRightMouseUp(x, y)
+    end
+
+    return gridRenderer
 end
 
 function ItemGridContainerUI:onApplyGridScale(gridScale)
@@ -142,66 +174,102 @@ end
 
 function ItemGridContainerUI:applyScales(gridScale, infoScale)
     local lineHeight = getTextManager():getFontHeight(UIFont.Small)
-    local yOffset = self.showTitle and lineHeight + (TITLE_Y_PADDING * 2) - 5 or 1
+    local titleOffset = self.showTitle and lineHeight + (TITLE_Y_PADDING * 2) - 5 or 1
 
     local infoWidth = (ICON_SIZE + ICON_PADDING_X * 2) * infoScale
     local infoHeight = (ICON_SIZE + ICON_PADDING_Y * 2) * infoScale + (lineHeight + 4)
 
     self.infoRenderer:setWidth(infoWidth)
     self.infoRenderer:setHeight(infoHeight)
-    self.infoRenderer:setY(yOffset)
+    self.infoRenderer:setY(titleOffset)
 
     self.infoRenderer.organizationIcon:setWidth(16 * infoScale)
     self.infoRenderer.organizationIcon:setHeight(16 * infoScale)
     self.infoRenderer.organizationIcon.scaledWidth = 16 * infoScale
     self.infoRenderer.organizationIcon.scaledHeight = 16 * infoScale
 
-    for _, grid in ipairs(self.gridUis) do
-        grid:onApplyScale(gridScale)
+    self.multiGridRenderer:setX(infoWidth + 2)
+    self.multiGridRenderer:setY(titleOffset)
+
+    local maxX = 0
+    local yOffset = 0
+    local xOffset = self.isPlayerInventory and (OPT.CELL_SIZE + 4 + GRID_PADDING) or 0
+    for _, renderer in ipairs(self.multiGridRenderer.sortedRenderers) do
+        local containerDef = self.containerGrid.containerDefinition
+        local target = renderer.secondaryTarget
+        if target ~= self.inventory then
+            containerDef = TetrisContainerData.getPocketDefinition(target)
+        end
+
+        for _, grid in ipairs(renderer.grids) do
+            grid:onApplyScale(gridScale)
+        end
+
+        local width, height = self:updateItemGridPositions(renderer.grids, gridScale, containerDef)
+        renderer:setWidth(width+(GRID_PADDING*2*gridScale) + xOffset)
+        renderer:setHeight(height+(GRID_PADDING*2*gridScale))
+        renderer:setX(0)
+        renderer:setY(yOffset)
+
+        for _, gridUi in ipairs(renderer.grids) do
+            gridUi:setX(gridUi:getX() + GRID_PADDING*gridScale + xOffset)
+            gridUi:setY(gridUi:getY() + GRID_PADDING*gridScale)
+        end
+
+        
+        width = width + GRID_PADDING*2*gridScale + xOffset
+        if width > maxX then
+            maxX = width
+        end
+
+        yOffset = yOffset + height + GRID_PADDING*2*gridScale
     end
 
-    local width, height = self:updateItemGridPositions(self.gridUis, gridScale)
-    self.gridRenderer:setWidth(width+(GRID_PADDING*2*gridScale))
-    self.gridRenderer:setHeight(height+(GRID_PADDING*2*gridScale))
-    self.gridRenderer:setX(infoWidth+2)
-    self.gridRenderer:setY(yOffset)
+    self.multiGridRenderer:setWidth(maxX)
+    self.multiGridRenderer:setHeight(yOffset)
 
-    for _, gridUi in ipairs(self.gridUis) do
-        gridUi:setX(gridUi:getX() + GRID_PADDING*gridScale)
-        gridUi:setY(gridUi:getY() + GRID_PADDING*gridScale)
-    end
-
-    self:setWidth(self.gridRenderer:getWidth() + infoWidth+2)
+    self:setWidth(maxX + infoWidth+2)
 
     if self.isCollapsed then
         self:setMaxDrawHeight(lineHeight + (TITLE_Y_PADDING * 2))
         self:setHeight(20)
         self.overflowRenderer:setVisible(false)
         self.infoRenderer:setVisible(false)
-        self.gridRenderer:setVisible(false)
+        self.multiGridRenderer:setVisible(false)
     else
         self:clearMaxDrawHeight()
-        self:setHeight(math.max(self.gridRenderer:getHeight(), self.infoRenderer:getHeight()) + yOffset)
+        self:setHeight(math.max(self.multiGridRenderer:getHeight(), self.infoRenderer:getHeight()) + titleOffset)
         self.overflowRenderer:setVisible(true)
         self.infoRenderer:setVisible(true)
-        self.gridRenderer:setVisible(true)
+        self.multiGridRenderer:setVisible(true)
     end
 end
 
-function ItemGridContainerUI:createItemGridUIs()
+function ItemGridContainerUI:initItemGridUIs()
     local itemGridUIs = {}
-    for i, grid in ipairs(self.containerGrid.grids) do
-        local itemGridUI = ItemGridUI:new(grid, self.containerGrid, self.inventoryPane, self.playerNum)
-        itemGridUI:initialise()
-        table.insert(itemGridUIs, itemGridUI)
-    end
+
+    local uis = self:createItemGridUIs(self.containerGrid.grids)
+    itemGridUIs[self.inventory] = uis
+
     return itemGridUIs
 end
 
+function ItemGridContainerUI:createItemGridUIs(grids, secondaryKey)
+    local uis = {}
+    for _, grid in ipairs(grids) do
+        local itemGridUI = ItemGridUI:new(grid, self.containerGrid, self.inventoryPane, self.playerNum)
+        itemGridUI:initialise()
+        table.insert(uis, itemGridUI)
+    end
+    return uis
+end
+
 function ItemGridContainerUI:findGridStackUnderMouse()
-    for _, gridUi in pairs(self.gridUis) do
-        if gridUi:isMouseOver() then
-            return gridUi:findGridStackUnderMouse(gridUi:getMouseX(), gridUi:getMouseY())
+    for _, grids in pairs(self.gridUis) do
+        for _, gridUi in pairs(grids) do
+            if gridUi:isMouseOver() then
+                return gridUi:findGridStackUnderMouse(gridUi:getMouseX(), gridUi:getMouseY())
+            end
         end
     end
     return nil
@@ -209,13 +277,13 @@ end
 
 -- Positions the grids so they are nicely spaced out
 -- Returns the size of all the grids plus the spacing
-function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale)
+function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale, containerDef)
     local xOffset = 0
     local yOffset = 0
 
     -- Space out the grids
     local gridSpacing = 6 * scale
-    
+
     local gridUis = {}
     for _, gridUi in ipairs(_gridUis) do
         table.insert(gridUis, gridUi)
@@ -320,7 +388,7 @@ function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale)
     local maxX = 0
     local maxY = 0
 
-    local mode = self.containerGrid.containerDefinition.centerMode
+    local mode = containerDef.centerMode
     if mode == "horizontal" or mode == nil then 
         -- center on x axis
         local startX = xOffset
@@ -372,7 +440,7 @@ function ItemGridContainerUI:prerender()
 
     local infoWidth = (ICON_SIZE + ICON_PADDING_X * 2) * OPT.CONTAINER_INFO_SCALE
     local overflowPadding = #self.containerGrid.overflow > 0 and 8 or 0
-    self:setWidth(self.gridRenderer:getWidth() + infoWidth+2 + self.overflowRenderer:getWidth() + overflowPadding)
+    self:setWidth(self.multiGridRenderer:getWidth() + infoWidth+2 + self.overflowRenderer:getWidth() + overflowPadding)
 
     if self.showTitle then
         local invName = ""
@@ -399,6 +467,24 @@ function ItemGridContainerUI.prerenderGrids(self)
     self:drawRectBorder(0, 0, self.width, self.height, 0.5,1,1,1)
 end
 
+function ItemGridContainerUI.renderItemPreview(self)
+    local scale = OPT.SCALE
+    local size = OPT.CELL_SIZE
+    local x = GRID_PADDING*scale + 1
+    local y = GRID_PADDING*scale
+
+    self:drawTextureScaledAspect(ItemGridUI.getGridBackgroundTexture(), x, y, size, size, 0.35,1,1,1)
+    self:drawRectBorder(x-1, y-1, size+2, size+2, 1,1,1,1)
+
+
+    if self.previewTex then
+        self:drawTextureScaledAspect(self.previewTex, x, y, size, size, 1, 1, 1, 1)
+    else
+        local tex = self.secondaryTarget:getTex()
+        self:drawTextureScaledAspect(tex, x, y, size, size, 1, ItemGridUI.getItemColor(self.secondaryTarget))
+    end
+end
+
 function ItemGridContainerUI:renderTitle(text, xOffset, yOffset, paddingX, paddingY)
     local textW = getTextManager():MeasureStringX(UIFont.Small, text);
     local textH = getTextManager():getFontHeight(UIFont.Small);
@@ -423,17 +509,109 @@ function ItemGridContainerUI:onCollapseButtonClick(button)
     self.inventoryPane:refreshContainer()
 end
 
+
 function ItemGridContainerUI:onMouseDoubleClick(x, y)
     if self.infoRenderer:isMouseOver() then
         self.infoRenderer:onMouseDoubleClick(self.infoRenderer:getMouseX(), self.infoRenderer:getMouseY())
         return
     end
 
-    local gridUi = ItemGridUiUtil.findGridUiUnderMouse(self.gridUis)
+    local gridUi = self:findGridUiUnderMouse(x,y)
     if gridUi then
         gridUi:onMouseDoubleClick(gridUi:getMouseX(), gridUi:getMouseY())
         return
     end
 
     self.overflowRenderer:onMouseDoubleClick(self.overflowRenderer:getMouseX(), self.overflowRenderer:getMouseY())
+end
+
+function ItemGridContainerUI:onRightMouseUp(x, y)
+    if not self.isPlayerInventory then
+        return
+    end
+
+    local target = self:didClickOnPocketPreview(x, y)
+    if target then
+        local menu = ItemGridUI.openItemContextMenu(self, self:getMouseX(), self:getMouseY(), target, self.inventoryPane, self.playerNum)
+        TetrisDevTool.insertContainerDebugOptions(menu, self)
+    end
+end
+
+function ItemGridContainerUI:didClickOnPocketPreview(x,y)
+    for target, renderer in pairs(self.multiGridRenderer.renderers) do
+        if target ~= self.inventory and renderer:isMouseOver(x, y) then
+            local rX = renderer:getMouseX()
+            local rY = renderer:getMouseY()
+
+            if rX < OPT.CELL_SIZE + GRID_PADDING * OPT.SCALE and rY < OPT.CELL_SIZE + GRID_PADDING * OPT.SCALE then
+                return target
+            end
+        end
+    end
+    return false
+end
+
+function ItemGridContainerUI:findGridUiUnderMouse(x, y)
+    for _, renderer in pairs(self.multiGridRenderer.renderers) do
+        if renderer:isMouseOver(x, y) then
+            for _, gridUi in pairs(renderer.grids) do
+                if gridUi:isMouseOver(x, y) then
+                    return gridUi
+                end
+            end
+        end
+    end
+    return nil
+end
+
+
+function ItemGridContainerUI:_sortRenderers()
+    self.multiGridRenderer.sortedRenderers = {}
+    for _, renderer in pairs(self.multiGridRenderer.renderers) do
+        table.insert(self.multiGridRenderer.sortedRenderers, renderer)
+    end
+
+    table.sort(self.multiGridRenderer.sortedRenderers, function(a,b)
+        return self:_countSlotsInGrids(a.grids) > self:_countSlotsInGrids(b.grids)
+    end)
+end
+
+function ItemGridContainerUI:_countSlotsInGrids(gridUis)
+    local count = 0
+    for _, gridUi in ipairs(gridUis) do
+        count = count + gridUi.grid.width * gridUi.grid.height
+    end
+    return count
+end
+
+function ItemGridContainerUI:_onSecondaryGridsAdded(target, grids)
+    local uis = self:createItemGridUIs(grids, target)
+    self.gridUis[target] = uis
+
+    local renderer = self:createGridRenderer(uis, target)
+    self.multiGridRenderer:addChild(renderer)
+    self.multiGridRenderer.renderers[target] = renderer
+
+    self:_sortRenderers()
+
+    self:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
+    if self.initialized then
+        self.inventoryPane:refreshItemGrids()
+    end
+end
+
+function ItemGridContainerUI:_onSecondaryGridsRemoved(target)
+    self.gridUis[target] = nil
+    local renderer = self.multiGridRenderer.renderers[target]
+    if renderer then
+        self.multiGridRenderer:removeChild(renderer)
+        self.multiGridRenderer.renderers[target] = nil
+    end
+
+    self:_sortRenderers()
+
+    self:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
+    if self.initialized then
+        self.inventoryPane:refreshItemGrids()
+    end
 end

@@ -57,7 +57,7 @@ function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, target
         local transferMag = nil
         transferMag, returnMag = NotUtil.createTransferActionWithReturn(magazine, targetInventory, playerInv, playerObj)
         if magStack and grid then
-            returnMag:setTetrisTarget(magStack.x, magStack.y, grid.gridIndex, magStack.isRotated)
+            returnMag:setTetrisTarget(magStack.x, magStack.y, grid.gridIndex, magStack.isRotated, grid.secondaryTarget)
         end
         ISTimedActionQueue.add(transferMag)
     end

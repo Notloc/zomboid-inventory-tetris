@@ -44,13 +44,13 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
         local containerGrid = containerGridUi.containerGrid
 
         TestUtils.assert(containerGridUi ~= nil)
-        TestUtils.assert(containerGridUi.gridUis ~= nil and #containerGridUi.gridUis == 1)
+        TestUtils.assert(containerGridUi.gridUis ~= nil and #containerGridUi.gridUis[containerGridUi.inventory])
     end
 
     function Tests.test_dragging()
         local containerGridUi = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
         local containerGrid = containerGridUi.containerGrid
-        local gridUi = containerGridUi.gridUis[1]
+        local gridUi = containerGridUi.gridUis[containerGridUi.inventory][1]
         local grid = gridUi.grid
 
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
@@ -75,7 +75,7 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
     function Tests.test_draggingAndDrop_sameGrid()
         local containerGridUi = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
         local containerGrid = containerGridUi.containerGrid
-        local gridUi = containerGridUi.gridUis[1]
+        local gridUi = containerGridUi.gridUis[containerGridUi.inventory][1]
         local grid = gridUi.grid
 
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
@@ -103,7 +103,7 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
     function Tests.test_dragAndDropToStack_sameGrid()
         local containerGridUi = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
         local containerGrid = containerGridUi.containerGrid
-        local gridUi = containerGridUi.gridUis[1]
+        local gridUi = containerGridUi.gridUis[containerGridUi.inventory][1]
         local grid = gridUi.grid
 
         local item = TestHelper.createItem_1x1_stackable(containerGrid.inventory)
@@ -136,12 +136,12 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
     function Tests.test_dragAndDrop_differentContainers()
         local containerGridUi1 = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
         local containerGrid1 = containerGridUi1.containerGrid
-        local gridUi1 = containerGridUi1.gridUis[1]
+        local gridUi1 = containerGridUi1.gridUis[containerGridUi1.inventory][1]
         local grid1 = gridUi1.grid
 
         local containerGridUi2 = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
         local containerGrid2 = containerGridUi2.containerGrid
-        local gridUi2 = containerGridUi2.gridUis[1]
+        local gridUi2 = containerGridUi2.gridUis[containerGridUi2.inventory][1]
         local grid2 = gridUi2.grid
 
         local item = TestHelper.createItem_1x1(containerGrid1.inventory)

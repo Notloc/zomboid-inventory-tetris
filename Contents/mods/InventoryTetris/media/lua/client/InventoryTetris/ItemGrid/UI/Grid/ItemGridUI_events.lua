@@ -269,7 +269,7 @@ function ItemGridUI:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
         self:unequipIfNeeded(playerObj, item)
 
         local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1)
-        action:setTetrisTarget(gridX, gridY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated())
+        action:setTetrisTarget(gridX, gridY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated(), self.grid.secondaryTarget)
         ISTimedActionQueue.add(action)
     end
 end
@@ -316,7 +316,7 @@ function ItemGridUI:handleDropOnStackDifferentContainer(vanillaStack, targetStac
         self:unequipIfNeeded(playerObj, item)
         
         local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1)
-        action:setTetrisTarget(targetStack.x, targetStack.y, self.grid.gridIndex, targetStack.isRotated)
+        action:setTetrisTarget(targetStack.x, targetStack.y, self.grid.gridIndex, targetStack.isRotated, self.grid.secondaryTarget)
         ISTimedActionQueue.add(action)
     end
 end
