@@ -1,0 +1,19 @@
+{
+    "Lua.workspace.library": [
+        "C:/Users/Colto/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/umbrella/module/library"
+    ],
+    "Lua.runtime.version": "Lua 5.1",
+    "Lua.runtime.path": [
+        "?.lua",
+        "?/init.lua",
+        "server/?.lua"
+    ],
+    "Lua.completion.requireSeparator": "/",
+    "Lua.workspace.preloadFileSize": 800,
+    "Lua.runtime.builtin": {
+        "debug": "disable",
+        "io": "disable",
+        "package": "disable"
+    },
+    "Lua.workspace.checkThirdParty": false
+}

@@ -953,12 +953,12 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
     if not isDebugEnabled() then return menu end
     
     local item = items[1]
-    if not item then return end
+    if not item then return menu end
 
     if items[1].items then 
         item = items[1].items[1]
     end
-    if not item then return end
+    if not item then return menu end
 
     print("item display name: " .. item:getDisplayName())
     print("item display category: " .. item:getDisplayCategory())
