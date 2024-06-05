@@ -15,5 +15,10 @@
         "io": "disable",
         "package": "disable"
     },
-    "Lua.workspace.checkThirdParty": false
+    "Lua.workspace.checkThirdParty": false,
+    "Lua.diagnostics.globals": [
+        "DragAndDrop",
+        "EquipmentUI",
+        "ModOptions"
+    ]
 }

@@ -16,10 +16,28 @@ TetrisContainerData = {}
 
 TetrisContainerData._containerDefinitions = {}
 TetrisContainerData._vehicleStorageNames = {}
+TetrisContainerData._pocketDefinitions = {}
 
 function TetrisContainerData.getContainerDefinition(container)
     local containerKey = TetrisContainerData._getContainerKey(container)
     return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
+end
+
+function TetrisContainerData.getPocketDefinition(item)
+    if not instanceof(item, "InventoryItem") then
+        return nil
+    end
+
+    local key = item:getFullType()
+    if TetrisDevTool.getPocketOverride(key) then
+        return TetrisDevTool.getPocketOverride(key)
+    end
+
+    if not TetrisContainerData._pocketDefinitions[key] then
+        TetrisContainerData._pocketDefinitions[key] = TetrisContainerData._calculatePocketDefinition(item)
+    end
+
+    return TetrisContainerData._pocketDefinitions[key]
 end
 
 function TetrisContainerData.calculateInnerSize(container)
@@ -159,6 +177,39 @@ function TetrisContainerData.validateInsert(containerDef, item)
     end
 
     return true
+end
+
+local bodySlotsToPocketDefinitions = {
+    ["Pants"] = {
+        gridDefinitions = {
+            {
+                size = {width=1, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=2, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            }
+        }
+    },
+}
+
+function TetrisContainerData._calculatePocketDefinition(item)
+    local bodySlot = item:getBodyLocation()
+    
+    if bodySlotsToPocketDefinitions[bodySlot] then
+        return bodySlotsToPocketDefinitions[bodySlot]
+    end
+    
+    return nil
 end
 
 -- Vehicle Storage Registration

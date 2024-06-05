@@ -8,18 +8,18 @@ local OVERFLOW_RENDERER_SPACING = 8
 
 GridOverflowRenderer = ISUIElement:derive("GridOverflowRenderer")
 
-function GridOverflowRenderer:new(x,y, containerGridUi)
+function GridOverflowRenderer:new(x,y, containerGridUi, gridUi)
     local o = ISUIElement:new(x, y, 0, 0)
     setmetatable(o, self)
     self.__index = self
     o.containerGridUi = containerGridUi
     o.containerGrid = containerGridUi.containerGrid
-    o.gridUi = o.containerGridUi.gridUis[1]
+    o.gridUi = gridUi
     return o
 end
 
 function GridOverflowRenderer:getYPositionsForOverflow()    
-    local height = self.containerGridUi.gridRenderer:getHeight()
+    local height = self.containerGridUi.multiGridRenderer:getHeight()
     if self.lastHeight == height then
         return self.lastYPositions
     end
@@ -48,7 +48,7 @@ function GridOverflowRenderer:render()
     local inventory = self.containerGridUi.inventory
     local overflow = self.containerGrid.overflow
     
-    local gridRenderer = self.containerGridUi.gridRenderer
+    local gridRenderer = self.containerGridUi.multiGridRenderer
     self:setX(gridRenderer:getX() + gridRenderer:getWidth() + OVERFLOW_RENDERER_SPACING)
     self:setY(gridRenderer:getY())
     self:setWidth(self:calculateOverflowColumnWidth(#overflow))

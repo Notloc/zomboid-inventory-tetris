@@ -25,11 +25,12 @@ Events.OnGameBoot.Add(function()
         return o
     end
 
-    function ISInventoryTransferAction:setTetrisTarget(x, y, i, r)
+    function ISInventoryTransferAction:setTetrisTarget(x, y, i, r, secondaryTarget)
         self.gridX = x
         self.gridY = y
         self.gridIndex = i
         self.isRotated = r
+        self.tetrisSecondary = secondaryTarget
         self.enforceTetrisRules = true
     end
 
@@ -69,7 +70,7 @@ Events.OnGameBoot.Add(function()
 
         local containerGrid = ItemContainerGrid.Create(self.destContainer, self.character:getPlayerNum())
         if self.gridX and self.gridY and self.gridIndex then
-            local doesFit = containerGrid:doesItemFit(self.item, self.gridX, self.gridY, self.gridIndex, self.isRotated) or containerGrid:canItemBeStacked(self.item, self.gridX, self.gridY, self.gridIndex)
+            local doesFit = containerGrid:doesItemFit(self.item, self.gridX, self.gridY, self.gridIndex, self.isRotated, self.tetrisSecondary) or containerGrid:canItemBeStacked(self.item, self.gridX, self.gridY, self.gridIndex, self.tetrisSecondary)
             if not doesFit then
                 return false
             end
@@ -134,7 +135,7 @@ Events.OnGameBoot.Add(function()
 
             local destContainerGrid = ItemContainerGrid.Create(self.destContainer, self.character:getPlayerNum())
             if self.gridX and self.gridY and self.gridIndex then
-                destContainerGrid:insertItem(item, self.gridX, self.gridY, self.gridIndex, self.isRotated)
+                destContainerGrid:insertItem(item, self.gridX, self.gridY, self.gridIndex, self.isRotated, self.tetrisSecondary)
             else
                 local organized = self.character:HasTrait("Organized")
                 local disorganized = self.character:HasTrait("Disorganized")
@@ -151,7 +152,7 @@ Events.OnGameBoot.Add(function()
                         local parentContainerGrid = ItemContainerGrid.Create(parentInventory, self.character:getPlayerNum())
                         local stack, grid = parentContainerGrid:findStackByItem(itemContainer)
                         parentContainerGrid:removeItem(itemContainer)
-                        if not stack or (grid and not parentContainerGrid:insertItem(itemContainer, stack.x, stack.y, grid.gridIndex, stack.isRotated)) then
+                        if not stack or (grid and not parentContainerGrid:insertItem(itemContainer, stack.x, stack.y, grid.gridIndex, stack.isRotated, grid.secondaryTarget)) then
                             parentContainerGrid:attemptToInsertItem(itemContainer, self.isRotated, true, false)
                         end
                         parentInventory:setDrawDirty(true)

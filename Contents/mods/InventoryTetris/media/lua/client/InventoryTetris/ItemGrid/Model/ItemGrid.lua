@@ -5,6 +5,7 @@
 ---@field gridIndex number
 ---@field inventory ItemContainer
 ---@field isPlayerInventory boolean
+---@field secondaryTarget InventoryItem
 ---@field isOnPlayer boolean
 ---@field isFloor boolean
 ---@field width number
@@ -14,20 +15,24 @@ ItemGrid = {}
 ---@param containerGrid ItemContainerGrid
 ---@param gridIndex number
 ---@param inventory ItemContainer
+---@param containerDefinition ContainerGridDefinition
+---@param gridDefinition GridDefinition
 ---@param isPlayerInventory boolean
+---@param secondaryTarget InventoryItem?
 ---@return ItemGrid
-function ItemGrid:new(containerGrid, gridIndex, inventory, isPlayerInventory)
+function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, gridDefinition, isPlayerInventory, secondaryTarget)
     local o = {}
     setmetatable(o, self)
     self.__index = self
 
     o.containerGrid = containerGrid
-    o.containerDefinition = containerGrid.containerDefinition
-    o.gridDefinition = o.containerDefinition.gridDefinitions[gridIndex]
+    o.containerDefinition = containerDefinition
+    o.gridDefinition = gridDefinition
     o.gridIndex = gridIndex
     o.inventory = inventory
-
     o.isPlayerInventory = isPlayerInventory
+    o.secondaryTarget = secondaryTarget
+
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
     o.isFloor = inventory:getType() == "floor"
 
@@ -328,7 +333,7 @@ function ItemGrid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisor
     preferRotated = preferRotated or false
     
     if not isOrganized then
-        isOrganized = self.containerDefinition.isOrganized
+        isOrganized = self.containerGrid:isOrganized()
     end
 
     if not isDisorganized or TetrisItemData.isAlwaysStacks(item) then
@@ -746,6 +751,10 @@ function ItemGrid:resetGridData()
     self:refresh()
 end
 
+function ItemGrid:deleteGridData()
+    self:_getSavedContainerData()[self.gridIndex] = nil
+end
+
 function ItemGrid:_getSavedGridData()
     local containerData, parent = self:_getSavedContainerData()
 
@@ -762,7 +771,7 @@ function ItemGrid:_getSavedContainerData()
         modData.gridContainers = {}
     end
 
-    local invType = self.inventory:getType()
+    local invType = self.secondaryTarget and self.secondaryTarget:getID() or self.inventory:getType()
     if not modData.gridContainers[invType] then
         modData.gridContainers[invType] = {}
     end

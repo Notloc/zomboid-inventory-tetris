@@ -2,23 +2,6 @@ local OPT = require "InventoryTetris/Settings"
 
 ItemGridUiUtil = {}
 
-function ItemGridUiUtil.findGridUiUnderMouse(gridUis, x, y)
-    for _, gridUi in pairs(gridUis) do
-        if gridUi:isMouseOver(x, y) then
-            return gridUi
-        end
-    end
-    return nil
-end
-
-function ItemGridUiUtil.findGridStackUnderMouse(gridUis, x, y)
-    local gridUi = ItemGridUiUtil.findGridUiUnderMouse(gridUis, x, y)
-    if gridUi then
-        return gridUi:findGridStackUnderMouse()
-    end
-    return nil
-end
-
 -- Rounds a mouse position to the nearest grid position, for the top left corner of the item
 function ItemGridUiUtil.mousePositionToGridPosition(x, y)
     local effectiveCellSize = OPT.CELL_SIZE - 1

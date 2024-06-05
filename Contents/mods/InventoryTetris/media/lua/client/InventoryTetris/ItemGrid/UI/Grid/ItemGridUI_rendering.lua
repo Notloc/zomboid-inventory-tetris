@@ -227,6 +227,10 @@ function ItemGridUI:renderBackGrid()
     self.javaObject:DrawTextureTiled(lineTex, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
 end
 
+function ItemGridUI.getGridBackgroundTexture()
+    return GridBackgroundTexturesByScale[OPT.SCALE] or GridBackgroundTexturesByScale[1]
+end
+
 function ItemGridUI.updateItem(item)
     if instanceof(item, 'InventoryItem') then
         item:updateAge()

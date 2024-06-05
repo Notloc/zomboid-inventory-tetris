@@ -79,7 +79,7 @@ function ItemGridStackSplitWindow:onOK()
     else
         for i=2, count+1 do
             local action = ISInventoryTransferAction:new(playerObj, vanillaStack.items[i], dragInventory, self.grid.inventory, 1)
-            action:setTetrisTarget(targetX, targetY, self.grid.gridIndex, isRotated)
+            action:setTetrisTarget(targetX, targetY, self.grid.gridIndex, isRotated, self.grid.secondaryTarget)
             ISTimedActionQueue.add(action)
         end
     end
