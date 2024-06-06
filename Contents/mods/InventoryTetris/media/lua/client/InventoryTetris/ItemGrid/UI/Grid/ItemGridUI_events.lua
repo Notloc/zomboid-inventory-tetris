@@ -8,6 +8,8 @@ require "ISUI/ISPanel"
 local OPT = require "InventoryTetris/Settings"
 local ItemUtil = require "Notloc/ItemUtil"
 
+local CONTROLLER_DOUBLE_PRESS_TIME = 200
+
 -- PARTIAL CLASS
 if not ItemGridUI then
     ItemGridUI = ISPanel:derive("ItemGridUI")
@@ -34,6 +36,18 @@ if not ItemGridUI then
         ---@cast o ItemGridUI
         return o
     end
+end
+
+function ItemGridUI:initialise()
+    ISPanel.initialise(self)
+
+    self.selectedX = 0
+    self.selectedY = 0
+    NotlocControllerNode
+        :injectControllerNode(self)
+        :doSimpleFocusHighlight()
+        :setJoypadDirHandler(self.controllerNodeOnJoypadDir)
+        :setJoypadDownHandler(self.controllerNodeOnJoypadDown)
 end
 
 local function isCtrlButtonDown()
@@ -148,10 +162,16 @@ function ItemGridUI.covertItemAndLocalMouseToGridPosition(x, y, item, isRotated)
     return ItemGridUiUtil.mousePositionToGridPosition(x, y)
 end
 
-function ItemGridUI:handleDragAndDrop(x, y)
+function ItemGridUI:handleDragAndDrop(mouseX, mouseY)
     local vanillaStack = DragAndDrop.getDraggedStack()
     if not vanillaStack or not vanillaStack.items[1] then return end
+    local dragItem = vanillaStack.items[1]
+    local gridX, gridY = ItemGridUI.covertItemAndLocalMouseToGridPosition(mouseX, mouseY, dragItem, DragAndDrop.isDraggedItemRotated())
 
+    return self:handleDragAndDrop_generic(vanillaStack, gridX, gridY)
+end
+
+function ItemGridUI:handleDragAndDrop_generic(vanillaStack, gridX, gridY)
     local dragItem = vanillaStack.items[1]
     local dragInventory = dragItem:getContainer()
     local dragContainerGrid = ItemContainerGrid.Create(dragInventory, self.playerNum)
@@ -160,24 +180,22 @@ function ItemGridUI:handleDragAndDrop(x, y)
     local isSameInventory = self.grid.inventory == dragInventory
     local isSameGrid = self.grid == otherGrid
 
-    if isSameInventory or self:canPutIn(dragItem) then
-        local gridX, gridY = ItemGridUI.covertItemAndLocalMouseToGridPosition(x, y, dragItem, DragAndDrop.isDraggedItemRotated())
-        
+    if isSameInventory or self:canPutIn(dragItem) then     
         if isStackSplitDown() then
             self:openSplitStack(vanillaStack, gridX, gridY)
             return
         end
-        
+
         luautils.walkToContainer(self.grid.inventory, self.playerNum)
-        
-        local stackUnderMouse = self:findGridStackUnderMouse(x, y)
+
+        local stackUnderMouse = self.grid:getStack(gridX, gridY, self.playerNum)
         local isSameStack = stackUnderMouse and gridStack == stackUnderMouse
 
         if not isSameStack and stackUnderMouse and ItemStack.canAddItem(stackUnderMouse, dragItem) then
             self:handleDropOnStack(vanillaStack, stackUnderMouse)
             return
         end
-        
+
         local container = self:getValidContainerFromStack(stackUnderMouse)
         if not isSameStack and container then
             self:handleDropOnContainer(vanillaStack, container)
@@ -196,7 +214,7 @@ function ItemGridUI:handleDragAndDrop(x, y)
         end
 
         if isSameGrid then
-            self.grid:moveStack(gridStack, gridX, gridY, DragAndDrop.isDraggedItemRotated())
+            self.grid:moveStack(gridStack, gridX, gridY, self:_isDragItemRotated())
         else
             self:handleSameContainerDifferentGrid(vanillaStack, gridX, gridY, otherGrid)
         end
@@ -206,12 +224,17 @@ end
 function ItemGridUI:handleSameContainerDifferentGrid(vanillaStack, gridX, gridY, otherGrid)
     for i=2, #vanillaStack.items do
         local item = vanillaStack.items[i]
-        if self.grid:insertItem(item, gridX, gridY, DragAndDrop.isDraggedItemRotated()) then
+        if self.grid:insertItem(item, gridX, gridY, self:_isDragItemRotated()) then
             if otherGrid then
                 otherGrid:removeItem(item)
             end
         end
     end
+end
+
+function ItemGridUI:_isDragItemRotated()
+    local isJoyPad = JoypadState.players[self.playerNum+1] ~= nil
+    return isJoyPad and ControllerDragAndDrop.isDraggedItemRotated(self.playerNum) or DragAndDrop.isDraggedItemRotated()
 end
 
 function ItemGridUI:canPutIn(item)
@@ -226,9 +249,9 @@ function ItemGridUI:handleDropOnContainer(vanillaStack, container)
     if isClient() then -- Prevent MP duping
         if container:getContainingItem() then
             if not self.grid.isOnPlayer and self.grid.inventory:getType() ~= "floor" then
-                return 
+                return
             end
-        end 
+        end
     end
 
     local frontItem = vanillaStack.items[1]
@@ -254,7 +277,7 @@ function ItemGridUI:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
         return
     end
 
-    if not self.grid:doesItemFit(frontItem, gridX, gridY, DragAndDrop.isDraggedItemRotated()) then
+    if not self.grid:doesItemFit(frontItem, gridX, gridY, self:_isDragItemRotated()) then
         return
     end
 
@@ -269,7 +292,7 @@ function ItemGridUI:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
         self:unequipIfNeeded(playerObj, item)
 
         local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1)
-        action:setTetrisTarget(gridX, gridY, self.grid.gridIndex, DragAndDrop.isDraggedItemRotated(), self.grid.secondaryTarget)
+        action:setTetrisTarget(gridX, gridY, self.grid.gridIndex, self:_isDragItemRotated(), self.grid.secondaryTarget)
         ISTimedActionQueue.add(action)
     end
 end
@@ -292,12 +315,12 @@ end
 function ItemGridUI:handleDropOnStackSameContainer(vanillaStack, targetStack)
     local frontItem = vanillaStack.items[1]
     local fromStack, fromGrid = self.containerGrid:findStackByItem(frontItem)
-    
+
     if not fromStack then
         self:sameContainerDifferentGrid(vanillaStack, targetStack.x, targetStack.y, nil)
         return
     end
-    
+
     if fromStack == targetStack then return end
 
     for i=2, #vanillaStack.items do
@@ -311,10 +334,10 @@ end
 function ItemGridUI:handleDropOnStackDifferentContainer(vanillaStack, targetStack)
     for i=2, #vanillaStack.items do
         local item = vanillaStack.items[i]
-        
+
         local playerObj = getSpecificPlayer(self.playerNum)
         self:unequipIfNeeded(playerObj, item)
-        
+
         local action = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory, 1)
         action:setTetrisTarget(targetStack.x, targetStack.y, self.grid.gridIndex, targetStack.isRotated, self.grid.secondaryTarget)
         ISTimedActionQueue.add(action)
@@ -328,12 +351,12 @@ function ItemGridUI:openSplitStack(vanillaStack, targetX, targetY)
     local isSameInventory = self.grid.inventory == dragInventory
     if isSameInventory then
         local gridStack = self.grid:findStackByItem(vanillaStack.items[1])
-        if gridStack and self.grid:willStackOverlapSelf(gridStack, targetX, targetY, DragAndDrop.isDraggedItemRotated()) then
+        if gridStack and self.grid:willStackOverlapSelf(gridStack, targetX, targetY, self:_isDragItemRotated()) then
             return
         end
     end
 
-    local window = ItemGridStackSplitWindow:new(self.grid, vanillaStack, targetX, targetY, DragAndDrop.isDraggedItemRotated(), self.playerNum)
+    local window = ItemGridStackSplitWindow:new(self.grid, vanillaStack, targetX, targetY, self:_isDragItemRotated(), self.playerNum)
     window:initialise()
     window:addToUIManager()
     window:setX(getMouseX() - window:getWidth() / 2)
@@ -449,7 +472,7 @@ function ItemGridUI:equipItem(item)
     local hasPrimaryHand = playerObj:getPrimaryHandItem()
     local hasSecondaryHand = playerObj:getSecondaryHandItem()
     local isTwoHanding = hasPrimaryHand == hasSecondaryHand
-    
+
     local requiresBothHands = item:isRequiresEquippedBothHands()
     if item:IsWeapon() then
         local useBothHands = requiresBothHands or (item:isTwoHandWeapon() and (not hasSecondaryHand or isTwoHanding))
@@ -490,17 +513,17 @@ function ItemGridUI:interact(gridStack)
         self:quickMoveItems(gridStack)
         return
     end
-    
+
     if item:IsClothing() then
         self:wearClothes(item)
         return
     end
-    
+
     if item:IsWeapon() then
         self:equipItem(item)
         return
     end
-    
+
     local items = ItemStack.getAllItems(gridStack, self.grid.inventory)
     if TetrisEvents.OnItemInteract:trigger(items, self.playerNum) then
         return
@@ -516,7 +539,7 @@ end
 function ItemGridUI:contextualAction(gridStack)
     local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
     if not item then return end
-    
+
     local playerObj = getSpecificPlayer(self.playerNum)
 
     if ItemUtil.canBeRead(item, playerObj) then
@@ -529,7 +552,7 @@ function ItemGridUI:contextualAction(gridStack)
         return
     end
 
-    local vanillaStack = ItemStack.convertToVanillaStacks(gridStack, item:getContainer(), self.inventoryPane)[1]    
+    local vanillaStack = ItemStack.convertToVanillaStacks(gridStack, item:getContainer(), self.inventoryPane)[1]
     if GenericSingleItemRecipeHandler.call(nil, vanillaStack, item:getContainer(), self.playerNum) then
         return
     end
@@ -580,11 +603,107 @@ function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, 
     local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItems(items, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
 
     -- TODO: Joypad support for these menus
-    if false and menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
-        local self = {} -- Suppresses warning
-        menu.origin = self.inventoryPage
-        menu.mouseOver = 1
-        setJoypadFocus(playerNum, menu)
+    if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
+        NotlocControllerNode:focusContextMenu(playerNum, menu)
     end
     return menu
+end
+
+function ItemGridUI:controllerNodeOnJoypadDir(dx, dy)
+    local xSelected = self.selectedX
+    local ySelected = self.selectedY
+    local originX = xSelected
+    local originY = ySelected
+    local w, h = 1, 1
+
+    local isDragging = ControllerDragAndDrop.isDragging(self.playerNum)
+    local stack = self.grid:getStack(xSelected, ySelected, self.playerNum)
+    if stack and not isDragging then
+        local item = ItemStack.getFrontItem(stack, self.grid.inventory)
+        w, h = TetrisItemData.getItemSize(item, stack.isRotated)
+        originX = stack.x
+        originY = stack.y
+    end
+
+    if dx == -1 then
+        xSelected = originX - 1
+    elseif dx == 1 then
+        xSelected = originX + w
+    end
+
+    if dy == -1 then
+        ySelected = originY - 1
+    elseif dy == 1 then
+        ySelected = originY + h
+    end
+
+    if xSelected < 0 then
+        return false
+    end
+    if xSelected >= self.grid.width then
+        return false
+    end
+
+    if ySelected < 0 then
+        return false
+    end
+    if ySelected >= self.grid.height then
+        return false
+    end
+
+    self.selectedX = xSelected
+    self.selectedY = ySelected
+    return true
+end
+
+function ItemGridUI:controllerNodeOnJoypadDown(button)
+    if button == Joypad.BButton then
+        if ControllerDragAndDrop.isDragging(self.playerNum) then
+            ControllerDragAndDrop.endDrag(self.playerNum)
+        else
+            local stack = self.grid:getStack(self.selectedX, self.selectedY, self.playerNum)
+            if stack then
+                self:openStackContextMenu(self.selectedX*OPT.CELL_SIZE, self.selectedY*OPT.CELL_SIZE, stack, self.grid.inventory, self.inventoryPane, self.playerNum)
+            end
+        end
+        return true
+    elseif button == Joypad.AButton then
+        if ControllerDragAndDrop.isDragging(self.playerNum) then
+            local stack = ControllerDragAndDrop.getDraggedTetrisStack(self.playerNum)
+            local time = getTimestampMs() - (self.startTime or 0)
+            local doInteract = stack and stack == self.doublePressStack and stack.x == self.selectedX and stack.y == self.selectedY and time < CONTROLLER_DOUBLE_PRESS_TIME
+
+            self:handleDragAndDrop_generic(ControllerDragAndDrop.getDraggedStack(self.playerNum), self.selectedX, self.selectedY)
+            ControllerDragAndDrop.endDrag(self.playerNum)
+
+            if doInteract then
+                self:interact(stack)
+            end
+        else
+            local stack = self.grid:getStack(self.selectedX, self.selectedY, self.playerNum)
+            if stack then
+                local vanillaStack = ItemStack.convertToVanillaStacks(stack, self.grid.inventory, self.inventoryPane)[1]
+                ControllerDragAndDrop.startDrag(self.playerNum, self, stack, vanillaStack)
+                self.selectedX = stack.x
+                self.selectedY = stack.y
+
+                self.startTime = getTimestampMs()
+                self.doublePressStack = stack
+            end
+        end
+        return true
+    elseif button == Joypad.XButton then
+        if ControllerDragAndDrop.isDragging(self.playerNum) then
+            ControllerDragAndDrop.rotateDraggedItem(self.playerNum)
+            return true
+        end
+
+        local stack = self.grid:getStack(self.selectedX, self.selectedY, self.playerNum)
+        if stack then
+            self:doAction(stack, "move")
+        end
+        return true
+    end
+
+    return false
 end

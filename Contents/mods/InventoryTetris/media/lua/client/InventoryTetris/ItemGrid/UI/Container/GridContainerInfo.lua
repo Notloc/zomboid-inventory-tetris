@@ -29,6 +29,10 @@ function GridContainerInfo:createChildren()
     self.organizationIcon = ISImage:new(0, 0, 16, 16, ORGANIZED_TEXTURE)
     self.organizationIcon:initialise()
     self:addChild(self.organizationIcon)
+    NotlocControllerNode
+        :injectControllerNode(self)
+        :doSimpleFocusHighlight()
+        :setJoypadDownHandler(self.controllerNodeOnJoypadDown)
 end
 
 local function getWeightColor(weight, capacity)
@@ -203,5 +207,12 @@ function GridContainerInfo:cancelDragDropItem()
 
     if not ISUIElement.isMouseOverAnyUI() then
         ISInventoryPaneContextMenu.dropItem(item, self.containerUi.playerNum)
+    end
+end
+
+function GridContainerInfo:controllerNodeOnJoypadDown(button)
+    if button == Joypad.BButton then
+        self.containerUi:onCollapseButtonClick()
+        self.containerUi.inventoryPane:refreshContainer()
     end
 end

@@ -244,12 +244,39 @@ function ItemGridUI:renderGridItems(searchSession)
     local inventory = self.grid.inventory
     local stacks = self.grid:getStacks()
     self:renderStackLoop(inventory, stacks, 1, searchSession)
+
+    if self.controllerNode.isFocused then
+        self:renderControllerSelection()
+    end
+end
+
+function ItemGridUI:renderControllerSelection()
+    if ControllerDragAndDrop.isDragging(self.playerNum) then
+        return
+    end
+
+    local x = self.selectedX
+    local y = self.selectedY
+
+    local w = 1
+    local h = 1
+
+    local stack = self.grid:getStack(x, y, self.playerNum)
+    if stack then
+        local item = ItemStack.getFrontItem(stack, self.grid.inventory)
+        w, h = TetrisItemData.getItemSize(item, stack.isRotated)
+        x = stack.x
+        y = stack.y
+    end
+
+    self:drawRect(x * OPT.CELL_SIZE - x, y * OPT.CELL_SIZE - y, w*OPT.CELL_SIZE - w + 1, h*OPT.CELL_SIZE - h + 1, 0.5, 0.2, 1, 1)
 end
 
 function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local CELL_SIZE = OPT.CELL_SIZE
     local gravityEnabled = SandboxVars.InventoryTetris.EnableGravity
-    local draggedItem = DragAndDrop.getDraggedItem()
+    local isJoypad = JoypadState.players[self.playerNum+1]
+    local draggedItem = isJoypad and ControllerDragAndDrop.getDraggedItem(self.playerNum) or DragAndDrop.getDraggedItem()
 
     local playerObj = getSpecificPlayer(self.playerNum)
 
@@ -293,26 +320,33 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 end
 
 function ItemGridUI:renderDragItemPreview()
-    local item = DragAndDrop.getDraggedItem()
-    if not item or not self:isMouseOver() then
+    local isJoyPad = JoypadState.players[self.playerNum+1]
+    local noMouse = not isJoyPad and not self:isMouseOver()
+    local noController = isJoyPad and not self.controllerNode.isFocused
+
+    local item = isJoyPad and ControllerDragAndDrop.getDraggedItem(self.playerNum) or DragAndDrop.getDraggedItem()
+    if not item or noMouse or noController then
         return
     end
 
-    local hoveredStack = self:findGridStackUnderMouse(self:getMouseX(), self:getMouseY())
+    local hoveredStack = isJoyPad and self.grid:getStack(self.selectedX, self.selectedY) or self:findGridStackUnderMouse(self:getMouseX(), self:getMouseY())
     local hoveredItem = hoveredStack and ItemStack.getFrontItem(hoveredStack, self.grid.inventory) or nil
 
-    if not hoveredStack or hoveredItem == item then 
-        local x = self:getMouseX()
-        local y = self:getMouseY()
-        local isRotated = DragAndDrop.isDraggedItemRotated()
-
+    if not hoveredStack or hoveredItem == item or isJoyPad then
+        local gridX, gridY = -1, -1
+        local isRotated = isJoyPad and ControllerDragAndDrop.isDraggedItemRotated(self.playerNum) or DragAndDrop.isDraggedItemRotated()
         local itemW, itemH = TetrisItemData.getItemSize(item, isRotated)
+        if not isJoyPad then
+            local x = self:getMouseX()
+            local y = self:getMouseY()
 
-        local halfCell = OPT.CELL_SIZE / 2
-        local xPos = x + halfCell - itemW * halfCell
-        local yPos = y + halfCell - itemH * halfCell
-
-        local gridX, gridY = ItemGridUiUtil.mousePositionToGridPosition(xPos, yPos)
+            local halfCell = OPT.CELL_SIZE / 2
+            local xPos = x + halfCell - itemW * halfCell
+            local yPos = y + halfCell - itemH * halfCell
+            gridX, gridY = ItemGridUiUtil.mousePositionToGridPosition(xPos, yPos)
+        else
+            gridX, gridY = self.selectedX, self.selectedY
+        end
 
         local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated)
         canPlace = canPlace and self.containerGrid:isItemAllowed(item) 
@@ -322,6 +356,12 @@ function ItemGridUI:renderDragItemPreview()
             self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 0, 1, 0)
         else
             self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 1, 0, 0)
+        end
+        
+        if isJoyPad then
+            local stack = ControllerDragAndDrop.getDraggedTetrisStack(self.playerNum)
+            local player = getSpecificPlayer(self.playerNum)
+            self:_renderGridItem(player, item, stack, gridX * OPT.CELL_SIZE - gridX, gridY * OPT.CELL_SIZE - gridY, isRotated, canPlace and 0.8 or 0.4, false, false)
         end
         return
     end

@@ -20,6 +20,31 @@ Events.OnGameBoot.Add(function()
 			self.dragItemRenderer:initialise();
 			self.dragItemRenderer:addToUIManager();
 		end
+
+		NotlocControllerNode
+			:injectControllerNode(self, true)
+			:setChildrenNodeProvider(function()
+				local children = {}
+				for _, containerUi in ipairs(self.inventoryPane.gridContainerUis) do
+					table.insert(children, containerUi.controllerNode)
+					if not containerUi.overflowRenderer:isEmpty() then
+						table.insert(children, containerUi.overflowRenderer.controllerNode)
+					end
+				end
+				return children
+			end)
+			:setJoypadDownHandler(function(self, button)
+				local playerInventory = getPlayerInventory(self.player)
+				local lootInventory = getPlayerLoot(self.player)
+				if button == Joypad.LBumper and self ~= playerInventory then
+					setJoypadFocus(self.player, playerInventory)
+					return true
+				elseif button == Joypad.RBumper and self ~= lootInventory then
+					setJoypadFocus(self.player, lootInventory)
+					return true
+				end
+				return false
+			end)
 	end
 
 	function ISInventoryPage:tetrisSearchAll()
@@ -157,6 +182,30 @@ Events.OnGameBoot.Add(function()
 			end
 		end
 		og_onKeyPressed(key)
+	end
+
+	local og_selectNextContainer = ISInventoryPage.selectNextContainer
+	function ISInventoryPage:selectNextContainer()
+		og_selectNextContainer(self)
+		if self.controllerNode.isFocused then
+			self.controllerNode:refreshSelectedChild()
+		end
+	end
+
+	local og_selectContainer = ISInventoryPage.selectContainer
+	function ISInventoryPage:selectContainer(button)
+		og_selectContainer(self, button)
+		self.inventoryPane:scrollToContainer(button.inventory)
+
+		-- Move cursor to the selected container when using a controller.
+		if self.joyfocus then
+			for i, containerUi in ipairs(self.inventoryPane.gridContainerUis) do
+				if containerUi.inventory == button.inventory then
+					self.controllerNode:setSelectedChild(containerUi.controllerNode)
+					return
+				end
+			end
+		end
 	end
 
 	Events.OnKeyPressed.Remove(og_onKeyPressed);

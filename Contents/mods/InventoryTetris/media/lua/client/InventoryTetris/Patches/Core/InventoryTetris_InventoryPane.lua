@@ -322,14 +322,6 @@ Events.OnGameBoot.Add(function()
         --return og_onMouseWheel(self, del)
     end
 
-    local og_getActualItems = ISInventoryPane.getActualItems
-    function ISInventoryPane.getActualItems(items)
-        if items.items then
-            return og_getActualItems(items.items)
-        end
-        return og_getActualItems(items)
-    end
-
     local og_transferItemsByWeight = ISInventoryPane.transferItemsByWeight
     function ISInventoryPane:transferItemsByWeight(items, container)
         ISInventoryTransferAction.globalTetrisRules = true
@@ -342,5 +334,35 @@ Events.OnGameBoot.Add(function()
             return self.tetrisWindowManager.childWindows
         end
         return {}
+    end
+
+
+
+    local og_canPutIn = ISInventoryPane.canPutIn
+    function ISInventoryPane:canPutIn()
+        ControllerDragAndDrop.currentPlayer = self.player
+        local retVal = og_canPutIn(self)
+        ControllerDragAndDrop.currentPlayer = nil
+        return retVal
+    end
+
+    local og_getActualItems = ISInventoryPane.getActualItems
+    function ISInventoryPane.getActualItems(items)
+        if not items then
+            items = ControllerDragAndDrop.getDraggedStack(ControllerDragAndDrop.currentPlayer)
+        end
+        if items.items then
+            return og_getActualItems(items.items)
+        end
+        return og_getActualItems(items)
+    end
+
+    function ISInventoryPane:scrollToContainer(inventory)
+        for _, gridContainerUi in ipairs(self.gridContainerUis) do
+            if gridContainerUi.inventory == inventory then
+                self.scrollView:ensureChildIsVisible(gridContainerUi)
+                return
+            end
+        end
     end
 end)

@@ -18,6 +18,13 @@ function GridOverflowRenderer:new(x,y, containerGridUi, gridUi)
     return o
 end
 
+function GridOverflowRenderer:initialise()
+    ISUIElement.initialise(self)
+    NotlocControllerNode
+        :injectControllerNode(self)
+        :doSimpleFocusHighlight()
+end
+
 function GridOverflowRenderer:getYPositionsForOverflow()    
     local height = self.containerGridUi.multiGridRenderer:getHeight()
     if self.lastHeight == height then
@@ -42,6 +49,10 @@ function GridOverflowRenderer:calculateOverflowColumnWidth(stackCount)
     local yPositions = self:getYPositionsForOverflow()
     local columns = math.ceil(stackCount / #yPositions)
     return columns * OPT.CELL_SIZE + OVERFLOW_MARGIN * columns - OVERFLOW_MARGIN + 4 
+end
+
+function GridOverflowRenderer:isEmpty()
+    return #self.containerGrid.overflow == 0
 end
 
 function GridOverflowRenderer:render()

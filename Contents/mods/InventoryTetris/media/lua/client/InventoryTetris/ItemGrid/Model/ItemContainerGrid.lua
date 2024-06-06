@@ -619,7 +619,7 @@ function ItemContainerGrid:_isItemInHotbar(item)
 end
 
 
-function ItemContainerGrid:refreshSecondaryGrids()
+function ItemContainerGrid:refreshSecondaryGrids(forceFull)
     if self.disableSecondaryGrids then
         return
     end
@@ -627,7 +627,7 @@ function ItemContainerGrid:refreshSecondaryGrids()
     local items = self:getWornItemsWithPockets()
 
     for target, _ in pairs(self.secondaryGrids) do
-        if not items[target] then
+        if not items[target] or forceFull then
             self:removeSecondaryGrid(target)
         end
     end

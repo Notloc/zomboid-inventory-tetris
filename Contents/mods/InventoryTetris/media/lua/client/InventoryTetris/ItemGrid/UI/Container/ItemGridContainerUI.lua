@@ -15,6 +15,8 @@ local BASIC_INV_TEXTURE = getTexture("media/ui/Icon_InventoryBasic.png")
 local SHELF_TEXTURE = getTexture("media/ui/Container_Shelf.png")
 local CONTAINER_BG = getTexture("media/textures/InventoryTetris/ContainerBG.png")
 
+local BLACK = {r=0, g=0, b=0, a=1}
+
 local OPT = require "InventoryTetris/Settings"
 
 ---@class ItemGridContainerUI : ISPanel
@@ -136,8 +138,28 @@ function ItemGridContainerUI:initialise()
 
     self:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
 
-    self.containerGrid:refreshSecondaryGrids()
+    self.containerGrid:refreshSecondaryGrids(true)
     self.initialized = true
+
+    NotlocControllerNode
+        :injectControllerNode(self)
+        :setChildrenNodeProvider(function()
+            local children = {}
+            if not self.isCollapsed then
+                for _, gridUis in pairs(self.gridUis) do
+                    for _, gridUi in pairs(gridUis) do
+                        table.insert(children, gridUi.controllerNode)
+                    end
+                end
+            end
+            table.insert(children, self.infoRenderer.controllerNode)
+            return children
+        end)
+        :setGainJoypadFocusHandler(function()
+            if self.isCollapsed then
+                self.controllerNode:setSelectedChild(self.infoRenderer.controllerNode)
+            end
+        end)
 end
 
 function ItemGridContainerUI:createGridRenderer(gridUis, target)
@@ -488,8 +510,10 @@ end
 function ItemGridContainerUI:renderTitle(text, xOffset, yOffset, paddingX, paddingY)
     local textW = getTextManager():MeasureStringX(UIFont.Small, text);
     local textH = getTextManager():getFontHeight(UIFont.Small);
-    
-    self:drawRect(xOffset, yOffset, textW+paddingX*2, textH+paddingY*2, 0.9,0,0,0)
+
+    local color = (self.isCollapsed and self.controllerNode.isFocused) and NotlocControllerNode.FOCUS_COLOR or BLACK
+
+    self:drawRect(xOffset, yOffset, textW+paddingX*2, textH+paddingY*2, color.a, color.r, color.g, color.b)
     self:drawRectBorder(xOffset, yOffset, textW+paddingX*2, textH+paddingY*2, 0.5,1,1,1)
     self:drawText(text, xOffset+paddingX, yOffset+paddingY, 1, 1, 1, 1, UIFont.Small);
 
