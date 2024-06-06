@@ -19,6 +19,7 @@
     "Lua.diagnostics.globals": [
         "DragAndDrop",
         "EquipmentUI",
-        "ModOptions"
+        "ModOptions",
+        "NotlocControllerNode"
     ]
 }

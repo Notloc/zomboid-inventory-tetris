@@ -64,8 +64,10 @@ local function jitTransferItems(playerObj, moveProps, _origSpriteName)
     end)
 end
 
-local og_new = ISMoveablesAction.new
-function ISMoveablesAction:new(character, _sq, _moveProps, _mode, _origSpriteName, _moveCursor)
-    jitTransferItems(character, _moveProps, _origSpriteName)
-    return og_new(self, character, _sq, _moveProps, _mode, _origSpriteName, _moveCursor)
-end
+Events.OnGameStart.Add(function ()
+    local og_new = ISMoveablesAction.new
+    function ISMoveablesAction:new(character, _sq, _moveProps, _mode, _origSpriteName, _moveCursor)
+        jitTransferItems(character, _moveProps, _origSpriteName)
+        return og_new(self, character, _sq, _moveProps, _mode, _origSpriteName, _moveCursor)
+    end
+end)

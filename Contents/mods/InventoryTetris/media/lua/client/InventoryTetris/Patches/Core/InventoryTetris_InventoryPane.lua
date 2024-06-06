@@ -10,8 +10,7 @@ require "TimedActions/ISEatFoodAction"
 require "ISUI/ISInventoryPane"
 local OPT = require "InventoryTetris/Settings"
 
--- Aggressively ensure we load last
--- If the user has this mod enabled, I think its safe to assume they want it to take priority
+-- I use on game boot because I want to make sure other mods have loaded before I patch them
 Events.OnGameBoot.Add(function()
 
     local og_new = ISInventoryPane.new

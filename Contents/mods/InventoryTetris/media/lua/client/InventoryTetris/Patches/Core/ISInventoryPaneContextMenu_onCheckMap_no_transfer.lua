@@ -3,9 +3,11 @@
 require "ISUI/ISInventoryPaneContextMenu"
 local ModScope = require "Notloc/ModScope/ModScope"
 
-local og_onCheckMap = ISInventoryPaneContextMenu.onCheckMap
-function ISInventoryPaneContextMenu.onCheckMap(map, player)
-    ModScope.withoutTransferNeededOnSelf(function()
-        og_onCheckMap(map, player)
-    end)
-end
+Events.OnGameBoot.Add(function ()
+    local og_onCheckMap = ISInventoryPaneContextMenu.onCheckMap
+    function ISInventoryPaneContextMenu.onCheckMap(map, player)
+        ModScope.withoutTransferNeededOnSelf(function()
+            og_onCheckMap(map, player)
+        end)
+    end
+end)

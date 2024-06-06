@@ -1,6 +1,6 @@
 version=1
 id=3260666789
-title=Inventory Tetris - UNSTABLE DEV
+title=Inventory Tetris - CONTROLLER TEST
 description=Unstable testing branch for my personal use.
 description=Do not ask for support for this version if you somehow find it.
 description=

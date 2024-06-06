@@ -12,6 +12,7 @@ local PHYSICS_DELAY = 600
 ---@field secondaryGrids table
 ---@field _onSecondaryGridsAdded table
 ---@field _onSecondaryGridsRemoved table
+---@field disableSecondaryGrids boolean
 ItemContainerGrid = {}
 
 ItemContainerGrid._tempGrid = {} -- For hovering over container items, so we don't create a new grid every frame to evaluate if an item can be placed into a hovered backpack
