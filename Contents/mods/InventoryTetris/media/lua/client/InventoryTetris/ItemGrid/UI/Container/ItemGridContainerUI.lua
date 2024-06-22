@@ -55,12 +55,17 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
     if inventory == player:getInventory() then
         o.isPlayerInventory = true
     end
-    
+
     o.isOnPlayer = o.isPlayerInventory or (o.item and o.item:isInPlayerInventory())
     o.showTitle = true
     o.isCollapsed = false
 
     return o
+end
+
+function ItemGridContainerUI:unregisterEvents()
+    self.containerGrid:removeOnSecondaryGridsAdded(self, self._onSecondaryGridsAdded)
+    self.containerGrid:removeOnSecondaryGridsRemoved(self, self._onSecondaryGridsRemoved)
 end
 
 ItemGridContainerUI.movableItemCache = {}
@@ -114,18 +119,18 @@ function ItemGridContainerUI:initialise()
     multiGridRenderer:addChild(gridRenderer)
     multiGridRenderer.renderers[self.inventory] = gridRenderer
     multiGridRenderer.sortedRenderers[1] = gridRenderer
- 
+
     local infoRenderer = GridContainerInfo:new(self)
     infoRenderer:initialise()
-    
-    local overflowRenderer = GridOverflowRenderer:new(0, 0, self, self.gridUis[self.inventory][1])
+
+    local overflowRenderer = GridOverflowRenderer:new(0, 0, self, self.gridUis[self.inventory][1], self.inventory, self.inventoryPane, self.playerNum)
     overflowRenderer:initialise()
-    
+
     local collapseButton = ISButton:new(0, 0, 16, 16, "V", self, ItemGridContainerUI.onCollapseButtonClick)
     collapseButton:initialise()
     collapseButton.borderColor = {r=1, g=1, b=1, a=0.1}
     collapseButton.backgroundColor = {r=1, g=1, b=1, a=0.1}
-    
+
     self.infoRenderer = infoRenderer
     self.multiGridRenderer = multiGridRenderer
     self.overflowRenderer = overflowRenderer
@@ -139,7 +144,7 @@ function ItemGridContainerUI:initialise()
     self:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
 
     self.containerGrid:refreshSecondaryGrids(true)
-    self.initialized = true
+    self.isInitialized = true
 
     NotlocControllerNode
         :injectControllerNode(self)
@@ -505,6 +510,13 @@ function ItemGridContainerUI.renderItemPreview(self)
         local tex = self.secondaryTarget:getTex()
         self:drawTextureScaledAspect(tex, x, y, size, size, 1, ItemGridUI.getItemColor(self.secondaryTarget))
     end
+
+    local containerDef = self.grids[1].grid.containerDefinition
+    local category = TetrisContainerData.getSingleValidCategory(containerDef)
+    if category then
+        local icon = TetrisItemCategory.getCategoryIcon(category)
+        self:drawTextureScaledAspect(icon, x, y, 16, 16, 1, 1, 1, 1)
+    end
 end
 
 function ItemGridContainerUI:renderTitle(text, xOffset, yOffset, paddingX, paddingY)
@@ -588,16 +600,92 @@ function ItemGridContainerUI:findGridUiUnderMouse(x, y)
     return nil
 end
 
+-- For render sorting
+ItemGridContainerUI.itemSlotPriority = {
+    "Neck",
+    "Necklace",
+    "Necklace_Long",
+    "Scarf",
+    "JacketHat",
+    "JacketHat_Bulky",
+    "Jacket",
+    "JacketSuit",
+    "Jacket_Bulky",
+    "Jacket_Down",
+    "TorsoExtra",
+    "TorsoExtraPlus1",
+    "TorsoExtraVest",
+    "Shirt",
+    "Tshirt",
+    "ShortSleeveShirt",
+    "Sweater",
+    "SweaterHat",
+    "Dress",
+    "BathRobe",
+    "TankTop",
+    "Torso1Legs1",
+    "FullSuit",
+    "FullSuitHead",
+    "FullTop",
+    "SMUIJumpsuitPlus",
+    "SMUITorsoRigPlus",
+    "SMUIWebbingPlus",
+    "Boilersuit",
+    "EHEPilotVest",
+    "TorsoRig",
+    "TorsoRig2",
+    "TorsoRigPlus2",
+    "RifleSling",
+    "AmmoStrap",
+    "Belt",
+    "Belt419",
+    "Belt420",
+    "BeltExtra",
+    "BeltExtraHL",
+    "SpecialBelt",
+    "FannyPackBack",
+    "FannyPackFront",
+    "waistbags",
+    "waistbagsComplete",
+    "waistbagsf",
+    "Underwear",
+    "UnderwearBottom",
+    "UnderwearExtra1",
+    "UnderwearExtra2",
+    "UnderwearInner",
+    "UnderwearTop",
+    "LowerBody",
+    "Legs1",
+    "Pants",
+    "Skirt",
+    "Shoes",
+    "Back",
+}
+
+ItemGridContainerUI.itemSlotPriorityMap = {}
+for i, slot in ipairs(ItemGridContainerUI.itemSlotPriority) do
+    ItemGridContainerUI.itemSlotPriorityMap[slot] = i
+end
 
 function ItemGridContainerUI:_sortRenderers()
-    self.multiGridRenderer.sortedRenderers = {}
-    for _, renderer in pairs(self.multiGridRenderer.renderers) do
-        table.insert(self.multiGridRenderer.sortedRenderers, renderer)
+    local sortedOwners = {}
+    for owner, renderer in pairs(self.multiGridRenderer.renderers) do
+        if owner ~= self.inventory then
+            table.insert(sortedOwners, owner)
+        end
     end
 
-    table.sort(self.multiGridRenderer.sortedRenderers, function(a,b)
-        return self:_countSlotsInGrids(a.grids) > self:_countSlotsInGrids(b.grids)
+    table.sort(sortedOwners, function(a,b)
+        local aSlot = ItemGridContainerUI.itemSlotPriorityMap[a:getBodyLocation()] or 9999
+        local bSlot = ItemGridContainerUI.itemSlotPriorityMap[b:getBodyLocation()] or 9999
+        return aSlot < bSlot
     end)
+    table.insert(sortedOwners, self.inventory)
+
+    self.multiGridRenderer.sortedRenderers = {}
+    for _, owner in ipairs(sortedOwners) do
+        table.insert(self.multiGridRenderer.sortedRenderers, self.multiGridRenderer.renderers[owner])
+    end
 end
 
 function ItemGridContainerUI:_countSlotsInGrids(gridUis)
@@ -619,7 +707,7 @@ function ItemGridContainerUI:_onSecondaryGridsAdded(target, grids)
     self:_sortRenderers()
 
     self:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
-    if self.initialized then
+    if self.isInitialized then
         self.inventoryPane:refreshItemGrids()
     end
 end
@@ -635,7 +723,7 @@ function ItemGridContainerUI:_onSecondaryGridsRemoved(target)
     self:_sortRenderers()
 
     self:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
-    if self.initialized then
+    if self.isInitialized then
         self.inventoryPane:refreshItemGrids()
     end
 end

@@ -29,6 +29,7 @@ if not ItemGridUI then
     end
 end
 
+-- Premade textures for supported scales so that any scale gets pixel perfect grids
 local GridBackgroundTexturesByScale = {
     [0.5] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX0.5.png"),
     [0.75] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX0.75.png"),
@@ -49,11 +50,13 @@ local GridLineTexturesByScale = {
     [4] = getTexture("media/textures/InventoryTetris/Grid/GridLineX4.png")
 }
 
+-- Color code the items by category
 local colorsByCategory = {
     [TetrisItemCategory.MELEE] = {0.95, 0.15, 0.7},
     [TetrisItemCategory.RANGED] = {0.45, 0, 0},
     [TetrisItemCategory.AMMO] = {1, 1, 0},
     [TetrisItemCategory.MAGAZINE] = {0.85, 0.5, 0.05},
+    [TetrisItemCategory.ATTACHMENT] = {0.85, 0.4, 0.2},
     [TetrisItemCategory.FOOD] = {0.1, 0.8, 0.25},
     [TetrisItemCategory.DRINK] = {0.1, 0.6, 0.2},
     [TetrisItemCategory.CLOTHING] = {0.5, 0.5, 0.5},
@@ -67,6 +70,7 @@ local colorsByCategory = {
     [TetrisItemCategory.MOVEABLE] = {0.7, 0.7, 0.7},
 }
 
+-- When hover a stack over a stack that has an interaction handler, color the hovered stack with this color (or the interaction handler's color if it has one)
 ItemGridUI.GENERIC_ACTION_COLOR = {0, 0.7, 1}
 
 local containerItemHoverColor = {1, 1, 0}
@@ -176,8 +180,9 @@ end
 function ItemGridUI:render()
     ItemGridUI.lineHeight = getTextManager():getFontHeight(UIFont.Small)
 
-    if self.grid:isUnsearched(self.playerNum) then
+    self.itemTransferData = GridTransferQueueData.build(self.playerNum)
 
+    if self.grid:isUnsearched(self.playerNum) then
         local searchSession = self.grid:getSearchSession(self.playerNum)
         if searchSession then
             self:renderBackGrid()
@@ -193,6 +198,7 @@ function ItemGridUI:render()
     else
         self:renderBackGrid()
         self:renderGridItems()
+        self:renderIncomingTransfers()
         self:renderDragItemPreview()
     end
 end
@@ -202,18 +208,19 @@ function ItemGridUI:renderUnsearched()
     self:drawTextCentre("?", self:getWidth()/2, self:getHeight()/2 - ItemGridUI.lineHeight, 1, 1, 1, 1, UIFont.Large)
 end
 
+-- 3 draw calls
 function ItemGridUI:renderBackGrid()
     local g = 1
     local b = 1
-    
+
     if self.isOverflowing then
         g = 0
         b = 0
     end
-    
+
     local width = self.grid.width
     local height = self.grid.height
-    
+
     local background = 0.07
     local totalWidth = OPT.CELL_SIZE * width - width + 1
     local totalHeight = OPT.CELL_SIZE * height - height + 1
@@ -231,6 +238,20 @@ function ItemGridUI.getGridBackgroundTexture()
     return GridBackgroundTexturesByScale[OPT.SCALE] or GridBackgroundTexturesByScale[1]
 end
 
+function ItemGridUI:renderIncomingTransfers()
+    local incomingActions = self.itemTransferData:getIncomingActions(self.grid.inventory, self.grid.gridIndex)
+    local playerObj = getSpecificPlayer(self.playerNum)
+
+    for item, action in pairs(incomingActions) do
+        local stack = ItemStack.createTempStack(action.item)
+        local item = action.item
+        if action.gridX and action.gridY then
+            ItemGridUI._renderGridItem(self, playerObj, item, stack, action.gridX * OPT.CELL_SIZE - action.gridX, action.gridY * OPT.CELL_SIZE - action.gridY, action.isRotated, 0.5, false, false, true)
+        end
+    end
+end
+
+-- The vanilla inventory render is also in charge of aging and drying items, so we need to do that here as well
 function ItemGridUI.updateItem(item)
     if instanceof(item, 'InventoryItem') then
         item:updateAge()
@@ -264,6 +285,7 @@ function ItemGridUI:renderControllerSelection()
     local stack = self.grid:getStack(x, y, self.playerNum)
     if stack then
         local item = ItemStack.getFrontItem(stack, self.grid.inventory)
+        if not item then return end
         w, h = TetrisItemData.getItemSize(item, stack.isRotated)
         x = stack.x
         y = stack.y
@@ -279,6 +301,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local draggedItem = isJoypad and ControllerDragAndDrop.getDraggedItem(self.playerNum) or DragAndDrop.getDraggedItem()
 
     local playerObj = getSpecificPlayer(self.playerNum)
+    local transferQueueData = self.itemTransferData
 
     local count = #stacks
     for i=count,1,-1 do
@@ -297,21 +320,22 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 
             local x, y = stack.x, stack.y
             if x and y then
-
                 local isBuried = gravityEnabled and self.grid:isStackBuried(stack)
 
                 if searchSession then
                     local revealed = searchSession.searchedStackIDs[item:getID()]
                     if revealed then
-                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false, isBuried)
+                        local transferAlpha = transferQueueData:getOutgoingActions(inventory)[item] and 0.25 or 1
+                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult * transferAlpha, false, isBuried)
                     else
                         self:_renderHiddenStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false)
                     end
                 else
+                    local transferAlpha = transferQueueData:getOutgoingActions(inventory)[item] and 0.25 or 1
                     if item ~= draggedItem then
-                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false, isBuried)
+                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult * transferAlpha, false, isBuried)
                     else
-                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult, false, isBuried)
+                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult * transferAlpha, false, isBuried)
                     end
                 end
             end
@@ -332,7 +356,8 @@ function ItemGridUI:renderDragItemPreview()
     local hoveredStack = isJoyPad and self.grid:getStack(self.selectedX, self.selectedY) or self:findGridStackUnderMouse(self:getMouseX(), self:getMouseY())
     local hoveredItem = hoveredStack and ItemStack.getFrontItem(hoveredStack, self.grid.inventory) or nil
 
-    if not hoveredStack or hoveredItem == item or isJoyPad then
+    -- Hovering over nothing or self
+    if not hoveredStack or hoveredItem == item then
         local gridX, gridY = -1, -1
         local isRotated = isJoyPad and ControllerDragAndDrop.isDraggedItemRotated(self.playerNum) or DragAndDrop.isDraggedItemRotated()
         local itemW, itemH = TetrisItemData.getItemSize(item, isRotated)
@@ -350,33 +375,44 @@ function ItemGridUI:renderDragItemPreview()
 
         local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated)
         canPlace = canPlace and self.containerGrid:isItemAllowed(item) 
-        canPlace = canPlace and (self.grid.inventory == item:getContainer() or self.grid.inventory:hasRoomFor(getSpecificPlayer(0), item))
+        canPlace = canPlace and (self.grid.inventory == item:getContainer() or not self.grid.containerDefinition.isFragile or self.grid.inventory:hasRoomFor(getSpecificPlayer(0), item))
 
         if canPlace then
             self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 0, 1, 0)
         else
             self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 1, 0, 0)
         end
-        
-        if isJoyPad then
-            local stack = ControllerDragAndDrop.getDraggedTetrisStack(self.playerNum)
-            local player = getSpecificPlayer(self.playerNum)
-            self:_renderGridItem(player, item, stack, gridX * OPT.CELL_SIZE - gridX, gridY * OPT.CELL_SIZE - gridY, isRotated, canPlace and 0.8 or 0.4, false, false)
-        end
+
+        self:_renderControllerDrag(canPlace and 0.8 or 0.4)
         return
     end
 
     local w, h = TetrisItemData.getItemSize(ItemStack.getFrontItem(hoveredStack, self.grid.inventory), hoveredStack.isRotated)
 
+    -- Hovering another stack
     if ItemStack.canAddItem(hoveredStack, item) then
         self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, unpackColors(stackableColor))
+        self:_renderControllerDrag(0.8)
         return
     end
 
     local otherContainerGrid = ItemContainerGrid.Create(item:getContainer(), self.playerNum)
     local draggedStack = otherContainerGrid:findGridStackByVanillaStack(DragAndDrop.getDraggedStack()) or ItemStack.createTempStack(item)
 
-    self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, self:getColorForStackHover(draggedStack, hoveredStack, otherContainerGrid.inventory, self.grid.inventory))    
+    -- Container hover
+    self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, self:getColorForStackHover(draggedStack, hoveredStack, otherContainerGrid.inventory, self.grid.inventory))
+    self:_renderControllerDrag(0.8)
+end
+
+function ItemGridUI:_renderControllerDrag(opacity)
+    if ControllerDragAndDrop.isDragging(self.playerNum) then
+        local item = ControllerDragAndDrop.getDraggedItem(self.playerNum)
+        local stack = ControllerDragAndDrop.getDraggedTetrisStack(self.playerNum)
+        local isRotated = ControllerDragAndDrop.isDraggedItemRotated(self.playerNum)
+        local gridX, gridY = self.selectedX, self.selectedY
+        local player = getSpecificPlayer(self.playerNum)
+        self:_renderGridItem(player, item, stack, gridX * OPT.CELL_SIZE - gridX, gridY * OPT.CELL_SIZE - gridY, isRotated, opacity, false, false)
+    end
 end
 
 function ItemGridUI:_renderPlacementPreview(gridX, gridY, itemW, itemH, r, g, b)
@@ -515,7 +551,8 @@ function ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, isRota
     drawingContext:drawRect(x, top + missing, 2, bottom - top - missing, alphaMult*a,r,g,b)
 end
 
-function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, rotate, alphaMult, force1x1, isBuried)
+---@param drawingContext ISUIElement
+function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, rotate, alphaMult, force1x1, isBuried, noEvents)
     local w, h = TetrisItemData.getItemSize(item, rotate)
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
@@ -559,16 +596,16 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     b = b * bgBright
 
     if rotate then
-        if OPT.SCALE == 1.0 and w == 1 and h == 1 and largestDimension <= TEXTURE_SIZE then -- Can only rotate 1x1 items if they fit in the texture perfectly
-            local half = TEXTURE_SIZE / 2
-            drawingContext.javaObject:DrawTextureAngle(texture, x2+half, y2+half, -90.0, alphaMult, r, g, b)
-        else -- Gotta flip the rest, rotation is off the table when scaling
-            local width = texW * targetScale
-            local height = texH * targetScale
-            local xInset = (minDimension*TEXTURE_SIZE - width) / 2
-            local yInset = (minDimension*TEXTURE_SIZE - height) / 2
-            drawingContext:drawTextureScaledAspect(texture, x2 + width + xInset, y2 + height + yInset, -width, -height, alphaMult, r, g, b);
-        end
+
+
+        local width = texW * targetScale
+        local height = texH * targetScale
+        local xInset = (minDimension*TEXTURE_SIZE - width) / 2
+        local yInset = (minDimension*TEXTURE_SIZE - height) / 2
+        --drawingContext:drawTextureScaledAspect(texture, x2 + width + xInset, y2 + height + yInset, -width, -height, alphaMult, r, g, b);
+
+        ItemGridUI._drawTextureRotated(drawingContext, texture, x2 + xInset, y2 + yInset, width, height, alphaMult, r, g, b)
+
     else
         drawingContext:drawTextureScaledUniform(texture, x2, y2, targetScale, alphaMult, r, g, b);
     end
@@ -585,10 +622,44 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
         drawingContext:drawRectBorder(x, y, totalWidth, totalHeight, alphaMult, 0.55, 0.55, 0.55)
     end
 
-    TetrisEvents.OnPostRenderGridItem:trigger(drawingContext, item, stack, x, y, totalWidth, totalHeight, playerObj)
+    if not noEvents then
+        TetrisEvents.OnPostRenderGridItem:trigger(drawingContext, item, stack, x, y, totalWidth, totalHeight, playerObj)
+    end
 end
 
+---@param drawingContext ISUIElement
+function ItemGridUI._drawTextureRotated(drawingContext, texture, x, y, width, height, alphaMult, r, g, b)
+    -- x,y define the center of the texture
+    -- We need to rotate around the center of the texture and define each corner with a 90 degree rotation, clockwise
+    local halfWidth = width / 2
+    local halfHeight = height / 2
 
+    x = x + halfWidth
+    y = y + halfHeight
+
+    x = x + drawingContext:getAbsoluteX()
+    y = y + drawingContext:getAbsoluteY()
+
+    -- The function takes top left, top right, bottom right, bottom left
+    -- We will feed it the top right, bottom right, bottom left, top left to achieve a 90 degree clockwise rotation
+
+    -- Height and width are swapped because we're rotating the texture onto its side
+    -- We also put the top-right data into the top-left, bottom-right into top-right, etc
+
+    local tlx = x + halfHeight
+    local tly = y - halfWidth
+
+    local trx = x + halfHeight
+    local try = y + halfWidth
+
+    local brx = x - halfHeight
+    local bry = y + halfWidth
+
+    local blx = x - halfHeight
+    local bly = y - halfWidth
+
+    drawingContext:drawTextureAllPoint(texture, tlx, tly, trx, try, brx, bry, blx, bly, r, g, b, alphaMult)
+end
 
 function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x, y, alphaMult, force1x1)
     local w, h = TetrisItemData.getItemSize(item, stack.isRotated)

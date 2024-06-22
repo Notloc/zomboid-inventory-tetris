@@ -2,7 +2,8 @@ require "InventoryTetris/TetrisItemCategory"
 
 ---@class ContainerGridDefinition
 ---@field gridDefinitions GridDefinition[]
----@field invalidCategories TetrisItemCategory[]
+---@field validCategories table<TetrisItemCategory, boolean>
+---@field invalidCategories TetrisItemCategory[] -- Deprecated
 ---@field isOrganized boolean
 
 ---@class GridDefinition
@@ -18,6 +19,12 @@ TetrisContainerData._containerDefinitions = {}
 TetrisContainerData._vehicleStorageNames = {}
 TetrisContainerData._pocketDefinitions = {}
 
+
+function TetrisContainerData.setContainerDefinition(container, containerDef)
+    local containerKey = TetrisContainerData._getContainerKey(container)
+    TetrisContainerData._containerDefinitions[containerKey] = containerDef
+end
+
 function TetrisContainerData.getContainerDefinition(container)
     local containerKey = TetrisContainerData._getContainerKey(container)
     return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
@@ -29,7 +36,7 @@ function TetrisContainerData.getPocketDefinition(item)
     end
 
     local key = item:getFullType()
-    if TetrisDevTool.getPocketOverride(key) then
+    if isDebugEnabled() and TetrisDevTool.getPocketOverride(key) then
         return TetrisDevTool.getPocketOverride(key)
     end
 
@@ -60,8 +67,6 @@ function TetrisContainerData._getContainerKey(container)
 end
 
 function TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
-    --print("containerKey: " .. containerKey)
-
     local devToolOverride = TetrisDevTool.getContainerOverride(containerKey)
     if devToolOverride then
         return devToolOverride
@@ -78,7 +83,7 @@ function TetrisContainerData._calculateContainerDefinition(container)
     if TetrisContainerData._vehicleStorageNames[type] then
         return TetrisContainerData._calculateVehicleTrunkContainerDefinition(container)
     end
-    
+
     local item = container:getContainingItem()
     if item then
         return TetrisContainerData._calculateItemContainerDefinition(container, item)
@@ -149,7 +154,7 @@ function TetrisContainerData._calculateDimensions(target)
             local result = x * y
             local diff = math.abs(result - target) + math.abs(x - y) -- Encourage square shapes 
             if diff < best then
-                best = diff 
+                best = diff
                 bestX = x
                 bestY = y
             end
@@ -165,21 +170,429 @@ function TetrisContainerData.recalculateContainerData()
 end
 
 function TetrisContainerData.validateInsert(containerDef, item)
-    if not containerDef.invalidCategories then
-        return true
+    local itemCategory = TetrisItemCategory.getCategory(item)
+    local validCategories = TetrisContainerData._getValidCategories(containerDef)
+    return not validCategories or validCategories[itemCategory]
+end
+
+
+function TetrisContainerData.getSingleValidCategory(containerDef)
+    local validCategories = TetrisContainerData._getValidCategories(containerDef)
+    if not validCategories then
+        return nil
     end
 
-    local itemCategory = TetrisItemCategory.getCategory(item)
-    for _, category in ipairs(containerDef.invalidCategories) do
-        if itemCategory == category then
-            return false
+    local category = nil
+    for key, _ in pairs(validCategories) do
+        if category then
+            return nil
+        else
+            category = key
         end
     end
+    return category
+end
 
-    return true
+-- Valid categories are used now because they are easier to reason.
+-- This remains to support existing datapacks.
+function TetrisContainerData._getValidCategories(containerDef)
+    if containerDef.validCategories then
+        return containerDef.validCategories
+    end
+    if not containerDef.invalidCategories then
+        return nil -- By default, all categories are valid, represented by nil
+    end
+
+    local validCategories = {}
+    for _, category in ipairs(TetrisItemCategory.list) do
+        local valid = true
+        for _, invalidCategory in ipairs(containerDef.invalidCategories) do
+            if category == invalidCategory then
+                valid = false
+                break
+            end
+        end
+        if valid then
+            validCategories[category] = true
+        end
+    end
+    containerDef.validCategories = validCategories
+    return validCategories
 end
 
 local bodySlotsToPocketDefinitions = {
+    ["FullSuit"] = {
+        gridDefinitions = {
+            {
+                size = {width=1, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=2, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            }
+        }
+    },
+    ["FullSuitHead"] = {
+        gridDefinitions = {
+            {
+                size = {width=1, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=2, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            }
+        }
+    },
+    ["FullTop"] = {
+        gridDefinitions = {
+            {
+                size = {width=1, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=1, y=0},
+            },
+        }
+    },
+    ["JacketHat"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+        }
+    },
+    ["JacketHat_Bulky"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+        }
+    },
+    ["Sweater"] = {
+        gridDefinitions = {
+            {
+                size = {width=4, height=1},
+                position = {x=0, y=0},
+            },
+        }
+    },
+    ["SweaterHat"] = {
+        gridDefinitions = {
+            {
+                size = {width=4, height=1},
+                position = {x=0, y=0},
+            },
+        }
+    },
+    ["Dress"] = {
+        gridDefinitions = {
+            {
+                size = {width=1, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=1, y=0},
+            },
+        }
+    },
+    ["BathRobe"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+        }
+    },
+    ["Torso1Legs1"] = {
+        gridDefinitions = {
+            {
+                size = {width=1, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=2, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            }
+        }
+    },
+    ["Jacket"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=4, y=0},
+            }
+        }
+    },
+    ["JacketSuit"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=4, y=0},
+            }
+        }
+    },
+    ["Jacket_Bulky"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=4, y=0},
+            }
+        }
+    },
+    ["Jacket_Down"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=4, y=0},
+            }
+        }
+    },
+    ["TorsoExtra"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=4, y=0},
+            }
+        }
+    },
+    ["TorsoExtraPlus1"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=4, y=0},
+            }
+        }
+    },
+    ["TorsoExtraVest"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=4, y=0},
+            }
+        }
+    },
+    ["Boilersuit"] = {
+        gridDefinitions = {
+            {
+                size = {width=1, height=2},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=2},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=2},
+                position = {x=2, y=0},
+            },
+            {
+                size = {width=1, height=2},
+                position = {x=3, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=0, y=1},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=1, y=1},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=2, y=1},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=1},
+            }
+        }
+    },
+    ["AmmoStrap"] = {
+        gridDefinitions = {
+            {
+                size = {width=2, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=2, height=1},
+                position = {x=2, y=0},
+            },
+        },
+        -- Ammo only
+        validCategories = {
+            [TetrisItemCategory.AMMO] = true
+        }
+    },
+    ["LowerBody"] = {
+        gridDefinitions = {
+            {
+                size = {width=1, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=2, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            }
+        }
+    },
+    ["Legs1"] = {
+        gridDefinitions = {
+            {
+                size = {width=1, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=1, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=2, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=3, y=0},
+            }
+        }
+    },
     ["Pants"] = {
         gridDefinitions = {
             {
@@ -200,6 +613,18 @@ local bodySlotsToPocketDefinitions = {
             }
         }
     },
+    ["Skirt"] = {
+        gridDefinitions = {
+            {
+                size = {width=1, height=1},
+                position = {x=0, y=0},
+            },
+            {
+                size = {width=1, height=1},
+                position = {x=1, y=0},
+            }
+        }
+    }
 }
 
 function TetrisContainerData._calculatePocketDefinition(item)
@@ -240,6 +665,30 @@ end
 function TetrisContainerData._processContainerPack(containerPack)
     for key, containerDef in pairs(containerPack) do
         TetrisContainerData._containerDefinitions[key] = containerDef
+    end
+end
+
+
+-- Register pocket definitions
+TetrisContainerData._pocketDataPacks = {}
+
+function TetrisContainerData.registerPocketDefinitions(pocketPack)
+    table.insert(TetrisContainerData._pocketDataPacks, pocketPack)
+    if TetrisContainerData._packsLoaded then
+        TetrisContainerData._processPocketPack(pocketPack) -- You're late.
+    end
+end
+
+function TetrisContainerData._initializePocketPacks()
+    for _, pocketPack in ipairs(TetrisContainerData._pocketDataPacks) do
+        TetrisContainerData._processPocketPack(pocketPack)
+    end
+    TetrisContainerData._packsLoaded = true
+end
+
+function TetrisContainerData._processPocketPack(pocketPack)
+    for key, pocketDef in pairs(pocketPack) do
+        TetrisContainerData._pocketDefinitions[key] = pocketDef
     end
 end
 

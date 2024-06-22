@@ -105,6 +105,10 @@ function TetrisDevTool.insertDebugOptions(menu, item)
     subMenu:addOption("Edit Item Data", item, TetrisDevTool.openEditItem);
     subMenu:addOption("Recalculate Item Data", item, TetrisDevTool.recalculateItemData);
 
+    if item:IsInventoryContainer() then
+        subMenu:addOption("Edit Container Data", item:getItemContainer(), TetrisDevTool.openContainerEdit_container);
+    end
+
     if item:IsClothing() then
         subMenu:addOption("Edit Pocket Data", item, TetrisDevTool.openPocketEdit);
     end
@@ -119,7 +123,20 @@ function TetrisDevTool.insertContainerDebugOptions(menu, containerUi)
     end
 
     local subMenu = TetrisDevTool._findOrCreateTetrisSubMenu(menu);
-    subMenu:addOption("Edit Container Data", containerUi, TetrisDevTool.openContainerEdit);
+
+    -- Check if "Edit Container Data" is already in the menu
+    local hasContainerEdit = false;
+    for _, option in ipairs(subMenu.options) do
+        if option.name == "Edit Container Data" then
+            hasContainerEdit = true;
+            break;
+        end
+    end
+
+    if not hasContainerEdit then
+        subMenu:addOption("Edit Container Data", containerUi, TetrisDevTool.openContainerEdit);
+    end
+    
     subMenu:addOption("Reset Grid Data", containerUi.containerGrid, TetrisDevTool.resetGridData);
     subMenu:addOption("Recalculate Container Data", containerUi.containerGrid, TetrisDevTool.recalculateContainerData);
 end
@@ -148,24 +165,48 @@ function TetrisDevTool.openEditItem(item)
     -- create a new window with 2 number inputs for width and height
     -- and a button to save the changes or cancel
 
-    local editWindow = ISPanel:new(getMouseX(), getMouseY(), 200, 400);
+    local editWindow = ISPanel:new(getMouseX(), getMouseY(), 350, 400);
     editWindow:initialise();
     editWindow:addToUIManager();
 
+    -- Create titlebar
+    local titleBar = ISPanel:new(0, 0, editWindow:getWidth(), 20);
+    titleBar:initialise();
+    titleBar:instantiate();
+    titleBar:setAnchorLeft(true);
+    titleBar:setAnchorRight(true);
+    titleBar:setAnchorTop(true);
+    titleBar.backgroundColor = {r=0, g=0, b=0, a=0.5};
+    editWindow:addChild(titleBar);
+    titleBar.moveWithMouse = true;
+
+    -- Close button, top right
+    local closeButton = ISButton:new(editWindow:getWidth() - 20, 2, 16, 16, "X", editWindow);
+    closeButton:initialise();
+    closeButton:instantiate();
+    closeButton:setAnchorRight(true);
+    closeButton:setAnchorTop(true);
+    closeButton:setAnchorBottom(false);
+    closeButton:setAnchorLeft(false);
+    closeButton:setAlwaysOnTop(true);
+    closeButton.internal = "CLOSE";
+    closeButton:setOnClick(TetrisDevTool.onEditItem, closeButton);
+    titleBar:addChild(closeButton);
+
     -- Item name
-    local nameLabel = ISLabel:new(10, 10, 10, item:getName(), 1, 1, 1, 1, UIFont.Small, true);
+    local nameLabel = ISLabel:new(10, 30, 10, item:getName(), 1, 1, 1, 1, UIFont.Medium, true);
     nameLabel:initialise();
     nameLabel:instantiate();
     editWindow:addChild(nameLabel);
     
     local maxStackSize = TetrisItemData.getMaxStackSize(item)
 
-    local maxStackLabel = ISLabel:new(10, 25, 10, "Max Stack:", 1, 1, 1, 1, UIFont.Small, true);
+    local maxStackLabel = ISLabel:new(10, 55, 10, "Max Stack:", 1, 1, 1, 1, UIFont.Small, true);
     maxStackLabel:initialise();
     maxStackLabel:instantiate();
     editWindow:addChild(maxStackLabel);
 
-    local maxStackInput = ISTextEntryBox:new("", 80, 25, 50, 20);
+    local maxStackInput = ISTextEntryBox:new("", 90, 50, 50, 20);
     maxStackInput:initialise();
     maxStackInput:instantiate();
     maxStackInput:setOnlyNumbers(true);
@@ -173,25 +214,60 @@ function TetrisDevTool.openEditItem(item)
     maxStackInput:setText(tostring(maxStackSize));
     editWindow:addChild(maxStackInput);
 
+
+    if item:IsInventoryContainer() then
+        -- Link to open container editor
+        local containerButton = ISButton:new(230, 30, 100, 20, "Edit Container", editWindow);
+        containerButton:setOnClick(function() TetrisDevTool.openContainerEdit_container(item:getItemContainer()) end);
+        containerButton:initialise();
+        containerButton:instantiate();
+        containerButton:setAnchorLeft(false);
+        containerButton:setAnchorRight(true);
+        editWindow:addChild(containerButton);
+
+        if TetrisItemData.isSquishable(item) then
+            -- Squishable title
+            local squishableTitle = ISLabel:new(230, 70, 10, "Show squished:", 1, 1, 1, 1, UIFont.Small, true);
+            squishableTitle:initialise();
+            squishableTitle:instantiate();
+            squishableTitle:setAnchorLeft(false);
+            squishableTitle:setAnchorRight(true);
+            editWindow:addChild(squishableTitle);
+
+            -- Squishable toggle button
+            local isSquished = TetrisItemData.isSquished(item);
+            local squishableButton = ISButton:new(230, 90, 100, 20, isSquished and "True" or "False", editWindow);
+            squishableButton:initialise();
+            squishableButton:instantiate();
+            squishableButton:setAnchorLeft(false);
+            squishableButton:setAnchorRight(true);
+            squishableButton.internal = "SQUISHABLE";
+            squishableButton:setOnClick(TetrisDevTool.onEditItem, squishableButton);
+            editWindow:addChild(squishableButton);
+        end
+    end
+
     editWindow.maxStackInput = maxStackInput;
     editWindow.item = item;
+    editWindow.squished = TetrisItemData.isSquished(item);
 
-    local okButton = ISButton:new(10, 55, 100, 20, "OK", editWindow);
+    local okButton = ISButton:new(10, 75, 100, 20, "Save", editWindow);
     okButton:setOnClick(TetrisDevTool.onEditItem, okButton);
     okButton:initialise();
     okButton:instantiate();
     okButton.internal = "OK";
     editWindow:addChild(okButton);
 
-    local cancelButton = ISButton:new(10, 80, 100, 20, "Cancel", editWindow);
+    local cancelButton = ISButton:new(10, 100, 100, 20, "Cancel", editWindow);
     cancelButton:setOnClick(TetrisDevTool.onEditItem, cancelButton);
     cancelButton:initialise();
     cancelButton:instantiate();
     cancelButton.internal = "Cancel";
     editWindow:addChild(cancelButton);
 
-    local width, height = TetrisItemData.getItemSize(item, false);
-    local itemRenderer = DevItemRenderer:new(10, 120, item, width, height);
+    local data = TetrisItemData.getItemData_squishState(item, editWindow.squished);
+    local width, height = data.width, data.height;
+    local itemRenderer = DevItemRenderer:new(10, 150, item, width, height);
     itemRenderer:initialise();
     itemRenderer:instantiate();
     editWindow:addChild(itemRenderer);
@@ -215,13 +291,41 @@ function TetrisDevTool.openEditItem(item)
 
     editWindow.itemRenderer = itemRenderer;
 
+    editWindow.dragHandle = dragHandle;
+
     ---@diagnostic disable-next-line: duplicate-set-field
     editWindow.render = function(self)
         ISPanel.render(self);
-        self:setWidth(math.max(itemRenderer:getWidth(), 250))
-        self:setHeight(math.max(itemRenderer:getHeight() + 150, 250))
-    end
+        self:setWidth(math.max(itemRenderer:getWidth() + 20, 350))
+        self:setHeight(math.max(itemRenderer:getHeight() + 180, 280))
 
+        local currentSlots = self.itemRenderer.w * self.itemRenderer.h;
+        local slotText = self.squished and "Sq Slots: " or "Slots: ";
+        self:drawText(slotText .. currentSlots, 10, 140-15, 1, 1, 1, 1, UIFont.Medium);
+
+        if self.item:IsInventoryContainer() then
+            -- Container slot count
+            local slotCount = TetrisContainerData.calculateInnerSize(item:getItemContainer());
+
+            local slotString = "Container Slots: " .. slotCount
+            local textInsetX = getTextManager():MeasureStringX(UIFont.Medium, slotString)
+            self:drawText(slotString, self:getWidth() - 10 - textInsetX, 140-15, 1, 1, 1, 1, UIFont.Medium);
+
+            if self.squished then
+                local data = TetrisItemData.getItemData_squishState(self.item, false);
+                currentSlots = data.width * data.height;
+            end
+
+            if slotCount > currentSlots then
+                local warning = "TARDIS CONTAINER!"
+                textInsetX = getTextManager():MeasureStringX(UIFont.Medium, warning)
+
+                -- draw a rect background to make the text more readable
+                self:drawRect(self:getWidth() - 10 - textInsetX - 5, 140-50, textInsetX + 10, 24, 0.95, 0, 0, 0);
+                self:drawText(warning, self:getWidth() - 10 - textInsetX, 140-50, 1, 0, 0, 1, UIFont.Medium);
+            end
+        end
+    end
 end
 
 TetrisDevTool.onEditItem = function(self, button)
@@ -230,15 +334,30 @@ TetrisDevTool.onEditItem = function(self, button)
         local y = self.itemRenderer.h
         local maxStack = tonumber(self.maxStackInput:getText());
         if x and y and maxStack and x > 0 and y > 0 and maxStack > 0 then
-            TetrisDevTool.applyEdits(self.item, x, y, maxStack);
+            TetrisDevTool.applyEdits(self.item, x, y, maxStack, self.squished);
         end
+        return;
     end
+
+    if button.internal == "SQUISHABLE" then
+        self.squished = not self.squished;
+        button:setTitle(self.squished and "True" or "False");
+
+        local data = TetrisItemData.getItemData_squishState(self.item, self.squished);
+        self.itemRenderer.w = data.width;
+        self.itemRenderer.h = data.height;
+
+        self.dragHandle:setX((data.width - 1) * OPT.TEXTURE_SIZE);
+        self.dragHandle:setY((data.height - 1) * OPT.TEXTURE_SIZE);
+        return;
+    end
+
     self:removeFromUIManager();
 end
 
-function TetrisDevTool.applyEdits(item, x, y, maxStack)
+function TetrisDevTool.applyEdits(item, x, y, maxStack, squished)
     local fType = item:getFullType();
-    if TetrisItemData.isSquished(item) then
+    if squished then
         fType = TetrisItemData.getSquishedFullType(item);
     end
 
@@ -253,7 +372,7 @@ function TetrisDevTool.applyEdits(item, x, y, maxStack)
     newData.maxStackSize = maxStack
 
     TetrisDevTool.itemEdits[fType] = newData;
-    
+
     writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
 end
 
@@ -270,13 +389,16 @@ local function copyTable(from, to)
 end
 
 function TetrisDevTool.getGridXYFromHandle(handle)
-    local x = handle:getX() + OPT.CELL_SIZE / 2;
-    local y = handle:getY() + OPT.CELL_SIZE / 2;
+    local x = handle:getX() + handle.pixelIncrement / 2;
+    local y = handle:getY() + handle.pixelIncrement / 2;
 
     if x < 0 then x = 0 end
     if y < 0 then y = 0 end
 
-    return ItemGridUiUtil.mousePositionToGridPosition(x, y)
+    local effectiveCellSize = handle.pixelIncrement - 1
+    local gridX = math.floor(x / effectiveCellSize)
+    local gridY = math.floor(y / effectiveCellSize)
+    return gridX, gridY
 end
 
 local function createAddGridButton(context)
@@ -342,7 +464,7 @@ function TetrisDevTool.remakeContainerUi(editWindow)
     containerUi:removeChild(containerUi.overflowRenderer);
 
     editWindow:addChild(containerUi);
-    containerUi:setY(200);
+    containerUi:setY(250);
     editWindow.containerUi = containerUi;
 
     -- Resize handles
@@ -378,6 +500,16 @@ function TetrisDevTool.remakeContainerUi(editWindow)
             dragHandle:setY(gridUi:getHeight() - OPT.CELL_SIZE);
         end
     end
+end
+
+function TetrisDevTool.openContainerEdit_container(container)
+    local inventory = container;
+    local inventoryPane = getPlayerData(0).playerInventory.inventoryPane;
+    local containerDef = TetrisContainerData.getContainerDefinition(inventory);
+    local dataKey = TetrisContainerData._getContainerKey(inventory);
+    local dataTable = TetrisDevTool.containerEdits;
+
+    TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, containerDef, dataKey, dataTable, "CONTAINER");
 end
 
 function TetrisDevTool.openContainerEdit(containerUi)
@@ -445,7 +577,7 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
         self.containerUi:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)
         self.containerUi.containerGrid:refresh();
         self:setWidth(math.max(self.containerUi:getWidth() + 48, 450));
-        self:setHeight(self.containerUi:getHeight() + 200 + 48);
+        self:setHeight(self.containerUi:getHeight() + 250 + 48);
         self.quickButtonsDirty = true
     end
   
@@ -461,7 +593,7 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
     titleBar.moveWithMouse = true;
 
     -- Close button, top right
-    local closeButton = ISButton:new(editWindow:getWidth() - 40, 2, 16, 16, "Close", editWindow);
+    local closeButton = ISButton:new(editWindow:getWidth() - 20, 2, 16, 16, "X", editWindow);
     closeButton:initialise();
     closeButton:instantiate();
     closeButton:setAnchorRight(true);
@@ -489,7 +621,7 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
     editWindow.alignmentButton = alignmentButton;
 
     -- Organized Title
-    local organizedTitle = ISLabel:new(10, 65, 16, "Organized:", 1, 1, 1, 1, UIFont.Small, true);
+    local organizedTitle = ISLabel:new(10, 65, 16, " Is Organized:", 1, 1, 1, 1, UIFont.Small, true);
     organizedTitle:initialise();
     organizedTitle:instantiate();
     editWindow:addChild(organizedTitle);
@@ -503,6 +635,35 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
     organizedButton:setOnClick(TetrisDevTool.onEditContainer, organizedButton);
     editWindow:addChild(organizedButton);
 
+    -- Fragile Title
+    local fragileTitle = ISLabel:new(10, 105, 16, "Is Fragile:", 1, 1, 1, 1, UIFont.Small, true);
+    fragileTitle:initialise();
+    fragileTitle:instantiate();
+    editWindow:addChild(fragileTitle);
+
+    -- Fragile toggle button
+    local isFragile = editWindow.newContainerDefinition.isFragile;
+    local fragileButton = ISButton:new(10, 122, 100, 16, isFragile and "True" or "False", editWindow);
+    fragileButton:initialise();
+    fragileButton:instantiate();
+    fragileButton.internal = "FRAGILE";
+    fragileButton:setOnClick(TetrisDevTool.onEditContainer, fragileButton);
+    editWindow:addChild(fragileButton);
+
+    -- Squishable Title
+    local squishableTitle = ISLabel:new(10, 145, 16, "Is Squishable:", 1, 1, 1, 1, UIFont.Small, true);
+    squishableTitle:initialise();
+    squishableTitle:instantiate();
+    editWindow:addChild(squishableTitle);
+
+    -- Squishable toggle button
+    local isSquishable = editWindow.newContainerDefinition.isSquishable;
+    local squishableButton = ISButton:new(10, 162, 100, 16, isSquishable and "True" or "False", editWindow);
+    squishableButton:initialise();
+    squishableButton:instantiate();
+    squishableButton.internal = "SQUISHABLE";
+    squishableButton:setOnClick(TetrisDevTool.onEditContainer, squishableButton);
+    editWindow:addChild(squishableButton);
 
     -- Item Restrictions Title
     local itemRestrictionsTitle = ISLabel:new(120, 25, 16, "Item Restrictions:", 1, 1, 1, 1, UIFont.Small, true);
@@ -510,7 +671,7 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
     itemRestrictionsTitle:instantiate();
     editWindow:addChild(itemRestrictionsTitle);
 
-    local invalidCategories = editWindow.newContainerDefinition.invalidCategories or {};
+    local validCategories = editWindow.newContainerDefinition.validCategories or {};
 
     -- Tickboxes for each item category restriction
     local itemCategoryBoxes1 = ISTickBox:new(130, 42, 100, 16, "", editWindow, TetrisDevTool.onItemRestriction, 0);
@@ -521,7 +682,7 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
     for i, category in ipairs(TetrisItemCategory.list) do
         if i <= #TetrisItemCategory.list/2 then
             itemCategoryBoxes1:addOption(category, {});
-            itemCategoryBoxes1:setSelected(i, contains(category, invalidCategories));
+            itemCategoryBoxes1:setSelected(i, validCategories[category]);
             firstCount = firstCount + 1
         end
     end
@@ -534,7 +695,7 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
 
     editWindow:addChild(itemCategoryBoxes1);
 
-    local itemCategoryBoxes2 = ISTickBox:new(265, 42, 100, 16, "", editWindow, TetrisDevTool.onItemRestriction, firstCount);
+    local itemCategoryBoxes2 = ISTickBox:new(315, 42, 100, 16, "", editWindow, TetrisDevTool.onItemRestriction, firstCount);
     itemCategoryBoxes2:initialise();
     itemCategoryBoxes2:instantiate();
     
@@ -542,7 +703,7 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
     for i, category in ipairs(TetrisItemCategory.list) do
         if i > #TetrisItemCategory.list/2 then
             itemCategoryBoxes2:addOption(category, {});
-            itemCategoryBoxes2:setSelected(j, contains(category, invalidCategories));
+            itemCategoryBoxes2:setSelected(j, validCategories[category]);
             j = j + 1
         end
     end
@@ -590,7 +751,7 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
         self:drawRect(1, 1, self:getWidth()-2, self:getHeight()-2, 0.75, 0, 0, 0);
 
         -- Draw a cyan rectangle behind the container grid
-        self:drawRect(0, 200, self:getWidth(), self:getHeight() - 200, 0.5, 0, 0.7, 1);
+        self:drawRect(0, 250, self:getWidth(), self:getHeight() - 250, 0.5, 0, 0.7, 1);
 
         if not self.quickButtonsDirty then
             return;
@@ -693,6 +854,20 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
                 --gridUi:drawText("Pos: " .. x .. "," .. y, 4, 20, 1, 1, 1, 1, UIFont.Medium);
             end
         end
+
+        -- Draw the slot count under the container info
+        local slotCount = 0;
+        for _, renderer in pairs(self.containerUi.multiGridRenderer.renderers) do
+            for _, gridUi in pairs(renderer.grids) do
+                local grid = gridUi.grid;
+                local gridDef = grid.gridDefinition;
+                local w = gridDef.size.width;
+                local h = gridDef.size.height;
+                slotCount = slotCount + w * h;
+            end
+        end
+
+        self:drawText("Slot Count: " .. slotCount, 10, 460, 1, 1, 1, 1, UIFont.Medium);
     end
 
     titleBar:addChild(closeButton);
@@ -721,6 +896,16 @@ function TetrisDevTool.onEditContainer(self, button)
         button:setTitle(self.newContainerDefinition.isOrganized and "True" or "False");
     end
 
+    if button.internal == "FRAGILE" then
+        self.newContainerDefinition.isFragile = not self.newContainerDefinition.isFragile;
+        button:setTitle(self.newContainerDefinition.isFragile and "True" or "False");
+    end
+
+    if button.internal == "SQUISHABLE" then
+        self.newContainerDefinition.isSquishable = not self.newContainerDefinition.isSquishable;
+        button:setTitle(self.newContainerDefinition.isSquishable and "True" or "False");
+    end
+
     if button.internal == "ACCEPT" then
         if self.type == "CONTAINER" then
             TetrisDevTool.applyContainerEdit(self.containerDataKey, self.newContainerDefinition);
@@ -742,26 +927,24 @@ function TetrisDevTool.onItemRestriction(editWindow, index, state, offset)
 
     local def = editWindow.newContainerDefinition;
     if state then
-        if not def.invalidCategories then
-            def.invalidCategories = {};
+        if not def.validCategories then
+            def.validCategories = {};
         end
-        if not contains(category, def.invalidCategories) then
-            table.insert(def.invalidCategories, category);
-        end
+        def.validCategories[category] = true;
     else
-        if not def.invalidCategories then
+        if not def.validCategories then
             return;
         end
 
-        for i, cat in ipairs(def.invalidCategories) do
-            if cat == category then
-                table.remove(def.invalidCategories, i);
-                break;
-            end
+        def.validCategories[category] = nil;
+
+        local count = 0;
+        for _, __ in pairs(def.validCategories) do
+            count = count + 1;
         end
 
-        if #def.invalidCategories == 0 then
-            def.invalidCategories = nil;
+        if count == 0 then
+            def.validCategories = nil;
         end
     end
 end
@@ -930,7 +1113,7 @@ function TetrisDevTool.createDragHandle(uiElement, pixelIncrement, onReleaseCall
     handle:setVisible(true);
 
     handle.onReleaseCallback = onReleaseCallback;
-
+    handle.pixelIncrement = pixelIncrement;
     -- enable drag
     handle.moveWithMouse = true;
 
@@ -959,8 +1142,14 @@ function TetrisDevTool.createDragHandle(uiElement, pixelIncrement, onReleaseCall
         if self.moving then
             -- Draw a rect from the 0,0 of the parent to the handles bottom right corner
             self:suspendStencil();
-
             self:drawRect(-self:getX(), -self:getY(), self:getX() + self:getWidth(), self:getY() + self:getHeight(), 1, 1, 1, 1);
+
+            if self.moveWithMouse then
+                -- Print the size if the handle is dropped here
+                local x, y = TetrisDevTool.getGridXYFromHandle(self);
+                self:drawText(x+1 .. "x" .. y+1, -20, -28, 0, 0, 0, 1, UIFont.Medium);
+            end
+
         end
     end
 
@@ -1093,6 +1282,10 @@ ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, it
     if tex then
         print("Texture Width: " .. tostring(tex:getWidth()))
         print("Texture Height: " .. tostring(tex:getHeight()))
+    end
+
+    if item:IsClothing() then
+        print("Bodyslot: " .. item:getBodyLocation())
     end
 
     TetrisDevTool.insertDebugOptions(menu, item)

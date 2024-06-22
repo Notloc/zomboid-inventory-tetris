@@ -14,9 +14,11 @@ Events.OnGameBoot.Add(function()
         o.stopOnRun = false
         o.stopOnWalk = false
 
-        -- Make the transfers instant
-        -- The user's personal time spent arranging items in the grid "replaces" the time spent moving the items
-        o.maxTime = 0
+        if not SandboxVars.InventoryTetris.UseItemTransferTime then
+            o.maxTime = 0
+        else
+            o.maxTime = o.maxTime / SandboxVars.InventoryTetris.ItemTransferSpeedMultiplier
+        end
 
         if ISInventoryTransferAction.globalTetrisRules then
             o.enforceTetrisRules = true
@@ -37,8 +39,10 @@ Events.OnGameBoot.Add(function()
     local og_start = ISInventoryTransferAction.start
     function ISInventoryTransferAction:start()
         og_start(self)
-        self.maxTime = 0
-        self.action:setTime(0)
+        if not SandboxVars.InventoryTetris.UseItemTransferTime then
+            self.maxTime = 0
+            self.action:setTime(0)
+        end
     end
 
     local og_canMergeAction = ISInventoryTransferAction.canMergeAction
@@ -84,6 +88,13 @@ Events.OnGameBoot.Add(function()
     end
 
     function ISInventoryTransferAction:validateTetrisSquishable(destContainer, item)
+        local containerDef = TetrisContainerData.getContainerDefinition(destContainer)
+        -- Container is not squishable, so the size will not change
+        if not containerDef.isSquishable then
+            return true
+        end
+
+        -- Container already contains items, so the size will not change
         if not destContainer:isEmpty() then return true end
 
         local itemContainer = self.destContainer:getContainingItem()
@@ -93,7 +104,7 @@ Events.OnGameBoot.Add(function()
             return true
         end
 
-        if itemContainer and TetrisItemData.isSquishable(itemContainer) then
+        if itemContainer then
             local parentInventory = itemContainer:getContainer()
             if parentInventory then
                 if parentInventory:getType() == "floor" then
@@ -105,7 +116,7 @@ Events.OnGameBoot.Add(function()
                     if container == destContainer then
                         --return true -- The container will self correct
                         -- DISABLED
-                        -- The item gets dropped or repostioned in the inventory
+                        -- The item gets dropped or repositioned in the inventory
                         -- But users keep thinking the item is getting deleted
                     end
                 end
@@ -161,4 +172,5 @@ Events.OnGameBoot.Add(function()
             end
         end
     end
+
 end)

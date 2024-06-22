@@ -29,14 +29,13 @@ function GridAutoDropSystem._processItems(playerNum, items)
         local currentContainer = item:getContainer()
         if currentContainer then
             local containerGrid = ItemContainerGrid.Create(currentContainer, playerNum)
-            if containerGrid:canAddItem(item) then
-                containerGrid:autoPositionItem(item, isOrganized, isDisorganized)
+            if containerGrid:canAddItem(item) and containerGrid:autoPositionItem(item, isOrganized, isDisorganized) then
                 addedToContainer = true
             else
                 for _, container in ipairs(containers) do
                     local containerGrid = ItemContainerGrid.Create(container, playerNum)
                     if currentContainer ~= container and containerGrid:canAddItem(item) then
-                        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, currentContainer, container))
+                        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, currentContainer, container, 1))
                         addedToContainer = true
                         break
                     end
@@ -81,7 +80,7 @@ function GridAutoDropSystem._attemptToForcePositionItem(item, playerObj, playerN
     local inventory = playerObj:getInventory()
     local grid = ItemContainerGrid.Create(inventory, playerNum)
     if grid:canAddItem(item) then
-        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), inventory))
+        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), inventory, 1))
         return true
     end
 
@@ -91,7 +90,7 @@ function GridAutoDropSystem._attemptToForcePositionItem(item, playerObj, playerN
         if wornItem:IsInventoryContainer() then
             local grid = ItemContainerGrid.Create(wornItem:getInventory(), playerNum)
             if grid:canAddItem(item) then
-                ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), wornItem:getInventory()))
+                ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), wornItem:getInventory(), 1))
                 return true
             end
         end

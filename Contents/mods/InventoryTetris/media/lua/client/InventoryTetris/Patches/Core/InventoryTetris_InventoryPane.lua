@@ -127,7 +127,12 @@ Events.OnGameBoot.Add(function()
         local x = 10
         local y = 10
         for _, inventory in ipairs(inventories) do
-            local itemGridContainerUi = not forceFullRefresh and oldGridContainerUis[inventory] or nil
+            local itemGridContainerUi = oldGridContainerUis[inventory]
+            if itemGridContainerUi and forceFullRefresh then
+                itemGridContainerUi:unregisterEvents()
+                itemGridContainerUi = nil
+            end
+
             if not itemGridContainerUi then
                 itemGridContainerUi = ItemGridContainerUI:new(inventory, self, self.player)
                 itemGridContainerUi:initialise()
@@ -197,20 +202,27 @@ Events.OnGameBoot.Add(function()
             return -- in the main menu
         end
 
-        if self.parent:isMouseOverEquipmentUi() then
+        local isController = JoypadState.players[self.player+1] ~= nil
+
+        if not isController and self.parent:isMouseOverEquipmentUi() then
             return self.parent.equipmentUi:updateTooltip()
         else
-            local item = nil
+            if isController then
+                local item = self:findSelectedControllerItem()
+                self:doTooltipForItem(item)
+            else
+                local item = nil
 
-            if not self.doController and not self.dragging and not self.draggingMarquis then
-                local containerGridUi = self:findContainerGridUiUnderMouse()
-                if containerGridUi then
-                    local stack = containerGridUi:findGridStackUnderMouse()
-                    item = stack and ItemStack.getFrontItem(stack, containerGridUi.inventory) or nil
+                if not self.doController and not self.dragging and not self.draggingMarquis then
+                    local containerGridUi = self:findContainerGridUiUnderMouse()
+                    if containerGridUi then
+                        local stack = containerGridUi:findGridStackUnderMouse()
+                        item = stack and ItemStack.getFrontItem(stack, containerGridUi.inventory) or nil
+                    end
                 end
-            end
 
-            self:doTooltipForItem(item)
+                self:doTooltipForItem(item)
+            end
         end
     end
 
@@ -364,4 +376,16 @@ Events.OnGameBoot.Add(function()
             end
         end
     end
+    
+    function ISInventoryPane:findSelectedControllerItem()
+        local inv = self.parent
+        if not inv.joyfocus then return nil end
+
+        local selection = inv.controllerNode:getLeafChild()
+        if selection and selection.uiElement.Type == "ItemGridUI" then
+            return selection.uiElement:getControllerSelectedItem() 
+        end
+        return nil
+    end
+
 end)

@@ -43,6 +43,22 @@ Events.OnGameBoot.Add(function()
 					setJoypadFocus(self.player, lootInventory)
 					return true
 				end
+
+				-- Move to the next container input
+				if self == playerInventory and button == Joypad.LBumper or self == lootInventory and button == Joypad.RBumper then
+					-- Find the lowest container (support for ReorderContainers mod)
+					local lastButton = self.selectedButton
+					for _, button in ipairs(self.backpacks) do
+						if button:getY() > lastButton:getY() then
+							lastButton = button
+						end
+					end
+
+					if lastButton == self.selectedButton and self.inventoryPane.tetrisWindowManager:hasOpenWindows() then
+						self.inventoryPane.tetrisWindowManager:focusFirstWindow()
+					end
+				end
+
 				return false
 			end)
 	end
@@ -105,7 +121,14 @@ Events.OnGameBoot.Add(function()
 		if self.inventoryPane.tetrisWindowManager then
 			self.inventoryPane.tetrisWindowManager:closeIfInvalid(self)
 		end
+		
+		if self.controllerNode and self.controllerNode.isFocused then
+			self.controllerNode:refreshSelectedChild()
+		end
+
 	end
+
+
 
 	local og_update = ISInventoryPage.update
 	function ISInventoryPage:update()
@@ -145,10 +168,10 @@ Events.OnGameBoot.Add(function()
 		end
 	end
 
-	local og_close = ISInventoryPage.close
-	function ISInventoryPage:close()
-		og_close(self)
-		if self.inventoryPane.tetrisWindowManager then
+	local og_setVisible = ISInventoryPage.setVisible
+	function ISInventoryPage:setVisible(state)
+		og_setVisible(self, state)
+		if not state and self.inventoryPane.tetrisWindowManager then
 			self.inventoryPane.tetrisWindowManager:closeAll()
 		end
 	end

@@ -31,10 +31,10 @@ function ammoMagazineHandler.validate(eventData, droppedStack, fromInventory, ta
 end
 
 -- The stacks are vanilla item stacks, not TetrisItemStacks, as drops may be sourced from outside of the Tetris grids
-function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
+function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
     local magazine = targetStack.items[1]
     local bullets = droppedStack.items
-    
+
     if magazine:getAmmoType() ~= bullets[1]:getFullType() then return end
 
     local missingBullets = magazine:getMaxAmmo() - magazine:getCurrentAmmoCount()
@@ -53,7 +53,7 @@ function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, target
     if targetInventory ~= playerInv then
         local containerGrid = ItemContainerGrid.Create(targetInventory, playerNum)
         local magStack, grid = containerGrid:findStackByItem(magazine)
-        
+
         local transferMag = nil
         transferMag, returnMag = NotUtil.createTransferActionWithReturn(magazine, targetInventory, playerInv, playerObj)
         if magStack and grid then

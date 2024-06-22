@@ -54,9 +54,10 @@ function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
             _self:refreshSecondaryGrids()
         end
         Events.OnClothingUpdated.Add(o._onClothingUpdated)
+    else
+        o:refresh() -- Don't refresh the player's main inventory before we register our secondary grids or the main pocket might claim items that are supposed to go into the secondary grids
     end
 
-    o:refresh()
     return o
 end
 
@@ -301,7 +302,7 @@ function ItemContainerGrid:canAddItem(item)
     end
 
     local capacity = self:_getCapacity()
-    if item:getContainer() ~= self.inventory and capacity < item:getActualWeight() + self.inventory:getCapacityWeight() then
+    if self.containerDefinition.isFragile and item:getContainer() ~= self.inventory and capacity < item:getActualWeight() + self.inventory:getCapacityWeight() then
         return false
     end
 
@@ -662,8 +663,16 @@ function ItemContainerGrid:addOnSecondaryGridsAdded(obj, callback)
     self._onSecondaryGridsAdded[obj] = callback
 end
 
+function ItemContainerGrid:removeOnSecondaryGridsAdded(obj)
+    self._onSecondaryGridsAdded[obj] = nil
+end
+
 function ItemContainerGrid:addOnSecondaryGridsRemoved(obj, callback)
     self._onSecondaryGridsRemoved[obj] = callback
+end
+
+function ItemContainerGrid:removeOnSecondaryGridsRemoved(obj)
+    self._onSecondaryGridsRemoved[obj] = nil
 end
 
 function ItemContainerGrid:addSecondaryGrid(secondaryTarget)

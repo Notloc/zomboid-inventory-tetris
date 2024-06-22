@@ -9,7 +9,7 @@ local ORGANIZED_TEXTURE = getTexture("media/textures/InventoryTetris/Organized.p
 local DISORGANIZED_TEXTURE = getTexture("media/textures/InventoryTetris/Disorganized.png")
 local SELECTED_TEXTURE = getTexture("media/ui/FavoriteStar.png")
 
-local ORGANIZED_TEXT = getText("UI_trait_Organized")
+local ORGANIZED_TEXT = getText("UI_trait_Packmule")
 local DISORGANIZED_TEXT = getText("UI_trait_Disorganized")
 
 local OPT = require "InventoryTetris/Settings"
@@ -75,12 +75,21 @@ function GridContainerInfo:prerender()
     end
 
     local topIconY = 3 * scale
+    local bottomIconY = self:getHeight() - 17 * scale
 
-    self.organizationIcon:setX(self.width - (18*scale))
-    self.organizationIcon:setY(topIconY)
+    self.organizationIcon:setX(2 + scale)
+    self.organizationIcon:setY(bottomIconY)
     
     self.organizationIcon.texture = isContainerOrganized and ORGANIZED_TEXTURE or DISORGANIZED_TEXTURE
     self.organizationIcon:setMouseOverText(isContainerOrganized and ORGANIZED_TEXT or DISORGANIZED_TEXT)
+
+    local gridUis = containerUi.gridUis[inv]
+    local containerDef = gridUis[1].grid.containerDefinition
+    local category = TetrisContainerData.getSingleValidCategory(containerDef)
+    if category then
+        local icon = TetrisItemCategory.getCategoryIcon(category)
+        self:drawTextureScaledAspect(icon, self.width - (18*scale), topIconY, 16 * scale, 16 * scale, 1, 1, 1, 1)
+    end
 
     local isSelected = containerUi.isOnPlayer and containerUi.inventory == containerUi.inventoryPane.inventory
     if isSelected then
@@ -103,7 +112,7 @@ function GridContainerInfo:prerender()
 
     local realWeight = inv:getCapacityWeight()
     local roundedWeight = round(realWeight, 1)
-    local weightText = roundedWeight .. " / " .. capacity
+    local weightText = (containerDef.isFragile or SandboxVars.InventoryTetris.EnforceCarryWeight) and (roundedWeight .. " / " .. capacity) or (roundedWeight .. "")
 
     local r,g,b = 1,1,1
     
@@ -112,12 +121,12 @@ function GridContainerInfo:prerender()
     end
     
     local centerX = (ICON_SIZE/2 + ICON_PADDING_X) * scale - 8 * scale
-    local textY = (ICON_PADDING_Y*2 + ICON_SIZE) * scale - scale
-    self:drawTextCentre(weightText, centerX, textY, r,g,b, 1);
-    local lineHeight = getTextManager():getFontFromEnum(UIFont.Small):getLineHeight()
-    local lineWidth = getTextManager():MeasureStringX(UIFont.Small, weightText)
+    local textY = (ICON_PADDING_Y*2 + ICON_SIZE) * scale - scale * 2
+    self:drawTextCentre(weightText, centerX, textY, r,g,b, 1, UIFont.Medium);
+    local lineHeight = getTextManager():getFontFromEnum(UIFont.Medium):getLineHeight()
+    local lineWidth = getTextManager():MeasureStringX(UIFont.Medium, weightText)
     
-    local weightXOff = 5
+    local weightXOff = 2
     local weightYOff = 0
     if g == 0 then
         weightXOff = weightXOff + ZombRand(-1/r,1/r)
@@ -125,7 +134,7 @@ function GridContainerInfo:prerender()
     end
 
     local weightX = centerX + lineWidth/2 + weightXOff * scale
-    local weightY = textY + lineHeight*0.75 + weightYOff - (8 * scale) --half height of weight icon 
+    local weightY = textY + lineHeight*0.75 + weightYOff - (8 * scale) - 2
     if r == 1 and g == 1 and b == 1 then
         self:drawTextureScaledUniform(WEIGHT_TEXTURE, weightX, weightY, scale, 1, 1, 0.92, 0.75);
     else
@@ -187,7 +196,7 @@ end
 
 function GridContainerInfo:onMouseDoubleClick(x, y)
     if self.containerUi.item and isPointOverContainerIcon(x, y) then
-        self.containerUi.inventoryPane.tetrisWindowManager:openContainerPopup(self.containerUi.item)
+        self.containerUi.inventoryPane.tetrisWindowManager:openContainerPopup(self.containerUi.item, self.containerUi.inventoryPane)
     end
     DragAndDrop.endDrag(self)
 end
@@ -214,5 +223,16 @@ function GridContainerInfo:controllerNodeOnJoypadDown(button)
     if button == Joypad.BButton then
         self.containerUi:onCollapseButtonClick()
         self.containerUi.inventoryPane:refreshContainer()
+        return true
     end
+
+    if button == Joypad.AButton then
+        if self.containerUi.item then
+            local menu = ItemGridUI.openItemContextMenu(self, 10, 10, self.containerUi.item, self.containerUi.inventoryPane, self.containerUi.playerNum)
+            TetrisDevTool.insertContainerDebugOptions(menu, self.containerUi)
+
+        end
+        return true
+    end
+
 end

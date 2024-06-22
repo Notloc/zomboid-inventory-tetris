@@ -14,7 +14,7 @@ function ItemGridWindow.getTopWindow()
     return ItemGridWindow._globalInstances[#ItemGridWindow._globalInstances];
 end
 
-function ItemGridWindow:new(x, y, inventory, inventoryPane, playerNum)
+function ItemGridWindow:new(x, y, inventory, inventoryPane, playerNum, windowManager)
 	local o = ISPanel:new(x, y, 100, 100);
     setmetatable(o, self)
     self.__index = self
@@ -35,6 +35,8 @@ function ItemGridWindow:new(x, y, inventory, inventoryPane, playerNum)
     o.inventoryPane = inventoryPane;
     o.playerNum = playerNum;
     o.player = playerNum;
+    
+    o.windowManager = windowManager
 
     o.titlebarbkg = getTexture("media/ui/Panel_TitleBar.png");
     o.infoBtn = getTexture("media/ui/Panel_info_button.png");
@@ -153,6 +155,33 @@ function ItemGridWindow:createChildren()
     self.pinButton.backgroundColorMouseOver.a = 0;
 
 	self.totalWeight =  ISInventoryPage.loadWeight(self.inventory);
+
+
+    local playerInv = getPlayerInventory(self.playerNum)
+    local bumperButton = Joypad.RBumper
+    if playerInv.inventoryPane == self.inventoryPane then
+        bumperButton = Joypad.LBumper
+    end
+
+
+    NotlocControllerNode
+        :injectControllerNode(self, true)
+        :setChildrenNodeProvider(function()
+            return {self.gridContainerUi.controllerNode}
+        end)
+        :setJoypadDownHandler(function(self, button)
+            if button == Joypad.YButton then
+                self:close()
+                return true
+            end
+            
+            if button == bumperButton then
+                self.windowManager:nextWindow()
+                return true
+            end
+
+            return false
+        end)
 end
 
 function ItemGridWindow:onApplyGridScale(scale)
@@ -200,15 +229,6 @@ end
 
 function ItemGridWindow:onCloseButton()
     self:close()
-end
-
-function ItemGridWindow:close()
-	ISPanel.close(self)
-	if JoypadState.players[self.player+1] then
-		setJoypadFocus(self.player, nil)
-		local playerObj = getSpecificPlayer(self.player)
-		playerObj:setBannedAttacking(false)
-	end
 end
 
 function ItemGridWindow:render()

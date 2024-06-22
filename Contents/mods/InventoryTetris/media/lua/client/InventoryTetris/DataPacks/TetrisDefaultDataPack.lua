@@ -1750,11 +1750,6 @@ local itemPack = {
         ["width"] = 1,
         ["maxStackSize"] = 5,
     },
-    ["Base.Guitarcase"] = {
-        ["height"] = 4,
-        ["width"] = 2,
-        ["maxStackSize"] = 1,
-    },
     ["Base.KeyRing"] = {
         ["height"] = 1,
         ["width"] = 1,
@@ -1772,11 +1767,6 @@ local itemPack = {
     },
     ["Base.FirstAidKit"] = {
         ["height"] = 2,
-        ["width"] = 2,
-        ["maxStackSize"] = 1,
-    },
-    ["Base.Purse"] = {
-        ["height"] = 3,
         ["width"] = 2,
         ["maxStackSize"] = 1,
     },
@@ -1965,11 +1955,6 @@ local itemPack = {
         ["width"] = 1,
         ["maxStackSize"] = 1,
     },
-    ["Base.Garbagebag"] = {
-        ["height"] = 3,
-        ["width"] = 3,
-        ["maxStackSize"] = 1,
-    },
 }
 
 local containerPack = {
@@ -2000,7 +1985,7 @@ local containerPack = {
                 },
             },
         },
-        ["isOrganized"] = false,
+        ["isOrganized"] = true,
     },
     ["Guitarcase_5"] = {
         ["gridDefinitions"] = {
@@ -2027,36 +2012,8 @@ local containerPack = {
                     ["x"] = 0,
                     ["y"] = 0,
                 },
-            },
-        },
-        ["validCategories"] = {
-            [1] = "MELEE_WEAPON",
-            [2] = "MELEE_WEAPON",
-            [3] = "RANGED_WEAPON",
-            [4] = "RANGED_WEAPON",
-            [5] = "AMMO",
-            [6] = "AMMO",
-            [7] = "MAGAZINE",
-            [8] = "MAGAZINE",
-            [9] = "FOOD",
-            [10] = "FOOD",
-            [11] = "DRINK",
-            [12] = "CLOTHING",
-            [13] = "CLOTHING",
-            [14] = "DRINK",
-            [15] = "HEALING",
-            [16] = "HEALING",
-            [17] = "BOOK",
-            [18] = "BOOK",
-            [19] = "ENTERTAINMENT",
-            [20] = "ENTERTAINMENT",
-            [21] = "KEY",
-            [22] = "KEY",
-            [23] = "MISC",
-            [24] = "MISC",
-            [25] = "SEED",
-            [26] = "SEED",
-        },
+            }
+        }
     },
     ["Bag_JanitorToolbox_8"] = {
         ["gridDefinitions"] = {
@@ -2070,35 +2027,7 @@ local containerPack = {
                     ["y"] = 0,
                 },
             },
-        },
-        ["validCategories"] = {
-            [1] = "MELEE_WEAPON",
-            [2] = "MELEE_WEAPON",
-            [3] = "RANGED_WEAPON",
-            [4] = "MAGAZINE",
-            [5] = "AMMO",
-            [6] = "AMMO",
-            [7] = "RANGED_WEAPON",
-            [8] = "MAGAZINE",
-            [9] = "FOOD",
-            [10] = "FOOD",
-            [11] = "DRINK",
-            [12] = "DRINK",
-            [13] = "CLOTHING",
-            [14] = "CLOTHING",
-            [15] = "SEED",
-            [16] = "SEED",
-            [17] = "MISC",
-            [18] = "MISC",
-            [19] = "KEY",
-            [20] = "KEY",
-            [21] = "ENTERTAINMENT",
-            [22] = "ENTERTAINMENT",
-            [23] = "BOOK",
-            [24] = "BOOK",
-            [25] = "HEALING",
-            [26] = "HEALING",
-        },
+        }
     },
     ["Bag_NormalHikingBag_20"] = {
         ["gridDefinitions"] = {
@@ -2725,13 +2654,7 @@ local containerPack = {
                     ["y"] = 0,
                 },
             },
-        },
-        ["invalidCategories"] = {
-            [1] = "RANGED_WEAPON",
-            [2] = "AMMO",
-            [3] = "MAGAZINE",
-            [4] = "CONTAINER",
-        },
+        }
     },
     ["Cooler_8"] = {
         ["gridDefinitions"] = {
@@ -2773,14 +2696,7 @@ local containerPack = {
                     ["y"] = 0,
                 },
             },
-        },
-        ["invalidCategories"] = {
-            [1] = "RANGED_WEAPON",
-            [2] = "CONTAINER",
-            [3] = "MOVEABLE",
-            [4] = "AMMO",
-            [5] = "MAGAZINE",
-        },
+        }
     },
     ["Garbagebag_20"] = {
         ["gridDefinitions"] = {

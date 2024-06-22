@@ -1,6 +1,8 @@
 ---@class TetrisWindowManager
----@field parent table
+---@field inventoryPane ISInventoryPane
 ---@field playerNum number
+---@field childWindows table[]
+---@field openWindows table[]
 TetrisWindowManager = {}
 
 TetrisWindowManager._instances = {}
@@ -13,12 +15,68 @@ function TetrisWindowManager:new(inventoryPane, playerNum)
     setmetatable(o, self)
     self.__index = self
 
-    o.parent = inventoryPane
+    o.inventoryPane = inventoryPane
     o.playerNum = playerNum
     o.childWindows = {}
+    o.openWindows = {}
+    o.controllerWindowIndex = 1
 
     TetrisWindowManager._instances[o] = true
     return o
+end
+
+function TetrisWindowManager:getInventoryPage()
+    local inventoryPage = getPlayerInventory(self.playerNum)
+    if inventoryPage.inventoryPane ~= self.inventoryPane then
+        inventoryPage = getPlayerLoot(self.playerNum)
+    end
+    return inventoryPage
+end
+
+function TetrisWindowManager:hasOpenWindows()
+    return #self.openWindows > 0
+end
+
+function TetrisWindowManager:focusFirstWindow()
+    if #self.openWindows > 0 then
+        self.openWindows[1]:bringToTop()
+        self.controllerWindowIndex = 1
+        setJoypadFocus(self.playerNum, self.openWindows[1])
+    end
+end
+
+-- Selects the inventory page once we hit the edge of the list
+function TetrisWindowManager:nextWindow()
+    self.controllerWindowIndex = self.controllerWindowIndex + 1
+    if self.controllerWindowIndex > #self.openWindows then
+        self.controllerWindowIndex = 1
+        local inventoryPage = self:getInventoryPage()
+        setJoypadFocus(self.playerNum, inventoryPage)
+        inventoryPage:bringToTop()
+    else
+        setJoypadFocus(self.playerNum, self.openWindows[self.controllerWindowIndex])
+        self.openWindows[self.controllerWindowIndex]:bringToTop()
+    end
+end
+
+-- Keeps windows selected even if we hit the edge of the list until empty
+function TetrisWindowManager:previousWindow()
+    local current = self.openWindows[self.controllerWindowIndex]
+
+    self.controllerWindowIndex = self.controllerWindowIndex - 1
+    if self.controllerWindowIndex < 1 then
+        self.controllerWindowIndex = #self.openWindows
+    end
+
+    local newSelection = self.openWindows[self.controllerWindowIndex]
+    if newSelection == current then
+        local inventoryPage = self:getInventoryPage()
+        setJoypadFocus(self.playerNum, inventoryPage)
+        inventoryPage:bringToTop()
+    else
+        setJoypadFocus(self.playerNum, self.openWindows[self.controllerWindowIndex])
+        self.openWindows[self.controllerWindowIndex]:bringToTop()
+    end
 end
 
 function TetrisWindowManager:findWindowByInventory(inventory)
@@ -72,17 +130,27 @@ function TetrisWindowManager:addRemoveOnClose(window)
     end
 end
 
+
+local function removeFromList(list, item)
+    for i, listItem in ipairs(list) do
+        if listItem == item then
+            table.remove(list, i)
+            return
+        end
+    end
+end
+
 function TetrisWindowManager:removeChildWindow(window)
     window:removeFromUIManager()
 
+    if window == self.openWindows[self.controllerWindowIndex] then
+        self:previousWindow()
+    end
+    removeFromList(self.openWindows, window)
+
     local parent = window.parentWindow
     if parent then
-        for i, child in ipairs(parent.childWindows) do
-            if child == window then
-                table.remove(parent.childWindows, i)
-                break
-            end
-        end
+        removeFromList(parent.childWindows, window)
 
         for _, child in ipairs(window.childWindows) do
             child.parentWindow = parent
@@ -94,6 +162,9 @@ function TetrisWindowManager:removeChildWindow(window)
 end
 
 function TetrisWindowManager:keepChildWindowsOnTop()
+    local isController = JoypadState.players[self.playerNum + 1] ~= nil
+    if isController then return end
+    
     for _, child in ipairs(self.childWindows) do
         child:bringToTop()
     end
@@ -111,7 +182,11 @@ function TetrisWindowManager:openContainerPopup(item)
         end
     end
 
-    local itemGridWindow = ItemGridWindow:new(getMouseX(), getMouseY(), item:getInventory(), self.parent, self.playerNum)
+    local isController = JoypadState.players[self.playerNum + 1] ~= nil
+    local x = isController and self.inventoryPane:getAbsoluteX() or getMouseX()
+    local y = isController and self.inventoryPane:getAbsoluteY() or getMouseY()
+
+    local itemGridWindow = ItemGridWindow:new(x, y, item:getInventory(), self.inventoryPane, self.playerNum, self)
     itemGridWindow:initialise()
     itemGridWindow:addToUIManager()
     itemGridWindow:bringToTop()
@@ -124,6 +199,12 @@ function TetrisWindowManager:openContainerPopup(item)
     itemGridWindow.parentWindow = parent
 
     table.insert(parent.childWindows, itemGridWindow)
+    table.insert(self.openWindows, itemGridWindow)
+
+    if isController then
+        setJoypadFocus(self.playerNum, itemGridWindow)
+        self.controllerWindowIndex = #self.openWindows
+    end
 end
 
 function TetrisWindowManager:closeIfInvalid(invPage)
@@ -141,6 +222,12 @@ function TetrisWindowManager:closeIfInvalid(invPage)
         if not inventoryMap[inv] or not inv:contains(child.item) then
             child:removeFromUIManager()
             table.remove(self.childWindows, i)
+
+            if child == self.openWindows[self.controllerWindowIndex] then
+                self:previousWindow()
+            end
+
+            removeFromList(self.openWindows, child)
             self:closeChildWindowsRecursive(child)
         end
     end
@@ -160,6 +247,12 @@ function TetrisWindowManager:closeIfMovedRecursive(window)
         if not inv:contains(child.item) then
             child:removeFromUIManager()
             table.remove(window.childWindows, i)
+
+            if child == self.openWindows[self.controllerWindowIndex] then
+                self:previousWindow()
+            end
+            removeFromList(self.openWindows, child)
+
             self:closeChildWindowsRecursive(child)
         else
             self:closeIfMovedRecursive(child)
@@ -170,6 +263,12 @@ end
 function TetrisWindowManager:closeChildWindowsRecursive(window)
     for _, child in ipairs(window.childWindows) do
         child:removeFromUIManager()
+
+        if child == self.openWindows[self.controllerWindowIndex] then
+            self:previousWindow()
+        end
+        removeFromList(self.openWindows, child)
+
         self:closeChildWindowsRecursive(child)
     end
 end
@@ -180,6 +279,7 @@ function TetrisWindowManager:closeAll()
         child:removeFromUIManager()
     end
     self.childWindows = {}
+    self.openWindows = {}
 end
 
 function TetrisWindowManager:closeTopWindow()
