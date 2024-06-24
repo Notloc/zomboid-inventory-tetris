@@ -39,6 +39,8 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, 
     o.width = o.gridDefinition.size.width + SandboxVars.InventoryTetris.BonusGridSize
     o.height = o.gridDefinition.size.height + SandboxVars.InventoryTetris.BonusGridSize
 
+    o.gridKey = gridIndex .. (secondaryTarget and tostring(secondaryTarget) or "")
+
     o:refresh()
     return o
 end

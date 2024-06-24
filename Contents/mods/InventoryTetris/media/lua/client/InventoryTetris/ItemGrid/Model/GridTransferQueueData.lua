@@ -1,4 +1,3 @@
--- TODO: Maintain this via events instead of polling?
 GridTransferQueueData = {}
 
 function GridTransferQueueData.build(playerNum)
@@ -37,15 +36,15 @@ function GridTransferQueueData:processAction(action)
         self.outgoing[sourceInv][item] = action
 
         local tetrisAware = action.gridIndex
-        local gridIndex = action.gridIndex
+        local gridKey = (action.gridIndex or "") .. (action.tetrisSecondary and tostring(action.tetrisSecondary) or "")
         if tetrisAware then
             if not self.incoming[targetInv] then
                 self.incoming[targetInv] = {}
             end
-            if not self.incoming[targetInv][gridIndex] then
-                self.incoming[targetInv][gridIndex] = {}
+            if not self.incoming[targetInv][gridKey] then
+                self.incoming[targetInv][gridKey] = {}
             end
-            self.incoming[targetInv][gridIndex][item] = action
+            self.incoming[targetInv][gridKey][item] = action
         end
 
         if #action.queueList > 0 then
@@ -53,7 +52,7 @@ function GridTransferQueueData:processAction(action)
                 for _, item in ipairs(queueData.items) do
                     self.outgoing[sourceInv][item] = action
                     if tetrisAware then
-                        self.incoming[targetInv][gridIndex][item] = action
+                        self.incoming[targetInv][gridKey][item] = action
                     end
                 end
             end
@@ -65,6 +64,6 @@ function GridTransferQueueData:getOutgoingActions(container)
     return self.outgoing[container] and self.outgoing[container] or {}
 end
 
-function GridTransferQueueData:getIncomingActions(container, gridIndex)
-    return self.incoming[container] and self.incoming[container][gridIndex] or {}
+function GridTransferQueueData:getIncomingActions(container, gridKey)
+    return self.incoming[container] and self.incoming[container][gridKey] or {}
 end

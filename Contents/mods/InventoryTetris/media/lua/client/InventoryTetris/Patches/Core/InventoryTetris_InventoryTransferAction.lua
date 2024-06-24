@@ -3,6 +3,14 @@
 require "TimedActions/ISInventoryTransferAction"
 require "Notloc/NotUtil"
 
+
+local function getOutermostContainer(container)
+    if not container:getContainingItem() then
+        return container
+    end
+    return container:getContainingItem():getOutermostContainer()
+end
+
 -- We really need to be the last one to load for this one
 Events.OnGameBoot.Add(function()
     ISInventoryTransferAction.globalTetrisRules = false
@@ -11,13 +19,22 @@ Events.OnGameBoot.Add(function()
     function ISInventoryTransferAction:new (character, item, srcContainer, destContainer, time, ...)
         local o = og_new(self, character, item, srcContainer, destContainer, time, ...)
 
-        o.stopOnRun = false
-        o.stopOnWalk = false
-
         if not SandboxVars.InventoryTetris.UseItemTransferTime then
             o.maxTime = 0
+            o.stopOnRun = false
+            o.stopOnWalk = false
         else
             o.maxTime = o.maxTime / SandboxVars.InventoryTetris.ItemTransferSpeedMultiplier
+
+            local inv = character:getInventory()  
+            local srcRoot = getOutermostContainer(srcContainer)
+            local destRoot = getOutermostContainer(destContainer)
+
+            local isInInventory = inv == srcRoot and inv == destRoot
+            local isDroppingToFloor = inv == srcRoot and destContainer:getType() == "floor"
+            o.stopOnWalk = not (isInInventory or isDroppingToFloor)
+
+            o.isDroppingToFloor = isDroppingToFloor
         end
 
         if ISInventoryTransferAction.globalTetrisRules then
@@ -65,6 +82,16 @@ Events.OnGameBoot.Add(function()
         end
 
         return self:validateTetrisRules()
+    end
+
+    local og_doActionAnim = ISInventoryTransferAction.doActionAnim
+    function ISInventoryTransferAction:doActionAnim(...)
+        og_doActionAnim(self, ...)
+
+        -- Player gets stuck crouched when dropping to the floor unless we force them to use the standing version
+        if self.isDroppingToFloor then
+            self:setActionAnim("DropWhileMoving");
+        end
     end
 
     function ISInventoryTransferAction:validateTetrisRules()

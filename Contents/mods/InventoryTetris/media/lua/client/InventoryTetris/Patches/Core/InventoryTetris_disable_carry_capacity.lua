@@ -1,3 +1,4 @@
+---@diagnostic disable: duplicate-set-field
 -- This patch disables the carry weight capacity check for all containers except for the player's main inventory.
 -- This implementation avoids lasting changes to the container's capacity by temporarily setting it to a very high value during the check.
 
@@ -31,7 +32,8 @@ local function disableCarryWeightSafe(container, callback, ...)
     local originalCapacity = container:getCapacity()
 
     container:setCapacity(99995)
-    TetrisContainerData.setContainerDefinition(container, containerDef) -- Because definition is retrieved partially by capacity
+    -- Because definition is retrieved partially by capacity we set it manually here to avoid issues
+    TetrisContainerData.setContainerDefinition(container, containerDef)
 
     local results = {pcall(callback, ...)}
 

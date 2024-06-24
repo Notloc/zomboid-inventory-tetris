@@ -20,6 +20,7 @@
         "DragAndDrop",
         "EquipmentUI",
         "ModOptions",
-        "NotlocControllerNode"
+        "NotlocControllerNode",
+        "ControllerDragAndDrop"
     ]
 }

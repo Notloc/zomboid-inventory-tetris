@@ -239,14 +239,14 @@ function ItemGridUI.getGridBackgroundTexture()
 end
 
 function ItemGridUI:renderIncomingTransfers()
-    local incomingActions = self.itemTransferData:getIncomingActions(self.grid.inventory, self.grid.gridIndex)
+    local incomingActions = self.itemTransferData:getIncomingActions(self.grid.inventory, self.grid.gridKey)
     local playerObj = getSpecificPlayer(self.playerNum)
 
     for item, action in pairs(incomingActions) do
         local stack = ItemStack.createTempStack(action.item)
         local item = action.item
         if action.gridX and action.gridY then
-            ItemGridUI._renderGridItem(self, playerObj, item, stack, action.gridX * OPT.CELL_SIZE - action.gridX, action.gridY * OPT.CELL_SIZE - action.gridY, action.isRotated, 0.5, false, false, true)
+            ItemGridUI._renderGridItem(self, playerObj, item, stack, action.gridX * OPT.CELL_SIZE - action.gridX, action.gridY * OPT.CELL_SIZE - action.gridY, action.isRotated, 0.18, false, false, true)
         end
     end
 end
@@ -322,16 +322,15 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
             if x and y then
                 local isBuried = gravityEnabled and self.grid:isStackBuried(stack)
 
+                local transferAlpha = transferQueueData:getOutgoingActions(inventory)[item] and 0.4 or 1
                 if searchSession then
                     local revealed = searchSession.searchedStackIDs[item:getID()]
                     if revealed then
-                        local transferAlpha = transferQueueData:getOutgoingActions(inventory)[item] and 0.25 or 1
                         self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult * transferAlpha, false, isBuried)
                     else
                         self:_renderHiddenStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false)
                     end
                 else
-                    local transferAlpha = transferQueueData:getOutgoingActions(inventory)[item] and 0.25 or 1
                     if item ~= draggedItem then
                         self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult * transferAlpha, false, isBuried)
                     else
