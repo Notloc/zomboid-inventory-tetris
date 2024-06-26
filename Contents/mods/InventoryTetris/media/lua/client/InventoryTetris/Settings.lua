@@ -1,3 +1,5 @@
+---@diagnostic disable: inject-field
+
 if not INVENTORY_TETRIS_OPTIONS then
     local EasyOptionsBuilder = require("Notloc/EasyOptions/EasyOptionsBuilder")
 

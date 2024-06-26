@@ -2,6 +2,8 @@ require("Notloc/NotUtil")
 
 Events.OnGameBoot.Add(function()
     local og_findInInventoryMultiSprite = ISMoveableSpriteProps.findInInventoryMultiSprite
+
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISMoveableSpriteProps:findInInventoryMultiSprite( _character, _spriteName )
         -- Ask the original before doing our own search
         local item, inv = og_findInInventoryMultiSprite(self, _character, _spriteName)

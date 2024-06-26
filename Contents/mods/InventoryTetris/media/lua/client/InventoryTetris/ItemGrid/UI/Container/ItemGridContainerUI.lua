@@ -183,6 +183,7 @@ function ItemGridContainerUI:createGridRenderer(gridUis, target)
         gridRenderer.previewTex = BASIC_INV_TEXTURE
     end
 
+    ---@diagnostic disable-next-line: duplicate-set-field
     gridRenderer.onRightMouseUp = function(self, x, y)
         self.containerUi:onRightMouseUp(x, y)
     end

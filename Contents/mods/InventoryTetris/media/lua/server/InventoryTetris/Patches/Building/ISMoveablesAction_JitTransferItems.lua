@@ -66,6 +66,8 @@ end
 
 Events.OnGameStart.Add(function ()
     local og_new = ISMoveablesAction.new
+
+    ---@diagnostic disable-next-line: duplicate-set-field
     function ISMoveablesAction:new(character, _sq, _moveProps, _mode, _origSpriteName, _moveCursor)
         jitTransferItems(character, _moveProps, _origSpriteName)
         return og_new(self, character, _sq, _moveProps, _mode, _origSpriteName, _moveCursor)
