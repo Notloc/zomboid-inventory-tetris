@@ -1,4 +1,4 @@
-OPT = require "InventoryTetris/Settings"
+OPT = require("InventoryTetris/Settings")
 
 DevItemRenderer = ISPanel:derive("DevItemRenderer");
 

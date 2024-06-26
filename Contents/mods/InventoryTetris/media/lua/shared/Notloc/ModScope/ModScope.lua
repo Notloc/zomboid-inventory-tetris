@@ -6,9 +6,9 @@ if not __GLOBAL_MOD_SCOPE then
     local ModScope = {};
     __GLOBAL_MOD_SCOPE = ModScope
 
-    local ItemReturnScope = require "Notloc/ModScope/ItemReturnScope"
-    local NoTransferNeededScope = require "Notloc/ModScope/NoTransferNeededScope"
-    local NoTransferNeededOnSelfScope = require "Notloc/ModScope/NoTransferNeededOnSelfScope"
+    local ItemReturnScope = require("Notloc/ModScope/ItemReturnScope")
+    local NoTransferNeededScope = require("Notloc/ModScope/NoTransferNeededScope")
+    local NoTransferNeededOnSelfScope = require("Notloc/ModScope/NoTransferNeededOnSelfScope")
 
     ---Reverse item transfers will be created after the callback for all items in the returnableItems table
     ---@param playerObj IsoPlayer

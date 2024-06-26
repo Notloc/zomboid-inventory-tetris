@@ -1,4 +1,4 @@
-require "InventoryTetris/TetrisItemCategory"
+require("InventoryTetris/TetrisItemCategory")
 
 local SQUISHED_SUFFIX = "__squished"
 local SQUISH_FACTOR = 2.25

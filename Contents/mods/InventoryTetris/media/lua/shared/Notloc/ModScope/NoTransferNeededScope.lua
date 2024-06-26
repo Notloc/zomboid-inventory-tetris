@@ -1,6 +1,6 @@
 if not __GLOBAL_NO_TRANSFER_NEEDED_SCOPE then
 
-    local BaseScope = require "Notloc/ModScope/BaseScope"
+    local BaseScope = require("Notloc/ModScope/BaseScope")
     local NoTransferNeededScope = BaseScope:new()
     __GLOBAL_NO_TRANSFER_NEEDED_SCOPE = NoTransferNeededScope
 

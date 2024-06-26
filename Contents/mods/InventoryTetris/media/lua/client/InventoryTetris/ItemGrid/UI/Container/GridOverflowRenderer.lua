@@ -1,8 +1,8 @@
 
-require "ISUI/ISUIElement"
-require "Notloc/NotUtil"
+require("ISUI/ISUIElement")
+require("Notloc/NotUtil")
 
-local OPT = require "InventoryTetris/Settings"
+local OPT = require("InventoryTetris/Settings")
 local OVERFLOW_MARGIN = 3
 local OVERFLOW_RENDERER_SPACING = 8
 

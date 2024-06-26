@@ -1,5 +1,5 @@
-local Version = require "Notloc/Versioning/Version"
-local Window = require "Notloc/Versioning/Window"
+local Version = require("Notloc/Versioning/Version")
+local Window = require("Notloc/Versioning/Window")
 
 local WARNING_TEX = getTexture("media/textures/Compatibility/warning.png")
 local WARNING_SIZE = 24
@@ -7,13 +7,13 @@ local WARNING_SIZE = 24
 local UNEQUAL_TEX = getTexture("media/textures/Compatibility/unequal.png")
 local UNEQUAL_SIZE = 24
 
-require "ISUI/ISPanel"
-require "ISUI/ISButton"
-require "ISUI/ISInventoryPane"
-require "ISUI/ISResizeWidget"
-require "ISUI/ISMouseDrag"
-require "ISUI/ISLayoutManager"
-require "defines"
+require("ISUI/ISPanel")
+require("ISUI/ISButton")
+require("ISUI/ISInventoryPane")
+require("ISUI/ISResizeWidget")
+require("ISUI/ISMouseDrag")
+require("ISUI/ISLayoutManager")
+require("defines")
 
 ---@class CompatibilityPopupWindow : ISPanel
 local CompatibilityPopupWindow = Window:derive("CompatibilityPopupWindow");

@@ -1,11 +1,11 @@
 ---@diagnostic disable: duplicate-set-field
 
-require "ISUI/ISInventoryPaneContextMenu"
+require("ISUI/ISInventoryPaneContextMenu")
 
 Events.OnGameBoot.Add(function()
     local function quickMoveItems(items, playerNum)
         local invPage = getPlayerInventory(playerNum)
-        local targetContainers = ItemGridUiUtil.getOrderedBackpacks(invPage)
+        local targetContainers = ItemGridUI.getOrderedBackpacks(invPage)
     
         local movedItem = nil
         local playerObj = getSpecificPlayer(playerNum)

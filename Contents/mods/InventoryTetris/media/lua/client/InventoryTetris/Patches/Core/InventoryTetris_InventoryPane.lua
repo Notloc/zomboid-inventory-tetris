@@ -1,14 +1,14 @@
 ---@diagnostic disable: duplicate-set-field
 
-local Version = require "Notloc/Versioning/Version"
+local Version = require("Notloc/Versioning/Version")
 
-require "ISUI/ISPanel"
-require "ISUI/ISButton"
-require "ISUI/ISMouseDrag"
-require "TimedActions/ISTimedActionQueue"
-require "TimedActions/ISEatFoodAction"
-require "ISUI/ISInventoryPane"
-local OPT = require "InventoryTetris/Settings"
+require("ISUI/ISPanel")
+require("ISUI/ISButton")
+require("ISUI/ISMouseDrag")
+require("TimedActions/ISTimedActionQueue")
+require("TimedActions/ISEatFoodAction")
+require("ISUI/ISInventoryPane")
+local OPT = require("InventoryTetris/Settings")
 
 -- I use on game boot because I want to make sure other mods have loaded before I patch them
 Events.OnGameBoot.Add(function()

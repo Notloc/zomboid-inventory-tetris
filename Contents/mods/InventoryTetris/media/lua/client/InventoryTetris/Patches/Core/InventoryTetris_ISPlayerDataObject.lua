@@ -1,4 +1,4 @@
-require "ISUI/PlayerData/ISPlayerDataObject"
+require("ISUI/PlayerData/ISPlayerDataObject")
 
 Events.OnGameBoot.Add(function ()
     local og_createInventoryInterface = ISPlayerDataObject.createInventoryInterface

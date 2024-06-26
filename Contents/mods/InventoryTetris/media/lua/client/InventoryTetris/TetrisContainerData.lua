@@ -1,10 +1,11 @@
-require "InventoryTetris/TetrisItemCategory"
+require("InventoryTetris/TetrisItemCategory")
 
 ---@class ContainerGridDefinition
 ---@field gridDefinitions GridDefinition[]
 ---@field validCategories table<TetrisItemCategory, boolean>
 ---@field invalidCategories TetrisItemCategory[] -- Deprecated
 ---@field isOrganized boolean
+---@field isFragile boolean
 
 ---@class GridDefinition
 ---@field size Size2D
@@ -169,7 +170,15 @@ function TetrisContainerData.recalculateContainerData()
     TetrisContainerData._onInitWorld()
 end
 
-function TetrisContainerData.validateInsert(containerDef, item)
+---@param container ItemContainer
+---@param containerDef any
+---@param item InventoryItem
+---@return boolean
+function TetrisContainerData.validateInsert(container, containerDef, item)
+    if item:IsInventoryContainer() and TetrisContainerData.isTardis(container) then
+        return false
+    end
+
     local itemCategory = TetrisItemCategory.getCategory(item)
     local validCategories = TetrisContainerData._getValidCategories(containerDef)
     return not validCategories or validCategories[itemCategory]
@@ -218,6 +227,22 @@ function TetrisContainerData._getValidCategories(containerDef)
     end
     containerDef.validCategories = validCategories
     return validCategories
+end
+
+---@param container ItemContainer
+function TetrisContainerData.isTardis(container)
+    local type = container:getType()
+    if type == "none" then
+        return false
+    end
+
+    if not container:getContainingItem() then
+        return false
+    end
+
+    local size = TetrisItemData.getItemSizeUnsquished(container:getContainingItem(), false)
+    local capacity = TetrisContainerData.calculateInnerSize(container)
+    return size < capacity
 end
 
 local bodySlotsToPocketDefinitions = {

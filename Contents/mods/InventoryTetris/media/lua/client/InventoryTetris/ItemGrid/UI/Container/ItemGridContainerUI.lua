@@ -1,6 +1,7 @@
-require "ISUI/ISUIElement"
-require "ISUI/ISPanel"
-require "Definitions/ContainerButtonIcons"
+require("ISUI/ISUIElement")
+require("ISUI/ISPanel")
+require("Definitions/ContainerButtonIcons")
+local OPT = require("InventoryTetris/Settings")
 
 ItemGridContainerUI = ISPanel:derive("ItemGridContainerUI")
 
@@ -16,8 +17,6 @@ local SHELF_TEXTURE = getTexture("media/ui/Container_Shelf.png")
 local CONTAINER_BG = getTexture("media/textures/InventoryTetris/ContainerBG.png")
 
 local BLACK = {r=0, g=0, b=0, a=1}
-
-local OPT = require "InventoryTetris/Settings"
 
 ---@class ItemGridContainerUI : ISPanel
 ---@field inventory ItemContainer

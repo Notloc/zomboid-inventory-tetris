@@ -1,7 +1,7 @@
 ---@diagnostic disable: duplicate-set-field
 
-require "ISUI/ISInventoryPaneContextMenu"
-local ModScope = require "Notloc/ModScope/ModScope"
+require("ISUI/ISInventoryPaneContextMenu")
+local ModScope = require("Notloc/ModScope/ModScope")
 
 Events.OnGameBoot.Add(function ()
     local og_onCheckMap = ISInventoryPaneContextMenu.onCheckMap

@@ -1,5 +1,5 @@
-require "ISUI/ISPanel"
-require "InventoryTetris/TetrisItemCategory"
+require("ISUI/ISPanel")
+require("InventoryTetris/TetrisItemCategory")
 
 -- PARTIAL CLASS
 if not ItemGridUI then
@@ -84,7 +84,7 @@ local function unpackColors(cols, brightness)
     return cols[1] * brightness, cols[2] * brightness, cols[3] * brightness
 end
 
-local OPT = require "InventoryTetris/Settings"
+local OPT = require("InventoryTetris/Settings")
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
 local HIDDEN_ITEM = getTexture("media/textures/InventoryTetris/Hidden.png")
 local SQUISHED_TEXTURE = getTexture("media/textures/InventoryTetris/Squished.png")
@@ -246,7 +246,7 @@ function ItemGridUI:renderIncomingTransfers()
         local stack = ItemStack.createTempStack(action.item)
         local item = action.item
         if action.gridX and action.gridY then
-            ItemGridUI._renderGridItem(self, playerObj, item, stack, action.gridX * OPT.CELL_SIZE - action.gridX, action.gridY * OPT.CELL_SIZE - action.gridY, action.isRotated, 0.18, false, false, true)
+            ItemGridUI._renderGridItem(self, playerObj, item, stack, action.gridX * OPT.CELL_SIZE - action.gridX, action.gridY * OPT.CELL_SIZE - action.gridY, action.isRotated, 0.18, false, false)
         end
     end
 end
@@ -367,7 +367,7 @@ function ItemGridUI:renderDragItemPreview()
             local halfCell = OPT.CELL_SIZE / 2
             local xPos = x + halfCell - itemW * halfCell
             local yPos = y + halfCell - itemH * halfCell
-            gridX, gridY = ItemGridUiUtil.mousePositionToGridPosition(xPos, yPos)
+            gridX, gridY = ItemGridUI.mousePositionToGridPosition(xPos, yPos)
         else
             gridX, gridY = self.selectedX, self.selectedY
         end
@@ -551,7 +551,7 @@ function ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, isRota
 end
 
 ---@param drawingContext ISUIElement
-function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, rotate, alphaMult, force1x1, isBuried, noEvents)
+function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, rotate, alphaMult, force1x1, isBuried)
     local w, h = TetrisItemData.getItemSize(item, rotate)
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
@@ -621,9 +621,7 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
         drawingContext:drawRectBorder(x, y, totalWidth, totalHeight, alphaMult, 0.55, 0.55, 0.55)
     end
 
-    if not noEvents then
-        TetrisEvents.OnPostRenderGridItem:trigger(drawingContext, item, stack, x, y, totalWidth, totalHeight, playerObj)
-    end
+    TetrisEvents.OnPostRenderGridItem:trigger(drawingContext, item, stack, x, y, totalWidth, totalHeight, playerObj)
 end
 
 ---@param drawingContext ISUIElement

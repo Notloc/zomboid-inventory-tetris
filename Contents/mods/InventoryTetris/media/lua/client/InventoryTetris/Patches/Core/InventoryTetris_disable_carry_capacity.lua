@@ -48,7 +48,7 @@ local function disableCarryWeightSafe(container, callback, ...)
 end
 
 Events.OnGameStart.Add(function()
-    require "ISUI/ISInventoryPane"
+    require("ISUI/ISInventoryPane")
     local og_canPutIn_pane = ISInventoryPane.canPutIn
     function ISInventoryPane:canPutIn()
         return disableCarryWeightSafe(self.inventory, og_canPutIn_pane, self)
@@ -60,33 +60,33 @@ Events.OnGameStart.Add(function()
         return disableCarryWeightSafe(container, og_update_draggedItems, self)
     end
 
-    require "ISUI/ISInventoryPage"
+    require("ISUI/ISInventoryPage")
     local og_canPutIn_page = ISInventoryPage.canPutIn
     function ISInventoryPage:canPutIn()
         local container = self.mouseOverButton and self.mouseOverButton.inventory or nil
         return disableCarryWeightSafe(container, og_canPutIn_page, self)
     end
 
-    require "TimedActions/ISInventoryTransferAction"
+    require("TimedActions/ISInventoryTransferAction")
     local og_isValid = ISInventoryTransferAction.isValid
     function ISInventoryTransferAction:isValid()
         return disableCarryWeightSafe(self.destContainer, og_isValid, self)
     end
 
-    require "ISUI/ISInventoryPaneContextMenu"
+    require("ISUI/ISInventoryPaneContextMenu")
     local og_hasRoomForAny = ISInventoryPaneContextMenu.hasRoomForAny
     function ISInventoryPaneContextMenu.hasRoomForAny(playerObj, container, items)
         return disableCarryWeightSafe(container, og_hasRoomForAny, playerObj, container, items)
     end
 
-    require "Foraging/ISBaseIcon"
+    require("Foraging/ISBaseIcon")
     local og_doContextMenu = ISBaseIcon.doContextMenu
     function ISBaseIcon:doContextMenu(_context)
         local plInventory = self.character:getInventory();
         return disableCarryWeightSafe(plInventory, og_doContextMenu, self, _context)
     end
 
-    require "ISUI/ISVehicleMenu"
+    require("ISUI/ISVehicleMenu")
     local og_moveItemsOnSeat = ISVehicleMenu.moveItemsOnSeat
     function ISVehicleMenu.moveItemsOnSeat(seat, newSeat, playerObj, moveThem, itemListIndex)
         local container = newSeat:getItemContainer()

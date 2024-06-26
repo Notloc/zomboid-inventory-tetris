@@ -1,5 +1,5 @@
-local CompatibilityPopupWindow = require "Notloc/Versioning/CompatibilityPopupWindow"
-local Version = require "Notloc/Versioning/Version"
+local CompatibilityPopupWindow = require("Notloc/Versioning/CompatibilityPopupWindow")
+local Version = require("Notloc/Versioning/Version")
 
 local TETRIS_IMG = getTexture("media/textures/Compatibility/tetris.png")
 local EQUIPMENT_IMG = getTexture("media/textures/Compatibility/equipment_ui.png")

@@ -1,4 +1,5 @@
-require "ISUI/ISUIElement"
+require("ISUI/ISUIElement")
+local OPT = require("InventoryTetris/Settings")
 
 local ICON_PADDING_X = 12
 local ICON_PADDING_Y = 8
@@ -11,8 +12,6 @@ local SELECTED_TEXTURE = getTexture("media/ui/FavoriteStar.png")
 
 local ORGANIZED_TEXT = getText("UI_trait_Packmule")
 local DISORGANIZED_TEXT = getText("UI_trait_Disorganized")
-
-local OPT = require "InventoryTetris/Settings"
 
 GridContainerInfo = ISUIElement:derive("GridContainerInfo")
 

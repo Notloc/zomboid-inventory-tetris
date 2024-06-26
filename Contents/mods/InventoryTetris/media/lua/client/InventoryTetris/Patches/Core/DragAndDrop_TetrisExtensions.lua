@@ -1,4 +1,4 @@
-require "EquipmentUI/DragAndDrop"
+require("EquipmentUI/DragAndDrop")
 
 function DragAndDrop.isDraggedItemRotated()
     return ISMouseDrag.rotateDrag

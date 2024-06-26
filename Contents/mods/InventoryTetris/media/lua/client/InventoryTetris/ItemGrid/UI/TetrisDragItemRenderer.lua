@@ -1,7 +1,7 @@
-require "ISUI/ISUIElement"
+require("ISUI/ISUIElement")
 
+local OPT = require("InventoryTetris/Settings")
 local BG_TEXTURE = getTexture("media/textures/InventoryTetris/ItemSlot.png")
-local OPT = require "InventoryTetris/Settings"
 
 DragItemRenderer = ISUIElement:derive("DragItemRenderer")
 

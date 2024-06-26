@@ -1,7 +1,7 @@
 ---@diagnostic disable: duplicate-set-field
 
-require "TimedActions/ISInventoryTransferAction"
-require "Notloc/NotUtil"
+require("TimedActions/ISInventoryTransferAction")
+require("Notloc/NotUtil")
 
 
 local function getOutermostContainer(container)

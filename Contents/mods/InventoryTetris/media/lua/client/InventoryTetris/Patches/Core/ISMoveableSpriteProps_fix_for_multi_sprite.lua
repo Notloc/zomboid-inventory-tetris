@@ -1,4 +1,4 @@
-require "Notloc/NotUtil"
+require("Notloc/NotUtil")
 
 Events.OnGameBoot.Add(function()
     local og_findInInventoryMultiSprite = ISMoveableSpriteProps.findInInventoryMultiSprite

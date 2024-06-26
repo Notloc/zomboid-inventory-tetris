@@ -1,5 +1,5 @@
-require "InventoryTetris/TetrisItemData"
-require "InventoryTetris/TetrisContainerData"
+require("InventoryTetris/TetrisItemData")
+require("InventoryTetris/TetrisContainerData")
 
 -- All packs except this default should be registered in the OnGameBoot event.
 -- I go first so that you can overwrite my defaults with your own.
@@ -3492,3 +3492,527 @@ TetrisItemData.registerItemDefinitions(itemPack)
 TetrisItemData.registerAlwaysStackOnSpawnItems(alwaysStackOnSpawnItems)
 TetrisContainerData.registerContainerDefinitions(containerPack)
 TetrisContainerData.registerLargeVehicleStorageContainers(vehicleStoragePack)
+
+
+
+
+
+-- A second data pack for testing purposes
+-- Need to redo everything at some point
+
+local itemPack = {
+    ["Base.Nails"] = {
+        ["width"] = 1,
+        ["height"] = 1,
+        ["maxStackSize"] = 25,
+    },
+    ["Base.Garbagebag__squished"] = {
+        ["width"] = 1,
+        ["height"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.SheetMetal"] = {
+        ["height"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 2,
+    },
+    ["Base.Bag_ALICEpack_Army"] = {
+        ["maxStackSize"] = 1,
+        ["height"] = 10,
+        ["width"] = 8,
+    },
+    ["Base.Bag_ALICEpack_Army__squished"] = {
+        ["width"] = 4,
+        ["height"] = 5,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.Toolbox"] = {
+        ["maxStackSize"] = 1,
+        ["height"] = 3,
+        ["width"] = 5,
+    },
+}
+
+local containerPack = {
+    ["Garbagebag_20"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 6,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isSquishable"] = true,
+        ["isFragile"] = true,
+    },
+    ["Bag_BigHikingBag_22"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 8,
+                    ["height"] = 8,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["validCategories"] = {
+            ["MELEE_WEAPON"] = true,
+            ["RANGED_WEAPON"] = true,
+            ["AMMO"] = true,
+            ["MAGAZINE"] = true,
+            ["FOOD"] = true,
+            ["DRINK"] = true,
+            ["CLOTHING"] = true,
+            ["CONTAINER"] = true,
+            ["HEALING"] = true,
+            ["BOOK"] = true,
+            ["ENTERTAINMENT"] = true,
+            ["KEY"] = true,
+            ["MISC"] = true,
+            ["SEED"] = true,
+            ["MOVEABLE"] = true,
+        },
+        ["isSquishable"] = true,
+    },
+    ["FirstAidKit_4"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 2,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [4] = {
+                ["size"] = {
+                    ["width"] = 2,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 2,
+                    ["y"] = 0,
+                },
+            },
+            [5] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 3,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isOrganized"] = true,
+        ["validCategories"] = {
+            ["HEALING"] = true,
+        },
+    },
+    ["Bag_ALICEpack_Army_28"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 1,
+                },
+            },
+            [4] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 2,
+                    ["y"] = 1,
+                },
+            },
+            [5] = {
+                ["size"] = {
+                    ["width"] = 7,
+                    ["height"] = 6,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+            [6] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 2,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isSquishable"] = true,
+    },
+    ["shelves_10"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["shelves_15"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+        },
+        ["isOrganized"] = true,
+        ["isFragile"] = true,
+    },
+    ["fridge_40"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 7,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 7,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 7,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 2,
+                },
+            },
+            [4] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 3,
+                },
+            },
+            [5] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 3,
+                },
+            },
+        },
+    },
+    ["stove_15"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+        },
+    },
+    ["counter_50"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 10,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+        },
+        ["isFragile"] = false,
+    },
+    ["metal_shelves_50"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 10,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 10,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 10,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 2,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["fridge_20"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 1,
+                },
+            },
+        },
+        ["centerMode"] = "horizontal",
+    },
+    ["sidetable_10"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+    },
+    ["shelves_20"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 2,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["Toolbox_8"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+        },
+    },
+}
+
+TetrisItemData.registerItemDefinitions(itemPack)
+TetrisContainerData.registerContainerDefinitions(containerPack)

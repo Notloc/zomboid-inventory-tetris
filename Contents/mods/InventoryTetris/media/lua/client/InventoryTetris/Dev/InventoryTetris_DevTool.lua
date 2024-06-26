@@ -1,5 +1,5 @@
-local OPT = require "InventoryTetris/Settings"
-local JSON = require "InventoryTetris/Dev/JSON.lua"
+local OPT = require("InventoryTetris/Settings")
+local JSON = require("InventoryTetris/Dev/JSON.lua")
 
 local function readJsonFile(fileName)
     local reader = getFileReader(fileName, false);
@@ -1180,8 +1180,8 @@ function TetrisDevTool._exportDataPack()
     local items = FormattedLuaWriter.formatLocalVariable("itemPack", TetrisDevTool.itemEdits, 1);
     local containers = FormattedLuaWriter.formatLocalVariable("containerPack", TetrisDevTool.containerEdits, 1);
 
-    local text =   'require "InventoryTetris/TetrisItemData";\r\n'
-    text = text .. 'require "InventoryTetris/TetrisContainerData";\r\n'
+    local text =   'require("InventoryTetris/TetrisItemData");\r\n'
+    text = text .. 'require("InventoryTetris/TetrisContainerData");\r\n'
     text = text .. '\r\n'
     text = text .. 'Events.OnGameBoot.Add(function() \r\n'
     text = text .. items

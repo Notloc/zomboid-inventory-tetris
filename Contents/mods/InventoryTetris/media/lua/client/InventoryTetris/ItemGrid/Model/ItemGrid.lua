@@ -93,7 +93,7 @@ function ItemGrid:insertItem(item, xPos, yPos, isRotated)
     if item:getContainer() ~= self.inventory then
         return false
     end
-    if not TetrisContainerData.validateInsert(self.containerDefinition, item) then
+    if not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
         return false
     end
 
@@ -335,7 +335,8 @@ function ItemGrid:_attemptToStackItem(item)
 end
 
 function ItemGrid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisorganized)
-    if not TetrisContainerData.validateInsert(self.containerDefinition, item) then
+    if not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
+        
         return false
     end
 

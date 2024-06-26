@@ -183,6 +183,10 @@ end
 function ItemContainerGrid:createSecondaryGrids(target)
     local containerDef = TetrisContainerData.getPocketDefinition(target)
     local grids = {}
+    if not containerDef then
+        return grids
+    end
+
     for index, gridDef in ipairs(containerDef.gridDefinitions) do
         local grid = ItemGrid:new(self, index, self.inventory, containerDef, gridDef, true, target)
         grids[index] = grid
@@ -330,7 +334,7 @@ function ItemContainerGrid:_validateOnlyAcceptCategory(item)
         end
     end
 
-    return TetrisContainerData.validateInsert(self.containerDefinition, item)
+    return TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item)
 end
 
 function ItemContainerGrid:refresh()

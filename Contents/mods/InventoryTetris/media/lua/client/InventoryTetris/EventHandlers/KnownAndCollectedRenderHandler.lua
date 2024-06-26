@@ -1,5 +1,5 @@
-require "InventoryTetris/Events"
-require "RecordedMedia/recorded_media"
+require("InventoryTetris/Events")
+require("RecordedMedia/recorded_media")
 
 if not getActivatedMods():contains("KnownAndCollected") then
     return

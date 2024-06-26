@@ -4,9 +4,9 @@
 ---@field inventoryPane ISInventoryPane
 ---@field playerNum number
 
-require "ISUI/ISPanel"
-local OPT = require "InventoryTetris/Settings"
-local ItemUtil = require "Notloc/ItemUtil"
+require("ISUI/ISPanel")
+local OPT = require("InventoryTetris/Settings")
+local ItemUtil = require("Notloc/ItemUtil")
 
 local CONTROLLER_DOUBLE_PRESS_TIME = 200
 
@@ -159,8 +159,17 @@ function ItemGridUI.covertItemAndLocalMouseToGridPosition(x, y, item, isRotated)
         y = y - OPT.CELL_SIZE * h / 2 + OPT.CELL_SIZE / 2
     end
 
-    return ItemGridUiUtil.mousePositionToGridPosition(x, y)
+    return ItemGridUI.mousePositionToGridPosition(x, y)
 end
+
+-- Rounds a mouse position to the nearest grid position, for the top left corner of the item
+function ItemGridUI.mousePositionToGridPosition(x, y)
+    local effectiveCellSize = OPT.CELL_SIZE - 1
+    local gridX = math.floor(x / effectiveCellSize)
+    local gridY = math.floor(y / effectiveCellSize)
+    return gridX, gridY
+end
+
 
 function ItemGridUI:handleDragAndDrop(mouseX, mouseY)
     local vanillaStack = DragAndDrop.getDraggedStack()
@@ -258,7 +267,7 @@ function ItemGridUI:handleDropOnContainer(vanillaStack, container)
 
     local frontItem = vanillaStack.items[1]
     local containerDef = TetrisContainerData.getContainerDefinition(container)
-    if not TetrisContainerData.validateInsert(containerDef, frontItem) then
+    if not TetrisContainerData.validateInsert(container, containerDef, frontItem) then
         return
     end
 
@@ -284,7 +293,7 @@ function ItemGridUI:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
         return
     end
 
-    if not TetrisContainerData.validateInsert(self.grid.containerDefinition, frontItem) then
+    if not TetrisContainerData.validateInsert(self.grid.inventory, self.grid.containerDefinition, frontItem) then
         return
     end
 
@@ -419,7 +428,7 @@ function ItemGridUI:quickMoveItems(gridStack)
     local invPage = nil;
     if not self.grid.inventory:isInCharacterInventory(getSpecificPlayer(self.playerNum)) then
         invPage = getPlayerInventory(self.playerNum)
-        local targetContainers = ItemGridUiUtil.getOrderedBackpacks(invPage)
+        local targetContainers = ItemGridUI.getOrderedBackpacks(invPage)
         self:quickMoveItemToContainer(gridStack, targetContainers)
     else
         invPage = getPlayerLoot(self.playerNum)
@@ -758,4 +767,27 @@ function ItemGridUI:controllerNodeOnJoypadDown(button)
     end
 
     return false
+end
+
+function ItemGridUI.getOrderedBackpacks(inventoryPage)
+    local orderedBackpacks = {}
+
+    local selectedBackpack = inventoryPage.inventory
+    if selectedBackpack then
+        table.insert(orderedBackpacks, selectedBackpack)
+    end
+
+    local sortedButtons = {}
+    for _, button in ipairs(inventoryPage.backpacks) do
+        table.insert(sortedButtons, button)
+    end
+    table.sort(sortedButtons, function(a, b) return a:getY() < b:getY() end)
+
+    for _, button in ipairs(sortedButtons) do
+        if button.inventory ~= selectedBackpack then
+            table.insert(orderedBackpacks, button.inventory)
+        end
+    end
+
+    return orderedBackpacks
 end

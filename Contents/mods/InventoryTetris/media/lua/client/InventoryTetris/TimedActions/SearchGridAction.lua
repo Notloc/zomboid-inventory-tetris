@@ -1,4 +1,4 @@
-require "TimedActions/ISBaseTimedAction"
+require("TimedActions/ISBaseTimedAction")
 
 SearchGridAction = ISBaseTimedAction:derive("SearchGridAction");
 

@@ -1,6 +1,6 @@
 if not __GLOBAL_ITEM_RETURN_SCOPE then
 
-    local BaseScope = require "Notloc/ModScope/BaseScope"
+    local BaseScope = require("Notloc/ModScope/BaseScope")
     local ItemReturnScope = BaseScope:new()
     __GLOBAL_ITEM_RETURN_SCOPE = ItemReturnScope
 

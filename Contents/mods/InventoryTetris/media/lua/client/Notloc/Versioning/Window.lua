@@ -1,10 +1,10 @@
-require "ISUI/ISPanel"
-require "ISUI/ISButton"
-require "ISUI/ISInventoryPane"
-require "ISUI/ISResizeWidget"
-require "ISUI/ISMouseDrag"
-require "ISUI/ISLayoutManager"
-require "defines"
+require("ISUI/ISPanel")
+require("ISUI/ISButton")
+require("ISUI/ISInventoryPane")
+require("ISUI/ISResizeWidget")
+require("ISUI/ISMouseDrag")
+require("ISUI/ISLayoutManager")
+require("defines")
 
 local Window =  ISPanel:derive("Window");
 
