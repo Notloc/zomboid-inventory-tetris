@@ -23,7 +23,7 @@ Events.OnGameStart.Add(function()
         end
 
         local spriteBuffer = {};
-        
+
         local processItem = function(item)
             if instanceof(item, "Moveable") then
                 local moveProps = ISMoveableSpriteProps.new( item:getWorldSprite() );

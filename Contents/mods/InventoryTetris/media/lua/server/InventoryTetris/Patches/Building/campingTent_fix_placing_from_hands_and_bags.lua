@@ -1,5 +1,7 @@
 Events.OnGameStart.Add(function ()
-	local og_create = campingTent.create
+	local og_create = campingTent.create -- TODO: Dirty override, original function is not called
+
+	---@diagnostic disable-next-line: duplicate-set-field
 	function campingTent:create(x, y, z, north, sprite)
 		local tent = self.character:getInventory():getFirstTypeRecurse("CampingTentKit")
 		if not tent then return end
@@ -13,7 +15,14 @@ Events.OnGameStart.Add(function ()
 		ISTimedActionQueue.add(ISAddTentAction:new(self.character, sq, tent, sprite, 0));
 	end
 
+	local og_isValid = campingTent.isValid
+
+	---@diagnostic disable-next-line: duplicate-set-field
 	function campingTent:isValid(square)
+		if og_isValid(self, square) then
+			return true
+		end
+
 		local valid = self:isSquareFree(square)
 		if valid and not self.character:getInventory():getFirstTypeRecurse("CampingTentKit") then
 			valid = false
