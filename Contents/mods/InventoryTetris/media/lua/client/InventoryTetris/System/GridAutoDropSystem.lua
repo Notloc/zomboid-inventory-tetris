@@ -1,10 +1,13 @@
+local ItemUtil = require("Notloc/ItemUtil")
+
 -- Responsible for forcing items out of the player's inventory when it slips into an invalid state
 GridAutoDropSystem = {}
 GridAutoDropSystem._dropQueues = {}
 GridAutoDropSystem._dropProcessing = {}
 
 function GridAutoDropSystem.queueItemForDrop(item, playerObj)
-    local queueIsEmpty = #ISTimedActionQueue.getTimedActionQueue(playerObj).queue == 0
+    local queueObj = ISTimedActionQueue.getTimedActionQueue(playerObj)
+    local queueIsEmpty = #queueObj.queue == 0
     if queueIsEmpty then
         local playerNum = playerObj:getPlayerNum()
         if GridAutoDropSystem._dropProcessing[playerNum] then return end
@@ -21,7 +24,7 @@ function GridAutoDropSystem._processItems(playerNum, items)
     local playerObj = getSpecificPlayer(playerNum)
     local isOrganized = playerObj:HasTrait("Organized")
     local isDisorganized = playerObj:HasTrait("Disorganized")
-    local containers = NotUtil.getAllEquippedContainers(playerObj)
+    local containers = ItemUtil.getAllEquippedContainers(playerObj)
 
     for _, item in ipairs(items) do
         local addedToContainer = false
@@ -35,7 +38,9 @@ function GridAutoDropSystem._processItems(playerNum, items)
                 for _, container in ipairs(containers) do
                     local containerGrid = ItemContainerGrid.Create(container, playerNum)
                     if currentContainer ~= container and containerGrid:canAddItem(item) then
-                        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, currentContainer, container, 1))
+                        local transfer = ISInventoryTransferAction:new(playerObj, item, currentContainer, container, 1)
+                        transfer.enforceTetrisRules = true
+                        ISTimedActionQueue.add(transfer)
                         addedToContainer = true
                         break
                     end
@@ -58,7 +63,9 @@ function GridAutoDropSystem._handleDropItem(item, playerNum)
         GridAutoDropSystem._forceItemIntoInventoryOrHands(item, playerNum)
     else
         item:setFavorite(false) -- We don't play favorites here
-        ISInventoryPaneContextMenu.onDropItems({item, item}, playerNum)
+        local playerObj = getSpecificPlayer(playerNum)
+        local transfer = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), ISInventoryPage.GetFloorContainer(playerNum), 1)
+        ISTimedActionQueue.add(transfer)
     end
 
     GridAutoDropSystem._dropProcessing[playerNum] = false
@@ -129,37 +136,3 @@ function GridAutoDropSystem._processQueues()
 end
 
 Events.OnTick.Add(GridAutoDropSystem._processQueues)
-
-
-
-
-
-
-
--- There is a sizable amount of vanilla actions that do not properly unequip items from the player's hands before destroying them.
--- Lets just do this and forget about it.
-
-TetrisHandMonitor = {}
-TetrisHandMonitor.ticksByPlayer = {}
-
-function TetrisHandMonitor.validateEquippedItems(playerObj)
-    local playerNum = playerObj:getPlayerNum()
-    if not playerNum or playerNum >= 4 then return end -- Some NPC mod or something
-
-    local tick = TetrisHandMonitor.ticksByPlayer[playerNum] or 0
-    if tick < 30 then
-        TetrisHandMonitor.ticksByPlayer[playerObj:getPlayerNum()] = tick + 1
-        return
-    end
-
-    local primHand = playerObj:getPrimaryHandItem()
-    if primHand and not primHand:getContainer() then
-        playerObj:setPrimaryHandItem(nil)
-    end
-
-    local secHand = playerObj:getSecondaryHandItem()
-    if secHand and not secHand:getContainer() then
-        playerObj:setSecondaryHandItem(nil)
-    end
-end
-Events.OnPlayerUpdate.Add(TetrisHandMonitor.validateEquippedItems)

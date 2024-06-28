@@ -1,4 +1,4 @@
-require("Notloc/NotUtil")
+local ItemUtil = require("Notloc/ItemUtil")
 
 Events.OnGameBoot.Add(function()
     local og_findInInventoryMultiSprite = ISMoveableSpriteProps.findInInventoryMultiSprite
@@ -13,7 +13,7 @@ Events.OnGameBoot.Add(function()
             local retItem = nil;
             local retInv = nil;
             local isDone = false;
-            NotUtil.forEachItemOnPlayer(_character, function(item, inventory)
+            ItemUtil.forEachItemOnPlayer(_character, function(item, inventory)
                 if isDone then return end
                 if instanceof(item, "Moveable") and self.customItem and (item:getFullType() == self.customItem) and (item:getName() == self.name) then
                     retItem = item;

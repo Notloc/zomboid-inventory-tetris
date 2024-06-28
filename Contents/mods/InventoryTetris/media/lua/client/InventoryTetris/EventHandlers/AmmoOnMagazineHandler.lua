@@ -1,6 +1,7 @@
 require("InventoryTetris/Events")
 require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
 require("Notloc/NotUtil")
+local ItemUtil = require("Notloc/ItemUtil")
 
 ItemGridUI.registerItemHoverColor(TetrisItemCategory.AMMO, TetrisItemCategory.MAGAZINE, ItemGridUI.GENERIC_ACTION_COLOR)
 
@@ -55,7 +56,7 @@ function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, target
         local magStack, grid = containerGrid:findStackByItem(magazine)
 
         local transferMag = nil
-        transferMag, returnMag = NotUtil.createTransferActionWithReturn(magazine, targetInventory, playerInv, playerObj)
+        transferMag, returnMag = ItemUtil.createTransferActionWithReturn(magazine, targetInventory, playerInv, playerObj)
         if magStack and grid then
             returnMag:setTetrisTarget(magStack.x, magStack.y, grid.gridIndex, magStack.isRotated, grid.secondaryTarget)
         end

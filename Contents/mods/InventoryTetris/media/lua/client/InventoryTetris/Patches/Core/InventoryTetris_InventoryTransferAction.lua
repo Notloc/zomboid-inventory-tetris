@@ -1,7 +1,7 @@
 ---@diagnostic disable: duplicate-set-field
 
 require("TimedActions/ISInventoryTransferAction")
-require("Notloc/NotUtil")
+local ItemUtil = require("Notloc/ItemUtil")
 
 
 local function getOutermostContainer(container)
@@ -26,7 +26,7 @@ Events.OnGameBoot.Add(function()
         else
             o.maxTime = o.maxTime / SandboxVars.InventoryTetris.ItemTransferSpeedMultiplier
 
-            local inv = character:getInventory()  
+            local inv = character:getInventory()
             local srcRoot = getOutermostContainer(srcContainer)
             local destRoot = getOutermostContainer(destContainer)
 
@@ -64,8 +64,15 @@ Events.OnGameBoot.Add(function()
 
     local og_canMergeAction = ISInventoryTransferAction.canMergeAction
     function ISInventoryTransferAction:canMergeAction(action)
+        if self.preventMerge or action.preventMerge then return false end
+
         local canMerge = og_canMergeAction(self, action)
         if not canMerge then return false end
+
+        -- Cannot merge tetris actions without explicit grid targets
+        if self.enforceTetrisRules and self.gridX == nil then
+            return false
+        end
 
         local tetrisCanMerge = self.gridX == action.gridX
         tetrisCanMerge = tetrisCanMerge and self.gridY == action.gridY
@@ -138,7 +145,7 @@ Events.OnGameBoot.Add(function()
                     return true
                 end
 
-                local equippedContainers = NotUtil.getAllEquippedContainers(self.character)
+                local equippedContainers = ItemUtil.getAllEquippedContainers(self.character)
                 for _, container in ipairs(equippedContainers) do
                     if container == destContainer then
                         --return true -- The container will self correct

@@ -1,5 +1,6 @@
 require("InventoryTetris/Events")
 require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
+local ItemUtil = require("Notloc/ItemUtil")
 
 ItemGridUI.registerItemHoverColor(TetrisItemCategory.ATTACHMENT, TetrisItemCategory.RANGED, ItemGridUI.GENERIC_ACTION_COLOR)
 
@@ -30,7 +31,7 @@ local function createTransfersIfNeeded(playerObj, item, itemInventory, desiredIn
     local prevGrid = ItemContainerGrid.Create(itemInventory, playerObj:getPlayerNum())
     local stack, grid = prevGrid:findStackByItem(item)
 
-    local transferAction, returnAction = NotUtil.createTransferActionWithReturn(item, itemInventory, desiredInventory, playerObj)
+    local transferAction, returnAction = ItemUtil.createTransferActionWithReturn(item, itemInventory, desiredInventory, playerObj)
     if stack and grid then
         returnAction:setTetrisTarget(stack.x, stack.y, grid.gridIndex, stack.isRotated, grid.secondaryTarget)
     end

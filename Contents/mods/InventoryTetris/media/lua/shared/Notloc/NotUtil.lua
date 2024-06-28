@@ -1,49 +1,6 @@
-if not NotUtil then
-    NotUtil = {}
-end
-
-function NotUtil.forEachItemOnPlayer(playerObj, callbackFunc)
-    local containers = NotUtil.getAllEquippedContainers(playerObj)
-    for _, container in ipairs(containers) do
-        local _items = container:getItems()
-        local _itemCount = container:getItems():size() - 1
-        for i = 0, _itemCount do
-            callbackFunc(_items:get(i), container)
-        end
-    end
-end
-
-function NotUtil.getAllEquippedContainers(playerObj)
-    local playerInv = getPlayerInventory(playerObj:getPlayerNum())
-    local selectedContainer = playerInv.inventory
-    local containers = {selectedContainer}
-    
-    for _, button in ipairs(playerInv.backpacks) do
-        if button.inventory ~= selectedContainer then
-            table.insert(containers, button.inventory)
-        end
-    end
-    return containers
-end
-
-function NotUtil.createTransferActionWithReturn(item, sourceContainer, destinationContainer, playerObj)
-    local transferActions, returnActions = NotUtil.createTransferActionsWithReturns({item}, sourceContainer, destinationContainer, playerObj)
-    return transferActions[1], returnActions[1]
-end
-
-function NotUtil.createTransferActionsWithReturns(items, sourceContainer, destinationContainer, playerObj)
-    local transferActions = {}
-    local returnActions = {}
-    for _, item in ipairs(items) do
-        local action = ISInventoryTransferAction:new(playerObj, item, sourceContainer, destinationContainer)
-        table.insert(transferActions, action)
-        
-        local returnAction = ISInventoryTransferAction:new(playerObj, item, destinationContainer, sourceContainer)
-        table.insert(returnActions, returnAction)
-    end
-    return transferActions, returnActions
-end
-
+-- A collection of utility functions
+-- TODO: Merge a lot of these into ItemUtil
+NotUtil = NotUtil or {}
 
 function NotUtil.slice(tbl, start, stop)
     local sliced = {}
@@ -61,6 +18,8 @@ function NotUtil.toTruthMap(tbl)
     return truthMap
 end
 
+
+
 ---@class SimpleEvent
 ---@field add fun(self:SimpleEvent, listener: function)
 ---@field remove fun(self:SimpleEvent, listener: function)
@@ -71,11 +30,11 @@ end
 function NotUtil.createSimpleEvent()
     local event = {}
     event._listeners = {}
-    
+
     function event:add(func)
         table.insert(self._listeners, func)
     end
-    
+
     function event:remove(func)
         table.remove(self._listeners, func)
     end
@@ -88,6 +47,8 @@ function NotUtil.createSimpleEvent()
 
     return event
 end
+
+
 
 NotUtil.Ui = {}
 

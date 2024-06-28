@@ -1,5 +1,5 @@
 require("BuildingObjects/ISMoveableCursor")
-require("Notloc/NotUtil")
+local ItemUtil = require("Notloc/ItemUtil")
 
 -- Make all moveable items visible in the moveable cursor
 -- Even if they are not in the player's main inventory
@@ -50,7 +50,7 @@ Events.OnGameStart.Add(function()
             end
         end
 
-        NotUtil.forEachItemOnPlayer(self.character, processItem)
+        ItemUtil.forEachItemOnPlayer(self.character, processItem)
 
         if self.tryInitialInvItem then
             if instanceof(self.tryInitialInvItem, "Moveable") then

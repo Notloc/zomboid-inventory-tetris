@@ -1,6 +1,6 @@
 require("BuildingObjects/ISMoveableCursor")
 require("Moveables/ISMoveablesAction")
-require("Notloc/NotUtil")
+local ItemUtil = require("Notloc/ItemUtil")
 
 -- Transfer items to the player's main inventory just in time for MoveablesAction to use them
 
@@ -25,7 +25,7 @@ local function jitTransferItems(playerObj, moveProps, _origSpriteName)
 
     local foundItem = false
     if not moveProps.isMultiSprite then
-        NotUtil.forEachItemOnPlayer(playerObj, function(item, container)
+        ItemUtil.forEachItemOnPlayer(playerObj, function(item, container)
             if not foundItem and instanceof(item, "Moveable") then
                 if item:getWorldSprite() == _origSpriteName then
                     if container ~= playerInv then
@@ -54,7 +54,7 @@ local function jitTransferItems(playerObj, moveProps, _origSpriteName)
         targetNames[moveProps.name .. " (1/1)"] = true
     end
 
-    NotUtil.forEachItemOnPlayer(playerObj, function(item)
+    ItemUtil.forEachItemOnPlayer(playerObj, function(item)
         if instanceof(item, "Moveable") then
             if doesItemMatch(moveProps, item, targetNames) then
                 ISInventoryPaneContextMenu.transferIfNeeded(playerObj, item)
