@@ -1,0 +1,83 @@
+Inventory Tetris - The Plan
+Score: 1
+
+
+[GENERAL BUG FIXES] - 10p
+	Trunks in MP moddata not working - 5p
+		Data is getting sent, but the clients are all autopositioning items and sending that data with a newer timestamp
+			Might need to go per item and have autopositioned items write 0 for their time
+	
+	Math is sketchy when autoscrolling, review and fix - 3p
+
+	Force point filtering for mod item textures via SpriteRenderer - 2p 
+		(Remember to check performance implications of this, might need caching/sanity checks)
+	
+	Hide weight until container is searched when using search mode - 2p
+
+[GRAVITY MODE] - 5p
+	Extra sandbox options (speed, self only, world only) - 1p
+	Delay buried items instead of preventing - 2p
+	Settle items before first render - 1p
+
+[REASON YOU CANT SYSTEM] - 4p
+	When an action gets rejected, write the reason into a buffer - 2p
+	The code that handled the player input can read this post action and display it if new data was written - 2p
+		Prevent confusion about why a bag can't accept an item or an item transfer is failing.
+		Make it look like RCT2's red text popup
+		
+[CONTROLLER SUPPORT] - 9p
+	Keep selected grid spot in scrollview - 2p
+	Way to split stacks for controller - 2p
+	Improved movement between grids - 4p
+	Need a way to start searching and block controller selection until grid is revealed - 1p
+
+[QoL]
+	Allow load gun by dropping mag on equipment ui - 3p
+		Really we should just process stack drops onto equipment ui slots the exact same as dropping on the itemgrid, allow all drop combos to just work
+	
+	Gun upgrades without main inventory requirement (Half complete) - 1p
+		Should probably mess around with crafting and building and mechanics to sanity check some of these main inventory transfer requirements
+
+	A way to quickly move all of the same item type to target container - 1p
+
+	Auto sort - 4p
+
+	Item swapping! - 3p
+		(Although, once swapped, the held item becomes overflow.)
+
+
+
+
+[DEV TOOLS]
+	Formalize datapack creation - 5p
+		Must create and select a pack before able to make edits
+		Dev packs are not inherently active
+		Export tool uses name in generated lua
+		Ability to delete development data per pack
+
+[CLOTHING POCKETS UPDATE]
+	Review clothing pocket balance
+		Just using the mod support right now, but the uniformity of it is appealing
+
+[FRAGILE]
+	Go through everything!
+	That includes world containers
+
+[REBALANCE]
+	Goal:
+		Remove container hyper stacking and make containers more interesting
+		Manually set size of every vanilla item
+
+	Implementation Plan:
+		Force all non-TARDIS containers to be the same size inside/outside (when not empty)
+		Prevent TARDIS containers from containing another container
+		Buff TARDIS container sizes but be more strict on allowed items.
+
+====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ======  
+
+
+[ADDITIONAL CONTROL OPTIONS]
+	Goal:
+		Allow players to further customize their controls.
+		If a player wants the UI to act like Minecraft, why not?
+		Provide control scheme presets.
