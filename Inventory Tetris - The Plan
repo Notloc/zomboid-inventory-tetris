@@ -1,5 +1,5 @@
 Inventory Tetris - The Plan
-Score: 1
+Score: 3
 
 
 [GENERAL BUG FIXES] - 10p
@@ -12,8 +12,6 @@ Score: 1
 	Force point filtering for mod item textures via SpriteRenderer - 2p 
 		(Remember to check performance implications of this, might need caching/sanity checks)
 	
-	Hide weight until container is searched when using search mode - 2p
-
 [GRAVITY MODE] - 5p
 	Extra sandbox options (speed, self only, world only) - 1p
 	Delay buried items instead of preventing - 2p

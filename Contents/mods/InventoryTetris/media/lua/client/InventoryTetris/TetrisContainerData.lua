@@ -175,8 +175,19 @@ end
 ---@param item InventoryItem
 ---@return boolean
 function TetrisContainerData.validateInsert(container, containerDef, item)
-    if item:IsInventoryContainer() and TetrisContainerData.isTardis(container) then
-        return false
+
+    -- Prevent the player from putting a bag of holding inside a bag of holding and blowing up the universe
+    if item:IsInventoryContainer() then
+        ---@cast item InventoryContainer
+
+        local isInsideTardis = TetrisContainerData.isTardisRecursive(container)
+        if isInsideTardis then
+            local leafTardis = {}
+            TetrisContainerData._findLeafTardis(item:getItemContainer(), leafTardis)
+            if #leafTardis > 0 then
+                return false
+            end
+        end
     end
 
     local itemCategory = TetrisItemCategory.getCategory(item)
@@ -230,6 +241,27 @@ function TetrisContainerData._getValidCategories(containerDef)
 end
 
 ---@param container ItemContainer
+function TetrisContainerData.isTardisRecursive(container)
+    local isTardis = TetrisContainerData.isTardis(container)
+    if isTardis then
+        return true
+    end
+
+    local item = container:getContainingItem()
+    if not item then
+        return false
+    end
+
+    container = item:getContainer()
+    if not container then
+        return false
+    end
+
+    return TetrisContainerData.isTardisRecursive(container)
+end
+
+
+---@param container ItemContainer
 function TetrisContainerData.isTardis(container)
     local type = container:getType()
     if type == "none" then
@@ -240,9 +272,27 @@ function TetrisContainerData.isTardis(container)
         return false
     end
 
-    local size = TetrisItemData.getItemSizeUnsquished(container:getContainingItem(), false)
+    local w, h = TetrisItemData.getItemSizeUnsquished(container:getContainingItem(), false)
+    local size = w * h
     local capacity = TetrisContainerData.calculateInnerSize(container)
     return size < capacity
+end
+
+---@param container ItemContainer
+function TetrisContainerData._findLeafTardis(container, tardisList)
+    local isTardis = TetrisContainerData.isTardis(container)
+    if isTardis then
+        table.insert(tardisList, container)
+    end
+
+    local items = container:getItems()
+    for i = 1, items:size() do
+        local item = items:get(i - 1)
+        if item:IsInventoryContainer() then
+            ---@cast item InventoryContainer
+            TetrisContainerData._findLeafTardis(item:getItemContainer(), tardisList)
+        end
+    end
 end
 
 local bodySlotsToPocketDefinitions = {

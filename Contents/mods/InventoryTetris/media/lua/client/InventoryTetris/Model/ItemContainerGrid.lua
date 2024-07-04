@@ -85,6 +85,7 @@ local function searchInventoryPageForContainerGrid(invPage, targetInventory)
 end
 
 
+-- TODO: Rename this to GetOrCreate, as it's not guaranteed to create a new container grid
 ---@return ItemContainerGrid
 function ItemContainerGrid.Create(inventory, playerNum, containerDefOverride)
     if not containerDefOverride then

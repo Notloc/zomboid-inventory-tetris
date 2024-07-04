@@ -1,33 +1,5 @@
-require("ISUI/ISPanel")
+require("InventoryTetris/UI/Grid/ItemGridUI")
 require("InventoryTetris/TetrisItemCategory")
-
--- PARTIAL CLASS
-if not ItemGridUI then
-    ItemGridUI = ISPanel:derive("ItemGridUI")
-
-    ---@param grid ItemGrid
-    ---@param containerGrid ItemContainerGrid
-    ---@param inventoryPane ISInventoryPane
-    ---@param playerNum number
-    ---@return ItemGridUI
-    ---@diagnostic disable-next-line: duplicate-set-field
-    function ItemGridUI:new(grid, containerGrid, inventoryPane, playerNum)
-        local o = ISPanel:new(0, 0, 0, 0)
-        setmetatable(o, self)
-        self.__index = self
-
-        o.grid = grid
-        o.containerGrid = containerGrid
-        o.inventoryPane = inventoryPane
-        o.playerNum = playerNum
-
-        o:setWidth(o:calculateWidth())
-        o:setHeight(o:calculateHeight())
-
-        ---@diagnostic disable-next-line: return-type-mismatch
-        return o
-    end
-end
 
 -- Premade textures for supported scales so that any scale gets pixel perfect grids
 local GridBackgroundTexturesByScale = {
@@ -352,7 +324,7 @@ function ItemGridUI:renderDragItemPreview()
         return
     end
 
-    local hoveredStack = isJoyPad and self.grid:getStack(self.selectedX, self.selectedY) or self:findGridStackUnderMouse(self:getMouseX(), self:getMouseY())
+    local hoveredStack = isJoyPad and self.grid:getStack(self.selectedX, self.selectedY, self.playerNum) or self:findGridStackUnderMouse(self:getMouseX(), self:getMouseY())
     local hoveredItem = hoveredStack and ItemStack.getFrontItem(hoveredStack, self.grid.inventory) or nil
 
     -- Hovering over nothing or self

@@ -10,3 +10,16 @@
 
 ---@class ISMouseDrag
 ---@field dragging any
+
+---@class SandboxVars
+---@field InventoryTetris InventoryTetrisVars
+
+---@class InventoryTetrisVars
+---@field EnforceCarryWeight boolean
+---@field EnabledSearch boolean
+---@field SearchTime number
+---@field UseItemTransferTime boolean
+---@field ItemTransferSpeedMultiplier number
+---@field BonusGridSize number
+---@field EnableGravity boolean
+

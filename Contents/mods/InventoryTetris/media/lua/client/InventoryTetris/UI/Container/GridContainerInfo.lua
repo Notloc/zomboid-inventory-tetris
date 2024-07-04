@@ -111,6 +111,12 @@ function GridContainerInfo:prerender()
 
     local realWeight = inv:getCapacityWeight()
     local roundedWeight = round(realWeight, 1)
+    if SandboxVars.InventoryTetris.EnableSearch then
+        if self.containerUi.containerGrid:areAnyUnsearched() then
+            roundedWeight = "?"
+        end
+    end
+
     local weightText = (containerDef.isFragile or SandboxVars.InventoryTetris.EnforceCarryWeight) and (roundedWeight .. " / " .. capacity) or (roundedWeight .. "")
 
     local r,g,b = 1,1,1
