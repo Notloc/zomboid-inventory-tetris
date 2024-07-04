@@ -522,6 +522,26 @@ function ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, isRota
     drawingContext:drawRect(x, top + missing, 2, bottom - top - missing, alphaMult*a,r,g,b)
 end
 
+-- Very finnicky, but it seems to work fine during grid rendering in its current state.
+local function SetTextureParameters(texture)
+    local TEXTURE_2D = 3553
+
+    -- Fixes blurry textures from other mods
+    local MAG_FILTER = 10240
+    --local MIN_FILTER = 10241
+    local NEAREST = 9728
+    SpriteRenderer.instance:glBind(texture:getID());
+	SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, MAG_FILTER, NEAREST);
+    --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, MIN_FILTER, NEAREST); Is a bit hit or miss on improving the quality of textures, so I'm leaving it out for now
+
+    -- Fixes pixel bleeding on the edge of textures
+    local TEXTURE_WRAP_S = 10242
+    local TEXTURE_WRAP_T = 10243
+    local CLAMP_TO_EDGE = 33071
+    SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE);
+    SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE);
+end
+
 ---@param drawingContext ISUIElement
 function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, rotate, alphaMult, force1x1, isBuried)
     local w, h = TetrisItemData.getItemSize(item, rotate)
@@ -567,17 +587,15 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     b = b * bgBright
 
     if rotate then
-
-
         local width = texW * targetScale
         local height = texH * targetScale
         local xInset = (minDimension*TEXTURE_SIZE - width) / 2
         local yInset = (minDimension*TEXTURE_SIZE - height) / 2
-        --drawingContext:drawTextureScaledAspect(texture, x2 + width + xInset, y2 + height + yInset, -width, -height, alphaMult, r, g, b);
 
+        SetTextureParameters(texture)
         ItemGridUI._drawTextureRotated(drawingContext, texture, x2 + xInset, y2 + yInset, width, height, alphaMult, r, g, b)
-
     else
+        SetTextureParameters(texture)
         drawingContext:drawTextureScaledUniform(texture, x2, y2, targetScale, alphaMult, r, g, b);
     end
 

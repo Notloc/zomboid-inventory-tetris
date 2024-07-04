@@ -96,6 +96,7 @@ Events.OnGameBoot.Add(function()
             self.scrollView:removeScrollChild(gridContainerUi)
             oldGridContainerUis[gridContainerUi.inventory] = gridContainerUi
         end
+        self.scrollView:resetScroll()
 
         self.gridContainerUis = {}
 

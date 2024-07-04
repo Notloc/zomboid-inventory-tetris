@@ -121,14 +121,12 @@ Events.OnGameBoot.Add(function()
 		if self.inventoryPane.tetrisWindowManager then
 			self.inventoryPane.tetrisWindowManager:closeIfInvalid(self)
 		end
-		
+
 		if self.controllerNode and self.controllerNode.isFocused then
 			self.controllerNode:refreshSelectedChild()
 		end
 
 	end
-
-
 
 	local og_update = ISInventoryPage.update
 	function ISInventoryPage:update()
@@ -152,7 +150,7 @@ Events.OnGameBoot.Add(function()
 			self:removeChild(button)
 			self.backpacks[#self.backpacks] = nil
 			-- Prepend the button to buttonPool.
-			--   There is an awkward bug where the selected backpack is double refresh and
+			--   There is an awkward bug where the selected backpack is double refreshed and
 			--   if the button objects are not in the exact same order between refreshes a different backpack will be opened.
 			table.insert(self.buttonPool, 1, button)
 		end
