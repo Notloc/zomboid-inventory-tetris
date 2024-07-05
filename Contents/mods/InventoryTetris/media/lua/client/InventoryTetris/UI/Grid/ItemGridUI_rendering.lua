@@ -522,7 +522,8 @@ function ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, isRota
     drawingContext:drawRect(x, top + missing, 2, bottom - top - missing, alphaMult*a,r,g,b)
 end
 
--- Very finnicky, but it seems to work fine during grid rendering in its current state.
+-- A bit finnicky, the changes are not permanent and reset shortly after.
+-- Seems to work fine during grid rendering in its current state.
 local function SetTextureParameters(texture)
     local TEXTURE_2D = 3553
 
@@ -531,7 +532,7 @@ local function SetTextureParameters(texture)
     --local MIN_FILTER = 10241
     local NEAREST = 9728
     SpriteRenderer.instance:glBind(texture:getID());
-	SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, MAG_FILTER, NEAREST);
+    SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, MAG_FILTER, NEAREST);
     --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, MIN_FILTER, NEAREST); Is a bit hit or miss on improving the quality of textures, so I'm leaving it out for now
 
     -- Fixes pixel bleeding on the edge of textures
