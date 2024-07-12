@@ -1,3 +1,4 @@
+-- Adjustments to the InventoryTransferAction to support the new rules for item transfers under the grid system and avoid illegal item placements.
 ---@diagnostic disable: duplicate-set-field
 
 require("TimedActions/ISInventoryTransferAction")
@@ -11,7 +12,7 @@ local function getOutermostContainer(container)
     return container:getContainingItem():getOutermostContainer()
 end
 
--- We really need to be the last one to load for this one
+-- We REALLY need to be the last one to load here
 Events.OnGameBoot.Add(function()
     ISInventoryTransferAction.globalTetrisRules = false
 

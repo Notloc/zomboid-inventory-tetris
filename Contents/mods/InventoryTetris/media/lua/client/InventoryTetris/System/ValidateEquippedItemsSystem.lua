@@ -5,14 +5,15 @@ TetrisHandMonitor = {}
 TetrisHandMonitor.ticksByPlayer = {}
 
 function TetrisHandMonitor.validateEquippedItems(playerObj)
-    local playerNum = playerObj:getPlayerNum()
-    if not playerNum or playerNum >= 4 then return end -- Some NPC mod or something
+    if playerObj:isNPC() then return end
 
+    local playerNum = playerObj:getPlayerNum()
     local tick = TetrisHandMonitor.ticksByPlayer[playerNum] or 0
-    if tick < 30 then
-        TetrisHandMonitor.ticksByPlayer[playerObj:getPlayerNum()] = tick + 1
+    if tick < 15 then
+        TetrisHandMonitor.ticksByPlayer[playerNum] = tick + 1
         return
     end
+    TetrisHandMonitor.ticksByPlayer[playerNum] = 0
 
     local primHand = playerObj:getPrimaryHandItem()
     if primHand and not primHand:getContainer() then

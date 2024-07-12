@@ -237,7 +237,7 @@ function TetrisContainerData.canAcceptCategory(containerDef, category)
 end
 
 -- Valid categories are used now because they are easier to reason.
--- This remains to support existing datapacks.
+-- Invalid parsing remains to support existing datapacks.
 function TetrisContainerData._getValidCategories(containerDef)
     if containerDef.validCategories then
         return containerDef.validCategories
@@ -766,8 +766,17 @@ function TetrisContainerData._initializeContainerPacks()
 end
 
 function TetrisContainerData._processContainerPack(containerPack)
-    for key, containerDef in pairs(containerPack) do
-        TetrisContainerData._containerDefinitions[key] = containerDef
+    for defKey, containerDef in pairs(containerPack) do
+        -- Write data into existing definition if it exists.
+        -- Allows container packs containing only partial data to be merged. i.e. Old packs before the rigid and squishable flags were added.
+        local existing = TetrisContainerData._containerDefinitions[defKey]
+        if existing then
+            for key, val in pairs(containerDef) do
+                existing[key] = val
+            end
+        else
+            TetrisContainerData._containerDefinitions[defKey] = containerDef
+        end
     end
 end
 

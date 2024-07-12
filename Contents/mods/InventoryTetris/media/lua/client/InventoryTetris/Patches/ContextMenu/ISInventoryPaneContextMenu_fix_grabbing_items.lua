@@ -1,3 +1,4 @@
+-- Fixes some quirks with the right click grab options
 ---@diagnostic disable: duplicate-set-field
 
 require("ISUI/ISInventoryPaneContextMenu")

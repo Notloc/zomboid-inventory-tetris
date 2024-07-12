@@ -1,3 +1,6 @@
+-- Represents a collection of many grids that all belong to the same container object
+-- Also statically caches grids for performance reasons (Grids get rebuilt entirely every few frames because we have no trusted events to know when the inventory changes)
+
 local GRID_REFRESH_DELAY = 600
 local PHYSICS_DELAY = 600
 

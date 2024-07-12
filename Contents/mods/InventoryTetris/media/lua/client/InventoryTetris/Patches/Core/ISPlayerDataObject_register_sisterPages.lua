@@ -1,3 +1,5 @@
+-- Small convenience that ended up under used.
+-- TODO: Remove this
 require("ISUI/PlayerData/ISPlayerDataObject")
 
 Events.OnGameBoot.Add(function ()

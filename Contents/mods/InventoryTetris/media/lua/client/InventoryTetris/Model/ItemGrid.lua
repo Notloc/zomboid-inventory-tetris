@@ -1,3 +1,6 @@
+-- The primary model for the inventory grid.
+-- This class is responsible for managing the grid data, item stacks, and search sessions.
+
 ---@class ItemGrid
 ---@field containerGrid ItemContainerGrid
 ---@field containerDefinition ContainerGridDefinition
@@ -336,7 +339,6 @@ end
 
 function ItemGrid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisorganized)
     if not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
-        
         return false
     end
 
@@ -435,6 +437,8 @@ function ItemGrid:_validateAndCleanStacks(persistentGridData)
     persistentGridData.stacks = self:_validateStackList(persistentGridData.stacks)
 end
 
+-- Fully rebuilds the stack list
+-- Unfortunate requirement due to lack of inventory events
 function ItemGrid:_validateStackList(stacks, skipBounds)
     local seenItemIDs = {}
     local badItemIDs = {}
@@ -445,7 +449,7 @@ function ItemGrid:_validateStackList(stacks, skipBounds)
                 badItemIDs[itemID] = true
                 badStacks[stack] = true
             end
-            
+
             local item = self.inventory:getItemById(itemID)
             if not item or not self.containerGrid:_isItemValid(item) then
                 badStacks[stack] = true
@@ -510,6 +514,7 @@ function ItemGrid:_rebuildStackMap(doPhysics)
     end
 end
 
+-- For the optional gravity feature
 function ItemGrid:physicsUpdate()
     local processedStacks = {}
     local ignoreMap = {}
@@ -553,6 +558,7 @@ function ItemGrid:_physicsFallPreValidated(stack, w, h)
     end
 end
 
+-- Determines if the stack is buried beneath other stacks when using gravity mode
 function ItemGrid:isStackBuried(stack)
     local dragItem = DragAndDrop.getDraggedItem()
     local mouseStack = dragItem and self:findStackByItem(dragItem) or nil
@@ -582,6 +588,16 @@ function ItemGrid:isEmpty()
 end
 
 
+-- Search Session Logic
+-- When using search mode we keep the contents of the grid hidden until the player performs a search
+
+-- Searches are not saved, they are kept in memory
+-- Sessions track the progress of a search and which items have been revealed
+-- Only the completion of a search is saved permanently
+ItemGrid._searchSessions = {}
+
+-- Didn't foresee the community modding in custom containers with so many grids, but I like the enthusiasm (used to be 10)
+ItemGrid.SESSION_MEMORY_LIMIT = 100
 
 function ItemGrid:isUnsearched(playerNum)
     if not SandboxVars.InventoryTetris.EnableSearch then
@@ -600,17 +616,6 @@ function ItemGrid:isUnsearched(playerNum)
 
     return not self.persistentData.searchLog[uuid]
 end
-
-
-
-
-
--- Searches are not saved, they are kept in memory only
--- Only completion of a search is saved
-ItemGrid._searchSessions = {}
-
--- Didn't foresee you guys modding in containers with so many grids, but I like the enthusiasm
-ItemGrid.SESSION_MEMORY_LIMIT = 100
 
 function ItemGrid._getSearchSession(playerNum, grid)
     if not ItemGrid._searchSessions[playerNum] then
@@ -740,7 +745,6 @@ function ItemGrid:completeSearch(playerNum)
     self:_sendModData()
 end
 
-
 function ItemGrid:_validateStackIsSearched(stack, playerNum)
     if not self:isUnsearched(playerNum) then
         return true
@@ -755,6 +759,9 @@ function ItemGrid:_validateStackIsSearched(stack, playerNum)
     local session = ItemGrid._getSearchSession(playerNum, self)
     return session and session.searchedStackIDs[frontItemID]
 end
+
+
+-- Grid Persistence Logic
 
 function ItemGrid:resetGridData()
     self:_getSavedContainerData()[self.gridIndex] = {}
@@ -790,7 +797,7 @@ function ItemGrid:_getSavedContainerData()
 end
 
 ItemGrid._floorModData = {} -- No need to save floor grids, but we do allow users to reposition items on the floor temporarily
-ItemGrid._proxData = {} -- Proximity inventory mod support
+ItemGrid._proxData = {} -- Proximity inventory mod support, acts the same as floor grids
 
 function ItemGrid:_getParentModData()
     if self.isPlayerInventory then
@@ -827,7 +834,7 @@ end
 local TETRIS_UUID = "TetrisUUID"
 function ItemGrid._getPlayerUUID(playerNum)
     local player = getSpecificPlayer(playerNum)
-    
+
     local uuid = player:getModData()[TETRIS_UUID]
     if not uuid then
         uuid = getRandomUUID()

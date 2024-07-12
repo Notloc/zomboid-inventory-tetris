@@ -1,3 +1,6 @@
+-- Parses the player's action queue into data that summarizes item transfer information for use in renderering.
+-- Allows us to show previews of in-progress and upcoming item transfers.
+
 GridTransferQueueData = {}
 
 function GridTransferQueueData.build(playerNum)

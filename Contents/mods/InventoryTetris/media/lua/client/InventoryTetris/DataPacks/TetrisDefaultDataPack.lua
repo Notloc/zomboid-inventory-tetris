@@ -3495,8 +3495,7 @@ TetrisContainerData.registerLargeVehicleStorageContainers(vehicleStoragePack)
 
 
 
--- A second data pack for testing purposes
--- Need to redo everything at some point
+-- Another data pack
 
 local itemPack = {
     ["Base.Nails"] = {
@@ -3995,6 +3994,8 @@ local containerPack = {
 TetrisItemData.registerItemDefinitions(itemPack)
 TetrisContainerData.registerContainerDefinitions(containerPack)
 
+-- Anotha one
+-- Need to clean up the old data at some point, but for now overwriting is fine
 
 local itemPack2 = {
     ["Base.Bag_DoctorBag__squished"] = {

@@ -1,3 +1,4 @@
+-- Allow the player to read maps without needing to transfer them to their main inventory.
 ---@diagnostic disable: duplicate-set-field
 
 require("ISUI/ISInventoryPaneContextMenu")

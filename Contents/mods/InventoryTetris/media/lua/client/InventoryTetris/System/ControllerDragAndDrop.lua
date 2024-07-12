@@ -1,3 +1,4 @@
+-- Tracks the current drag and drop operation for controller players.
 ControllerDragAndDrop = {}
 
 ControllerDragAndDrop.dragging = {}

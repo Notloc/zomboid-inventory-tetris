@@ -1,6 +1,6 @@
----@diagnostic disable: duplicate-set-field
 -- This patch disables the carry weight capacity check for all containers except for the player's main inventory.
 -- This implementation avoids lasting changes to the container's capacity by temporarily setting it to a very high value during the check.
+---@diagnostic disable: duplicate-set-field
 
 local function isPlayerInv(container)
     local player1 = getSpecificPlayer(0)
@@ -23,16 +23,14 @@ local function disableCarryWeightSafe(container, callback, ...)
     if not container or SandboxVars.InventoryTetris.EnforceCarryWeight or isPlayerInv(container) then
         return callback(...)
     end
-
     local containerDef = TetrisContainerData.getContainerDefinition(container)
     if containerDef.isFragile then
         return callback(...)
     end
 
     local originalCapacity = container:getCapacity()
-
     container:setCapacity(99995)
-    -- Because definition is retrieved partially by capacity we set it manually here to avoid issues
+    -- Because definition is retrieved and calculated by capacity we set it manually here to avoid issues
     TetrisContainerData.setContainerDefinition(container, containerDef)
 
     local results = {pcall(callback, ...)}
@@ -47,6 +45,7 @@ local function disableCarryWeightSafe(container, callback, ...)
     end
 end
 
+-- All vanilla functions that I found that check the container's capacity
 Events.OnGameStart.Add(function()
     require("ISUI/ISInventoryPane")
     local og_canPutIn_pane = ISInventoryPane.canPutIn

@@ -1,3 +1,4 @@
+-- Injects the new control scheme into the InventoryPage class.
 ---@diagnostic disable: duplicate-set-field
 
 Events.OnGameBoot.Add(function()

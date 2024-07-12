@@ -535,7 +535,7 @@ local function SetTextureParameters(texture)
     SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, MAG_FILTER, NEAREST);
     --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, MIN_FILTER, NEAREST); Is a bit hit or miss on improving the quality of textures, so I'm leaving it out for now
 
-    -- Fixes pixel bleeding on the edge of textures
+    -- Fixes pixel bleeding on the edge of textures from other mods
     local TEXTURE_WRAP_S = 10242
     local TEXTURE_WRAP_T = 10243
     local CLAMP_TO_EDGE = 33071
@@ -575,10 +575,6 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     x2 = 1 + x + TEXTURE_PAD * w + (w - minDimension) * (TEXTURE_SIZE) / 2
     y2 = 1 + y + TEXTURE_PAD * h + (h - minDimension) * (TEXTURE_SIZE) / 2
 
-    if (targetScale < 1.0) then -- Center weirdly sized textures
-        x2 = x2 + 0.5 * (TEXTURE_SIZE - texW * targetScale) * minDimension
-        y2 = y2 + 0.5 * (TEXTURE_SIZE - texH * targetScale) * minDimension
-    end
     targetScale = targetScale * minDimension
 
     local r,g,b = ItemGridUI.getItemColor(item)

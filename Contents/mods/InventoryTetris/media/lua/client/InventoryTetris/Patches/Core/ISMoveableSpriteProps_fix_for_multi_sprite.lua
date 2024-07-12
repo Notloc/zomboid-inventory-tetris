@@ -1,3 +1,4 @@
+-- Fixes issues with building multi-sprite items in the world from secondary inventories and the hands.
 local ItemUtil = require("Notloc/ItemUtil")
 
 Events.OnGameBoot.Add(function()

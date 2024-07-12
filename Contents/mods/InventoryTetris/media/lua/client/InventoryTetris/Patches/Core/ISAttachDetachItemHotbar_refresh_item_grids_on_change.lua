@@ -1,3 +1,4 @@
+-- Let the inventory know that it needs to redraw when attaching/detaching items from the hotbar.
 ---@diagnostic disable: duplicate-set-field
 
 Events.OnGameBoot.Add(function()

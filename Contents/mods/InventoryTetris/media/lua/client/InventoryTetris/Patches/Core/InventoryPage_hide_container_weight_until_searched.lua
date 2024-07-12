@@ -1,3 +1,4 @@
+-- Ensures the weight of a container is not displayed until the container has been searched when searching is enabled.
 ---@diagnostic disable: duplicate-set-field
 
 Events.OnGameStart.Add(function()

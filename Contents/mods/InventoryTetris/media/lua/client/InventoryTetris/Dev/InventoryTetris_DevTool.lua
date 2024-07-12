@@ -1,3 +1,5 @@
+-- A quick and drity tool used for adjusting item and container data in-game and exporting directly into a formatted lua file
+
 local OPT = require("InventoryTetris/Settings")
 local JSON = require("InventoryTetris/Dev/JSON.lua")
 local ContextUtil = require("Notloc/ContextUtil")
@@ -11,8 +13,8 @@ local function readJsonFile(fileName)
         while line do
             allLines = allLines .. line .. "\r\n";
             line = reader:readLine()
-        end    
-        
+        end
+
         reader:close();
         if allLines == "" then
             return nil;

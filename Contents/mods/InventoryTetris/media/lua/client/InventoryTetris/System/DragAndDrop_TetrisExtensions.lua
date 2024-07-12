@@ -1,3 +1,5 @@
+-- Tracks the current drag and drop operation for keyboard and mouse players.
+-- Main body of the class is part of the EquipmentUI mod.
 require("EquipmentUI/DragAndDrop")
 
 function DragAndDrop.isDraggedItemRotated()

@@ -1,3 +1,5 @@
+-- Handles syncing of grid data between client and server for a few specific objects that do not support the normal modData syncing methods.
+
 -- Keep these synced with the ones in TetrisServer.lua
 local TETRIS_UUID = "TetrisUUID"
 
