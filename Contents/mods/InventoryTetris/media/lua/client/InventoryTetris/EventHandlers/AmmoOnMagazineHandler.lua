@@ -52,7 +52,7 @@ function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, target
 
     local returnMag = nil
     if targetInventory ~= playerInv then
-        local containerGrid = ItemContainerGrid.Create(targetInventory, playerNum)
+        local containerGrid = ItemContainerGrid.GetOrCreate(targetInventory, playerNum)
         local magStack, grid = containerGrid:findStackByItem(magazine)
 
         local transferMag = nil

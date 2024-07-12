@@ -94,7 +94,7 @@ function ItemGridStackSplitWindow:onOK()
     local count = self.splitSlider:getCurrentValue()
 
     if isSameInventory then
-        local containerGrid = ItemContainerGrid.Create(self.grid.inventory, self.playerNum)
+        local containerGrid = ItemContainerGrid.GetOrCreate(self.grid.inventory, self.playerNum)
         for i=2, count+1 do
             local item = vanillaStack.items[i]
             if self.grid:canAddItemAt(item, targetX, targetY, isRotated) and containerGrid:removeItem(item) then

@@ -44,7 +44,7 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
         o.invTexture = o.item and o.item:getTex() or BASIC_INV_TEXTURE;
     end
 
-    o.containerGrid = ItemContainerGrid.Create(inventory, playerNum, containerDefOverride)
+    o.containerGrid = ItemContainerGrid.GetOrCreate(inventory, playerNum, containerDefOverride)
     o.containerGrid:addOnSecondaryGridsAdded(o, o._onSecondaryGridsAdded)
     o.containerGrid:addOnSecondaryGridsRemoved(o, o._onSecondaryGridsRemoved)
 

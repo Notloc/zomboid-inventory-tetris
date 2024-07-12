@@ -28,7 +28,7 @@ local function createTransfersIfNeeded(playerObj, item, itemInventory, desiredIn
         return
     end
 
-    local prevGrid = ItemContainerGrid.Create(itemInventory, playerObj:getPlayerNum())
+    local prevGrid = ItemContainerGrid.GetOrCreate(itemInventory, playerObj:getPlayerNum())
     local stack, grid = prevGrid:findStackByItem(item)
 
     local transferAction, returnAction = ItemUtil.createTransferActionWithReturn(item, itemInventory, desiredInventory, playerObj)

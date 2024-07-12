@@ -31,12 +31,12 @@ function GridAutoDropSystem._processItems(playerNum, items)
 
         local currentContainer = item:getContainer()
         if currentContainer then
-            local containerGrid = ItemContainerGrid.Create(currentContainer, playerNum)
+            local containerGrid = ItemContainerGrid.GetOrCreate(currentContainer, playerNum)
             if containerGrid:canAddItem(item) and containerGrid:autoPositionItem(item, isOrganized, isDisorganized) then
                 addedToContainer = true
             else
                 for _, container in ipairs(containers) do
-                    local containerGrid = ItemContainerGrid.Create(container, playerNum)
+                    local containerGrid = ItemContainerGrid.GetOrCreate(container, playerNum)
                     if currentContainer ~= container and containerGrid:canAddItem(item) then
                         local transfer = ISInventoryTransferAction:new(playerObj, item, currentContainer, container, 1)
                         transfer.enforceTetrisRules = true
@@ -85,7 +85,7 @@ end
 
 function GridAutoDropSystem._attemptToForcePositionItem(item, playerObj, playerNum)
     local inventory = playerObj:getInventory()
-    local grid = ItemContainerGrid.Create(inventory, playerNum)
+    local grid = ItemContainerGrid.GetOrCreate(inventory, playerNum)
     if grid:canAddItem(item) then
         ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), inventory, 1))
         return true
@@ -95,7 +95,7 @@ function GridAutoDropSystem._attemptToForcePositionItem(item, playerObj, playerN
     for i = 0, wornItems:size()-1 do
         local wornItem = wornItems:get(i):getItem()
         if wornItem:IsInventoryContainer() then
-            local grid = ItemContainerGrid.Create(wornItem:getInventory(), playerNum)
+            local grid = ItemContainerGrid.GetOrCreate(wornItem:getInventory(), playerNum)
             if grid:canAddItem(item) then
                 ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), wornItem:getInventory(), 1))
                 return true

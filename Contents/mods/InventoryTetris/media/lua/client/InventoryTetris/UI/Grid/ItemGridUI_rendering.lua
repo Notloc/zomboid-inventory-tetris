@@ -367,7 +367,7 @@ function ItemGridUI:renderDragItemPreview()
         return
     end
 
-    local otherContainerGrid = ItemContainerGrid.Create(item:getContainer(), self.playerNum)
+    local otherContainerGrid = ItemContainerGrid.GetOrCreate(item:getContainer(), self.playerNum)
     local draggedStack = otherContainerGrid:findGridStackByVanillaStack(DragAndDrop.getDraggedStack()) or ItemStack.createTempStack(item)
 
     -- Container hover

@@ -12,7 +12,7 @@ Events.OnGameBoot.Add(function()
         for _, item in ipairs(items) do
             local targetContainer = nil
             for _, testContainer in ipairs(targetContainers) do
-                local gridContainer = ItemContainerGrid.Create(testContainer, playerNum)
+                local gridContainer = ItemContainerGrid.GetOrCreate(testContainer, playerNum)
                 if gridContainer:canAddItem(item) then
                     targetContainer = testContainer
                     break

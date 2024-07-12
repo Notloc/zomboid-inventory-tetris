@@ -25,7 +25,7 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Gravity Tests", 
     function Tests.test_createGrid()
         local playerObj = getSpecificPlayer(0)
         local inv = playerObj:getInventory()
-        local containerGrid =  ItemContainerGrid.Create(inv, playerNum)
+        local containerGrid =  ItemContainerGrid.GetOrCreate(inv, playerNum)
 
         TestUtils.assert(containerGrid ~= nil)
         TestUtils.assert(containerGrid.inventory == inv)

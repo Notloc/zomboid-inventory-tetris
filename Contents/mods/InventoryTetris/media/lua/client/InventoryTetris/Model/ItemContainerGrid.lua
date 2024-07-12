@@ -18,8 +18,6 @@ ItemContainerGrid = {}
 ItemContainerGrid._tempGrid = {} -- For hovering over container items, so we don't create a new grid every frame to evaluate if an item can be placed into a hovered backpack
 ItemContainerGrid._gridCache = {} -- Just created grids, so we don't end up creating a new grid multiple times in a single tick when looping or something
 
--- TODO: Remove playerNum from this class, it's not actually used unless the grid is for the player's base inventory
--- Thankfully grids are pretty much entirely agnostic to the player interacting with them, so it should be easy to remove
 function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
     local o = {}
     setmetatable(o, self)
@@ -30,7 +28,7 @@ function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
     o.containerDefinition = definitionOverride or TetrisContainerData.getContainerDefinition(inventory)
     o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
-    o.grids = o:createGrids(inventory, playerNum)
+    o.grids = o:createGrids(inventory)
     o.overflow = {}
     
     o.secondaryGrids = {}
@@ -87,7 +85,7 @@ end
 
 -- TODO: Rename this to GetOrCreate, as it's not guaranteed to create a new container grid
 ---@return ItemContainerGrid
-function ItemContainerGrid.Create(inventory, playerNum, containerDefOverride)
+function ItemContainerGrid.GetOrCreate(inventory, playerNum, containerDefOverride)
     if not containerDefOverride then
 
         local containerGrid = ItemContainerGrid.FindInstance(inventory, playerNum)
@@ -169,13 +167,10 @@ function ItemContainerGrid._getPlayerMainGrid(playerNum)
     return ItemContainerGrid._playerMainGrids[playerNum]
 end
 
-function ItemContainerGrid:createGrids(container, playerNum)
-    local playerObj = getSpecificPlayer(playerNum)
-    local isPlayerInventory = container == playerObj:getInventory()
-
+function ItemContainerGrid:createGrids(container)
     local grids = {}
     for index, gridDef in ipairs(self.containerDefinition.gridDefinitions) do
-        local grid = ItemGrid:new(self, index, container, self.containerDefinition, gridDef, isPlayerInventory)
+        local grid = ItemGrid:new(self, index, container, self.containerDefinition, gridDef, self.isPlayerInventory)
         grids[index] = grid
     end
     return grids
@@ -704,7 +699,7 @@ end
 Events.OnTick.Add(function()
     for playerNum, grid in pairs(ItemContainerGrid._playerMainGrids) do
         local player = getSpecificPlayer(playerNum)
-        if not player or player:isDead() then
+        if not player or player:isDead() or player:isNPC() then
             ItemContainerGrid._playerMainGrids[playerNum] = nil
         else
             if grid:shouldRefresh() then

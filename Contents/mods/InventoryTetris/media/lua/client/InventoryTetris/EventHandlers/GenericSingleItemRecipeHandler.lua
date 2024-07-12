@@ -29,7 +29,7 @@ function GenericSingleItemRecipeHandler.call(eventData, stack, inventory, player
     local numberOfTimes = RecipeManager.getNumberOfTimesRecipeCanBeDone(recipe, playerObj, containerList, item)
     local resultItemType = recipe:getResult():getFullType()
 
-    local containerGrid = ItemContainerGrid.Create(inventory, playerNum)
+    local containerGrid = ItemContainerGrid.GetOrCreate(inventory, playerNum)
 
     local canBeDoneFromFloor = recipe:isCanBeDoneFromFloor()
     if containerGrid.isOnPlayer then

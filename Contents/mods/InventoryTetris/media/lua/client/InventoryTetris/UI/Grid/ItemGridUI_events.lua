@@ -150,7 +150,7 @@ end
 function ItemGridUI:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hoveredStack)
     local dragItem = vanillaStack.items[1]
     local dragInventory = dragItem:getContainer()
-    local dragContainerGrid = ItemContainerGrid.Create(dragInventory, self.playerNum)
+    local dragContainerGrid = ItemContainerGrid.GetOrCreate(dragInventory, self.playerNum)
     local gridStack, otherGrid = dragContainerGrid:findGridStackByVanillaStack(vanillaStack)
 
     local isSameInventory = self.grid.inventory == dragInventory
@@ -415,7 +415,7 @@ function ItemGridUI:quickMoveItemToContainer(gridStack, targetContainers)
 
     local targetContainer = nil
     for _, testContainer in ipairs(targetContainers) do
-        local gridContainer = ItemContainerGrid.Create(testContainer, self.playerNum)
+        local gridContainer = ItemContainerGrid.GetOrCreate(testContainer, self.playerNum)
         if gridContainer:canAddItem(item) then
             targetContainer = testContainer
             break

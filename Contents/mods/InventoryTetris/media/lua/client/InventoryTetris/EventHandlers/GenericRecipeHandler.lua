@@ -114,8 +114,8 @@ function GenericRecipeHandler.call(eventData, droppedStack, fromInventory, targe
         targetItem = item1
     end
 
-    local fromContainerGrid = ItemContainerGrid.Create(fromInventory, playerNum)
-    local targetContainerGrid = ItemContainerGrid.Create(targetInventory, playerNum)
+    local fromContainerGrid = ItemContainerGrid.GetOrCreate(fromInventory, playerNum)
+    local targetContainerGrid = ItemContainerGrid.GetOrCreate(targetInventory, playerNum)
 
     local canBeDoneFromFloor = recipe:isCanBeDoneFromFloor()
     if fromContainerGrid.isOnPlayer and targetContainerGrid.isOnPlayer then
