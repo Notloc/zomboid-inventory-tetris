@@ -790,6 +790,7 @@ function ItemGrid:_getSavedContainerData()
 end
 
 ItemGrid._floorModData = {} -- No need to save floor grids, but we do allow users to reposition items on the floor temporarily
+ItemGrid._proxData = {} -- Proximity inventory mod support
 
 function ItemGrid:_getParentModData()
     if self.isPlayerInventory then
@@ -799,6 +800,10 @@ function ItemGrid:_getParentModData()
 
     if self.inventory:getType() == "floor" then
         return ItemGrid._floorModData, nil
+    end
+
+    if self.inventory:getType() == "local" then
+        return ItemGrid._proxData, nil
     end
 
     local itemContainer = self.inventory:getContainingItem()
