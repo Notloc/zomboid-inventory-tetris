@@ -22,4 +22,5 @@
 ---@field ItemTransferSpeedMultiplier number
 ---@field BonusGridSize number
 ---@field EnableGravity boolean
+---@field PreventTardisStacking boolean
 

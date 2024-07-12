@@ -80,16 +80,22 @@ function TetrisContainerData._getContainerDefinitionByKey(container, containerKe
 end
 
 function TetrisContainerData._calculateContainerDefinition(container)
+    local definition = nil
     local type = container:getType()
+
     if TetrisContainerData._vehicleStorageNames[type] then
-        return TetrisContainerData._calculateVehicleTrunkContainerDefinition(container)
+        definition = TetrisContainerData._calculateVehicleTrunkContainerDefinition(container)
+    else
+        local item = container:getContainingItem()
+        if item then
+            definition = TetrisContainerData._calculateItemContainerDefinition(container, item)
+        else
+            definition = TetrisContainerData._calculateWorldContainerDefinition(container)
+        end
     end
 
-    local item = container:getContainingItem()
-    if item then
-        return TetrisContainerData._calculateItemContainerDefinition(container, item)
-    end
-    return TetrisContainerData._calculateWorldContainerDefinition(container)
+    definition._autoCalculated = true
+    return definition
 end
 
 function TetrisContainerData._calculateItemContainerDefinition(container, item)
@@ -175,11 +181,10 @@ end
 ---@param item InventoryItem
 ---@return boolean
 function TetrisContainerData.validateInsert(container, containerDef, item)
-
-    -- Prevent the player from putting a bag of holding inside a bag of holding and blowing up the universe
-    if item:IsInventoryContainer() then
+    if item:IsInventoryContainer() and SandboxVars.InventoryTetris.PreventTardisStacking then
         ---@cast item InventoryContainer
 
+        -- Prevent the player from putting a bag of holding inside a bag of holding and blowing up the universe
         local isInsideTardis = TetrisContainerData.isTardisRecursive(container)
         if isInsideTardis then
             local leafTardis = {}
@@ -188,11 +193,24 @@ function TetrisContainerData.validateInsert(container, containerDef, item)
                 return false
             end
         end
+
+        -- Prevent a rigid container from being put inside a rigid container unless its smaller
+        -- i.e. You can't fit a 3x3 lunchbox inside a 3x3 lunchbox
+        local containerItem = container:getContainingItem()
+        if containerItem then
+            local itemContainerDef = TetrisContainerData.getContainerDefinition(item:getItemContainer())
+            if containerDef.isRigid and itemContainerDef.isRigid then
+                local x,y = TetrisItemData.getItemSizeUnsquished(containerItem, false)
+                local x2,y2 = TetrisItemData.getItemSizeUnsquished(item, false)
+                if x*y <= x2*y2 then
+                    return false
+                end
+            end
+        end
     end
 
     local itemCategory = TetrisItemCategory.getCategory(item)
-    local validCategories = TetrisContainerData._getValidCategories(containerDef)
-    return not validCategories or validCategories[itemCategory]
+    return TetrisContainerData.canAcceptCategory(containerDef, itemCategory)
 end
 
 
@@ -211,6 +229,11 @@ function TetrisContainerData.getSingleValidCategory(containerDef)
         end
     end
     return category
+end
+
+function TetrisContainerData.canAcceptCategory(containerDef, category)
+    local validCategories = TetrisContainerData._getValidCategories(containerDef)
+    return not validCategories or validCategories[category]
 end
 
 -- Valid categories are used now because they are easier to reason.
@@ -264,11 +287,16 @@ end
 ---@param container ItemContainer
 function TetrisContainerData.isTardis(container)
     local type = container:getType()
-    if type == "none" then
+    if type == "none" or type == "KeyRing" then
         return false
     end
 
     if not container:getContainingItem() then
+        return false
+    end
+
+    local containerDef = TetrisContainerData.getContainerDefinition(container)
+    if not TetrisContainerData.canAcceptCategory(containerDef, TetrisItemCategory.CONTAINER) then
         return false
     end
 

@@ -9,7 +9,7 @@ Events.OnGameStart.Add(function()
 
     local og_loadWeight = ISInventoryPage.loadWeight
     function ISInventoryPage.loadWeight(container)
-        if SandboxVars.InventoryTetris.EnableSearch then
+        if SandboxVars.InventoryTetris.EnableSearch and container then
             local containerGrid = ItemContainerGrid.Create(container, 0)
             if containerGrid:areAnyUnsearched() then
                 return nil

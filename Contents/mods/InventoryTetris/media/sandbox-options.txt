@@ -48,3 +48,10 @@ option InventoryTetris.EnableGravity
 	page = InventoryTetris,
 	translation = InventoryTetris_EnableGravity,
 }
+
+option InventoryTetris.PreventTardisStacking
+{
+	type = boolean, default = true,
+	page = InventoryTetris,
+	translation = InventoryTetris_PreventTardisStacking
+}

@@ -1,7 +1,7 @@
 require("InventoryTetris/TetrisItemCategory")
 
 local SQUISHED_SUFFIX = "__squished"
-local SQUISH_FACTOR = 2.25
+local SQUISH_FACTOR = 3
 
 TetrisItemData = {}
 TetrisItemData._itemData = {}
@@ -64,7 +64,7 @@ end
 
 function TetrisItemData._calculateAndCacheItemInfo(item, fType, isSquished)
     local data = {}
-    
+
     if isSquished then
         local regData = TetrisItemData._getItemData(item, true)
         data.width = regData.width
@@ -82,6 +82,8 @@ function TetrisItemData._calculateAndCacheItemInfo(item, fType, isSquished)
         data.width = math.ceil(data.width / SQUISH_FACTOR)
         data.height = math.ceil(data.height / SQUISH_FACTOR)
     end
+
+    data._autoCalculated = true
 
     TetrisItemData._itemData[fType] = data
 end
@@ -505,5 +507,5 @@ end
 Events.OnInitWorld.Add(TetrisItemData._onInitWorld)
 
 function TetrisItemData.isSquishable(item)
-    return item:IsInventoryContainer() and TetrisContainerData.getContainerDefinition(item:getItemContainer()).isSquishable
+    return item:IsInventoryContainer() and not TetrisContainerData.getContainerDefinition(item:getItemContainer()).isRigid
 end

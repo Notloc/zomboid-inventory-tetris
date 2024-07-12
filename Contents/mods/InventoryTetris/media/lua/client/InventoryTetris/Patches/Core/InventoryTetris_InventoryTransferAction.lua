@@ -124,7 +124,7 @@ Events.OnGameBoot.Add(function()
     function ISInventoryTransferAction:validateTetrisSquishable(destContainer, item)
         local containerDef = TetrisContainerData.getContainerDefinition(destContainer)
         -- Container is not squishable, so the size will not change
-        if not containerDef.isSquishable then
+        if containerDef.isRigid then
             return true
         end
 

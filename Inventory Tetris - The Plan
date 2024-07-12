@@ -1,53 +1,43 @@
 Inventory Tetris - The Plan
-Score: 6
 
 [GENERAL BUG FIXES]
-	Trunks in MP moddata not working - 5p
+	Trunks in MP moddata not working 
 		Data is getting sent, but the clients are all autopositioning items and sending that data with a newer timestamp
 			Might need to go per item and have autopositioned items write 0 for their time
 	
 [GRAVITY MODE]
-	Extra sandbox options (speed, self only, world only) - 1p
-	Delay buried items instead of preventing - 2p
+	Extra sandbox options (speed)
+	Delay buried items instead of preventing
 
-		
 [CONTROLLER SUPPORT]
-	Keep selected grid spot in scrollview - 2p
-	Way to split stacks for controller - 2p
-	Improved movement between grids - 4p
-	Need a way to start searching and block controller selection until grid is revealed - 1p
+	Nav
+		Improved movement between grids
+		Keep selected grid spot in scrollview
+	Controls
+		Way to split stacks for controller (L3?)
+		Need a way to start searching and block controller selection until grid is revealed
+		Add way to move faster (Hold X?)
 
 [QoL]
-	Allow load gun by dropping mag on equipment ui - 3p
+	Allow load gun by dropping mag on equipment ui
 		Really we should just process stack drops onto equipment ui slots the exact same as dropping on the itemgrid, allow all drop combos to just work
 	
-	Gun upgrades without main inventory requirement (Half complete) - 1p
+	Gun upgrades without main inventory requirement (Half complete)
 		Should probably mess around with crafting and building and mechanics to sanity check some of these main inventory transfer requirements
 
-	A way to quickly move all of the same item type to target container - 1p
+	Auto sort
 
-	Auto sort - 4p
-
-	Item swapping! - 3p
+	Item swapping!
 		(Although, once swapped, the held item becomes overflow.)
+
+	Process controller tooltips before the mouse tooltips
 
 
 [REASON YOU CANT SYSTEM]
-	When an action gets rejected, write the reason into a buffer - 2p
-	The code that handled the player input can read this post action and display it if new data was written - 2p
+	When an action gets rejected, write the reason into a buffer
+	The code that handled the player input can read this post action and display it if new data was written 
 		Prevent confusion about why a bag can't accept an item or an item transfer is failing.
 		Make it look like RCT2's red text popup
-
-
-
-
-
-[DEV TOOLS]
-	Formalize datapack creation - 5p
-		Must create and select a pack before able to make edits
-		Dev packs are not inherently active
-		Export tool uses name in generated lua
-		Ability to delete development data per pack
 
 [CLOTHING POCKETS UPDATE]
 	Review clothing pocket balance
@@ -57,16 +47,6 @@ Score: 6
 	Go through everything!
 	That includes world containers
 
-[REBALANCE]
-	Goal:
-		Remove container hyper stacking and make containers more interesting
-		Manually set size of every vanilla item
-
-	Implementation Plan:
-		Force all non-TARDIS containers to be the same size inside/outside (when not empty)
-		Prevent TARDIS containers from containing another container
-		Buff TARDIS container sizes but be more strict on allowed items.
-
 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ======  
 
 
@@ -75,3 +55,5 @@ Score: 6
 		Allow players to further customize their controls.
 		If a player wants the UI to act like Minecraft, why not?
 		Provide control scheme presets.
+
+A way to quickly move all of the same item type to target container

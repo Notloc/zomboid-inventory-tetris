@@ -1,6 +1,6 @@
 version=1
 id=3260666789
-title=STOPSTOPSTOP - Inventory Tetris - UNSTABLE BETA 6
+title=Inventory Tetris - UNSTABLE BETA 6
 description=[h1]FOR TESTING PURPOSES ONLY![/h1]
 description=[h2]This mod will be deleted when its features are deployed into the main version.[/h2]
 description=

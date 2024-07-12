@@ -48,7 +48,7 @@ function Version.isBelow(version, major, minor, patch)
 end
 
 function Version.format(version)
-    local formatted = string.format("%d.%d.%d", version.major, version.minor, version.patch)
+    local formatted = string.format("%d.%d.%d", version.major, version.minor, version.patch or 0)
     if version.stage then
         formatted = string.format("%s %s", formatted, version.stage)
     end

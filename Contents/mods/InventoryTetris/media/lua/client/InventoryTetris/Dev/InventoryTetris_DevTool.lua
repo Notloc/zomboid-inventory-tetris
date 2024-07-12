@@ -1,5 +1,6 @@
 local OPT = require("InventoryTetris/Settings")
 local JSON = require("InventoryTetris/Dev/JSON.lua")
+local ContextUtil = require("Notloc/ContextUtil")
 
 local function readJsonFile(fileName)
     local reader = getFileReader(fileName, false);
@@ -44,15 +45,6 @@ local function writeText(fileName, text)
     writer:close();
 end
 
-local function contains(needle, haystack)
-    for _, item in ipairs(haystack) do
-        if item == needle then
-            return true;
-        end
-    end
-    return false;
-end
-
 
 TetrisDevTool = {}
 
@@ -87,23 +79,24 @@ local CONTAINER_FILENAME = "InventoryTetris_ContainerData"
 local POCKET_FILENAME = "InventoryTetris_PocketData"
 
 if isDebugEnabled() then
-    TetrisDevTool.itemEdits = readJsonFile(ITEM_FILENAME..".json") or {}
-    TetrisDevTool.containerEdits = readJsonFile(CONTAINER_FILENAME..".json") or {}
-    TetrisDevTool.pocketEdits = readJsonFile(POCKET_FILENAME..".json") or {}
+    TetrisDevTool.itemEdits = readJsonFile(ITEM_FILENAME..".json") or {};
+    TetrisDevTool.containerEdits = readJsonFile(CONTAINER_FILENAME..".json") or {};
+    TetrisDevTool.pocketEdits = readJsonFile(POCKET_FILENAME..".json") or {};
 else
     TetrisDevTool.itemEdits = {}
     TetrisDevTool.containerEdits = {}
     TetrisDevTool.pocketEdits = {}
 end
 
-function TetrisDevTool.insertDebugOptions(menu, item)
+---@param context ISContextMenu
+function TetrisDevTool.insertDebugOptions(context, item)
     if not isDebugEnabled() then
         return;
     end
 
-    local subMenu = TetrisDevTool._findOrCreateTetrisSubMenu(menu);
+    local subMenu = ContextUtil.getOrCreateSubMenu(context, "Tetris");
     subMenu:addOption("Edit Item Data", item, TetrisDevTool.openEditItem);
-    subMenu:addOption("Recalculate Item Data", item, TetrisDevTool.recalculateItemData);
+    subMenu:addOption("Reset Item Data", item, TetrisDevTool.recalculateItemData);
 
     if item:IsInventoryContainer() then
         subMenu:addOption("Edit Container Data", item:getItemContainer(), TetrisDevTool.openContainerEdit_container);
@@ -112,59 +105,26 @@ function TetrisDevTool.insertDebugOptions(menu, item)
     if item:IsClothing() then
         subMenu:addOption("Edit Pocket Data", item, TetrisDevTool.openPocketEdit);
     end
-
 end
 
-
----@param menu ISContextMenu
-function TetrisDevTool.insertContainerDebugOptions(menu, containerUi)
+---@param context ISContextMenu
+function TetrisDevTool.insertContainerDebugOptions(context, containerUi)
     if not isDebugEnabled() then
         return;
     end
 
-    local subMenu = TetrisDevTool._findOrCreateTetrisSubMenu(menu);
+    local subMenu = ContextUtil.getOrCreateSubMenu(context, "Tetris");
 
-    -- Check if "Edit Container Data" is already in the menu
-    local hasContainerEdit = false;
-    for _, option in ipairs(subMenu.options) do
-        if option.name == "Edit Container Data" then
-            hasContainerEdit = true;
-            break;
-        end
-    end
-
-    if not hasContainerEdit then
+    local editContainerOption = ContextUtil.getOptionByName(subMenu, "Edit Container Data")
+    if not editContainerOption then
         subMenu:addOption("Edit Container Data", containerUi, TetrisDevTool.openContainerEdit);
     end
-    
+
     subMenu:addOption("Reset Grid Data", containerUi.containerGrid, TetrisDevTool.resetGridData);
-    subMenu:addOption("Recalculate Container Data", containerUi.containerGrid, TetrisDevTool.recalculateContainerData);
-end
-
-local lastMenu = nil;
-local lastSubMenu = nil;
-
----@param menu ISContextMenu
-function TetrisDevTool._findOrCreateTetrisSubMenu(menu)
-    local tetris = menu:getOptionFromName("Tetris");
-    if tetris == lastMenu and lastSubMenu then
-        return lastSubMenu;
-    end
-
-    tetris = menu:addOptionOnTop("Tetris", nil, nil)
-    local subMenu = ISContextMenu:getNew(menu);
-    menu:addSubMenu(tetris, subMenu);
-
-    lastMenu = tetris;
-    lastSubMenu = subMenu;
-
-    return subMenu;
+    subMenu:addOption("Reset Container Data", containerUi.containerGrid, TetrisDevTool.recalculateContainerData);
 end
 
 function TetrisDevTool.openEditItem(item)
-    -- create a new window with 2 number inputs for width and height
-    -- and a button to save the changes or cancel
-
     local editWindow = ISPanel:new(getMouseX(), getMouseY(), 350, 400);
     editWindow:initialise();
     editWindow:addToUIManager();
@@ -303,6 +263,11 @@ function TetrisDevTool.openEditItem(item)
         local slotText = self.squished and "Sq Slots: " or "Slots: ";
         self:drawText(slotText .. currentSlots, 10, 140-15, 1, 1, 1, 1, UIFont.Medium);
 
+        local itemDef = TetrisItemData._getItemData(self.item);
+        if itemDef._autoCalculated then
+            self:drawText("Unset", 120, 75, 0, 1, 1, 1, UIFont.Medium);
+        end
+
         if self.item:IsInventoryContainer() then
             -- Container slot count
             local slotCount = TetrisContainerData.calculateInnerSize(item:getItemContainer());
@@ -370,6 +335,7 @@ function TetrisDevTool.applyEdits(item, x, y, maxStack, squished)
     newData.width = x;
     newData.height = y;
     newData.maxStackSize = maxStack
+    newData._autoCalculated = nil; -- Avoid saving this value
 
     TetrisDevTool.itemEdits[fType] = newData;
 
@@ -657,7 +623,7 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
     editWindow:addChild(squishableTitle);
 
     -- Squishable toggle button
-    local isSquishable = editWindow.newContainerDefinition.isSquishable;
+    local isSquishable = not editWindow.newContainerDefinition.isRigid;
     local squishableButton = ISButton:new(10, 162, 100, 16, isSquishable and "True" or "False", editWindow);
     squishableButton:initialise();
     squishableButton:instantiate();
@@ -902,8 +868,8 @@ function TetrisDevTool.onEditContainer(self, button)
     end
 
     if button.internal == "SQUISHABLE" then
-        self.newContainerDefinition.isSquishable = not self.newContainerDefinition.isSquishable;
-        button:setTitle(self.newContainerDefinition.isSquishable and "True" or "False");
+        self.newContainerDefinition.isRigid = not self.newContainerDefinition.isRigid;
+        button:setTitle(not self.newContainerDefinition.isRigid and "True" or "False");
     end
 
     if button.internal == "ACCEPT" then
@@ -1158,12 +1124,18 @@ end
 
 
 function TetrisDevTool.applyContainerEdit(key, newDef)
+    newDef._autoCalculated = nil; -- Avoid saving this value
+    newDef.invalidCategories = nil;
     TetrisDevTool.containerEdits[key] = newDef;
     writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
+
     TetrisDevTool.forceRefreshAllGrids();
 end
 
 function TetrisDevTool.applyPocketEdit(key, newDef)
+    newDef._autoCalculated = nil; -- Avoid saving this value
+    newDef.invalidCategories = nil;
+
     TetrisDevTool.pocketEdits[key] = newDef;
     writeJsonFile(POCKET_FILENAME..".json", TetrisDevTool.pocketEdits);
     TetrisDevTool.forceRefreshAllGrids();
@@ -1210,6 +1182,14 @@ function TetrisDevTool.recalculateItemData(item)
     local fType = item:getFullType();
     TetrisItemData._itemData[fType] = nil;
     TetrisDevTool.itemEdits[fType] = nil;
+
+
+    if TetrisItemData.isSquishable(item) then
+        fType = TetrisItemData.getSquishedFullType(item);
+        TetrisItemData._itemData[fType] = nil;
+        TetrisDevTool.itemEdits[fType] = nil;
+    end
+
     writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
     -- Recalculation will happen when the item is next rendered
 end
@@ -1235,60 +1215,65 @@ function TetrisDevTool.resetGridData(containerGrid)
     getPlayerLoot(playerNum).inventoryPane:refreshItemGrids(true)
 end
 
-local og_createMenu = ISInventoryPaneContextMenu.createMenu
----@diagnostic disable-next-line: duplicate-set-field
-ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
-    local menu = og_createMenu(player, isInPlayerInventory, items, x, y, origin)
-    if not isDebugEnabled() then return menu end
-    
-    local item = items[1]
-    if not item then return menu end
+-- Avoid double patching when reloading
+if not TetrisDevTool.og_createMenu then
+    TetrisDevTool.og_createMenu = ISInventoryPaneContextMenu.createMenu
+    ---@diagnostic disable-next-line: duplicate-set-field
+    ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
+        local menu = TetrisDevTool.og_createMenu(player, isInPlayerInventory, items, x, y, origin)
+        if not isDebugEnabled() then return menu end
 
-    if items[1].items then 
-        item = items[1].items[1]
+        local item = items[1]
+        if not item then return menu end
+
+        if items[1].items then
+            item = items[1].items[1]
+        end
+        if not item then return menu end
+
+        pcall(function ()
+            print("item display name: " .. item:getDisplayName())
+            print("item display category: " .. (item:getDisplayCategory() or "none"))
+            print("item CLASS: " .. TetrisItemCategory.getCategory(item))
+            print("item full type: " .. item:getFullType())
+
+            print("item weight: " .. item:getWeight())
+            print("item actual weight: " .. item:getActualWeight())
+
+            if item:IsFood() then
+                print("item base hunger: " .. item:getBaseHunger())
+                print("item hunger change: " .. item:getHungerChange())
+            end
+
+            if item:IsDrainable() then
+                print("item use delta: " .. item:getUseDelta())
+                print("item used delta: " .. item:getUsedDelta())
+                print("item delta: " .. item:getDelta())
+            end
+
+            local mediaData = item:getMediaData()
+            if mediaData then
+                print("mediaData: " .. mediaData:getCategory())
+            end
+
+            if item:IsInventoryContainer() then
+                local container = item:getItemContainer()
+                print("container type: " .. tostring(container:getType()))
+            end
+
+            local tex = item:getTex()
+            if tex then
+                print("Texture Width: " .. tostring(tex:getWidth()))
+                print("Texture Height: " .. tostring(tex:getHeight()))
+            end
+
+            if item:IsClothing() then
+                print("Bodyslot: " .. item:getBodyLocation())
+            end
+        end)
+
+        TetrisDevTool.insertDebugOptions(menu, item)
+
+        return menu
     end
-    if not item then return menu end
-
-    print("item display name: " .. item:getDisplayName())
-    print("item display category: " .. (item:getDisplayCategory() or "none"))
-    print("item CLASS: " .. TetrisItemCategory.getCategory(item))
-    print("item full type: " .. item:getFullType())
-
-    print("item weight: " .. item:getWeight())
-    print("item actual weight: " .. item:getActualWeight())
-
-    if item:IsFood() then
-        print("item base hunger: " .. item:getBaseHunger())
-        print("item hunger change: " .. item:getHungerChange())
-    end
-
-    if item:IsDrainable() then
-        print("item use delta: " .. item:getUseDelta())
-        print("item used delta: " .. item:getUsedDelta())
-        print("item delta: " .. item:getDelta())
-    end
-
-    local mediaData = item:getMediaData()
-    if mediaData then
-        print("mediaData: " .. mediaData:getCategory())
-    end
-
-    if item:IsInventoryContainer() then
-        local container = item:getItemContainer()
-        print("container type: " .. tostring(container:getType()))
-    end
-
-    local tex = item:getTex()
-    if tex then
-        print("Texture Width: " .. tostring(tex:getWidth()))
-        print("Texture Height: " .. tostring(tex:getHeight()))
-    end
-
-    if item:IsClothing() then
-        print("Bodyslot: " .. item:getBodyLocation())
-    end
-
-    TetrisDevTool.insertDebugOptions(menu, item)
-
-    return menu
 end

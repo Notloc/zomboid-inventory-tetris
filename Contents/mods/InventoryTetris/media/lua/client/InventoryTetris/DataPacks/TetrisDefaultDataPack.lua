@@ -3495,8 +3495,6 @@ TetrisContainerData.registerLargeVehicleStorageContainers(vehicleStoragePack)
 
 
 
-
-
 -- A second data pack for testing purposes
 -- Need to redo everything at some point
 
@@ -3547,7 +3545,6 @@ local containerPack = {
                 },
             },
         },
-        ["isSquishable"] = true,
         ["isFragile"] = true,
     },
     ["Bag_BigHikingBag_22"] = {
@@ -3563,24 +3560,6 @@ local containerPack = {
                 },
             },
         },
-        ["validCategories"] = {
-            ["MELEE_WEAPON"] = true,
-            ["RANGED_WEAPON"] = true,
-            ["AMMO"] = true,
-            ["MAGAZINE"] = true,
-            ["FOOD"] = true,
-            ["DRINK"] = true,
-            ["CLOTHING"] = true,
-            ["CONTAINER"] = true,
-            ["HEALING"] = true,
-            ["BOOK"] = true,
-            ["ENTERTAINMENT"] = true,
-            ["KEY"] = true,
-            ["MISC"] = true,
-            ["SEED"] = true,
-            ["MOVEABLE"] = true,
-        },
-        ["isSquishable"] = true,
     },
     ["FirstAidKit_4"] = {
         ["gridDefinitions"] = {
@@ -3702,8 +3681,7 @@ local containerPack = {
                     ["y"] = 0,
                 },
             },
-        },
-        ["isSquishable"] = true,
+        }
     },
     ["shelves_10"] = {
         ["gridDefinitions"] = {
@@ -4016,3 +3994,827 @@ local containerPack = {
 
 TetrisItemData.registerItemDefinitions(itemPack)
 TetrisContainerData.registerContainerDefinitions(containerPack)
+
+
+local itemPack2 = {
+    ["Base.Bag_DoctorBag__squished"] = {
+        ["width"] = 3,
+        ["height"] = 2,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.Cooler"] = {
+        ["maxStackSize"] = 1,
+        ["height"] = 4,
+        ["width"] = 5,
+    },
+    ["Base.Bag_GolfBag"] = {
+        ["maxStackSize"] = 1,
+        ["height"] = 8,
+        ["width"] = 4,
+    },
+    ["Base.GroceryBag5__squished"] = {
+        ["width"] = 1,
+        ["height"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.GroceryBag2__squished"] = {
+        ["width"] = 1,
+        ["height"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.Plasticbag__squished"] = {
+        ["width"] = 1,
+        ["height"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.GroceryBag1__squished"] = {
+        ["width"] = 1,
+        ["height"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.GroceryBag4__squished"] = {
+        ["width"] = 1,
+        ["height"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.GroceryBag3__squished"] = {
+        ["width"] = 1,
+        ["height"] = 1,
+        ["maxStackSize"] = 1,
+    },
+    ["Base.SewingKit"] = {
+        ["height"] = 2,
+        ["width"] = 2,
+        ["maxStackSize"] = 1,
+    },
+}
+
+local containerPack2 = {
+    ["Bag_FannyPackBack_1"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 2,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+        },
+    },
+    ["Bag_FannyPackFront_1"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 2,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+        },
+    },
+    ["FirstAidKit_4"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 2,
+                    ["height"] = 1,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 1,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [4] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 1,
+                },
+                ["position"] = {
+                    ["x"] = 2,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isOrganized"] = true,
+        ["validCategories"] = {
+            ["HEALING"] = true,
+        },
+        ["isRigid"] = true,
+        ["isFragile"] = true,
+    },
+    ["Bag_DoctorBag_8"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+        ["validCategories"] = {
+            ["HEALING"] = true,
+        },
+    },
+    ["Cooler_8"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 7,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+        ["validCategories"] = {
+            ["FOOD"] = true,
+            ["DRINK"] = true,
+        },
+    },
+    ["Briefcase_7"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["Bag_GolfBag_18"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 2,
+                    ["y"] = 0,
+                },
+            },
+            [4] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 3,
+                    ["y"] = 0,
+                },
+            },
+            [5] = {
+                ["size"] = {
+                    ["width"] = 2,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [6] = {
+                ["size"] = {
+                    ["width"] = 2,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 1,
+                },
+            },
+            [7] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 1,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 2,
+                },
+            },
+        },
+        ["isRigid"] = true,
+        ["centerMode"] = "horizontal",
+    },
+    ["Flightcase_5"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 7,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["Guitarcase_5"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 2,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["Lunchbox_4"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["Lunchbox2_4"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["Lunchbag_5"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["none"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 1,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+    },
+    ["Suitcase_16"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["Purse_12"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 6,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+    },
+    ["Bag_Satchel_15"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+    },
+    ["SeedBag_5"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["validCategories"] = {
+            ["SEED"] = true,
+        },
+        ["isRigid"] = true,
+    },
+    ["SewingKit_5"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+            [2] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 0,
+                },
+            },
+            [3] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 2,
+                },
+                ["position"] = {
+                    ["x"] = 2,
+                    ["y"] = 0,
+                },
+            },
+            [4] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 1,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 1,
+                },
+            },
+            [5] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 1,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 1,
+                },
+            },
+            [6] = {
+                ["size"] = {
+                    ["width"] = 1,
+                    ["height"] = 1,
+                },
+                ["position"] = {
+                    ["x"] = 2,
+                    ["y"] = 1,
+                },
+            },
+        },
+        ["validCategories"] = {
+            ["AMMO"] = true,
+            ["CLOTHING"] = true,
+            ["HEALING"] = true,
+            ["KEY"] = true,
+            ["SEED"] = true,
+        },
+        ["isRigid"] = true,
+        ["isFragile"] = true,
+    },
+    ["PistolCase1_4"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["PistolCase2_4"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["PistolCase3_4"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["RevolverCase2_4"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["RevolverCase1_4"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["RevolverCase3_4"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["RifleCase3_7"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 8,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["RifleCase2_7"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 8,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["RifleCase1_7"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 8,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["ShotgunCase1_7"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["ShotgunCase2_7"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isRigid"] = true,
+    },
+    ["GroceryBag2_8"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["GroceryBag5_8"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["Plasticbag_8"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["GroceryBag1_8"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["GroceryBag4_8"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["GroceryBag3_8"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 4,
+                    ["height"] = 4,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["Tote_12"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 5,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["Paperbag_Spiffos_5"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["Paperbag_Jays_5"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+    ["PaperBag_5"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 3,
+                    ["height"] = 3,
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0,
+                },
+            },
+        },
+        ["isFragile"] = true,
+    },
+}
+
+TetrisItemData.registerItemDefinitions(itemPack2)
+TetrisContainerData.registerContainerDefinitions(containerPack2)

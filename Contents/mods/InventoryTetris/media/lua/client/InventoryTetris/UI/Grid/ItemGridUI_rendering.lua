@@ -565,17 +565,16 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     local largestDimension = math.max(texW, texH)
 
     local x2, y2 = nil, nil
-    local targetScale = TEXTURE_SIZE / 32
+    local targetScale = OPT.SCALE
+    local correctiveScale = 1.0
 
-    local precisionFactor = 8
-    if largestDimension > TEXTURE_SIZE + TEXTURE_PAD then -- Handle large textures
-        local mult = precisionFactor * largestDimension / TEXTURE_SIZE 
-        mult = math.ceil(mult) / precisionFactor
-        targetScale = targetScale / mult
+    if largestDimension > 34 then -- Handle large textures
+        correctiveScale = 34 / largestDimension
     end
 
     x2 = 1 + x + TEXTURE_PAD * w + (w - minDimension) * (TEXTURE_SIZE) / 2
     y2 = 1 + y + TEXTURE_PAD * h + (h - minDimension) * (TEXTURE_SIZE) / 2
+
     if (targetScale < 1.0) then -- Center weirdly sized textures
         x2 = x2 + 0.5 * (TEXTURE_SIZE - texW * targetScale) * minDimension
         y2 = y2 + 0.5 * (TEXTURE_SIZE - texH * targetScale) * minDimension
@@ -588,8 +587,8 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     b = b * bgBright
 
     if rotate then
-        local width = texW * targetScale
-        local height = texH * targetScale
+        local width = texW * targetScale * correctiveScale
+        local height = texH * targetScale * correctiveScale
         local xInset = (minDimension*TEXTURE_SIZE - width) / 2
         local yInset = (minDimension*TEXTURE_SIZE - height) / 2
 
@@ -597,7 +596,7 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
         ItemGridUI._drawTextureRotated(drawingContext, texture, x2 + xInset, y2 + yInset, width, height, alphaMult, r, g, b)
     else
         SetTextureParameters(texture)
-        drawingContext:drawTextureScaledUniform(texture, x2, y2, targetScale, alphaMult, r, g, b);
+        drawingContext:drawTextureScaledUniform(texture, x2, y2, targetScale * correctiveScale, alphaMult, r, g, b);
     end
 
     if item:isBroken() then

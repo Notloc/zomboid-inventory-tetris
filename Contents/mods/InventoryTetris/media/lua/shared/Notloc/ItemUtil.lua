@@ -34,8 +34,8 @@ function ItemUtil.canEquipItem(item)
     return not ItemUtil.canEat(item) and not item:IsClothing() and not item:isBroken()
 end
 
-function ItemUtil.forEachItemOnPlayer(playerObj, callbackFunc)
-    local containers = ItemUtil.getAllEquippedContainers(playerObj)
+function ItemUtil.forEachItemOnPlayer(playerObj, callbackFunc, ignoreMainInventory)
+    local containers = ItemUtil.getAllEquippedContainers(playerObj, ignoreMainInventory)
     for _, container in ipairs(containers) do
         local _items = container:getItems()
         local _itemCount = container:getItems():size() - 1
@@ -45,13 +45,18 @@ function ItemUtil.forEachItemOnPlayer(playerObj, callbackFunc)
     end
 end
 
-function ItemUtil.getAllEquippedContainers(playerObj)
-    local playerInv = getPlayerInventory(playerObj:getPlayerNum())
-    local selectedContainer = playerInv.inventory
-    local containers = {selectedContainer}
+function ItemUtil.getAllEquippedContainers(playerObj, ignoreMainInventory)
+    local containers = {}
+    local mainInv = playerObj:getInventory()
 
-    for _, button in ipairs(playerInv.backpacks) do
-        if button.inventory ~= selectedContainer then
+    local inventoryPage = getPlayerInventory(playerObj:getPlayerNum())
+    local selectedContainer = inventoryPage.inventory
+    if not ignoreMainInventory or selectedContainer ~= mainInv then
+        table.insert(containers, mainInv)
+    end
+
+    for _, button in ipairs(inventoryPage.backpacks) do
+        if button.inventory ~= selectedContainer and (not ignoreMainInventory or button.inventory ~= mainInv) then
             table.insert(containers, button.inventory)
         end
     end
