@@ -1,6 +1,6 @@
+-- Responsible for forcing items out of the player's inventory when it slips into an invalid state
 local ItemUtil = require("Notloc/ItemUtil")
 
--- Responsible for forcing items out of the player's inventory when it slips into an invalid state
 GridAutoDropSystem = {}
 GridAutoDropSystem._dropQueues = {}
 GridAutoDropSystem._dropProcessing = {}
@@ -15,8 +15,6 @@ function GridAutoDropSystem.queueItemForDrop(item, playerObj)
         GridAutoDropSystem._dropQueues[playerNum][item] = true
     end
 end
-
--- PRIVATE FUNCTIONS --
 
 function GridAutoDropSystem._processItems(playerNum, items)
     GridAutoDropSystem._dropProcessing[playerNum] = true
