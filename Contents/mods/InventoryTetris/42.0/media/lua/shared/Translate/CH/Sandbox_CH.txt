@@ -1,6 +1,0 @@
-Sandbox_CH = {
-    Sandbox_InventoryTetris = "幾何物品欄",
-    Sandbox_InventoryTetris_EnableSearch = "開啟容器內搜索",
-    Sandbox_InventoryTetris_SearchTime = "搜刮時間",
-    Sandbox_InventoryTetris_BonusGridSize = "額外網格容量"
-}
