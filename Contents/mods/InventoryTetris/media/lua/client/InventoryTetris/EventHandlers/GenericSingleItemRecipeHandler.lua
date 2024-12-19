@@ -1,5 +1,5 @@
 GenericSingleItemRecipeHandler = {}
-function GenericSingleItemRecipeHandler.call(eventData, stack, inventory, playerNum)    
+GenericSingleItemRecipeHandler.call = function(eventData, stack, inventory, playerNum)    
     local playerObj = getSpecificPlayer(playerNum)
     if playerObj:isDriving() then return false end
     
@@ -29,7 +29,7 @@ function GenericSingleItemRecipeHandler.call(eventData, stack, inventory, player
     local numberOfTimes = RecipeManager.getNumberOfTimesRecipeCanBeDone(recipe, playerObj, containerList, item)
     local resultItemType = recipe:getResult():getFullType()
 
-    local containerGrid = ItemContainerGrid.GetOrCreate(inventory, playerNum)
+    local containerGrid = ItemContainerGrid.Create(inventory, playerNum)
 
     local canBeDoneFromFloor = recipe:isCanBeDoneFromFloor()
     if containerGrid.isOnPlayer then

@@ -14,7 +14,7 @@ local validKeys = {
 
 TetrisServer = {}
 
-function TetrisServer.getOrCreateUuid(tableObj)
+TetrisServer.getOrCreateUuid = function(tableObj)
     local uuid = tableObj[TETRIS_UUID]
     if not uuid then
         uuid = getRandomUUID()
@@ -23,7 +23,7 @@ function TetrisServer.getOrCreateUuid(tableObj)
     return uuid
 end
 
-local function validateTimestamps(existingData, incomingData)
+local validateTimestamps = function(existingData, incomingData)
     if not existingData.lastServerTime then
         return true
     end
@@ -35,7 +35,7 @@ local function validateTimestamps(existingData, incomingData)
     return incomingData.lastServerTime == existingData.lastServerTime
 end
 
-local function handlePartialData(fullKey, partialKey, incomingData)
+local handlePartialData = function(fullKey, partialKey, incomingData)
     local uuid = TetrisServer.getOrCreateUuid(incomingData)
     local fullData = ModData.getOrCreate(fullKey)
     local existingData = fullData[uuid]
@@ -53,7 +53,7 @@ local function handlePartialData(fullKey, partialKey, incomingData)
     ModData.transmit(partialKey)
 end
 
-local function onServerReceiveGlobalModData(key, data)
+local onServerReceiveGlobalModData = function(key, data)
     if not isServer() or not validKeys[key] then
         return
     end

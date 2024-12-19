@@ -1,22 +1,18 @@
--- Injects the new rendering elements into the InventoryPane and disables the original system.
----@diagnostic disable: duplicate-set-field
+require "ISUI/ISPanel"
+require "ISUI/ISButton"
+require "ISUI/ISMouseDrag"
+require "TimedActions/ISTimedActionQueue"
+require "TimedActions/ISEatFoodAction"
+require "ISUI/ISInventoryPane"
+local OPT = require "InventoryTetris/Settings"
 
-local Version = require("Notloc/Versioning/Version")
-
-require("ISUI/ISPanel")
-require("ISUI/ISButton")
-require("ISUI/ISMouseDrag")
-require("TimedActions/ISTimedActionQueue")
-require("TimedActions/ISEatFoodAction")
-require("ISUI/ISInventoryPane")
-local OPT = require("InventoryTetris/Settings")
-
--- I use on game boot because I want to make sure other mods have loaded before I patch this in
+-- Aggressively ensure we load last
+-- If the user has this mod enabled, I think its safe to assume they want it to take priority
 Events.OnGameBoot.Add(function()
-
     local og_new = ISInventoryPane.new
-    function ISInventoryPane:new(x, y, width, height, inventory, zoom)
-        local o = og_new(self, x, y, width, height, inventory, zoom)
+    function ISInventoryPane:new(x, y, width, height, inventory, player)
+        local o = og_new(self, x, y, width, height, inventory, player)
+        o.tetrisWindowManager = TetrisWindowManager:new(o)
         o.gridContainerUis = {}
         return o
     end
@@ -25,12 +21,7 @@ Events.OnGameBoot.Add(function()
     function ISInventoryPane:createChildren()
         og_createChildren(self)
 
-        self.tetrisWindowManager = TetrisWindowManager:new(self, self.player)
-
-        ---@diagnostic disable-next-line: undefined-global
-        self.scrollView = NotlocScrollView:new(0,0, self.width, self.height) -- From EquipmentUI mod
-        self.scrollView.addHorizontalScrollbar = true
-
+        self.scrollView = NotlocScrollView:new(0,0, self.width, self.height)
         self.scrollView:initialise()
         self:addChild(self.scrollView)
         self.scrollView:setAnchorLeft(true)
@@ -47,12 +38,12 @@ Events.OnGameBoot.Add(function()
         self.onApplyGridScaleCallback = function(scale)
             self:onApplyGridScale(scale)
         end
-        OPT.OnValueChanged.SCALE:add(self.onApplyGridScaleCallback)
+        OPT.OnApplyGridScale:add(self.onApplyGridScaleCallback)
 
         self.onApplyContainerInfoScaleCallback = function(scale)
             self:onApplyContainerInfoScale(scale)
         end
-        OPT.OnValueChanged.CONTAINER_INFO_SCALE:add(self.onApplyContainerInfoScaleCallback)
+        OPT.OnApplyContainerInfoScale:add(self.onApplyContainerInfoScaleCallback)
     end
 
     function ISInventoryPane:onApplyGridScale(scale)
@@ -88,7 +79,6 @@ Events.OnGameBoot.Add(function()
 
         -- Tetris time
         self:refreshItemGrids()
-        self.parent:checkTetrisSearch()
     end
 
     function ISInventoryPane:refreshItemGrids(forceFullRefresh)
@@ -97,7 +87,6 @@ Events.OnGameBoot.Add(function()
             self.scrollView:removeScrollChild(gridContainerUi)
             oldGridContainerUis[gridContainerUi.inventory] = gridContainerUi
         end
-        self.scrollView:resetScroll()
 
         self.gridContainerUis = {}
 
@@ -126,15 +115,9 @@ Events.OnGameBoot.Add(function()
             inventories[1] = self.inventory
         end
 
-        local x = 10
         local y = 10
         for _, inventory in ipairs(inventories) do
-            local itemGridContainerUi = oldGridContainerUis[inventory]
-            if itemGridContainerUi and forceFullRefresh then
-                itemGridContainerUi:unregisterEvents()
-                itemGridContainerUi = nil
-            end
-
+            local itemGridContainerUi = not forceFullRefresh and oldGridContainerUis[inventory] or nil
             if not itemGridContainerUi then
                 itemGridContainerUi = ItemGridContainerUI:new(inventory, self, self.player)
                 itemGridContainerUi:initialise()
@@ -144,13 +127,11 @@ Events.OnGameBoot.Add(function()
             itemGridContainerUi:setX(10)
             self.scrollView:addScrollChild(itemGridContainerUi)
 
-            x = math.max(x, itemGridContainerUi:getX() + itemGridContainerUi:getWidth() + 8)
             y = y + itemGridContainerUi:getHeight() + 8
 
             table.insert(self.gridContainerUis, itemGridContainerUi)
         end
 
-        self.scrollView:setScrollWidth(x)
         self.scrollView:setScrollHeight(y)
     end
 
@@ -179,7 +160,7 @@ Events.OnGameBoot.Add(function()
         
         -- Draw the version at the bottom left
         if self.parent.onCharacter then
-            local version = "Inventory Tetris - " .. Version.format(InventoryTetris.version)
+            local version = "Inventory Tetris - " .. InventoryTetris.version
             self:drawText(version, 8, self.height - 18, 0.3, 0.3, 0.3, 0.82, UIFont.Small)
         end
     end
@@ -204,27 +185,20 @@ Events.OnGameBoot.Add(function()
             return -- in the main menu
         end
 
-        local isController = JoypadState.players[self.player+1] ~= nil
-
-        if not isController and self.parent:isMouseOverEquipmentUi() then
+        if self.parent:isMouseOverEquipmentUi() then
             return self.parent.equipmentUi:updateTooltip()
         else
-            if isController then
-                local item = self:findSelectedControllerItem()
-                self:doTooltipForItem(item)
-            else
-                local item = nil
+            local item = nil
 
-                if not self.doController and not self.dragging and not self.draggingMarquis then
-                    local containerGridUi = self:findContainerGridUiUnderMouse()
-                    if containerGridUi then
-                        local stack = containerGridUi:findGridStackUnderMouse()
-                        item = stack and ItemStack.getFrontItem(stack, containerGridUi.inventory) or nil
-                    end
+            if not self.doController and not self.dragging and not self.draggingMarquis then
+                local containerGrid = self:findContainerGridUiUnderMouse()
+                if containerGrid then
+                    local stack = containerGrid:findGridStackUnderMouse()
+                    item = stack and ItemStack.getFrontItem(stack, containerGrid.inventory) or nil
                 end
-
-                self:doTooltipForItem(item)
             end
+
+            self:doTooltipForItem(item)
         end
     end
 
@@ -282,8 +256,8 @@ Events.OnGameBoot.Add(function()
         local lootPage = getPlayerLoot(self.player)
         local lootTooltip = lootPage and lootPage.inventoryPane.toolRender
         UIManager.setPlayerInventoryTooltip(self.player,
-            inventoryTooltip and inventoryTooltip.javaObject,
-            lootTooltip and lootTooltip.javaObject)
+            inventoryTooltip and inventoryTooltip.javaObject or nil,
+            lootTooltip and lootTooltip.javaObject or nil)
     end
 
     local og_onMouseDown = ISInventoryPane.onMouseDown
@@ -335,6 +309,14 @@ Events.OnGameBoot.Add(function()
         --return og_onMouseWheel(self, del)
     end
 
+    local og_getActualItems = ISInventoryPane.getActualItems
+    function ISInventoryPane.getActualItems(items)
+        if items.items then
+            return og_getActualItems(items.items)
+        end
+        return og_getActualItems(items)
+    end
+
     local og_transferItemsByWeight = ISInventoryPane.transferItemsByWeight
     function ISInventoryPane:transferItemsByWeight(items, container)
         ISInventoryTransferAction.globalTetrisRules = true
@@ -348,46 +330,4 @@ Events.OnGameBoot.Add(function()
         end
         return {}
     end
-
-
-
-    local og_canPutIn = ISInventoryPane.canPutIn
-    function ISInventoryPane:canPutIn()
-        ControllerDragAndDrop.currentPlayer = self.player
-        local retVal = og_canPutIn(self)
-        ControllerDragAndDrop.currentPlayer = nil
-        return retVal
-    end
-
-    local og_getActualItems = ISInventoryPane.getActualItems
-    function ISInventoryPane.getActualItems(items)
-        if not items then
-            items = ControllerDragAndDrop.getDraggedStack(ControllerDragAndDrop.currentPlayer)
-        end
-        if items.items then
-            return og_getActualItems(items.items)
-        end
-        return og_getActualItems(items)
-    end
-
-    function ISInventoryPane:scrollToContainer(inventory)
-        for _, gridContainerUi in ipairs(self.gridContainerUis) do
-            if gridContainerUi.inventory == inventory then
-                self.scrollView:ensureChildIsVisible(gridContainerUi)
-                return
-            end
-        end
-    end
-    
-    function ISInventoryPane:findSelectedControllerItem()
-        local inv = self.parent
-        if not inv.joyfocus then return nil end
-
-        local selection = inv.controllerNode:getLeafChild()
-        if selection and selection.uiElement.Type == "ItemGridUI" then
-            return selection.uiElement:getControllerSelectedItem() 
-        end
-        return nil
-    end
-
 end)

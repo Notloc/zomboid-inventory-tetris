@@ -1,4 +1,4 @@
-require("TimedActions/ISBaseTimedAction")
+require "TimedActions/ISBaseTimedAction"
 
 SearchGridAction = ISBaseTimedAction:derive("SearchGridAction");
 
@@ -14,6 +14,7 @@ end
 function SearchGridAction:isValid()
 	return true
 end
+
 
 function SearchGridAction:startActionAnim()
     self:setActionAnim("Loot");
@@ -37,7 +38,9 @@ function SearchGridAction:startActionAnim()
 	end
 end
 
+
 function SearchGridAction:start()
+	--self.grid:startSearch(character:getPlayerNum())
     self:startActionAnim()
 end
 
@@ -59,13 +62,7 @@ function SearchGridAction:perform()
 		self.character:getEmitter():stopSound(self.sound)
 	end
 
-	local playerNum = self.character:getPlayerNum()
-	self.grid:completeSearch(playerNum)
-
-	-- we need to update our needSearch variable when a search is completed
-	---- TODO: Possibly a better way to propagate this?
-	getPlayerInventory(playerNum):checkTetrisSearch()
-	getPlayerLoot(playerNum):checkTetrisSearch()
+    self.grid:completeSearch(self.character:getPlayerNum())
 
     -- needed to remove from queue / start next.
 	ISBaseTimedAction.perform(self);

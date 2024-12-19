@@ -1,6 +1,6 @@
-require("BuildingObjects/ISMoveableCursor")
-require("Moveables/ISMoveablesAction")
-local ItemUtil = require("Notloc/ItemUtil")
+require "BuildingObjects/ISMoveableCursor"
+require "Moveables/ISMoveablesAction"
+require "Notloc/NotUtil"
 
 -- Transfer items to the player's main inventory just in time for MoveablesAction to use them
 
@@ -25,7 +25,7 @@ local function jitTransferItems(playerObj, moveProps, _origSpriteName)
 
     local foundItem = false
     if not moveProps.isMultiSprite then
-        ItemUtil.forEachItemOnPlayer(playerObj, function(item, container)
+        NotUtil.forEachItemOnPlayer(playerObj, function(item, container)
             if not foundItem and instanceof(item, "Moveable") then
                 if item:getWorldSprite() == _origSpriteName then
                     if container ~= playerInv then
@@ -54,7 +54,7 @@ local function jitTransferItems(playerObj, moveProps, _origSpriteName)
         targetNames[moveProps.name .. " (1/1)"] = true
     end
 
-    ItemUtil.forEachItemOnPlayer(playerObj, function(item)
+    NotUtil.forEachItemOnPlayer(playerObj, function(item)
         if instanceof(item, "Moveable") then
             if doesItemMatch(moveProps, item, targetNames) then
                 ISInventoryPaneContextMenu.transferIfNeeded(playerObj, item)
@@ -64,12 +64,8 @@ local function jitTransferItems(playerObj, moveProps, _origSpriteName)
     end)
 end
 
-Events.OnGameStart.Add(function ()
-    local og_new = ISMoveablesAction.new
-
-    ---@diagnostic disable-next-line: duplicate-set-field
-    function ISMoveablesAction:new(character, _sq, _moveProps, _mode, _origSpriteName, _moveCursor)
-        jitTransferItems(character, _moveProps, _origSpriteName)
-        return og_new(self, character, _sq, _moveProps, _mode, _origSpriteName, _moveCursor)
-    end
-end)
+local og_new = ISMoveablesAction.new
+function ISMoveablesAction:new(character, _sq, _moveProps, _mode, _origSpriteName, _moveCursor)
+    jitTransferItems(character, _moveProps, _origSpriteName)
+    return og_new(self, character, _sq, _moveProps, _mode, _origSpriteName, _moveCursor)
+end

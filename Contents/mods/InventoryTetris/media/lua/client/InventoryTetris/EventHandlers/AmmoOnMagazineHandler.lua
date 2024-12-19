@@ -1,7 +1,6 @@
-require("InventoryTetris/Events")
-require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
-require("Notloc/NotUtil")
-local ItemUtil = require("Notloc/ItemUtil")
+require "InventoryTetris/Events"
+require "InventoryTetris/ItemGrid/UI/Grid/ItemGridUI_rendering"
+require "Notloc/NotUtil"
 
 ItemGridUI.registerItemHoverColor(TetrisItemCategory.AMMO, TetrisItemCategory.MAGAZINE, ItemGridUI.GENERIC_ACTION_COLOR)
 
@@ -14,7 +13,7 @@ local ammoMagazineHandler = {}
 
 -- In this case, we only validate that bullets are being dropped on a magazine, as we want this handler to "own" this interaction
 -- The specific checks for the magazine and bullets are done in the call function
-function ammoMagazineHandler.validate(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
+ammoMagazineHandler.validate = function(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
     local dropItem = droppedStack.items[1]
     local targetItem = targetStack.items[1]
     
@@ -32,10 +31,10 @@ function ammoMagazineHandler.validate(eventData, droppedStack, fromInventory, ta
 end
 
 -- The stacks are vanilla item stacks, not TetrisItemStacks, as drops may be sourced from outside of the Tetris grids
-function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
+ammoMagazineHandler.call = function(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
     local magazine = targetStack.items[1]
     local bullets = droppedStack.items
-
+    
     if magazine:getAmmoType() ~= bullets[1]:getFullType() then return end
 
     local missingBullets = magazine:getMaxAmmo() - magazine:getCurrentAmmoCount()
@@ -52,13 +51,12 @@ function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, target
 
     local returnMag = nil
     if targetInventory ~= playerInv then
-        local containerGrid = ItemContainerGrid.GetOrCreate(targetInventory, playerNum)
+        local containerGrid = ItemContainerGrid.Create(targetInventory, playerNum)
         local magStack, grid = containerGrid:findStackByItem(magazine)
-
-        local transferMag = nil
-        transferMag, returnMag = ItemUtil.createTransferActionWithReturn(magazine, targetInventory, playerInv, playerObj)
-        if magStack and grid then
-            returnMag:setTetrisTarget(magStack.x, magStack.y, grid.gridIndex, magStack.isRotated, grid.secondaryTarget)
+        
+        transferMag, returnMag = NotUtil.createTransferActionWithReturn(magazine, targetInventory, playerInv, playerObj)
+        if magStack then
+            returnMag:setTetrisTarget(magStack.x, magStack.y, grid.gridIndex, magStack.isRotated)
         end
         ISTimedActionQueue.add(transferMag)
     end

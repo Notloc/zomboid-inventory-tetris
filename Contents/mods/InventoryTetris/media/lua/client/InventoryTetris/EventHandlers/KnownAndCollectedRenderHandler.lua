@@ -1,5 +1,5 @@
-require("InventoryTetris/Events")
-require("RecordedMedia/recorded_media")
+require "InventoryTetris/Events"
+require "RecordedMedia/recorded_media"
 
 if not getActivatedMods():contains("KnownAndCollected") then
     return
@@ -64,14 +64,14 @@ local function isSkillMedia(mediaId)
     return isSkillMediaCache[mediaId]
 end
 
-local KnownAndCollectedRenderer = {}
-function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridStack, x, y, width, height, playerObj)
+local knownAndCollectedRenderer = {}
+knownAndCollectedRenderer.call = function(eventData, drawingContext, item, gridStack, x, y, width, height, playerObj)
     local knownAndCollected = playerObj:getModData().knownAndCollected
     if not knownAndCollected then
         return
     end
 
-    local recordedMedia = KnownAndCollectedRenderer.recordedMedia or getZomboidRadio():getRecordedMedia()
+    local recordedMedia = knownAndCollectedRenderer.recordedMedia or getZomboidRadio():getRecordedMedia()
 
     local collectedMap = knownAndCollected.collected or {}
     local collectedMediaMap = knownAndCollected.collectedMedia or {}
@@ -157,4 +157,4 @@ function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridSta
 
 end
 
-TetrisEvents.OnPostRenderGridItem:add(KnownAndCollectedRenderer)
+TetrisEvents.OnPostRenderGridItem:add(knownAndCollectedRenderer)

@@ -1,11 +1,8 @@
----@enum TetrisItemCategory
-
 TetrisItemCategory = {
     MELEE = "MELEE_WEAPON",
     RANGED = "RANGED_WEAPON",
     AMMO = "AMMO",
     MAGAZINE = "MAGAZINE",
-    ATTACHMENT = "ATTACHMENT",
     FOOD = "FOOD",
     DRINK = "DRINK",
     CLOTHING = "CLOTHING",
@@ -25,7 +22,7 @@ for _, category in pairs(TetrisItemCategory) do
 end
 TetrisItemCategory.list = list
 
-function TetrisItemCategory.getCategory(item)
+TetrisItemCategory.getCategory = function(item)
     local category = item:getDisplayCategory()
     local type = item:getFullType()
 
@@ -44,10 +41,7 @@ function TetrisItemCategory.getCategory(item)
 
     elseif item:getMaxAmmo() > 0 then
             return TetrisItemCategory.MAGAZINE
-
-    elseif category == "WeaponPart" then
-        return TetrisItemCategory.ATTACHMENT
-
+    
     elseif category == "Ammo" then
         return TetrisItemCategory.AMMO
 
@@ -65,35 +59,13 @@ function TetrisItemCategory.getCategory(item)
 
     elseif category == "Entertainment" then
         return TetrisItemCategory.ENTERTAINMENT
-
+    
     elseif category == "Key" then
         return TetrisItemCategory.KEY
-
+    
     elseif string.find(type, "Seed") then 
         return TetrisItemCategory.SEED
     end
 
     return TetrisItemCategory.MISC
-end
-
-TetrisItemCategory.categoryIcons = {
-    [TetrisItemCategory.MELEE] = getTexture("media/textures/InventoryTetris/Categories/MELEE.png"),
-    [TetrisItemCategory.RANGED] = getTexture("media/textures/InventoryTetris/Categories/RANGED.png"),
-    [TetrisItemCategory.AMMO] = getTexture("media/textures/InventoryTetris/Categories/AMMO.png"),
-    [TetrisItemCategory.MAGAZINE] = getTexture("media/textures/InventoryTetris/Categories/MAGAZINE.png"),
-    [TetrisItemCategory.FOOD] = getTexture("media/textures/InventoryTetris/Categories/FOOD.png"),
-    [TetrisItemCategory.DRINK] = getTexture("media/textures/InventoryTetris/Categories/DRINK.png"),
-    [TetrisItemCategory.CLOTHING] = getTexture("media/textures/InventoryTetris/Categories/CLOTHING.png"),
-    [TetrisItemCategory.CONTAINER] = getTexture("media/textures/InventoryTetris/Categories/CONTAINER.png"),
-    [TetrisItemCategory.HEALING] = getTexture("media/textures/InventoryTetris/Categories/HEALING.png"),
-    [TetrisItemCategory.BOOK] = getTexture("media/textures/InventoryTetris/Categories/BOOK.png"),
-    [TetrisItemCategory.ENTERTAINMENT] = getTexture("media/textures/InventoryTetris/Categories/ENTERTAINMENT.png"),
-    [TetrisItemCategory.KEY] = getTexture("media/textures/InventoryTetris/Categories/KEY.png"),
-    [TetrisItemCategory.MISC] = getTexture("media/textures/InventoryTetris/Categories/MISC.png"),
-    [TetrisItemCategory.SEED] = getTexture("media/textures/InventoryTetris/Categories/SEED.png"),
-    [TetrisItemCategory.MOVEABLE] = getTexture("media/textures/InventoryTetris/Categories/MOVEABLE.png"),
-}
-
-function TetrisItemCategory.getCategoryIcon(category)
-    return TetrisItemCategory.categoryIcons[category]
 end

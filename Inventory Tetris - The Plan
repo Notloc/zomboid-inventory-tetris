@@ -1,11 +1,12 @@
 Inventory Tetris - The Plan
 
-
 Remove organized/disorganized
 	Disorganized behaviour is only for disorganized trait now
 	Organized will buff autosort
 
 Auto sort
+
+Remove generic recipe handler
 
 [GENERAL BUG FIXES]
 	Tooltips on overflow
@@ -72,6 +73,9 @@ Auto sort
 [FRAGILE]
 	Go through everything!
 	That includes world containers
+
+[Allow stacking of food items]
+	Will require 
 
 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ======  
 
