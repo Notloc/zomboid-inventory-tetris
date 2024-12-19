@@ -1,6 +1,0 @@
-Sandbox_PTBR = {
-    Sandbox_InventoryTetris = "Inventário de Tetris",
-    Sandbox_InventoryTetris_EnableSearch = "Ativar Pesquisa em Recipientes",
-    Sandbox_InventoryTetris_SearchTime = "Tempo da Pesquisa",
-    Sandbox_InventoryTetris_BonusGridSize = "Tamanho da Grade de Bônus"
-}

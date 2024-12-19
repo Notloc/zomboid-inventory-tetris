@@ -1,7 +1,0 @@
-Sandbox_ES =
-{
-    Sandbox_InventoryTetris = "Inventario Tetris",
-    Sandbox_InventoryTetris_EnableSearch = "Habilitar busqueda en contenedor",
-    Sandbox_InventoryTetris_SearchTime = "Tiempo de busqueda",
-    Sandbox_InventoryTetris_BonusGridSize = "Tamaño de cuadrícula adicional"
-}
