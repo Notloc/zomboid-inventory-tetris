@@ -57,7 +57,7 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
 
     o.isOnPlayer = o.isPlayerInventory or (o.item and o.item:isInPlayerInventory())
     o.showTitle = true
-    o.isCollapsed = false
+    o.isGridCollapsed = false
 
     return o
 end
@@ -149,7 +149,7 @@ function ItemGridContainerUI:initialise()
         :injectControllerNode(self)
         :setChildrenNodeProvider(function()
             local children = {}
-            if not self.isCollapsed then
+            if not self.isGridCollapsed then
                 for _, gridUis in pairs(self.gridUis) do
                     for _, gridUi in pairs(gridUis) do
                         table.insert(children, gridUi.controllerNode)
@@ -160,7 +160,7 @@ function ItemGridContainerUI:initialise()
             return children
         end)
         :setGainJoypadFocusHandler(function()
-            if self.isCollapsed then
+            if self.isGridCollapsed then
                 self.controllerNode:setSelectedChild(self.infoRenderer.controllerNode)
             end
         end)
@@ -257,7 +257,7 @@ function ItemGridContainerUI:applyScales(gridScale, infoScale)
 
     self:setWidth(maxX + infoWidth+2)
 
-    if self.isCollapsed then
+    if self.isGridCollapsed then
         self:setMaxDrawHeight(lineHeight + (TITLE_Y_PADDING * 2))
         self:setHeight(20)
         self.overflowRenderer:setVisible(false)
@@ -523,7 +523,7 @@ function ItemGridContainerUI:renderTitle(text, xOffset, yOffset, paddingX, paddi
     local textW = getTextManager():MeasureStringX(UIFont.Small, text);
     local textH = getTextManager():getFontHeight(UIFont.Small);
 
-    local color = (self.isCollapsed and self.controllerNode.isFocused) and NotlocControllerNode.FOCUS_COLOR or BLACK
+    local color = (self.isGridCollapsed and self.controllerNode.isFocused) and NotlocControllerNode.FOCUS_COLOR or BLACK
 
     self:drawRect(xOffset, yOffset, textW+paddingX*2, textH+paddingY*2, color.a, color.r, color.g, color.b)
     self:drawRectBorder(xOffset, yOffset, textW+paddingX*2, textH+paddingY*2, 0.5,1,1,1)
@@ -533,9 +533,9 @@ function ItemGridContainerUI:renderTitle(text, xOffset, yOffset, paddingX, paddi
 end
 
 function ItemGridContainerUI:onCollapseButtonClick(button)
-    self.isCollapsed = not self.isCollapsed
+    self.isGridCollapsed = not self.isGridCollapsed
 
-    if self.isCollapsed then
+    if self.isGridCollapsed then
         self.collapseButton:setTitle(">")
     else
         self.collapseButton:setTitle("V")

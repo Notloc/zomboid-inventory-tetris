@@ -39,11 +39,6 @@ Events.OnGameBoot.Add(function()
         self.scrollView:setAnchorBottom(true)
         self.scrollView.scrollSensitivity = 40
 
-
-        self.expandAll:setVisible(false)
-        self.collapseAll:setVisible(false)
-        self.filterMenu:setVisible(false)
-
         self.onApplyGridScaleCallback = function(scale)
             self:onApplyGridScale(scale)
         end
@@ -85,8 +80,11 @@ Events.OnGameBoot.Add(function()
     function ISInventoryPane:refreshContainer()
         -- Do this for mod compatibility only, tetris has no use for this
         og_refreshContainer(self)
+        -- Hide these buttons because they are updated every refresh
+        self.expandAll:setVisible(false)
+        self.collapseAll:setVisible(false)
+        self.filterMenu:setVisible(false)
 
-        -- Tetris time
         self:refreshItemGrids()
         self.parent:checkTetrisSearch()
     end
