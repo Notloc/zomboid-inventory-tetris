@@ -1249,7 +1249,7 @@ if not TetrisDevTool.og_createMenu then
 
             if item:IsDrainable() then
                 print("item use delta: " .. item:getUseDelta())
-                print("item used delta: " .. item:getUsedDelta())
+                print("item used delta: " .. item:getCurrentUsesFloat())
             end
 
             local mediaData = item:getMediaData()

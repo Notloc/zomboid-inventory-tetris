@@ -790,7 +790,7 @@ function ItemGrid:_getSavedContainerData()
 
     local invType = self.secondaryTarget and self.secondaryTarget:getID() or self.inventory:getType()
     if not modData.gridContainers[invType] then
-        modData.gridContainers[invType] = {}
+        modData.gridContainers[invType] = { stacks = {} }
     end
 
     return modData.gridContainers[invType], parent
@@ -798,6 +798,8 @@ end
 
 ItemGrid._floorModData = {} -- No need to save floor grids, but we do allow users to reposition items on the floor temporarily
 ItemGrid._proxData = {} -- Proximity inventory mod support, acts the same as floor grids
+
+local PROX_INV_TYPE = "proxInv"
 
 function ItemGrid:_getParentModData()
     if self.isPlayerInventory then
@@ -809,7 +811,7 @@ function ItemGrid:_getParentModData()
         return ItemGrid._floorModData, nil
     end
 
-    if self.inventory:getType() == "local" then
+    if self.inventory:getType() == PROX_INV_TYPE then
         return ItemGrid._proxData, nil
     end
 
