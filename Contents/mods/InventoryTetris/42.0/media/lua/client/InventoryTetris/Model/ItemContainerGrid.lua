@@ -193,10 +193,6 @@ function ItemContainerGrid:createSecondaryGrids(target)
     return grids
 end
 
-function ItemContainerGrid:isOrganized()
-    return self.containerDefinition.isOrganized
-end
-
 --- Check if any grids are unsearched
 function ItemContainerGrid:areAnyUnsearched()
     for _, grid in ipairs(self.grids) do
@@ -369,15 +365,15 @@ function ItemContainerGrid:shouldDoPhysics()
     return getTimestampMs() - self.lastPhysics >= PHYSICS_DELAY
 end
 
-function ItemContainerGrid:attemptToInsertItem(item, preferRotated, isOrganized, isDisoraganized)
+function ItemContainerGrid:attemptToInsertItem(item, preferRotated, isDisoraganized)
     for _, grid in ipairs(self.grids) do
-        if grid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisoraganized) then
+        if grid:_attemptToInsertItem(item, preferRotated, isDisoraganized) then
             return true
         end
     end
     for _, grids in pairs(self.secondaryGrids) do
         for _, grid in ipairs(grids) do
-            if grid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisoraganized) then
+            if grid:_attemptToInsertItem(item, preferRotated, isDisoraganized) then
                 return true
             end
         end
@@ -409,7 +405,7 @@ function ItemContainerGrid:removeItem(item)
     return false
 end
 
-function ItemContainerGrid:autoPositionItem(item, isOrganized, isDisorganized)
+function ItemContainerGrid:autoPositionItem(item, isDisorganized)
     for _, grid in ipairs(self.grids) do
         if grid:removeItem(item) then
             print("ohno")
@@ -424,13 +420,13 @@ function ItemContainerGrid:autoPositionItem(item, isOrganized, isDisorganized)
     end
 
     for _, grid in ipairs(self.grids) do
-        if grid:_attemptToInsertItem(item, false, isOrganized, isDisorganized) then
+        if grid:_attemptToInsertItem(item, false, isDisorganized) then
             return true
         end
     end
     for _, grids in pairs(self.secondaryGrids) do
         for _, grid in ipairs(grids) do
-            if grid:_attemptToInsertItem(item, false, isOrganized, isDisorganized) then
+            if grid:_attemptToInsertItem(item, false, isDisorganized) then
                 return true
             end
         end
@@ -477,17 +473,16 @@ function ItemContainerGrid:_updateGridPositions()
     self.overflow = {}
     local unpositionedItems = self:_getUnpositionedItems()
 
-    local isOrganized = false
     local isDisorganized = false
     if self.isOnPlayer then
         local player = getSpecificPlayer(self.playerNum)
-        isOrganized = player:HasTrait("Organized")
         isDisorganized = player:HasTrait("Disorganized")
     end
 
     -- Sort the unpositioned items by size, so we can place the biggest ones first
     table.sort(unpositionedItems, function(a, b) return a.size < b.size end)
 
+    ---@type ItemGrid[]
     local allGrids = {}
     for _, grid in ipairs(self.grids) do
         allGrids[#allGrids+1] = grid
@@ -513,7 +508,7 @@ function ItemContainerGrid:_updateGridPositions()
                 gridIndex = 1
             end
 
-            if grid:_acceptUnpositionedItem(item.item, isOrganized, isDisorganized) then
+            if grid:_acceptUnpositionedItem(item.item, isDisorganized) then
                 placedItem = true
                 break
             end

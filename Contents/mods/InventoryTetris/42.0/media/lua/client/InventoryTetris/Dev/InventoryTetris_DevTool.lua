@@ -588,21 +588,6 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
     editWindow:addChild(alignmentButton);
     editWindow.alignmentButton = alignmentButton;
 
-    -- Organized Title
-    local organizedTitle = ISLabel:new(10, 65, 16, " Is Organized:", 1, 1, 1, 1, UIFont.Small, true);
-    organizedTitle:initialise();
-    organizedTitle:instantiate();
-    editWindow:addChild(organizedTitle);
-
-    -- Organized toggle button
-    local isOrganized = editWindow.newContainerDefinition.isOrganized;
-    local organizedButton = ISButton:new(10, 82, 100, 16, isOrganized and "True" or "False", editWindow);
-    organizedButton:initialise();
-    organizedButton:instantiate();
-    organizedButton.internal = "ORGANIZED";
-    organizedButton:setOnClick(TetrisDevTool.onEditContainer, organizedButton);
-    editWindow:addChild(organizedButton);
-
     -- Fragile Title
     local fragileTitle = ISLabel:new(10, 105, 16, "Is Fragile:", 1, 1, 1, 1, UIFont.Small, true);
     fragileTitle:initialise();
@@ -857,11 +842,6 @@ function TetrisDevTool.onEditContainer(self, button)
         end
         self.newContainerDefinition.centerMode = self.newContainerDefinition.centerMode == "horizontal" and "vertical" or "horizontal";
         button:setTitle(self.newContainerDefinition.centerMode == "horizontal" and "Horizontal" or "Vertical");
-    end
-
-    if button.internal == "ORGANIZED" then
-        self.newContainerDefinition.isOrganized = not self.newContainerDefinition.isOrganized;
-        button:setTitle(self.newContainerDefinition.isOrganized and "True" or "False");
     end
 
     if button.internal == "FRAGILE" then

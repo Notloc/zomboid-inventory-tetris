@@ -183,9 +183,8 @@ Events.OnGameBoot.Add(function()
             if self.gridX and self.gridY and self.gridIndex then
                 destContainerGrid:insertItem(item, self.gridX, self.gridY, self.gridIndex, self.isRotated, self.tetrisSecondary)
             else
-                local organized = self.character:HasTrait("Organized")
                 local disorganized = self.character:HasTrait("Disorganized")
-                destContainerGrid:attemptToInsertItem(item, self.isRotated, organized, disorganized)
+                destContainerGrid:attemptToInsertItem(item, self.isRotated, disorganized)
             end
 
             -- Handle squishable items changing size
@@ -199,7 +198,7 @@ Events.OnGameBoot.Add(function()
                         local stack, grid = parentContainerGrid:findStackByItem(itemContainer)
                         parentContainerGrid:removeItem(itemContainer)
                         if not stack or (grid and not parentContainerGrid:insertItem(itemContainer, stack.x, stack.y, grid.gridIndex, stack.isRotated, grid.secondaryTarget)) then
-                            parentContainerGrid:attemptToInsertItem(itemContainer, self.isRotated, true, false)
+                            parentContainerGrid:attemptToInsertItem(itemContainer, self.isRotated, false)
                         end
                         parentInventory:setDrawDirty(true)
                     end

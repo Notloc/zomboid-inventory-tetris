@@ -4,7 +4,6 @@ require("InventoryTetris/TetrisItemCategory")
 ---@field gridDefinitions GridDefinition[]
 ---@field validCategories table<TetrisItemCategory, boolean>
 ---@field invalidCategories TetrisItemCategory[] -- Deprecated
----@field isOrganized boolean
 ---@field isFragile boolean
 
 ---@class GridDefinition
