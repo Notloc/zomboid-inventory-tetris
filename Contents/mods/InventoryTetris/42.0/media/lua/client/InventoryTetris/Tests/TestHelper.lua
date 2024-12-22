@@ -1,4 +1,4 @@
-if not getActivatedMods():contains("TEST_FRAMEWORK") or not isDebugEnabled() then return end
+if not getActivatedMods():contains("\\TEST_FRAMEWORK") or not isDebugEnabled() then return end
 
 local TestFramework = require("TestFramework/TestFramework")
 TestFramework.registerFileForReload("client/InventoryTetris/Tests/TestHelper.lua")
@@ -25,7 +25,7 @@ TestHelper.devToolOverrideStack = {}
 -- Overrides the data pack definitions with known values for testing
 function TestHelper.applyDataPackOverrides()
     for _, data in pairs(TestHelper.containers) do
-        local item = InventoryItemFactory.CreateItem(data.name)
+        local item = instanceItem(data.name)
 
         ---@cast item InventoryContainer
         local container = item:getItemContainer()
@@ -40,7 +40,7 @@ function TestHelper.applyDataPackOverrides()
     end
 
     for _, data in pairs(TestHelper.items) do
-        local item = InventoryItemFactory.CreateItem(data.name)
+        local item = instanceItem(data.name)
         TetrisItemData._itemData[item:getFullType()] = {
             width = data.x,
             height = data.y,
@@ -59,7 +59,7 @@ end
 
 function TestHelper.removeDataPackOverrides()
     for _, data in pairs(TestHelper.containers) do
-        local item = InventoryItemFactory.CreateItem(data.name)
+        local item = instanceItem(data.name)
 
         ---@cast item InventoryContainer
         local container = item:getItemContainer()
@@ -69,7 +69,7 @@ function TestHelper.removeDataPackOverrides()
     end
 
     for _, data in pairs(TestHelper.items) do
-        local item = InventoryItemFactory.CreateItem(data.name)
+        local item = instanceItem(data.name)
         TetrisItemData._itemData[item:getFullType()] = nil
     end
 
@@ -108,7 +108,7 @@ end
 ---@return ItemContainerGrid
 function TestHelper.createContainerGridFromItem(item)
     if type(item) == "string" then
-        item = InventoryItemFactory.CreateItem(item)
+        item = instanceItem(item)
     end
 
     local container = item:getItemContainer()
@@ -152,8 +152,9 @@ function TestHelper.createItem_1x1_stackable(inventory)
 end
 
 
-function TestHelper.isTimedActionQueueEmpty(playerNum)
-    return #ISTimedActionQueue.getTimedActionQueue(playerNum).queue == 0
+function TestHelper.isTimedActionQueueEmpty(player)
+    local actionQueue = ISTimedActionQueue.getTimedActionQueue(player)
+    return #actionQueue.queue == 0 and not actionQueue.current
 end
 
 return TestHelper

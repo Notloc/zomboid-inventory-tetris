@@ -1,4 +1,4 @@
-if not getActivatedMods():contains("TEST_FRAMEWORK") or not isDebugEnabled() then return end
+if not getActivatedMods():contains("\\TEST_FRAMEWORK") or not isDebugEnabled() then return end
 local TestFramework = require("TestFramework/TestFramework")
 local TestUtils = require("TestFramework/TestUtils")
 local AsyncTest = require("TestFramework/AsyncTest")
@@ -25,7 +25,7 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Window Tests", f
         local windowManager = TetrisWindowManager:new(getPlayerInventory(0).inventoryPane, playerNum)
         TestUtils.assert(windowManager ~= nil)
 
-        TestUtils.assert(windowManager.parent == getPlayerInventory(0).inventoryPane)
+        TestUtils.assert(windowManager.inventoryPane == getPlayerInventory(0).inventoryPane)
         TestUtils.assert(windowManager.playerNum == playerNum)
         TestUtils.assert(TetrisWindowManager._instances[windowManager] == true)
 
