@@ -1,12 +1,10 @@
 {
-    "Lua.workspace.library": [
-        "C:/Users/Colto/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/umbrella/module/library"
-    ],
     "Lua.runtime.version": "Lua 5.1",
     "Lua.runtime.path": [
         "?.lua",
         "?/init.lua",
-        "server/?.lua"
+        "server/?.lua",
+        "client/?.lua"
     ],
     "Lua.completion.requireSeparator": "/",
     "Lua.workspace.preloadFileSize": 800,
@@ -22,5 +20,10 @@
         "ModOptions",
         "NotlocControllerNode",
         "ControllerDragAndDrop"
+    ],
+    "Lua.workspace.library": [
+        "c:\\Users\\Colto\\.vscode\\extensions\\ilka.umbrella-vscode-1.1.19\\plugin\\library\\runtime",
+        "c:\\Users\\Colto\\.vscode\\extensions\\ilka.umbrella-vscode-1.1.19\\plugin\\library\\natives\\umbrella",
+        "${addons}/umbrella-unstable/module/library"
     ]
 }
