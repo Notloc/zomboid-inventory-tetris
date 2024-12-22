@@ -33,7 +33,7 @@ function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
     o.grids = o:createGrids(inventory)
     o.overflow = {}
-    
+
     o.secondaryGrids = {}
     o._onSecondaryGridsAdded = {}
     o._onSecondaryGridsRemoved = {}
@@ -86,7 +86,6 @@ local function searchInventoryPageForContainerGrid(invPage, targetInventory)
 end
 
 
--- TODO: Rename this to GetOrCreate, as it's not guaranteed to create a new container grid
 ---@return ItemContainerGrid
 function ItemContainerGrid.GetOrCreate(inventory, playerNum, containerDefOverride)
     if not containerDefOverride then
@@ -337,7 +336,7 @@ function ItemContainerGrid:_validateOnlyAcceptCategory(item)
 end
 
 function ItemContainerGrid:refresh()
-    local doPhysics = SandboxVars.InventoryTetris.EnableGravity and self:shouldDoPhysics()  
+    local doPhysics = SandboxVars.InventoryTetris.EnableGravity and self:shouldDoPhysics()
     for _, grid in ipairs(self.grids) do
         grid:refresh(doPhysics)
     end
@@ -609,7 +608,7 @@ function ItemContainerGrid:_getPositionedItems()
 end
 
 function ItemContainerGrid:_isItemValid(item)
-    return not item:isHidden() and not item:isEquipped() and not self:_isItemInHotbar(item)
+    return not item:isHidden() and (not self.isPlayerInventory or (not item:isEquipped() and not self:_isItemInHotbar(item)))
 end
 
 function ItemContainerGrid:_isItemInHotbar(item)

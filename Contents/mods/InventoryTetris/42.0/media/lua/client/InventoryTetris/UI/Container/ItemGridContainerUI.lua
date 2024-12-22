@@ -23,7 +23,7 @@ local BLACK = {r=0, g=0, b=0, a=1}
 ---@field inventoryPane table
 ---@field playerNum number
 ---@field player IsoPlayer
----@field gridUis ItemGridUI[]
+---@field gridUis ItemGridUI[][]
 ---@field containerGrid ItemContainerGrid
 function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerDefOverride)
     local o = ISPanel:new(0, 0, 0, 0)

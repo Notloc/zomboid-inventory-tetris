@@ -1,4 +1,4 @@
-if not getActivatedMods():contains("TEST_FRAMEWORK") or not isDebugEnabled() then return end
+if not getActivatedMods():contains("\\TEST_FRAMEWORK") or not isDebugEnabled() then return end
 local TestFramework = require("TestFramework/TestFramework")
 local TestUtils = require("TestFramework/TestUtils")
 local AsyncTest = require("TestFramework/AsyncTest")
@@ -140,9 +140,7 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
         local grid1 = gridUi1.grid
 
         local containerGridUi2 = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
-        local containerGrid2 = containerGridUi2.containerGrid
         local gridUi2 = containerGridUi2.gridUis[containerGridUi2.inventory][1]
-        local grid2 = gridUi2.grid
 
         local item = TestHelper.createItem_1x1(containerGrid1.inventory)
         TestUtils.assert(containerGrid1:insertItem(item, 0, 0, firstGrid, false))
@@ -158,15 +156,18 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
 
         return AsyncTest:new()
             :repeatUntil(function()
-                return TestHelper.isTimedActionQueueEmpty(playerNum)
+                return TestHelper.isTimedActionQueueEmpty(getSpecificPlayer(playerNum))
             end)
             :next(function()
                 TestUtils.assert(not ISMouseDrag.dragging)
 
-                local stack = grid2:getStack(1, 1, playerNum)
+                gridUi2.grid:refresh() -- refresh the grid to update the stack data
+
+                local stack = gridUi2.grid:getStack(1, 1, playerNum)
                 TestUtils.assert(stack ~= nil)
                 TestUtils.assert(ItemStack.containsItem(stack, item))
 
+                grid1:refresh()
                 stack = grid1:getStack(0, 0, playerNum)
                 TestUtils.assert(stack == nil)
             end)
