@@ -6,12 +6,7 @@ local ICON_PADDING_Y = 8
 local ICON_SIZE = 64
 
 local WEIGHT_TEXTURE = getTexture("media/textures/InventoryTetris/weight.png")
-local ORGANIZED_TEXTURE = getTexture("media/textures/InventoryTetris/Organized.png")
-local DISORGANIZED_TEXTURE = getTexture("media/textures/InventoryTetris/Disorganized.png")
 local SELECTED_TEXTURE = getTexture("media/ui/FavoriteStar.png")
-
-local ORGANIZED_TEXT = getText("UI_trait_Packmule")
-local DISORGANIZED_TEXT = getText("UI_trait_Disorganized")
 
 GridContainerInfo = ISUIElement:derive("GridContainerInfo")
 
@@ -25,9 +20,6 @@ function GridContainerInfo:new(containerUi)
 end
 
 function GridContainerInfo:createChildren()
-    self.organizationIcon = ISImage:new(0, 0, 16, 16, ORGANIZED_TEXTURE)
-    self.organizationIcon:initialise()
-    self:addChild(self.organizationIcon)
     NotlocControllerNode
         :injectControllerNode(self)
         :doSimpleFocusHighlight()
@@ -63,24 +55,7 @@ function GridContainerInfo:prerender()
     local offsetY = (ICON_SIZE/2 + ICON_PADDING_Y) * scale
     self:drawTextureCenteredAndSquare(containerUi.invTexture, offsetX, offsetY+4, ICON_SIZE * scale, 1, r,g,b)
 
-    local hasOrganized = containerUi.player:HasTrait("Organized")
-    local hasDisorganized = containerUi.player:HasTrait("Disorganized")
-
-    local isContainerOrganized = containerUi.containerGrid:isOrganized()
-    if hasOrganized then
-        isContainerOrganized = true
-    elseif hasDisorganized then
-        isContainerOrganized = false
-    end
-
     local topIconY = 3 * scale
-    local bottomIconY = self:getHeight() - 17 * scale
-
-    self.organizationIcon:setX(2 + scale)
-    self.organizationIcon:setY(bottomIconY)
-    
-    self.organizationIcon.texture = isContainerOrganized and ORGANIZED_TEXTURE or DISORGANIZED_TEXTURE
-    self.organizationIcon:setMouseOverText(isContainerOrganized and ORGANIZED_TEXT or DISORGANIZED_TEXT)
 
     local gridUis = containerUi.gridUis[inv]
     local containerDef = gridUis[1].grid.containerDefinition
@@ -97,12 +72,7 @@ function GridContainerInfo:prerender()
         self:drawTextureScaled(SELECTED_TEXTURE, 4, topIconY+2, tx, ty, 1, 1, 1, 1)
     end
 
-    local capacity = inv:getCapacity()
-    if hasOrganized then
-        capacity = capacity * 1.3
-    elseif hasDisorganized then
-        capacity = capacity * 0.7
-    end
+    local capacity = containerUi.containerGrid:_getCapacity()
     capacity = math.floor(capacity)
 
     if containerUi.isPlayerInventory then
@@ -120,17 +90,17 @@ function GridContainerInfo:prerender()
     local weightText = (containerDef.isFragile or SandboxVars.InventoryTetris.EnforceCarryWeight) and (roundedWeight .. " / " .. capacity) or (roundedWeight .. "")
 
     local r,g,b = 1,1,1
-    
+
     if containerUi.isPlayerInventory then
         r,g,b = getWeightColor(realWeight, capacity)
     end
-    
+
     local centerX = (ICON_SIZE/2 + ICON_PADDING_X) * scale - 8 * scale
     local textY = (ICON_PADDING_Y*2 + ICON_SIZE) * scale - scale * 2
     self:drawTextCentre(weightText, centerX, textY, r,g,b, 1, UIFont.Medium);
     local lineHeight = getTextManager():getFontFromEnum(UIFont.Medium):getLineHeight()
     local lineWidth = getTextManager():MeasureStringX(UIFont.Medium, weightText)
-    
+
     local weightXOff = 2
     local weightYOff = 0
     if g == 0 then

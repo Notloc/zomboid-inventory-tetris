@@ -210,11 +210,6 @@ function ItemGridContainerUI:applyScales(gridScale, infoScale)
     self.infoRenderer:setHeight(infoHeight)
     self.infoRenderer:setY(titleOffset)
 
-    self.infoRenderer.organizationIcon:setWidth(16 * infoScale)
-    self.infoRenderer.organizationIcon:setHeight(16 * infoScale)
-    self.infoRenderer.organizationIcon.scaledWidth = 16 * infoScale
-    self.infoRenderer.organizationIcon.scaledHeight = 16 * infoScale
-
     self.multiGridRenderer:setX(infoWidth + 2)
     self.multiGridRenderer:setY(titleOffset)
 

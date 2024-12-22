@@ -337,16 +337,12 @@ function ItemGrid:_attemptToStackItem(item)
     return false
 end
 
-function ItemGrid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisorganized)
+function ItemGrid:_attemptToInsertItem(item, preferRotated, isDisorganized)
     if not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
         return false
     end
 
     preferRotated = preferRotated or false
-
-    if not isOrganized then
-        isOrganized = self.containerGrid:isOrganized()
-    end
 
     if not isDisorganized or TetrisItemData.isAlwaysStacks(item) then
         if self:_attemptToStackItem(item) then
@@ -358,16 +354,12 @@ function ItemGrid:_attemptToInsertItem(item, preferRotated, isOrganized, isDisor
         return false
     end
 
-    if not isOrganized then
+    if isDisorganized then
         preferRotated = ZombRand(0, 2) == 0
     end
 
     local w, h = TetrisItemData.getItemSize(item, preferRotated)
-    if w == h then
-        preferRotated = false
-    end
-
-    local useShuffle = not isOrganized
+    local useShuffle = isDisorganized
     if self:_attemptToInsertItem_outerLoop(item, w, h, preferRotated, useShuffle) then
         return true
     end
@@ -579,8 +571,8 @@ function ItemGrid:isStackBuried(stack)
 end
 
 -- TODO: Either remove this method or make it batch several items at once with minimal checks
-function ItemGrid:_acceptUnpositionedItem(item, isOrganized, isDisorganized)    
-    return self:_attemptToInsertItem(item, false, isOrganized, isDisorganized)
+function ItemGrid:_acceptUnpositionedItem(item, isDisorganized)
+    return self:_attemptToInsertItem(item, false, isDisorganized)
 end
 
 function ItemGrid:isEmpty()
