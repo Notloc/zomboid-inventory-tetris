@@ -220,7 +220,7 @@ function ItemGridContainerUI:applyScales(gridScale, infoScale)
         local containerDef = self.containerGrid.containerDefinition
         local target = renderer.secondaryTarget
         if target ~= self.inventory then
-            containerDef = TetrisContainerData.getPocketDefinition(target)
+            containerDef = TetrisPocketData.getPocketDefinition(target)
         end
 
         for _, grid in ipairs(renderer.grids) do

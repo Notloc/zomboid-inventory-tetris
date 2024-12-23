@@ -102,7 +102,7 @@ function TetrisItemData._calculateItemSizeMagazine(item)
     local height = 1
 
     local maxAmmo = item:getMaxAmmo()
-    if maxAmmo >= 15 then
+    if maxAmmo > 15 then
         height = 2
     end
 
