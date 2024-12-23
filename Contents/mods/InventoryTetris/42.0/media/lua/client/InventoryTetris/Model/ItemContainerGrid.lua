@@ -179,7 +179,7 @@ function ItemContainerGrid:createGrids(container)
 end
 
 function ItemContainerGrid:createSecondaryGrids(target)
-    local containerDef = TetrisContainerData.getPocketDefinition(target)
+    local containerDef = TetrisPocketData.getPocketDefinition(target)
     local grids = {}
     if not containerDef then
         return grids
@@ -653,7 +653,7 @@ function ItemContainerGrid:getWornItemsWithPockets()
 end
 
 function ItemContainerGrid:_hasPockets(item)
-    return not item:isHidden() and TetrisContainerData.getPocketDefinition(item) ~= nil
+    return not item:isHidden() and TetrisPocketData.getPocketDefinition(item) ~= nil
 end
 
 function ItemContainerGrid:addOnSecondaryGridsAdded(obj, callback)

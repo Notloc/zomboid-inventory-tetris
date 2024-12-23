@@ -493,7 +493,7 @@ end
 function TetrisDevTool.openPocketEdit(item)
     local inventory = getSpecificPlayer(0):getInventory();
     local inventoryPane = getPlayerData(0).playerInventory.inventoryPane;
-    local containerDef = TetrisContainerData.getPocketDefinition(item);
+    local containerDef = TetrisPocketData.getPocketDefinition(item);
     if not containerDef then
         containerDef = {
             gridDefinitions = {
