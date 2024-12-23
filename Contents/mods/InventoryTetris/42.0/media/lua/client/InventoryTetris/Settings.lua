@@ -28,6 +28,7 @@ if not INVENTORY_TETRIS_OPTIONS then
         {value="move",     name="UI_tetris_options_do_move"},
         {value="equip",    name="UI_tetris_options_do_equip"},
         {value="drop",     name="UI_tetris_options_do_drop"},
+        {value="multi",    name="UI_tetris_options_do_multi"},
     }
 
     -- Define the options
@@ -40,7 +41,7 @@ if not INVENTORY_TETRIS_OPTIONS then
         DOUBLE_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("interact", clickDropdownOptions, "UI_tetris_options_double_click_action"),
         CTRL_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("move", clickDropdownOptions, "UI_tetris_options_ctrl_click_action"),
         ALT_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("equip", clickDropdownOptions, "UI_tetris_options_alt_click_action"),
-        SHIFT_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("drop", clickDropdownOptions, "UI_tetris_options_shift_click_action"),
+        SHIFT_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("multi", clickDropdownOptions, "UI_tetris_options_shift_click_action"),
     }
 
     -- Build the options object

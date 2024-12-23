@@ -55,78 +55,63 @@ function EasyOptionsBuilder.build(optionDefinitions, modId, modUiName)
         end
     end
 
-    if ModOptions and ModOptions.getInstance then
+    if false and ModOptions and ModOptions.getInstance then
         EasyOptionsBuilder._buildModOptions(optionsObj, keys, modId, modUiName)
     end
 
+    EasyOptionsBuilder._buildVanillaOptions(optionsObj, keys, modId, modUiName)
     EasyOptionsBuilder._reportErrorsAfterDelay(errors, 1000)
 
     return optionsObj
 end
 
-function EasyOptionsBuilder._buildModOptions(OPTIONS, keys, modId, modUiName)
-    -- I'm not clear on what the difference between these two is
-    local modOptionsData = EasyOptionsBuilder._prebuildModOptions(OPTIONS, keys, modId, modUiName)
-    local modOptionsInstance = ModOptions:getInstance(modOptionsData)
-
-    ModOptions:loadFile()
-    EasyOptionsBuilder._buildModOptionsInstance(OPTIONS, keys, modId, modOptionsData, modOptionsInstance)
-
-    OPTIONS._modOptionsInstance = modOptionsInstance
-end
-
-function EasyOptionsBuilder._prebuildModOptions(OPTIONS, keys, modId, modUiName)
-    local modOptionsData = {
-        options = {},
-        names = {},
-        mod_id = modId,
-        mod_shortname = getText(modUiName),
-    }
+function EasyOptionsBuilder._buildVanillaOptions(optionsObj, keys, modId, modUiName)
+    local vanillaOptions = PZAPI.ModOptions:create(modId, modUiName)
+    optionsObj._vanillaOptions = vanillaOptions
 
     for _, key in ipairs(keys) do
-        local optionInstance = OPTIONS._optionInstances[key]
+        local optionInstance = optionsObj._optionInstances[key]
         local definition = optionInstance.definition
 
-        if EasyOptionType.isModOptionsSupported(definition.type) then
-            modOptionsData.names[key] = optionInstance.definition.uiName
-            modOptionsData.options[key] = optionInstance.default
+        if definition.type == EasyOptionType.DROPDOWN then
+            EasyOptionsBuilder._buildVanillaDropdown(vanillaOptions, optionInstance)
+        end
+    end
+
+    vanillaOptions.apply = function (self)
+        for _, key in ipairs(keys) do
+            local optionInstance = optionsObj._optionInstances[key]
+            local definition = optionInstance.definition
+
             if definition.type == EasyOptionType.DROPDOWN then
-                modOptionsData.options[key] = optionInstance.defaultIndex
+                local vOption = self:getOption(key)
+                local valueIdx = vOption.selected
+                local value = definition.options[valueIdx].value
+                optionInstance.parent[key] = value
+                optionInstance.OnValueChanged:trigger(value)
             end
         end
     end
 
-    return modOptionsData
-end
-
-function EasyOptionsBuilder._buildModOptionsInstance(OPTIONS, keys, modId, modOptionsData, modOptionsInstance)
-    for _, key in ipairs(keys) do
-        local optionInstance = OPTIONS._optionInstances[key]
-        local definition = optionInstance.definition
-
-        if definition.type ~= EasyOptionType.HIDDEN then
-            local modOptionEntry = modOptionsInstance:getData(key)
-            if definition.type == EasyOptionType.DROPDOWN then
-                EasyOptionsBuilder._buildModOptionDropdown(modOptionsData, modOptionEntry, optionInstance)
-            end
-
-            -- Load the value from the mod options
-            modOptionEntry:OnApply(modOptionsData.options[key])
-        end
+    local og_load = PZAPI.ModOptions.load
+    PZAPI.ModOptions.load = function(self)
+        og_load(self)
+        pcall(function ()
+            vanillaOptions:apply()
+        end)
     end
 end
 
-function EasyOptionsBuilder._buildModOptionDropdown(modOptionsData, modOptionEntry, optionInstance)
-    for i, option in ipairs(optionInstance.definition.options) do
-        modOptionEntry[i] = getText(option.name)
-    end
-
+function EasyOptionsBuilder._buildVanillaDropdown(vanillaOptions, optionInstance)
     local key = optionInstance.key
-    function modOptionEntry:OnApply(index)
-        modOptionsData.options[key] = index
-        local value = optionInstance.definition.options[index].value
-        optionInstance.parent[key] = value
-        optionInstance.OnValueChanged:trigger(value)
+    local uiName = getText(optionInstance.definition.uiName)
+    --local tooltip = getText(optionInstance.definition.tooltip)
+
+    -- Create the dropdown and add the options to it
+    local comboBox = vanillaOptions:addComboBox(key, uiName, "tooltip")
+    for i, option in ipairs(optionInstance.definition.options) do
+        local optionName = getText(option.name)
+        comboBox:addItem(optionName, i == optionInstance.defaultIndex)
     end
 end
 
