@@ -1,4 +1,4 @@
-require("InventoryTetris/TetrisItemCategory")
+require("InventoryTetris/Data/TetrisItemCategory")
 
 ---@class ContainerGridDefinition
 ---@field gridDefinitions GridDefinition[]

@@ -1,4 +1,4 @@
-require("InventoryTetris/TetrisItemCategory")
+require("InventoryTetris/Data/TetrisItemCategory")
 
 local SQUISHED_SUFFIX = "__squished"
 local SQUISH_FACTOR = 3
@@ -57,12 +57,13 @@ function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
     end
 
     if not TetrisItemData._itemData[fType] then
-        TetrisItemData._calculateAndCacheItemInfo(item, fType, isSquished)
+        local data = TetrisItemData._autoCalculateItemInfo(item, isSquished)
+        TetrisItemData._itemData[fType] = data
     end
     return TetrisItemData._itemData[fType]
 end
 
-function TetrisItemData._calculateAndCacheItemInfo(item, fType, isSquished)
+function TetrisItemData._autoCalculateItemInfo(item, isSquished)
     local data = {}
 
     if isSquished then
@@ -84,8 +85,7 @@ function TetrisItemData._calculateAndCacheItemInfo(item, fType, isSquished)
     end
 
     data._autoCalculated = true
-
-    TetrisItemData._itemData[fType] = data
+    return data
 end
 
 function TetrisItemData._calculateItemSize(item, category)
@@ -436,6 +436,22 @@ function TetrisItemData._calculateFoodStackability(item)
         return 1
     end
     return 5
+end
+
+function TetrisItemData.getItemDefinitonIfExists(fType)
+    local devToolOverride = TetrisDevTool.getItemOverride(fType)
+    if devToolOverride then
+        return devToolOverride
+    end
+    return TetrisItemData._itemData[fType]
+end
+
+function TetrisItemData.getAutoCalculatedItemDefiniton(fType)
+    if TetrisItemData._itemData[fType] and TetrisItemData._itemData[fType]._autoCalculated then
+        return TetrisItemData._itemData[fType]
+    end
+    local item = instanceItem(fType)
+    return TetrisItemData._autoCalculateItemInfo(item, false)
 end
 
 TetrisItemData._itemClassToStackabilityCalculation = {

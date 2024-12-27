@@ -1,5 +1,5 @@
-require("InventoryTetris/TetrisItemData")
-require("InventoryTetris/TetrisContainerData")
+require("InventoryTetris/Data/TetrisItemData")
+require("InventoryTetris/Data/TetrisContainerData")
 
 -- All packs except this default should be registered in the OnGameBoot event.
 -- I go first so that you can overwrite my defaults with your own.

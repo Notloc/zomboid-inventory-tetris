@@ -1,5 +1,5 @@
 require("InventoryTetris/UI/Grid/ItemGridUI")
-require("InventoryTetris/TetrisItemCategory")
+require("InventoryTetris/Data/TetrisItemCategory")
 
 -- Premade textures for supported scales so that any scale gets pixel perfect grids
 local GridBackgroundTexturesByScale = {

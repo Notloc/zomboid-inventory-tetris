@@ -1134,10 +1134,8 @@ function TetrisDevTool._exportDataPack()
     local items = FormattedLuaWriter.formatLocalVariable("itemPack", TetrisDevTool.itemEdits, 1);
     local containers = FormattedLuaWriter.formatLocalVariable("containerPack", TetrisDevTool.containerEdits, 1);
 
-    local text =   'require("InventoryTetris/TetrisItemData");\r\n'
-    text = text .. 'require("InventoryTetris/TetrisContainerData");\r\n'
-    text = text .. '\r\n'
-    text = text .. 'Events.OnGameBoot.Add(function() \r\n'
+    local text =   'Events.OnGameBoot.Add(function() \r\n'
+    text = text .. '\t' .. 'if not TetrisItemData then return end\r\n'
     text = text .. items
     text = text .. '\r\n'
     text = text .. containers

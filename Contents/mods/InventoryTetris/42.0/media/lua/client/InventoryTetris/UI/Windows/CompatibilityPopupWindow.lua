@@ -1,5 +1,5 @@
 local Version = require("Notloc/Versioning/Version")
-local Window = require("Notloc/Versioning/Window")
+local Window = require("InventoryTetris/UI/Windows/Window")
 
 local WARNING_TEX = getTexture("media/textures/Compatibility/warning.png")
 local WARNING_SIZE = 24
