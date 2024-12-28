@@ -38,6 +38,15 @@ function TetrisItemData.getSquishedFullType(item)
     return item:getFullType() .. SQUISHED_SUFFIX
 end
 
+function TetrisItemData.getItemDefinitonByItemScript(itemScript)
+    local fType = itemScript:getFullName()
+    local item = nil
+    if not TetrisItemData._itemData[fType] then
+        item = instanceItem(fType)
+    end
+    return TetrisItemData._getItemDataByFullType(item, fType, false)
+end
+
 function TetrisItemData._getItemData(item, noSquish)
     local fType = item:getFullType()
     local isSquished = not noSquish and TetrisItemData.isSquished(item)
@@ -436,22 +445,6 @@ function TetrisItemData._calculateFoodStackability(item)
         return 1
     end
     return 5
-end
-
-function TetrisItemData.getItemDefinitonIfExists(fType)
-    local devToolOverride = TetrisDevTool.getItemOverride(fType)
-    if devToolOverride then
-        return devToolOverride
-    end
-    return TetrisItemData._itemData[fType]
-end
-
-function TetrisItemData.getAutoCalculatedItemDefiniton(fType)
-    if TetrisItemData._itemData[fType] and TetrisItemData._itemData[fType]._autoCalculated then
-        return TetrisItemData._itemData[fType]
-    end
-    local item = instanceItem(fType)
-    return TetrisItemData._autoCalculateItemInfo(item, false)
 end
 
 TetrisItemData._itemClassToStackabilityCalculation = {

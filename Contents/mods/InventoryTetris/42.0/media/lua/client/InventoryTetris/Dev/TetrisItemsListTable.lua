@@ -1,6 +1,6 @@
 -- Based on ISItemsListTable
 
-require "ISUI/ISPanel"
+require("ISUI/ISPanel")
 
 TetrisItemsListTable = ISPanel:derive("TetrisItemsListTable");
 
@@ -74,29 +74,43 @@ function TetrisItemsListTable:createChildren()
     self.datas.font = UIFont.NewSmall;
     self.datas.doDrawItem = self.drawDatas;
     self.datas.drawBorder = true;
---    self.datas.parent = self;
-    self.datas:addColumn("Type", 0); --note, trying to add translations to these breaks the menu completely. find some way to bypass this
+
+    self.datas:addColumn("Type", 0);
     self.datas:addColumn("Name", 200+(getCore():getOptionFontSizeReal()*20));
     self.datas:addColumn("Category", 450+(getCore():getOptionFontSizeReal()*40));
-    self.datas:addColumn("DisplayCategory", 650+(getCore():getOptionFontSizeReal()*40))  --resize these based on longest item in contents
-    self.datas:addColumn("LootCategory", 850+(getCore():getOptionFontSizeReal()*50))  --resize these based on longest item in contents
-    
-    self.datas:addColumn("X/Y", 1050+(getCore():getOptionFontSizeReal()*40));
-    self.datas:addColumn("Size", 1100+(getCore():getOptionFontSizeReal()*40));
-    self.datas:addColumn("Stack", 1200+(getCore():getOptionFontSizeReal()*40));
-    self.datas:addColumn("Density", 1300+(getCore():getOptionFontSizeReal()*40));
-    self.datas:addColumn("StackDensity", 1400+(getCore():getOptionFontSizeReal()*40));
+    self.datas:addColumn("DisplayCategory", 650+(getCore():getOptionFontSizeReal()*40))
+    self.datas:addColumn("LootCategory", 850+(getCore():getOptionFontSizeReal()*50))
+
+    local tX = 1050
+
+    self.datas:addColumn("Auto", tX+(getCore():getOptionFontSizeReal()*40));
+    tX = tX + 65
+
+    self.datas:addColumn("X/Y", tX+(getCore():getOptionFontSizeReal()*40));
+    tX = tX + 100
+
+    self.datas:addColumn("Size", tX+(getCore():getOptionFontSizeReal()*40));
+    tX = tX + 100
+
+    self.datas:addColumn("Stack", tX+(getCore():getOptionFontSizeReal()*40));
+    tX = tX + 100
+
+    self.datas:addColumn("Density", tX+(getCore():getOptionFontSizeReal()*40));
+    tX = tX + 100
+
+    self.datas:addColumn("StackDensity", tX+(getCore():getOptionFontSizeReal()*40));
+    tX = tX + 100
 
     self.datas:setOnMouseDoubleClick(self, TetrisItemsListTable.addItem);
     self:addChild(self.datas);
 
     local btnY = self.datas.y + self.datas.height + UI_BORDER_SPACING*2 + BUTTON_HGT*3
-        
+
     self.filters = ISLabel:new(0, btnY, LABEL_HGT, getText("IGUI_DbViewer_Filters"), 1, 1, 1, 1, UIFont.Large, true)
     self.filters:initialise()
     self.filters:instantiate()
     self:addChild(self.filters)
-    
+
     local x = 0;
     local entryY = self.filters:getBottom() + BUTTON_HGT
     for i,column in ipairs(self.datas.columns) do
@@ -228,51 +242,55 @@ function TetrisItemsListTable:update()
     self.datas.doDrawItem = self.drawDatas;
 end
 
-function TetrisItemsListTable:filterDisplayCategory(widget, scriptItem)
+function TetrisItemsListTable.filterDisplayCategory(widget, scriptItem)
     if widget.selected == 1 then return true end -- Any category
     if widget.selected == 2 then return scriptItem:getDisplayCategory() == nil end
     return scriptItem:getDisplayCategory() == widget:getOptionText(widget.selected)
 end
 
-function TetrisItemsListTable:filterCategory(widget, scriptItem)
+function TetrisItemsListTable.filterCategory(widget, scriptItem)
     if widget.selected == 1 then return true end -- Any category
     return scriptItem:getTypeString() == widget:getOptionText(widget.selected)
 end
 
-function TetrisItemsListTable:filterName(widget, scriptItem)
+function TetrisItemsListTable.filterName(widget, scriptItem)
     return TetrisItemsListTable.doTextFilter(widget, scriptItem:getDisplayName())
 end
 
-function TetrisItemsListTable:filterType(widget, scriptItem)
+function TetrisItemsListTable.filterType(widget, scriptItem)
     return TetrisItemsListTable.doTextFilter(widget, scriptItem:getName())
 end
 
-function TetrisItemsListTable:filterLootCategory(widget, scriptItem)
+function TetrisItemsListTable.filterLootCategory(widget, scriptItem)
     if widget.selected == 1 then return true end -- Any category
     return getText("Sandbox_" .. scriptItem:getLootType() .. "LootNew") == widget:getOptionText(widget.selected)
 end
 
-function TetrisItemsListTable:filterDimensions(widget, scriptItem)
+function TetrisItemsListTable.filterAuto(widget, scriptItem)
+    return TetrisItemsListTable.doTextFilter(widget, tostring(TetrisItemInfo.isAutoCalculated(scriptItem)))
+end
+
+function TetrisItemsListTable.filterDimensions(widget, scriptItem)
     local itemSize = TetrisItemInfo.getItemDimensions(scriptItem)
     return TetrisItemsListTable.doTextFilter(widget, itemSize)
 end
 
-function TetrisItemsListTable:filterSize(widget, scriptItem)
+function TetrisItemsListTable.filterSize(widget, scriptItem)
     local itemSize = TetrisItemInfo.getItemSize(scriptItem)
     return TetrisItemsListTable.doNumericFilter(widget, itemSize)
 end
 
-function TetrisItemsListTable:filterStack(widget, scriptItem)
+function TetrisItemsListTable.filterStack(widget, scriptItem)
     local stackSize = TetrisItemInfo.getMaxStackSize(scriptItem)
     return TetrisItemsListTable.doNumericFilter(widget, stackSize)
 end
 
-function TetrisItemsListTable:filterDensity(widget, scriptItem)
+function TetrisItemsListTable.filterDensity(widget, scriptItem)
     local density = TetrisItemInfo.getItemDensity(scriptItem)
     return TetrisItemsListTable.doNumericFilter(widget, density)
 end
 
-function TetrisItemsListTable:filterStackDensity(widget, scriptItem)
+function TetrisItemsListTable.filterStackDensity(widget, scriptItem)
     local stackDensity = TetrisItemInfo.getStackDensity(scriptItem)
     return TetrisItemsListTable.doNumericFilter(widget, stackDensity)
 end
@@ -280,6 +298,46 @@ end
 function TetrisItemsListTable.doTextFilter(widget, textToCheck)
     local txtToCheck = string.lower(textToCheck)
     local filterTxt = string.lower(widget:getInternalText())
+    return TetrisItemsListTable._doTextFilter(txtToCheck, filterTxt)
+end
+
+local function split(input, delimiter)
+    local result = {}
+    for match in (input .. delimiter):gmatch("(.-)" .. delimiter) do
+        table.insert(result, match)
+    end
+    return result
+end
+
+-- Didn't write this pretty, but it lets me filter strings with OR(||), AND(&&) and NOT(!!) operators
+function TetrisItemsListTable._doTextFilter(txtToCheck, filterTxt)
+    if string.match(filterTxt, "&&") then
+        local filters = split(filterTxt, "&&")
+        for _,filter in ipairs(filters) do
+            if filter then
+                local check = TetrisItemsListTable._doTextFilter(txtToCheck, filter)
+                if not check then return false end
+            end
+        end
+        return true
+    end
+
+    if string.match(filterTxt, "||") then
+        local filters = split(filterTxt, "||")
+        for _,filter in ipairs(filters) do
+            if filter then
+                local check = TetrisItemsListTable._doTextFilter(txtToCheck, filter)
+                if check then
+                    return true
+                end
+            end
+        end
+        return false
+    end
+
+    if string.len(filterTxt) >= 2 and string.sub(filterTxt, 1, 2) == "!!" then
+        return not TetrisItemsListTable._doTextFilter(txtToCheck, string.sub(filterTxt, 3))
+    end
     return checkStringPattern(filterTxt) and string.match(txtToCheck, filterTxt)
 end
 
@@ -296,7 +354,7 @@ function TetrisItemsListTable.doNumericFilter(widget, numberToCheck)
     if operator == "<=" then return numberToCheck <= number end
 end
 
-TetrisItemsListTable.onFilterChange = function(self, widget)
+TetrisItemsListTable.onFilterChange = function(widget)
     local datas = widget.parent.datas;
     if not datas.fullList then datas.fullList = datas.items; end
     widget.parent.totalResult = 0;
@@ -305,7 +363,7 @@ TetrisItemsListTable.onFilterChange = function(self, widget)
     for i, itemData in ipairs(datas.fullList) do -- check every items
         local add = true;
         for j,widget in ipairs(widget.parent.filterWidgets) do -- check every filters
-            if not widget.itemsListFilter(self, widget, itemData.item) then
+            if not widget.itemsListFilter(widget, itemData.item) then
                 add = false
                 break
             end
@@ -386,20 +444,36 @@ function TetrisItemsListTable:drawDatas(y, item, alt)
         self:drawText(getText("Sandbox_" .. item.item:getLootType() .. "LootNew"), self.columns[5].size + xoffset, y + 3, 1, 1, 1, a, self.font);
     end
 
+
+    local tetrixIdx = 6
+
+    local auto = TetrisItemInfo.isAutoCalculated(item.item)
+    self:drawText(tostring(auto), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+
+    tetrixIdx = tetrixIdx + 1
+
     local itemDimensions = TetrisItemInfo.getItemDimensions(item.item)
-    self:drawText(itemDimensions, self.columns[6].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+    self:drawText(itemDimensions, self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+
+    tetrixIdx = tetrixIdx + 1
 
     local itemSize = TetrisItemInfo.getItemSize(item.item) or "-"
-    self:drawText(tostring(itemSize), self.columns[7].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+    self:drawText(tostring(itemSize), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+
+    tetrixIdx = tetrixIdx + 1
 
     local stackSize = TetrisItemInfo.getMaxStackSize(item.item) or "-"
-    self:drawText(tostring(stackSize), self.columns[8].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+    self:drawText(tostring(stackSize), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+
+    tetrixIdx = tetrixIdx + 1
 
     local density = TetrisItemInfo.getItemDensity(item.item)
-    self:drawText(formatNumber(density, 4), self.columns[9].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+    self:drawText(formatNumber(density, 4), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+
+    tetrixIdx = tetrixIdx + 1
 
     local stackDensity = TetrisItemInfo.getStackDensity(item.item)
-    self:drawText(formatNumber(stackDensity, 4), self.columns[10].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+    self:drawText(formatNumber(stackDensity, 4), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
 
     self:repaintStencilRect(0, clipY, self.width, clipY2 - clipY)
 
@@ -413,7 +487,7 @@ function TetrisItemsListTable:drawDatas(y, item, alt)
             self:drawTextureScaledAspect2(texture, self.columns[2].size + iconX, y + (self.itemheight - iconSize) / 2, iconSize, iconSize,  1, 1, 1, 1);
         end
     end
-    
+
     return y + self.itemheight;
 end
 

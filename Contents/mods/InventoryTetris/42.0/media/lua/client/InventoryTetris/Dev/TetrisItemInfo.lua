@@ -1,22 +1,19 @@
 TetrisItemInfo = TetrisItemInfo or {}
 
 function TetrisItemInfo.getItemDimensions(itemScript)
-    local itemType = itemScript:getFullName()
-    local itemDef = TetrisItemData.getItemDefinitonIfExists(itemType)
+    local itemDef = TetrisItemData.getItemDefinitonByItemScript(itemScript)
     if not itemDef then return "-" end
     return itemDef.width .. "x" .. itemDef.height
 end
 
 function TetrisItemInfo.getItemSize(itemScript)
-    local itemType = itemScript:getFullName()
-    local itemDef = TetrisItemData.getItemDefinitonIfExists(itemType)
+    local itemDef = TetrisItemData.getItemDefinitonByItemScript(itemScript)
     if not itemDef then return nil end
     return itemDef.width * itemDef.height
 end
 
 function TetrisItemInfo.getMaxStackSize(itemScript)
-    local itemType = itemScript:getFullName()
-    local itemDef = TetrisItemData.getItemDefinitonIfExists(itemType)
+    local itemDef = TetrisItemData.getItemDefinitonByItemScript(itemScript)
     if not itemDef then return nil end
     return itemDef.maxStackSize
 end
@@ -37,4 +34,9 @@ function TetrisItemInfo.getStackDensity(itemScript)
 
     local itemWeight = itemScript:getActualWeight()
     return itemWeight * stackSize / itemSize
+end
+
+function TetrisItemInfo.isAutoCalculated(itemScript)
+    local itemDef = TetrisItemData.getItemDefinitonByItemScript(itemScript)
+    return itemDef and itemDef._autoCalculated or false
 end

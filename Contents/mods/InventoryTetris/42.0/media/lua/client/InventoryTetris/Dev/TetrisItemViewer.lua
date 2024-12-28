@@ -130,7 +130,7 @@ function TetrisItemViewer.OnOpenPanel()
         TetrisItemViewer.instance:setKeyboardFocus()
         return
     end
-    local modal = TetrisItemViewer:new(50, 200, 1550+(getCore():getOptionFontSizeReal()*50), 650+(getCore():getOptionFontSizeReal()*50))
+    local modal = TetrisItemViewer:new(50, 200, 1650+(getCore():getOptionFontSizeReal()*50), 650+(getCore():getOptionFontSizeReal()*50))
     modal:initialise();
     modal:addToUIManager();
     modal.instance:setKeyboardFocus()
