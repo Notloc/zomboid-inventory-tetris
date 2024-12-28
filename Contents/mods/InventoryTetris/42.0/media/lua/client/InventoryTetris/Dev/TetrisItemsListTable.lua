@@ -94,10 +94,10 @@ function TetrisItemsListTable:createChildren()
     self.datas:addColumn("Size", tX+(getCore():getOptionFontSizeReal()*40));
     tX = tX + 100
 
-    self.datas:addColumn("Stack", tX+(getCore():getOptionFontSizeReal()*40));
+    self.datas:addColumn("Density", tX+(getCore():getOptionFontSizeReal()*40));
     tX = tX + 100
 
-    self.datas:addColumn("Density", tX+(getCore():getOptionFontSizeReal()*40));
+    self.datas:addColumn("Stack", tX+(getCore():getOptionFontSizeReal()*40));
     tX = tX + 100
 
     self.datas:addColumn("StackDensity", tX+(getCore():getOptionFontSizeReal()*40));
@@ -487,13 +487,13 @@ function TetrisItemsListTable:drawDatas(y, item, alt)
 
     tetrixIdx = tetrixIdx + 1
 
-    local stackSize = TetrisItemInfo.getMaxStackSize(item.item) or "-"
-    self:drawText(tostring(stackSize), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+    local density = TetrisItemInfo.getItemDensity(item.item)
+    self:drawText(formatNumber(density, 4), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
 
     tetrixIdx = tetrixIdx + 1
 
-    local density = TetrisItemInfo.getItemDensity(item.item)
-    self:drawText(formatNumber(density, 4), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+    local stackSize = TetrisItemInfo.getMaxStackSize(item.item) or "-"
+    self:drawText(tostring(stackSize), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
 
     tetrixIdx = tetrixIdx + 1
 
@@ -516,7 +516,20 @@ function TetrisItemsListTable:drawDatas(y, item, alt)
     return y + self.itemheight;
 end
 
-
+function TetrisItemsListTable:addItem(item)
+    local playerNum = self.viewer.playerSelect.selected - 1
+    local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj or playerObj:isDead() then return end
+    if isClient() then
+        SendCommandToServer("/additem \"" .. playerObj:getDisplayName() .. "\" \"" .. luautils.trim(item:getFullName()) .. "\"")
+    else
+        local item = instanceItem(item:getFullName())
+        if item:getType() == "CorpseAnimal" then
+            item:createAndStoreDefaultDeadBody(nil)
+        end
+        playerObj:getInventory():AddItem(item);
+    end
+end
 
 
 
