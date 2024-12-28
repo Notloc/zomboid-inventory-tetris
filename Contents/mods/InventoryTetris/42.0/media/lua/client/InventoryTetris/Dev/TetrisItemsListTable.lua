@@ -18,8 +18,10 @@ end
 function TetrisItemsListTable:render()
     ISPanel.render(self);
     
+    local filterInProgress = self.needsFilterRefresh and "..." or ""
+
     local y = self.datas.y + self.datas.height + UI_BORDER_SPACING + 3
-    self:drawText(getText("IGUI_DbViewer_TotalResult") .. self.totalResult, 0, y, 1,1,1,1,UIFont.Small)
+    self:drawText(getText("IGUI_DbViewer_TotalResult") .. self.totalResult .. filterInProgress, 0, y, 1,1,1,1,UIFont.Small)
     self:drawText(getText("IGUI_ItemList_Info"), 0, y + BUTTON_HGT, 1,1,1,1,UIFont.Small)
     self:drawText(getText("IGUI_ItemList_Info2"), 0, y + BUTTON_HGT*2, 1,1,1,1,UIFont.Small)
 
