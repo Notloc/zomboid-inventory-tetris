@@ -119,7 +119,9 @@ end
 function CompatibilityPopupWindow:doInfoTooltip(x, y, text)
     self:suspendStencil()
 
+    ---@diagnostic disable-next-line: undefined-field
     local lineCount = #text:split("\n")
+
     local fontHgt = getTextManager():getFontFromEnum(UIFont.Medium):getLineHeight()
     local width = getTextManager():MeasureStringX(UIFont.Medium, text)
     local height = fontHgt * lineCount

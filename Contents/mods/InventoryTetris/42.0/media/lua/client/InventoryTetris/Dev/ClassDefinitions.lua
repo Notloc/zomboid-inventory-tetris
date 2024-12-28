@@ -24,3 +24,12 @@
 ---@field EnableGravity boolean
 ---@field PreventTardisStacking boolean
 
+-- Declare some built-in functions that do exist, but normally don't in lua 5.1
+---@class string
+---@field split fun(self:string, separator:string):string[]
+
+---@class stringlib
+---@field sort fun(a:string, b:string):boolean
+
+---@class tablelib
+---@field wipe fun(t:table)

@@ -525,7 +525,8 @@ function TetrisItemsListTable:addItem(item)
     else
         local item = instanceItem(item:getFullName())
         if item:getType() == "CorpseAnimal" then
-            item:createAndStoreDefaultDeadBody(nil)
+            ---@diagnostic disable-next-line: param-type-mismatch
+            item:createAndStoreDefaultDeadBody(nil) -- Vanilla code
         end
         playerObj:getInventory():AddItem(item);
     end
