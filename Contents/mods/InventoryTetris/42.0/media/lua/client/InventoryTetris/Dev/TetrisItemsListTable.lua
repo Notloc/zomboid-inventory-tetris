@@ -240,6 +240,40 @@ end
 
 function TetrisItemsListTable:update()
     self.datas.doDrawItem = self.drawDatas;
+
+    if self.needsFilterRefresh then
+        self:resumeFilterRefresh()
+    end
+end
+
+function TetrisItemsListTable:resumeFilterRefresh()
+    local PER_FRAME = 500
+
+    local datas = self.datas
+    local total = #datas.fullList
+
+    local max = math.min(self.filterRefreshIndex + PER_FRAME, total)
+
+    for i = self.filterRefreshIndex, max do
+        local itemData = datas.fullList[i]
+        local add = true;
+        for _,widget in ipairs(self.filterWidgets) do
+            if not widget.itemsListFilter(widget, itemData.item) then
+                add = false
+                break
+            end
+        end
+        if add then
+            datas:addItem(i, itemData.item);
+            self.totalResult = self.totalResult + 1;
+        end
+    end
+
+    if max == total then
+        self.needsFilterRefresh = false
+    else
+        self.filterRefreshIndex = max + 1
+    end
 end
 
 function TetrisItemsListTable.filterDisplayCategory(widget, scriptItem)
@@ -357,22 +391,11 @@ end
 TetrisItemsListTable.onFilterChange = function(widget)
     local datas = widget.parent.datas;
     if not datas.fullList then datas.fullList = datas.items; end
-    widget.parent.totalResult = 0;
     datas:clear();
 
-    for i, itemData in ipairs(datas.fullList) do -- check every items
-        local add = true;
-        for j,widget in ipairs(widget.parent.filterWidgets) do -- check every filters
-            if not widget.itemsListFilter(widget, itemData.item) then
-                add = false
-                break
-            end
-        end
-        if add then
-            datas:addItem(i, itemData.item);
-            widget.parent.totalResult = widget.parent.totalResult + 1;
-        end
-    end
+    widget.parent.totalResult = 0;
+    widget.parent.needsFilterRefresh = true;
+    widget.parent.filterRefreshIndex = 1;
 end
 
 function TetrisItemsListTable:onOtherKey(key)
