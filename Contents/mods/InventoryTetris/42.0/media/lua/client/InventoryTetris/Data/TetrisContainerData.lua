@@ -30,7 +30,10 @@ end
 
 function TetrisContainerData.calculateInnerSize(container)
     local definition = TetrisContainerData.getContainerDefinition(container)
-    
+    return TetrisContainerData._calculateInnerSizeByDefinition(definition)
+end
+
+function TetrisContainerData._calculateInnerSizeByDefinition(definition)
     local innerSize = 0
     for _, gridDefinition in ipairs(definition.gridDefinitions) do
         local x = gridDefinition.size.width + SandboxVars.InventoryTetris.BonusGridSize
@@ -302,6 +305,28 @@ function TetrisContainerData._findLeafTardis(container, tardisList)
         end
     end
 end
+
+
+local itemScriptToContainerKey = {}
+
+function TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
+    if not itemScriptToContainerKey[itemScript] then
+        local item = instanceItem(itemScript)
+        if not item:IsInventoryContainer() then
+            return nil
+        end
+        ---@cast item InventoryContainer
+        local container = item:getItemContainer()
+        local containerKey = TetrisContainerData._getContainerKey(container)
+        itemScriptToContainerKey[itemScript] = containerKey
+
+        return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
+    end
+
+    return TetrisContainerData._getContainerDefinitionByKey(nil, itemScriptToContainerKey[itemScript])
+end
+
+
 
 -- Vehicle Storage Registration
 

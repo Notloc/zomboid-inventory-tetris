@@ -79,29 +79,35 @@ function TetrisContainersListTable:createChildren()
 
     self.datas:addColumn("Type", 0);
     self.datas:addColumn("Name", 200+(getCore():getOptionFontSizeReal()*20));
-    self.datas:addColumn("Category", 450+(getCore():getOptionFontSizeReal()*40));
-    self.datas:addColumn("DisplayCategory", 650+(getCore():getOptionFontSizeReal()*40))
-    self.datas:addColumn("LootCategory", 850+(getCore():getOptionFontSizeReal()*50))
 
-    local tX = 1050
+    local tX = 450
 
     self.datas:addColumn("Auto", tX+(getCore():getOptionFontSizeReal()*40));
     tX = tX + 65
 
-    self.datas:addColumn("X/Y", tX+(getCore():getOptionFontSizeReal()*40));
+    self.datas:addColumn("ItemSize", tX+(getCore():getOptionFontSizeReal()*40));
     tX = tX + 100
 
-    self.datas:addColumn("Size", tX+(getCore():getOptionFontSizeReal()*40));
+    self.datas:addColumn("Slots", tX+(getCore():getOptionFontSizeReal()*40));
     tX = tX + 100
 
-    self.datas:addColumn("Density", tX+(getCore():getOptionFontSizeReal()*40));
+    self.datas:addColumn("Tardis", tX+(getCore():getOptionFontSizeReal()*40));
     tX = tX + 100
 
-    self.datas:addColumn("Stack", tX+(getCore():getOptionFontSizeReal()*40));
+    self.datas:addColumn("Fragile", tX+(getCore():getOptionFontSizeReal()*40));
     tX = tX + 100
 
-    self.datas:addColumn("StackDensity", tX+(getCore():getOptionFontSizeReal()*40));
+    self.datas:addColumn("Capacity", tX+(getCore():getOptionFontSizeReal()*40));
     tX = tX + 100
+
+    self.datas:addColumn("SlotDensity", tX+(getCore():getOptionFontSizeReal()*40));
+    tX = tX + 125
+
+    self.datas:addColumn("Squishable", tX+(getCore():getOptionFontSizeReal()*40));
+    tX = tX + 100
+
+    self.datas:addColumn("SquishedSize", tX+(getCore():getOptionFontSizeReal()*40));
+    tX = tX + 140
 
     self.datas:setOnMouseDoubleClick(self, TetrisContainersListTable.addItem);
     self:addChild(self.datas);
@@ -122,122 +128,34 @@ function TetrisContainersListTable:createChildren()
         else
             size = self.datas.columns[i+1].size - self.datas.columns[i].size
         end
-        if column.name == "Category" then
-            local combo = ISComboBox:new(x, entryY, size, LABEL_HGT)
-            combo.font = UIFont.Medium
-            combo:initialise()
-            combo:instantiate()
-            combo.columnName = column.name
-            combo.target = combo
-            combo.onChange = self.onFilterChange
-            combo.itemsListFilter = self.filterCategory
-            self:addChild(combo)
-            table.insert(self.filterWidgets, combo)
-            self.filterWidgetMap[column.name] = combo
-        elseif column.name == "DisplayCategory" then
-            local combo = ISComboBox:new(x, entryY, size, LABEL_HGT)
-            combo.font = UIFont.Medium
-            combo:initialise()
-            combo:instantiate()
-            combo.columnName = column.name
-            combo.target = combo
-            combo.onChange = self.onFilterChange
-            combo.itemsListFilter = self.filterDisplayCategory
-            self:addChild(combo)
-            table.insert(self.filterWidgets, combo)
-            self.filterWidgetMap[column.name] = combo
-        elseif column.name == "LootCategory" then
-            local combo = ISComboBox:new(x, entryY, size, LABEL_HGT)
-            combo.font = UIFont.Medium
-            combo:initialise()
-            combo:instantiate()
-            combo.columnName = column.name
-            combo.target = combo
-            combo.onChange = self.onFilterChange
-            combo.itemsListFilter = self.filterLootCategory
-            self:addChild(combo)
-            table.insert(self.filterWidgets, combo)
-            self.filterWidgetMap[column.name] = combo
-        elseif column.name == "X/Y" then
-            local entry = ISTextEntryBox:new("", x, entryY, size, LABEL_HGT);
-            entry.font = UIFont.Medium
-            entry:initialise();
-            entry:instantiate();
-            entry.columnName = column.name;
-            entry.itemsListFilter = self.filterDimensions;
-            entry.onTextChange = TetrisContainersListTable.onFilterChange;
-            entry.onOtherKey = function(entry, key) TetrisContainersListTable.onOtherKey(entry, key) end
-            entry.target = self;
-            entry:setClearButton(true)
-            self:addChild(entry);
-            table.insert(self.filterWidgets, entry);
-            self.filterWidgetMap[column.name] = entry
-        else
-            local entry = ISTextEntryBox:new("", x, entryY, size, LABEL_HGT);
-            entry.font = UIFont.Medium
-            entry:initialise();
-            entry:instantiate();
-            entry.columnName = column.name;
-            entry.itemsListFilter = self['filter'..column.name]
-            entry.onTextChange = TetrisContainersListTable.onFilterChange;
-            entry.onOtherKey = function(entry, key) TetrisContainersListTable.onOtherKey(entry, key) end
-            entry.target = self;
-            entry:setClearButton(true)
-            self:addChild(entry);
-            table.insert(self.filterWidgets, entry);
-            self.filterWidgetMap[column.name] = entry
-        end
+
+        local entry = ISTextEntryBox:new("", x, entryY, size, LABEL_HGT);
+        entry.font = UIFont.Medium
+        entry:initialise();
+        entry:instantiate();
+        entry.columnName = column.name;
+        entry.itemsListFilter = self['filter'..column.name]
+        entry.onTextChange = TetrisContainersListTable.onFilterChange;
+        entry.onOtherKey = function(entry, key) TetrisContainersListTable.onOtherKey(entry, key) end
+        entry.target = self;
+        entry:setClearButton(true)
+        self:addChild(entry);
+        table.insert(self.filterWidgets, entry);
+        self.filterWidgetMap[column.name] = entry
+
         x = x + size;
     end
 end
 
 function TetrisContainersListTable:initList(moduleItems)
     self.totalResult = 0;
-    local categoryNames = {}
-    local displayCategoryNames = {}
-    local lootCategoryNames = {}
-    local categoryMap = {}
-    local displayCategoryMap = {}
-    local lootCategoryMap = {}
+
     for _, item in ipairs(moduleItems) do
         self.datas:addItem(item:getDisplayName(), item);
-        if not categoryMap[item:getTypeString()] then
-            categoryMap[item:getTypeString()] = true
-            table.insert(categoryNames, item:getTypeString())
-        end
-        if not displayCategoryMap[item:getDisplayCategory()] then
-            displayCategoryMap[item:getDisplayCategory()] = true
-            table.insert(displayCategoryNames, item:getDisplayCategory())
-        end
-        if not lootCategoryMap[getText("Sandbox_" .. item:getLootType().. "LootNew")] then
-            lootCategoryMap[getText("Sandbox_" .. item:getLootType() .. "LootNew")] = true
-            table.insert(lootCategoryNames, getText("Sandbox_" .. item:getLootType() .. "LootNew"))
-        end
+
         self.totalResult = self.totalResult + 1;
     end
     table.sort(self.datas.items, function(a,b) return not string.sort(a.item:getDisplayName(), b.item:getDisplayName()); end);
-
-    local combo = self.filterWidgetMap.Category
-    table.sort(categoryNames, function(a,b) return not string.sort(a, b) end)
-    combo:addOption("<Any>")
-    for _,categoryName in ipairs(categoryNames) do
-        combo:addOption(categoryName)
-    end
-
-    local combo = self.filterWidgetMap.DisplayCategory
-    table.sort(displayCategoryNames, function(a,b) return not string.sort(a, b) end)
-    combo:addOption("<Any>")
-    combo:addOption("<No category set>")
-    for _,displayCategoryName in ipairs(displayCategoryNames) do
-        combo:addOption(displayCategoryName)
-    end
-
-    local combo = self.filterWidgetMap.LootCategory
-    table.sort(lootCategoryNames, function(a,b) return not string.sort(a, b) end)
-    combo:addOption("<Any>")
-    for _,lootCategoryName in ipairs(lootCategoryNames) do
-        combo:addOption(lootCategoryName)
-    end
 end
 
 function TetrisContainersListTable:update()
@@ -278,61 +196,65 @@ function TetrisContainersListTable:resumeFilterRefresh()
     end
 end
 
-function TetrisContainersListTable.filterDisplayCategory(widget, scriptItem)
-    if widget.selected == 1 then return true end -- Any category
-    if widget.selected == 2 then return scriptItem:getDisplayCategory() == nil end
-    return scriptItem:getDisplayCategory() == widget:getOptionText(widget.selected)
-end
-
-function TetrisContainersListTable.filterCategory(widget, scriptItem)
-    if widget.selected == 1 then return true end -- Any category
-    return scriptItem:getTypeString() == widget:getOptionText(widget.selected)
-end
-
+-- FILTERS
 function TetrisContainersListTable.filterName(widget, scriptItem)
-    return TetrisContainersListTable.doTextFilter(widget, scriptItem:getDisplayName())
+    local displayName = scriptItem:getDisplayName()
+    return TetrisContainersListTable.doTextFilter(widget, displayName)
 end
 
 function TetrisContainersListTable.filterType(widget, scriptItem)
-    return TetrisContainersListTable.doTextFilter(widget, scriptItem:getName())
-end
-
-function TetrisContainersListTable.filterLootCategory(widget, scriptItem)
-    if widget.selected == 1 then return true end -- Any category
-    return getText("Sandbox_" .. scriptItem:getLootType() .. "LootNew") == widget:getOptionText(widget.selected)
+    local typeName = scriptItem:getName()
+    return TetrisContainersListTable.doTextFilter(widget, typeName)
 end
 
 function TetrisContainersListTable.filterAuto(widget, scriptItem)
-    return TetrisContainersListTable.doTextFilter(widget, tostring(TetrisItemInfo.isAutoCalculated(scriptItem)))
+    return TetrisContainersListTable.doTextFilter(widget, tostring(TetrisContainerInfo.isAutoCalculated(scriptItem)))
 end
 
-function TetrisContainersListTable.filterDimensions(widget, scriptItem)
-    local itemSize = TetrisItemInfo.getItemDimensions(scriptItem)
-    return TetrisContainersListTable.doTextFilter(widget, itemSize)
-end
-
-function TetrisContainersListTable.filterSize(widget, scriptItem)
+function TetrisContainersListTable.filterItemSize(widget, scriptItem)
     local itemSize = TetrisItemInfo.getItemSize(scriptItem)
     return TetrisContainersListTable.doNumericFilter(widget, itemSize)
 end
 
-function TetrisContainersListTable.filterStack(widget, scriptItem)
-    local stackSize = TetrisItemInfo.getMaxStackSize(scriptItem)
+function TetrisContainersListTable.filterSlots(widget, scriptItem)
+    local slotCount = TetrisContainerInfo.getSlotCount(scriptItem)
+    return TetrisContainersListTable.doNumericFilter(widget, slotCount)
+end
+
+function TetrisContainersListTable.filterFragile(widget, scriptItem)
+    local isFragile = TetrisContainerInfo.isFragile(scriptItem)
+    return TetrisContainersListTable.doTextFilter(widget, isFragile)
+end
+
+function TetrisContainersListTable.filterCapacity(widget, scriptItem)
+    local stackSize = TetrisContainerInfo.getCapacity(scriptItem)
     return TetrisContainersListTable.doNumericFilter(widget, stackSize)
 end
 
-function TetrisContainersListTable.filterDensity(widget, scriptItem)
-    local density = TetrisItemInfo.getItemDensity(scriptItem)
+function TetrisContainersListTable.filterSlotDensity(widget, scriptItem)
+    local density = TetrisContainerInfo.getSlotDensity(scriptItem)
     return TetrisContainersListTable.doNumericFilter(widget, density)
 end
 
-function TetrisContainersListTable.filterStackDensity(widget, scriptItem)
-    local stackDensity = TetrisItemInfo.getStackDensity(scriptItem)
+function TetrisContainersListTable.filterSquishable(widget, scriptItem)
+    local stackDensity = TetrisContainerInfo.isSquishable(scriptItem)
+    return TetrisContainersListTable.doTextFilter(widget, stackDensity)
+end
+
+function TetrisContainersListTable.filterSquishedSize(widget, scriptItem)
+    local stackDensity = TetrisContainerInfo.getSquishedSize(scriptItem)
     return TetrisContainersListTable.doNumericFilter(widget, stackDensity)
 end
 
+function TetrisContainersListTable.filterTardis(widget, scriptItem)
+    local stackDensity = TetrisContainerInfo.isTardis(scriptItem)
+    return TetrisContainersListTable.doTextFilter(widget, stackDensity)
+end
+
+-- END FILTERS
+
 function TetrisContainersListTable.doTextFilter(widget, textToCheck)
-    local txtToCheck = string.lower(textToCheck)
+    local txtToCheck = string.lower(tostring(textToCheck))
     local filterTxt = string.lower(widget:getInternalText())
     return TetrisContainersListTable._doTextFilter(txtToCheck, filterTxt)
 end
@@ -452,53 +374,52 @@ function TetrisContainersListTable:drawDatas(y, item, alt)
     self:drawText(item.item:getDisplayName(), self.columns[2].size + iconX + iconSize + 4, y + 3, 1, 1, 1, a, self.font);
     self:clearStencilRect()
 
-    clipX = self.columns[3].size
-    clipX2 = self.columns[4].size
-    self:setStencilRect(clipX, clipY, clipX2 - clipX, clipY2 - clipY)
-    self:drawText(item.item:getTypeString(), self.columns[3].size + xoffset, y + 3, 1, 1, 1, a, self.font);
-    self:clearStencilRect()
+    local tetrixIdx = 3
 
-
-    if item.item:getDisplayCategory() ~= nil then
-        self:drawText(getText("IGUI_ItemCat_" .. item.item:getDisplayCategory()), self.columns[4].size + xoffset, y + 4, 1, 1, 1, a, self.font);
-    else
-        self:drawText("Error: No category set", self.columns[4].size + xoffset, y + 3, 1, 1, 1, a, self.font);
-    end
-
-    if item.item:getLootType() ~= nil then
-        self:drawText(getText("Sandbox_" .. item.item:getLootType() .. "LootNew"), self.columns[5].size + xoffset, y + 3, 1, 1, 1, a, self.font);
-    end
-
-
-    local tetrixIdx = 6
-
-    local auto = TetrisItemInfo.isAutoCalculated(item.item)
+    local auto = TetrisContainerInfo.isAutoCalculated(item.item)
     self:drawText(tostring(auto), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
 
     tetrixIdx = tetrixIdx + 1
 
-    local itemDimensions = TetrisItemInfo.getItemDimensions(item.item)
-    self:drawText(itemDimensions, self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
-
-    tetrixIdx = tetrixIdx + 1
-
-    local itemSize = TetrisItemInfo.getItemSize(item.item) or "-"
+    local itemSize = TetrisItemInfo.getItemSize(item.item)
     self:drawText(tostring(itemSize), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
 
     tetrixIdx = tetrixIdx + 1
 
-    local density = TetrisItemInfo.getItemDensity(item.item)
+    local slotCount = TetrisContainerInfo.getSlotCount(item.item)
+    self:drawText(tostring(slotCount), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+
+    tetrixIdx = tetrixIdx + 1
+
+    local tardis = TetrisContainerInfo.isTardis(item.item)
+    self:drawText(tostring(tardis), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+
+    tetrixIdx = tetrixIdx + 1
+
+    local fragile = TetrisContainerInfo.isFragile(item.item)
+    self:drawText(tostring(fragile), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+
+    tetrixIdx = tetrixIdx + 1
+
+    local capacity = TetrisContainerInfo.getCapacity(item.item)
+    self:drawText(tostring(capacity), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+
+    tetrixIdx = tetrixIdx + 1
+
+    local density = TetrisContainerInfo.getSlotDensity(item.item) or "-"
     self:drawText(formatNumber(density, 4), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
 
     tetrixIdx = tetrixIdx + 1
 
-    local stackSize = TetrisItemInfo.getMaxStackSize(item.item) or "-"
-    self:drawText(tostring(stackSize), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+    local squishy = TetrisContainerInfo.isSquishable(item.item)
+    self:drawText(tostring(squishy), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
 
     tetrixIdx = tetrixIdx + 1
 
-    local stackDensity = TetrisItemInfo.getStackDensity(item.item)
-    self:drawText(formatNumber(stackDensity, 4), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+    local squishedSize = squishy and TetrisContainerInfo.getSquishedSize(item.item) or "-"
+    self:drawText(tostring(squishedSize), self.columns[tetrixIdx].size + xoffset, y + 3, 1, 1, 1, a, self.font);
+
+    tetrixIdx = tetrixIdx + 1
 
     self:repaintStencilRect(0, clipY, self.width, clipY2 - clipY)
 

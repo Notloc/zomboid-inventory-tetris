@@ -38,7 +38,11 @@ function TetrisItemData.getSquishedFullType(item)
     return item:getFullType() .. SQUISHED_SUFFIX
 end
 
-function TetrisItemData.getItemDefinitonByItemScript(itemScript)
+function TetrisItemData.getItemDefinitonByItemScript(itemScript, squished)
+    if squished == nil then 
+        squished = false
+    end
+
     local fType = itemScript:getFullName()
     local item = nil
     if not TetrisItemData._itemData[fType] then
