@@ -1,5 +1,3 @@
--- A collection of utility functions
--- TODO: Merge a lot of these into ItemUtil
 NotUtil = NotUtil or {}
 
 function NotUtil.slice(tbl, start, stop)
