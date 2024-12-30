@@ -1,8 +1,9 @@
 require("BuildingObjects/ISMoveableCursor")
 local ItemUtil = require("Notloc/ItemUtil")
 
--- Make all moveable items visible in the moveable cursor
--- Even if they are not in the player's main inventory
+-- Adjusts the moveable cursor to show moveable items in the player's hands and equipped bags in addition to their main inventory
+-- ISMoveableSpriteProps_allow_items_from_hands_and_bags handles finding items while building a ISMoveablesAction
+-- ISMoveablesAction_JitTransferItems handles transferring and unequipping the item(s) just before the action is executed
 
 Events.OnGameStart.Add(function()
     local og_getInventoryObjectList = ISMoveableCursor.getInventoryObjectList

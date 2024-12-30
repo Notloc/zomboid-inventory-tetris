@@ -1,5 +1,8 @@
 local ItemUtil = require("Notloc/ItemUtil")
 
+-- Allows ISMoveableSpriteProps to find items in the player's hands and equipped bags when building the ISMoveablesAction
+-- Transfer and unequipping of the item is handled by the ISMoveablesAction_JitTransferItems patch
+
 Events.OnGameBoot.Add(function()
     local og_findInInventory = ISMoveableSpriteProps.findInInventory
 
