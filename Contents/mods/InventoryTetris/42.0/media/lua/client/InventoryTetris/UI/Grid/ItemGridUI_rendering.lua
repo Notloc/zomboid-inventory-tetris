@@ -344,9 +344,8 @@ function ItemGridUI:renderDragItemPreview()
             gridX, gridY = self.selectedX, self.selectedY
         end
 
-        local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated)
-        canPlace = canPlace and self.containerGrid:isItemAllowed(item) 
-        canPlace = canPlace and (self.grid.inventory == item:getContainer() or not self.grid.containerDefinition.isFragile or self.grid.inventory:hasRoomFor(getSpecificPlayer(0), item))
+        local isSameInv = self.grid.inventory == item:getContainer()
+        local canPlace = self.grid:doesItemFit(item, gridX, gridY, isRotated) and (isSameInv or self.containerGrid:isItemAllowed(item))
 
         if canPlace then
             self:_renderPlacementPreview(gridX, gridY, itemW, itemH, 0, 1, 0)

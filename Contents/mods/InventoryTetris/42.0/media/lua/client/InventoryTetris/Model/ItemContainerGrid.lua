@@ -273,8 +273,7 @@ function ItemContainerGrid:doesItemFitAnywhere(item, w, h, ignoreItems)
     return false
 end
 
-function ItemContainerGrid:_getCapacity()
-    local player = getSpecificPlayer(self.playerNum)
+function ItemContainerGrid:_getCapacity(player)
     local hasOrganizedTrait = player:HasTrait("Organized")
     local hasDisorganizedTrait = player:HasTrait("Disorganized")
 
@@ -288,19 +287,53 @@ function ItemContainerGrid:_getCapacity()
     return capacity
 end
 
+---@param item InventoryItem
+---@param container ItemContainer
+---@param playerObj IsoPlayer
+---@return boolean
+function ItemContainerGrid:validateCapacityRestrictions(item, container, playerObj)
+    if item:getContainer() == container then
+        return true
+    end
+
+    if SandboxVars.InventoryTetris.EnforceCarryWeight then
+        local capacity = self:_getCapacity(playerObj)
+        if item:getUnequippedWeight() + container:getCapacityWeight() > capacity then
+            return false
+        end
+
+        local item = container:getContainingItem()
+        if item and item:IsInventoryContainer() then
+            ---@cast item InventoryContainer
+            local maxItemSize = item:getMaxItemSize()
+            if maxItemSize and maxItemSize < item:getUnequippedWeight() then
+                return false
+            end
+        end
+    end
+
+    return true
+end
+
 ---@return boolean
 function ItemContainerGrid:isItemAllowed(item)
-    return self:_validateOnlyAcceptCategory(item)
+    if self.inventory:getOnlyAcceptCategory() then
+        if item:getCategory() ~= self.inventory:getOnlyAcceptCategory() then
+            return false
+        end
+    end
+
+    local player = getSpecificPlayer(self.playerNum)
+    if not self:validateCapacityRestrictions(item, self.inventory, player) then
+        return false
+    end
+
+    return TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item)
 end
 
 ---@return boolean
 function ItemContainerGrid:canAddItem(item)
-    if not self:_validateOnlyAcceptCategory(item) then
-        return false
-    end
-
-    local capacity = self:_getCapacity()
-    if self.containerDefinition.isFragile and item:getContainer() ~= self.inventory and capacity < item:getActualWeight() + self.inventory:getCapacityWeight() then
+    if not self:isItemAllowed(item) then
         return false
     end
 
@@ -321,15 +354,6 @@ function ItemContainerGrid:canAddItem(item)
     return false
 end
 
-function ItemContainerGrid:_validateOnlyAcceptCategory(item)
-    if self.inventory:getOnlyAcceptCategory() then
-        if item:getCategory() ~= self.inventory:getOnlyAcceptCategory() then
-            return false
-        end
-    end
-
-    return TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item)
-end
 
 function ItemContainerGrid:refresh()
     local doPhysics = SandboxVars.InventoryTetris.EnableGravity and self:shouldDoPhysics()

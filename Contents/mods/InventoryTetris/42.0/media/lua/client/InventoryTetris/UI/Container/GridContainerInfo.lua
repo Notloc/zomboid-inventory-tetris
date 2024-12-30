@@ -72,7 +72,7 @@ function GridContainerInfo:prerender()
         self:drawTextureScaled(SELECTED_TEXTURE, 4, topIconY+2, tx, ty, 1, 1, 1, 1)
     end
 
-    local capacity = containerUi.containerGrid:_getCapacity()
+    local capacity = containerUi.containerGrid:_getCapacity(self.containerUi.player)
     capacity = math.floor(capacity)
 
     if containerUi.isPlayerInventory then

@@ -342,7 +342,7 @@ function TetrisContainersListTable:drawDatas(y, item, alt)
     if y + self:getYScroll() + self.itemheight < 0 or y + self:getYScroll() >= self.height then
         return y + self.itemheight
     end
-    
+
     local a = 0.9;
 
     if self.selected == item.index then
@@ -363,7 +363,7 @@ function TetrisContainersListTable:drawDatas(y, item, alt)
     local clipX2 = self.columns[2].size
     local clipY = math.max(0, y + self:getYScroll())
     local clipY2 = math.min(self.height, y + self:getYScroll() + self.itemheight)
-    
+
     self:setStencilRect(clipX, clipY, clipX2 - clipX, clipY2 - clipY)
     self:drawText(item.item:getName(), xoffset, y + 3, 1, 1, 1, a, self.font);
     self:clearStencilRect()
