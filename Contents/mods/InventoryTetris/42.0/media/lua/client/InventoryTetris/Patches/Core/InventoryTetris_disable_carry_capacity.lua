@@ -26,7 +26,7 @@ local function disableCarryWeightOnContainer(container, callback, ...)
 
     local originalCapacity = container:getCapacity()
     local containerDef = TetrisContainerData.getContainerDefinition(container)
-    if containerDef.isFragile or originalCapacity == 50 then
+    if containerDef.isFragile or originalCapacity >= 50 then
         return callback(...)
     end
 
@@ -85,13 +85,21 @@ local function disableCarryWeightOnItems(items, callback, ...)
     end
 end
 
+local function disableBoth(container, items, callback, ...)
+    local doItems = function (...)
+        return disableCarryWeightOnItems(...)
+    end
+    return disableCarryWeightOnContainer(container, doItems, items, callback, ...)
+end
+
 -- All vanilla functions that I found that check the container's capacity
 Events.OnGameStart.Add(function()
     require("ISUI/ISInventoryPane")
     local og_canPutIn_pane = ISInventoryPane.canPutIn
     function ISInventoryPane:canPutIn()
+        local container = self.inventory
         local items = ISInventoryPane.getActualItems(ISMouseDrag.dragging)
-        return disableCarryWeightOnItems(items, og_canPutIn_pane, self)
+        return disableBoth(container, items, og_canPutIn_pane, self)
     end
 
     local og_update_draggedItems = ISInventoryPaneDraggedItems.update
@@ -110,8 +118,9 @@ Events.OnGameStart.Add(function()
     require("TimedActions/ISInventoryTransferAction")
     local og_isValid = ISInventoryTransferAction.isValid
     function ISInventoryTransferAction:isValid()
+        local container = self.destContainer
         local items = {self.item}
-        return disableCarryWeightOnItems(items, og_isValid, self)
+        return disableBoth(container, items, og_isValid, self)
     end
 
     require("ISUI/ISInventoryPaneContextMenu")
