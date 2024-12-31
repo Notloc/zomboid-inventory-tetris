@@ -1,11 +1,11 @@
 UI_HU = {
-    UI_optionscreen_binding_tetris_rotate_item = "T·rgy elforgat·sa",
-    UI_optionscreen_binding_tetris_quick_move = "Gyors mozgat·s gomb",
-    UI_optionscreen_binding_tetris_quick_equip = "Gyors felszedÈs gomb",
-    UI_optionscreen_binding_tetris_stack_split = "T·rgy eloszt·sa gomb",
-    UI_optionscreen_binding_tetris_close_window = "FelugrÛ ablak bez·r·sa",
+    UI_optionscreen_binding_tetris_rotate_item = "T√°rgy elforgat√°sa",
+    UI_optionscreen_binding_tetris_quick_move = "Gyors mozgat√°s gomb",
+    UI_optionscreen_binding_tetris_quick_equip = "Gyors felszed√©s gomb",
+    UI_optionscreen_binding_tetris_stack_split = "T√°rgy eloszt√°sa gomb",
+    UI_optionscreen_binding_tetris_close_window = "Felugr√≥ ablak bez√°r√°sa",
 
-    UI_tetris_options_grid_scale = "R·cs mÈret",
-    UI_tetris_options_container_info_scale = "T·rolÛ inform·ciÛ mÈret",
-    UI_optionscreen_binding_InventoryTetris = "FelszerelÈs tetrisz"
+    UI_tetris_options_grid_scale = "R√°cs m√©ret",
+    UI_tetris_options_container_info_scale = "T√°rol√≥ inform√°ci√≥ m√©ret",
+    UI_optionscreen_binding_InventoryTetris = "Felszerel√©s tetrisz"
 }

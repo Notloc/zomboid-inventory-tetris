@@ -1,0 +1,6 @@
+Sandbox_DK = {
+    Sandbox_InventoryTetris = "Inventar Tetris",
+    Sandbox_InventoryTetris_EnableSearch = "Aktiver Gennemsøgning af Beholder",
+    Sandbox_InventoryTetris_SearchTime = "Gennemsøgningstid",
+    Sandbox_InventoryTetris_BonusGridSize = "Bonus Gitter Størrelse"
+}

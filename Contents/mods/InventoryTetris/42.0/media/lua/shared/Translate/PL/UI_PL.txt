@@ -1,7 +1,7 @@
 UI_PL = {
-    UI_optionscreen_binding_tetris_rotate_item = "Obr�? przedmiot",
+    UI_optionscreen_binding_tetris_rotate_item = "Obróć przedmiot",
     UI_optionscreen_binding_tetris_quick_move = "Szybkie przeniesienie",
-    UI_optionscreen_binding_tetris_quick_equip = "Szybkie za?o?enie ",
+    UI_optionscreen_binding_tetris_quick_equip = "Szybkie założenie ",
     UI_optionscreen_binding_tetris_stack_split = "Podziel stos",
     UI_optionscreen_binding_tetris_close_window = "Zamknij okno",
 

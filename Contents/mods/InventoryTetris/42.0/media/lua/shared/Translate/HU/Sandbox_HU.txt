@@ -1,6 +1,6 @@
 Sandbox_HU = {
-    Sandbox_InventoryTetris = "FelszerelÈs tetrisz",
-    Sandbox_InventoryTetris_EnableSearch = "EngedÈlyezze a t·rolÛ keresÈst",
-    Sandbox_InventoryTetris_SearchTime = "KeresÈsi idı",
-    Sandbox_InventoryTetris_BonusGridSize = "BÛnusz r·cs mÈret"
+    Sandbox_InventoryTetris = "Felszerel√©s tetrisz",
+    Sandbox_InventoryTetris_EnableSearch = "Enged√©lyezze a t√°rol√≥ keres√©st",
+    Sandbox_InventoryTetris_SearchTime = "Keres√©si id≈ë",
+    Sandbox_InventoryTetris_BonusGridSize = "B√≥nusz r√°cs m√©ret"
 }

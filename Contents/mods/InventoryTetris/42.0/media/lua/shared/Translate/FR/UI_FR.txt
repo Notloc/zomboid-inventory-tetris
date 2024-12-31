@@ -1,11 +1,11 @@
 UI_FR = {
     UI_optionscreen_binding_tetris_rotate_item = "Rotation de l'objet",
-    UI_optionscreen_binding_tetris_quick_move = "Touche de déplacement rapide",
-    UI_optionscreen_binding_tetris_quick_equip = "Touche d'équipement rapide",
+    UI_optionscreen_binding_tetris_quick_move = "Touche de dÃ©placement rapide",
+    UI_optionscreen_binding_tetris_quick_equip = "Touche d'Ã©quipement rapide",
     UI_optionscreen_binding_tetris_stack_split = "Touche de division de piles",
-    UI_optionscreen_binding_tetris_close_window = "Fermer la fenêtre contextuelle",
+    UI_optionscreen_binding_tetris_close_window = "Fermer la fenÃªtre contextuelle",
 
-    UI_tetris_options_grid_scale = "Échelle de la grille",
-    UI_tetris_options_container_info_scale = "Échelle des informations du conteneur",
+    UI_tetris_options_grid_scale = "Ã‰chelle de la grille",
+    UI_tetris_options_container_info_scale = "Ã‰chelle des informations du conteneur",
     UI_optionscreen_binding_InventoryTetris = "Inventaire Tetris"
 }

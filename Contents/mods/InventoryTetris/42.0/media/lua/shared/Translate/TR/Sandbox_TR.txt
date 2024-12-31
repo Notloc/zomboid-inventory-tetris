@@ -1,0 +1,6 @@
+Sandbox_TR = {
+    Sandbox_InventoryTetris = "Tetris Envanter",
+    Sandbox_InventoryTetris_EnableSearch = "Konteynır Aramasını Etkinleştir",
+    Sandbox_InventoryTetris_SearchTime = "Arama Süresi",
+    Sandbox_InventoryTetris_BonusGridSize = "Bonus Karelaj Boyutu"
+}

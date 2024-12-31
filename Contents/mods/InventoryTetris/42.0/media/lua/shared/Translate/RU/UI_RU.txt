@@ -1,11 +1,11 @@
 UI_RU = {
-    UI_optionscreen_binding_tetris_rotate_item = "Повернуть предмет",
-    UI_optionscreen_binding_tetris_quick_move = "Клавиша быстрого перемещения",
-    UI_optionscreen_binding_tetris_quick_equip = "Клавиша быстрой экипировки",
-    UI_optionscreen_binding_tetris_stack_split = "Клавиша разделения стака",
-    UI_optionscreen_binding_tetris_close_window = "Закрыть всплывающее окно",
+    UI_optionscreen_binding_tetris_rotate_item = "РџРѕРІРµСЂРЅСѓС‚СЊ РїСЂРµРґРјРµС‚",
+    UI_optionscreen_binding_tetris_quick_move = "РљР»Р°РІРёС€Р° Р±С‹СЃС‚СЂРѕРіРѕ РїРµСЂРµРјРµС‰РµРЅРёСЏ",
+    UI_optionscreen_binding_tetris_quick_equip = "РљР»Р°РІРёС€Р° Р±С‹СЃС‚СЂРѕР№ СЌРєРёРїРёСЂРѕРІРєРё",
+    UI_optionscreen_binding_tetris_stack_split = "РљР»Р°РІРёС€Р° СЂР°Р·РґРµР»РµРЅРёСЏ СЃС‚Р°РєР°",
+    UI_optionscreen_binding_tetris_close_window = "Р—Р°РєСЂС‹С‚СЊ РІСЃРїР»С‹РІР°СЋС‰РµРµ РѕРєРЅРѕ",
 
-    UI_tetris_options_grid_scale = "Масштаб сетки",
-    UI_tetris_options_container_info_scale = "Масштаб информации контейнера",
-    UI_optionscreen_binding_InventoryTetris = "Инвентарь-Тетрис"
+    UI_tetris_options_grid_scale = "РњР°СЃС€С‚Р°Р± СЃРµС‚РєРё",
+    UI_tetris_options_container_info_scale = "РњР°СЃС€С‚Р°Р± РёРЅС„РѕСЂРјР°С†РёРё РєРѕРЅС‚РµР№РЅРµСЂР°",
+    UI_optionscreen_binding_InventoryTetris = "РРЅРІРµРЅС‚Р°СЂСЊ-РўРµС‚СЂРёСЃ"
 }

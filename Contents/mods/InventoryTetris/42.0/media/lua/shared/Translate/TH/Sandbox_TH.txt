@@ -1,0 +1,6 @@
+Sandbox_TH = {
+	Sandbox_InventoryTetris = "ช่องเก็บของสไตล์เตตริส",
+	Sandbox_InventoryTetris_EnableSearch = "เปิดใช้งานการค้นหาไอเท็มในบรรจุภัณฑ์",
+	Sandbox_InventoryTetris_SearchTime = "เวลาในการค้นหาไอเท็ม",
+	Sandbox_InventoryTetris_BonusGridSize = "ขนาดช่องพิเศษ"
+}

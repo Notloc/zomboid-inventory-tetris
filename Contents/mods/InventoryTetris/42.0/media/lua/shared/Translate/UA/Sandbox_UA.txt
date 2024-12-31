@@ -1,0 +1,6 @@
+Sandbox_UA = {
+    Sandbox_InventoryTetris = "Інвентар-тетріс",
+    Sandbox_InventoryTetris_EnableSearch = "Увімкнути пошук в контейнері",
+    Sandbox_InventoryTetris_SearchTime = "Час пошуку",
+    Sandbox_InventoryTetris_BonusGridSize = "Розмір бонусної сітки"
+}

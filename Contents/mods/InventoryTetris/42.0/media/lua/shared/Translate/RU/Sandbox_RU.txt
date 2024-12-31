@@ -1,6 +1,6 @@
 Sandbox_RU = {
-    Sandbox_InventoryTetris = "Инвентарь-Тетрис",
-    Sandbox_InventoryTetris_EnableSearch = "Включить поиск в контейнерах",
-    Sandbox_InventoryTetris_SearchTime = "Время Поиска",
-    Sandbox_InventoryTetris_BonusGridSize = "Размер бонусной сетки"
+    Sandbox_InventoryTetris = "РРЅРІРµРЅС‚Р°СЂСЊ-РўРµС‚СЂРёСЃ",
+    Sandbox_InventoryTetris_EnableSearch = "Р’РєР»СЋС‡РёС‚СЊ РїРѕРёСЃРє РІ РєРѕРЅС‚РµР№РЅРµСЂР°С…",
+    Sandbox_InventoryTetris_SearchTime = "Р’СЂРµРјСЏ РџРѕРёСЃРєР°",
+    Sandbox_InventoryTetris_BonusGridSize = "Р Р°Р·РјРµСЂ Р±РѕРЅСѓСЃРЅРѕР№ СЃРµС‚РєРё"
 }
