@@ -53,26 +53,29 @@ local function disableCarryWeightOnItems(items, callback, ...)
         return callback(...)
     end
 
-    local itemWeightByIndex = {}
-    local scriptWeightByIndex = {}
+    local itemWeightByItem = {}
+    local scriptWeightByScriptItem = {}
 
-    for i, item in ipairs(items) do
-        local weight = item:getActualWeight()
-        itemWeightByIndex[i] = weight
-        item:setActualWeight(0)
+    for _, item in ipairs(items) do
+        if not itemWeightByItem[item] then
+            itemWeightByItem[item] = item:getActualWeight()
+            item:setActualWeight(0)
+        end
 
         local scriptItem = item:getScriptItem()
-        weight = scriptItem:getActualWeight()
-        scriptWeightByIndex[i] = weight
-        scriptItem:setActualWeight(0)
+        if not scriptWeightByScriptItem[scriptItem] then
+            scriptWeightByScriptItem[scriptItem] = scriptItem:getActualWeight()
+            scriptItem:setActualWeight(0)
+        end
     end
 
     local results = {pcall(callback, ...)}
 
-    for i, item in ipairs(items) do
-        item:setActualWeight(itemWeightByIndex[i])
-        local scriptItem = item:getScriptItem()
-        scriptItem:setActualWeight(scriptWeightByIndex[i])
+    for item, weight in pairs(itemWeightByItem) do
+        item:setActualWeight(weight)
+    end
+    for scriptItem, weight in pairs(scriptWeightByScriptItem) do
+        scriptItem:setActualWeight(weight)
     end
 
     if results[1] then
