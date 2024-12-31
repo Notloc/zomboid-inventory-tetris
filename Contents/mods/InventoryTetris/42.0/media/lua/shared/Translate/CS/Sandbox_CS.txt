@@ -1,0 +1,6 @@
+Sandbox_CS = {
+    Sandbox_InventoryTetris = "Inventářní Tetris",
+    Sandbox_InventoryTetris_EnableSearch = "Zapnout prohledávání úložiště",
+    Sandbox_InventoryTetris_SearchTime = "Čas prohledávání",
+    Sandbox_InventoryTetris_BonusGridSize = "Bonus k velikosti mřížky"
+}

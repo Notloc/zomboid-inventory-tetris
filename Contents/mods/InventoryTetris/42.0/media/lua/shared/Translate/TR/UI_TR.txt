@@ -1,0 +1,11 @@
+UI_TR = {
+    UI_optionscreen_binding_tetris_rotate_item = "Nesneyi Döndür",
+    UI_optionscreen_binding_tetris_quick_move = "Hızlı Gezdirme Tuşu",
+    UI_optionscreen_binding_tetris_quick_equip = "Hızlı Kuşanma Tuşu",
+    UI_optionscreen_binding_tetris_stack_split = "Yığını Bölme Tuşu",
+    UI_optionscreen_binding_tetris_close_window = "Açılır Pencereyi Kapat",
+
+    UI_tetris_options_grid_scale = "Karelaj Ölçüsü",
+    UI_tetris_options_container_info_scale = "Konteynır Bilgi Ölçüsü",
+    UI_optionscreen_binding_InventoryTetris = "Tetris Envanter"
+}

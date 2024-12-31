@@ -1,0 +1,11 @@
+UI_CS = {
+    UI_optionscreen_binding_tetris_rotate_item = "Otočit předmět",
+    UI_optionscreen_binding_tetris_quick_move = "Rychlé přesunutí",
+    UI_optionscreen_binding_tetris_quick_equip = "Rychlé vybavení",
+    UI_optionscreen_binding_tetris_stack_split = "Rozdělit předměty",
+    UI_optionscreen_binding_tetris_close_window = "Zavřít inventář",
+
+    UI_tetris_options_grid_scale = "Měřítko mřížky",
+    UI_tetris_options_container_info_scale = "Měřítko informací o úložišti",
+    UI_optionscreen_binding_InventoryTetris = "Inventářní Tetris"
+}
