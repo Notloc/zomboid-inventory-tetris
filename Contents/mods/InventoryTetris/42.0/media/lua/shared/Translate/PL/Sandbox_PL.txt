@@ -1,6 +1,6 @@
 Sandbox_PL = {
     Sandbox_InventoryTetris = "Ekwipunek Tetris",
-    Sandbox_InventoryTetris_EnableSearch = "W??cz wyszukiwanie kontener�w",
+    Sandbox_InventoryTetris_EnableSearch = "Włącz wyszukiwanie kontenerów",
     Sandbox_InventoryTetris_SearchTime = "Czas szukania",
     Sandbox_InventoryTetris_BonusGridSize = "Dodatkowy rozmiar siatki"
 }

@@ -1,6 +1,6 @@
 Sandbox_DE = {
 	Sandbox_InventoryTetris = "Inventar Tetris",
-	Sandbox_InventoryTetris_EnableSearch = "Beh‰ltersuche aktivieren",
+	Sandbox_InventoryTetris_EnableSearch = "Beh√§ltersuche aktivieren",
 	Sandbox_InventoryTetris_SearchTime = "Suchdauer",
-	Sandbox_InventoryTetris_BonusGridSize = "Bonus Rastergrˆﬂe"
+	Sandbox_InventoryTetris_BonusGridSize = "Bonus Rastergr√∂√üe"
 }
