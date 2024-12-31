@@ -10,10 +10,7 @@ require("InventoryTetris/Data/TetrisItemCategory")
 ---@field size Size2D
 ---@field position Vector2Lua
 
-local MAX_ITEM_HEIGHT = 30
-local MAX_ITEM_WIDTH = 10
-
-TetrisContainerData = {}
+TetrisContainerData = TetrisContainerData or {}  -- Partial class
 
 TetrisContainerData._containerDefinitions = {}
 TetrisContainerData._vehicleStorageNames = {}
@@ -60,98 +57,6 @@ function TetrisContainerData._getContainerDefinitionByKey(container, containerKe
         TetrisContainerData._containerDefinitions[containerKey] = TetrisContainerData._calculateContainerDefinition(container)
     end
     return TetrisContainerData._containerDefinitions[containerKey]
-end
-
-function TetrisContainerData._calculateContainerDefinition(container)
-    local definition = nil
-    local type = container:getType()
-
-    if TetrisContainerData._vehicleStorageNames[type] then
-        definition = TetrisContainerData._calculateVehicleTrunkContainerDefinition(container)
-    else
-        local item = container:getContainingItem()
-        if item then
-            definition = TetrisContainerData._calculateItemContainerDefinition(container, item)
-        else
-            definition = TetrisContainerData._calculateWorldContainerDefinition(container)
-        end
-    end
-
-    definition._autoCalculated = true
-    return definition
-end
-
-function TetrisContainerData._calculateItemContainerDefinition(container, item)
-    local capacity = container:getCapacity()
-    local weightReduction = item:getWeightReduction()
-
-    local bonus = weightReduction - 45
-    if bonus < 0 then
-        bonus = 0
-    end
-
-    local slotCount = 6 + capacity + bonus
-
-    -- Determine two numbers that multiply close to the slot count
-    local x, y = TetrisContainerData._calculateDimensions(slotCount)
-    if x < 2 then
-        x = 2
-    end
-    if y < 2 then
-        y = 2
-    end
-
-    return {
-        gridDefinitions = {{
-            size = {width=x, height=y},
-            position = {x=0, y=0},
-        }}
-    }
-end
-
-function TetrisContainerData._calculateWorldContainerDefinition(container)
-    local capacity = container:getCapacity()
-
-    local size = 1 + math.ceil(capacity^0.55)
-    return {
-        gridDefinitions = {{
-            size = {width=size, height=size},
-            position = {x=0, y=0},
-        }}
-    }
-end
-
-function TetrisContainerData._calculateVehicleTrunkContainerDefinition(container)
-    local capacity = container:getCapacity()
-
-    local size = 50 + capacity
-    local x, y = TetrisContainerData._calculateDimensions(size)
-    return {
-        gridDefinitions = {{
-            size = {width=x, height=y},
-            position = {x=0, y=0},
-        }}
-    }
-end
-
-function TetrisContainerData._calculateDimensions(target)
-    local best = 99999999
-    local bestX = 1
-    local bestY = 1
-
-    for x = 1, MAX_ITEM_WIDTH do
-        for y = 1, MAX_ITEM_HEIGHT do
-            local result = x * y
-            local diff = math.abs(result - target) + math.abs(x - y) -- Encourage square shapes 
-            if diff < best then
-                best = diff
-                bestX = x
-                bestY = y
-            end
-        end
-    end
-
-    return bestX, bestY
 end
 
 function TetrisContainerData.recalculateContainerData()
