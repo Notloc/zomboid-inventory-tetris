@@ -52,7 +52,7 @@ function ItemUtil.getAllEquippedContainers(playerObj, ignoreMainInventory)
     local inventoryPage = getPlayerInventory(playerObj:getPlayerNum())
     local selectedContainer = inventoryPage.inventory
     if not ignoreMainInventory or selectedContainer ~= mainInv then
-        table.insert(containers, mainInv)
+        table.insert(containers, selectedContainer)
     end
 
     for _, button in ipairs(inventoryPage.backpacks) do
