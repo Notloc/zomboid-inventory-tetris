@@ -389,6 +389,21 @@ local containerPack = {
 			},
 		},
 	},
+	["floor_50"] = {
+        ["gridDefinitions"] = {
+            [1] = {
+                ["size"] = {
+                    ["width"] = 12,
+                    ["height"] = 12,
+                },
+                ["position"] = {
+                    ["x"] = 1,
+                    ["y"] = 1,
+                },
+            },
+        },
+        ["isOrganized"] = true,
+    },
 	["Bag_AmmoBox_ShotgunShells_6"] = {
 		["gridDefinitions"] = {
 			[1] = {

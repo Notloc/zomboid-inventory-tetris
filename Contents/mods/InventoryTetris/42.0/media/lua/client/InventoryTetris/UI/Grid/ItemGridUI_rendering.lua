@@ -30,7 +30,6 @@ local colorsByCategory = {
     [TetrisItemCategory.MAGAZINE] = {0.85, 0.5, 0.05},
     [TetrisItemCategory.ATTACHMENT] = {0.85, 0.4, 0.2},
     [TetrisItemCategory.FOOD] = {0.1, 0.8, 0.25},
-    [TetrisItemCategory.DRINK] = {0.1, 0.6, 0.2},
     [TetrisItemCategory.CLOTHING] = {0.5, 0.5, 0.5},
     [TetrisItemCategory.CONTAINER] = {0.65, 0.6, 0.4},
     [TetrisItemCategory.HEALING] = {0.1, 0.95, 1},

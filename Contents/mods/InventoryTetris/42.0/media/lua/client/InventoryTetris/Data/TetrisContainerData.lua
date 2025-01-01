@@ -69,6 +69,10 @@ end
 ---@param item InventoryItem
 ---@return boolean
 function TetrisContainerData.validateInsert(container, containerDef, item)
+    if not container:isItemAllowed(item) then
+        return false
+    end
+
     if item:IsInventoryContainer() and SandboxVars.InventoryTetris.PreventTardisStacking then
         ---@cast item InventoryContainer
 

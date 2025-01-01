@@ -1337,3 +1337,14 @@ if not TetrisDevTool.og_createMenu then
         return menu
     end
 end
+
+function TetrisDevTool.extractWorldContainers(containerDefs)
+    for key, containerDef in pairs(containerDefs) do
+        -- if key starts with a lowercase letter, it's a world container
+        if string.match(key, "^[a-z]") then
+            TetrisDevTool.containerEdits[key] = containerDef
+        end
+    end
+
+    writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
+end
