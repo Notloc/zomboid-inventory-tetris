@@ -306,7 +306,7 @@ function ItemContainerGrid:validateCapacityRestrictions(item, container, playerO
         if containerItem and containerItem:IsInventoryContainer() then
             ---@cast containerItem InventoryContainer
             local maxItemSize = containerItem:getMaxItemSize()
-            if maxItemSize and maxItemSize < item:getUnequippedWeight() then
+            if maxItemSize > 0 and maxItemSize < item:getUnequippedWeight() then
                 return false
             end
         end

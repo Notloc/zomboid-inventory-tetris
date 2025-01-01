@@ -65,10 +65,10 @@ end
 
 function ItemStack.canAddItem(stack, item)
     if stack.count == 0 then return true end
-    
+
     if not ItemStack.isSameType(stack, item) then return false end
     if stack.count >= TetrisItemData.getMaxStackSize(item) then return false end
-    
+
     return true
 end
 

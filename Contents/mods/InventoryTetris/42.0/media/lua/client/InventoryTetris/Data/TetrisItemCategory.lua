@@ -36,6 +36,9 @@ function TetrisItemCategory.getCategory(item)
     elseif item:IsInventoryContainer() then
         return TetrisItemCategory.CONTAINER
 
+    elseif displayCategory == "FirstAid" or displayCategory == "FirstAidWeapon" then
+        return TetrisItemCategory.HEALING
+
     elseif item:IsWeapon() or displayCategory == "Weapon" then
         if item:getAmmoType() then
             return TetrisItemCategory.RANGED
@@ -57,9 +60,6 @@ function TetrisItemCategory.getCategory(item)
 
     elseif displayCategory == "Food" or displayCategory == "WaterContainer" or displayCategory == "Water" then
         return TetrisItemCategory.FOOD
-
-    elseif displayCategory == "FirstAid" then
-        return TetrisItemCategory.HEALING
 
     elseif displayCategory == "Literature" or displayCategory == "SkillBook" then
         return TetrisItemCategory.BOOK

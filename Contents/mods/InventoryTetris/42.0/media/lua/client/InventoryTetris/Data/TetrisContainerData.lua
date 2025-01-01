@@ -101,6 +101,14 @@ function TetrisContainerData.validateInsert(container, containerDef, item)
         end
     end
 
+    if containerDef.maxSize then
+        local w, h = TetrisItemData.getItemSizeUnsquished(item, false)
+        local size = w * h
+        if size > containerDef.maxSize then
+            return false
+        end
+    end
+
     local itemCategory = TetrisItemCategory.getCategory(item)
     return TetrisContainerData.canAcceptCategory(containerDef, itemCategory)
 end

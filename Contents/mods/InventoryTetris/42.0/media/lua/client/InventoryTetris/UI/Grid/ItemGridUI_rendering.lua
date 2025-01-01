@@ -67,7 +67,7 @@ local function determineContainerHoverColor(draggedStack, hoveredStack, dragInv,
     if draggedItem and containerItem and containerItem:IsInventoryContainer() then
         local container = containerItem:getInventory()
         local gridContainer = ItemContainerGrid.CreateTemp(container, playerNum)
-        if gridContainer:canAddItem(draggedItem) and container:hasRoomFor(getSpecificPlayer(playerNum), draggedItem) then
+        if gridContainer:canAddItem(draggedItem) then
             return unpack(containerItemHoverColor)
         end
     end

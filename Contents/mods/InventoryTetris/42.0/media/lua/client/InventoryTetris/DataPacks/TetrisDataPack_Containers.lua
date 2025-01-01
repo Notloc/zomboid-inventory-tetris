@@ -1999,6 +1999,7 @@ local containerPack = {
 				},
 			},
 		},
+		["maxSize"] = 1
 	},
 	["PencilCase_Gaming_1"] = {
 		["gridDefinitions"] = {
@@ -2013,6 +2014,7 @@ local containerPack = {
 				},
 			},
 		},
+		["maxSize"] = 1
 	},
 	["Bag_SaxophoneCase_3"] = {
 		["gridDefinitions"] = {

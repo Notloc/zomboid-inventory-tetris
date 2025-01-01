@@ -1059,20 +1059,6 @@ local containerPack = {
 			[14] = "KEY",
 		},
 	},
-	["none"] = {
-		["gridDefinitions"] = {
-			[1] = {
-				["size"] = {
-					["width"] = 1,
-					["height"] = 1,
-				},
-				["position"] = {
-					["x"] = 0,
-					["y"] = 0,
-				},
-			},
-		},
-	},
 	["stove_15"] = {
 		["gridDefinitions"] = {
 			[1] = {
