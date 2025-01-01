@@ -1307,8 +1307,8 @@ if not TetrisDevTool.og_createMenu then
             end
 
             if item:IsDrainable() then
-                print("item use delta: " .. item:getUseDelta())
-                print("item used delta: " .. item:getCurrentUsesFloat())
+                print("item uses: " .. item:getCurrentUses())
+                print("item max uses: " .. item:getMaxUses())
             end
 
             local mediaData = item:getMediaData()
