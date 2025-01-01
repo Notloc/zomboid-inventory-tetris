@@ -127,12 +127,12 @@ end
 
 function TetrisDevTool.copyItemData(item)
     local data = TetrisItemData.getItemData_squishState(item, false);
-    local dataSquished = data.isSquishable and TetrisItemData.getItemData_squishState(item, true) or nil;
+    local dataSquished = TetrisItemData.getItemData_squishState(item, true)
     local containerData = nil
     if item:IsInventoryContainer() then
         containerData = TetrisContainerData.getContainerDefinition(item:getItemContainer());
     end
-    
+
     -- Only copy data that isn't auto calculated
     if data and data._autoCalculated then
         data = nil;
@@ -163,7 +163,6 @@ function TetrisDevTool.pasteItemData(item)
         local itemData = {}
         copyTable(TetrisDevTool.clipboard.itemData, itemData);
 
-        itemData._autoCalculated = nil; -- Avoid saving this value
         local fType = item:getFullType();
         TetrisDevTool.itemEdits[fType] = itemData;
         writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
@@ -173,7 +172,6 @@ function TetrisDevTool.pasteItemData(item)
         local itemDataSquished = {}
         copyTable(TetrisDevTool.clipboard.itemDataSquished, itemDataSquished);
 
-        itemDataSquished._autoCalculated = nil; -- Avoid saving this value
         local fType = TetrisItemData.getSquishedFullType(item);
         TetrisDevTool.itemEdits[fType] = itemDataSquished;
         writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
@@ -184,12 +182,14 @@ function TetrisDevTool.pasteItemData(item)
             local containerData = {}
             copyTable(TetrisDevTool.clipboard.containerData, containerData);
 
-            containerData._autoCalculated = nil; -- Avoid saving this value
-            containerData.invalidCategories = nil;
-
             local key = TetrisContainerData._getContainerKey(item:getItemContainer());
             TetrisDevTool.containerEdits[key] = containerData;
             writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
+
+            local itemDef = TetrisItemData._getItemData(item);
+            if itemDef._autoCalculated then
+                TetrisDevTool.recalculateItemData(item);
+            end
         end
     end
 end
@@ -928,7 +928,7 @@ function TetrisDevTool.onEditContainer(self, button)
 
     if button.internal == "ACCEPT" then
         if self.type == "CONTAINER" then
-            TetrisDevTool.applyContainerEdit(self.containerDataKey, self.newContainerDefinition);
+            TetrisDevTool.applyContainerEdit(self.containerDataKey, self.newContainerDefinition, self.inventory);
         else
             TetrisDevTool.applyPocketEdit(self.containerDataKey, self.newContainerDefinition);
         end
@@ -1177,11 +1177,20 @@ function TetrisDevTool.createDragHandle(uiElement, pixelIncrement, onReleaseCall
 end
 
 
-function TetrisDevTool.applyContainerEdit(key, newDef)
+function TetrisDevTool.applyContainerEdit(key, newDef, container)
     newDef._autoCalculated = nil; -- Avoid saving this value
     newDef.invalidCategories = nil;
     TetrisDevTool.containerEdits[key] = newDef;
     writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
+
+    ---@cast container ItemContainer
+    local item = container:getContainingItem();
+    if item then
+        local itemDef = TetrisItemData._getItemData(item);
+        if itemDef._autoCalculated then
+            TetrisDevTool.recalculateItemData(item);
+        end
+    end
 
     TetrisDevTool.forceRefreshAllGrids();
 end

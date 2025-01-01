@@ -168,7 +168,6 @@ local ammo_strap = {
 }
 
 TetrisPocketData.defaultPocketDefinitionsBySlot = {
-    ["AmmoStrap"] = ammo_strap,
     ["BathRobe"] = two_big_pockets,
     ["Boilersuit"] = boiler_suit,
     ["Dress"] = two_pockets,
