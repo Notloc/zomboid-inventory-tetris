@@ -236,8 +236,15 @@ end
 
 function TetrisItemData._calculateFluidContainerSize(item)
     local fluidContainer = item:getFluidContainer()
+
+    -- Small containers are 1x1
     local fluidCapacity = fluidContainer:getCapacity()
-    local slots = math.ceil(math.max(fluidCapacity, 0.1) / 0.5)
+    if fluidCapacity <= 0.5 then
+        return 1, 1
+    end
+
+    -- Everything else is 1 slot per liter with a minimum size of 1x2
+    local slots = math.max(math.ceil(fluidCapacity), 2)
     local x, y = TetrisContainerData._calculateDimensions(slots, 2)
 
     if x > y then

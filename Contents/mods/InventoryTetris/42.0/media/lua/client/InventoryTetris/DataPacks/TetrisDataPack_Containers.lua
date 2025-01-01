@@ -1999,9 +1999,6 @@ local containerPack = {
 				},
 			},
 		},
-		["validCategories"] = {
-			["MISC"] = true,
-		},
 	},
 	["PencilCase_Gaming_1"] = {
 		["gridDefinitions"] = {
@@ -2015,9 +2012,6 @@ local containerPack = {
 					["y"] = 0,
 				},
 			},
-		},
-		["validCategories"] = {
-			["MISC"] = true,
 		},
 	},
 	["Bag_SaxophoneCase_3"] = {
@@ -2873,9 +2867,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_CarDealer_1"] = {
 		["gridDefinitions"] = {
@@ -2891,9 +2882,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_EagleFlag_1"] = {
 		["gridDefinitions"] = {
@@ -2909,9 +2897,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_Bass_1"] = {
 		["gridDefinitions"] = {
@@ -2927,9 +2912,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_BlueFox_1"] = {
 		["gridDefinitions"] = {
@@ -2945,9 +2927,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_Bug_1"] = {
 		["gridDefinitions"] = {
@@ -2963,9 +2942,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_EightBall_1"] = {
 		["gridDefinitions"] = {
@@ -2981,9 +2957,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_Clover_1"] = {
 		["gridDefinitions"] = {
@@ -2999,9 +2972,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_Kitty_1"] = {
 		["gridDefinitions"] = {
@@ -3017,9 +2987,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_Large_2"] = {
 		["gridDefinitions"] = {
@@ -3035,9 +3002,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_Nolans_1"] = {
 		["gridDefinitions"] = {
@@ -3053,9 +3017,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_Panther_1"] = {
 		["gridDefinitions"] = {
@@ -3071,9 +3032,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_PineTree_1"] = {
 		["gridDefinitions"] = {
@@ -3089,9 +3047,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_PrayingHands_1"] = {
 		["gridDefinitions"] = {
@@ -3107,9 +3062,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_Hotdog_1"] = {
 		["gridDefinitions"] = {
@@ -3125,9 +3077,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_RabbitFoot_1"] = {
 		["gridDefinitions"] = {
@@ -3143,9 +3092,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_RainbowStar_1"] = {
 		["gridDefinitions"] = {
@@ -3161,9 +3107,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_RubberDuck_1"] = {
 		["gridDefinitions"] = {
@@ -3179,9 +3122,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_Sexy_1"] = {
 		["gridDefinitions"] = {
@@ -3197,9 +3137,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_Spiffos_1"] = {
 		["gridDefinitions"] = {
@@ -3215,9 +3152,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_StinkyFace_1"] = {
 		["gridDefinitions"] = {
@@ -3233,9 +3167,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["KeyRing_WestMaple_1"] = {
 		["gridDefinitions"] = {
@@ -3251,9 +3182,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["HollowFancyBook_2"] = {
 		["gridDefinitions"] = {
@@ -3774,9 +3702,6 @@ local containerPack = {
 			},
 		},
 		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-		},
 	},
 	["SewingKit_2"] = {
 		["gridDefinitions"] = {

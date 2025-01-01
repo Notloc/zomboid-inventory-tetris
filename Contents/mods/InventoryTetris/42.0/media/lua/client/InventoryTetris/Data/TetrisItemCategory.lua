@@ -55,7 +55,7 @@ function TetrisItemCategory.getCategory(item)
     elseif displayCategory == "Clothing" then
         return TetrisItemCategory.CLOTHING
 
-    elseif displayCategory == "Food" or displayCategory == "WaterContainer" then
+    elseif displayCategory == "Food" or displayCategory == "WaterContainer" or displayCategory == "Water" then
         return TetrisItemCategory.FOOD
 
     elseif displayCategory == "FirstAid" then

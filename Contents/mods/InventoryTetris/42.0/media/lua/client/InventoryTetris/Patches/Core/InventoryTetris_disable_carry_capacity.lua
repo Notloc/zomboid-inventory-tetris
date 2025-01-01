@@ -16,6 +16,16 @@ local function isPlayerInv(container)
     return container == inv1 or container == inv2 or container == inv3 or container == inv4
 end
 
+---@param container ItemContainer
+local function determineMaxCapacity(container)
+    if container:getParent() and instanceof(container:getParent(), "BaseVehicle") then
+        return 100 -- Decompiled code seems to imply the limit is 1000 for vehicles, but that error spams...
+    elseif container:getContainingItem() and container:getContainingItem():IsInventoryContainer() then
+        return 50
+    end
+    return 100
+end
+
 -- Sets the container's capacity to a very high value, calls the callback function, and then resets the container's capacity
 -- Even if an error occurs, the container's capacity will be reset to its original value
 local function disableCarryWeightOnContainer(container, callback, ...)
@@ -24,13 +34,15 @@ local function disableCarryWeightOnContainer(container, callback, ...)
         return callback(...)
     end
 
+    local targetCapacity = determineMaxCapacity(container)
+
     local originalCapacity = container:getCapacity()
     local containerDef = TetrisContainerData.getContainerDefinition(container)
-    if containerDef.isFragile or originalCapacity >= 50 then
+    if containerDef.isFragile or originalCapacity >= targetCapacity then
         return callback(...)
     end
 
-    container:setCapacity(50) -- Limited to 50 as of B42 due to hardcoded limits
+    container:setCapacity(targetCapacity) -- Limited to 50 as of B42 due to hardcoded limits
 
     -- Because definition is retrieved and calculated by capacity we set it manually here to avoid issues
     TetrisContainerData.setContainerDefinition(container, containerDef)
@@ -47,49 +59,11 @@ local function disableCarryWeightOnContainer(container, callback, ...)
     end
 end
 
--- Sets the item weights to 0, calls the callback function, and then resets the item weights
-local function disableCarryWeightOnItems(items, callback, ...)
-    if SandboxVars.InventoryTetris.EnforceCarryWeight then
-        return callback(...)
-    end
-
-    local itemWeightByItem = {}
-    local scriptWeightByScriptItem = {}
-
-    for _, item in ipairs(items) do
-        if not itemWeightByItem[item] then
-            itemWeightByItem[item] = item:getActualWeight()
-            item:setActualWeight(0)
-        end
-
-        local scriptItem = item:getScriptItem()
-        if not scriptWeightByScriptItem[scriptItem] then
-            scriptWeightByScriptItem[scriptItem] = scriptItem:getActualWeight()
-            scriptItem:setActualWeight(0)
-        end
-    end
-
-    local results = {pcall(callback, ...)}
-
-    for item, weight in pairs(itemWeightByItem) do
-        item:setActualWeight(weight)
-    end
-    for scriptItem, weight in pairs(scriptWeightByScriptItem) do
-        scriptItem:setActualWeight(weight)
-    end
-
-    if results[1] then
-        return unpack(results, 2)
-    else
-        error(results[2])
-    end
-end
-
 local function disableBoth(container, items, callback, ...)
-    local doItems = function (...)
-        return disableCarryWeightOnItems(...)
-    end
-    return disableCarryWeightOnContainer(container, doItems, items, callback, ...)
+    --local doItems = function (...)
+    --    return disableCarryWeightOnItems(...)
+    --end
+    return disableCarryWeightOnContainer(container, callback, ...)
 end
 
 -- All vanilla functions that I found that check the container's capacity
