@@ -47,10 +47,10 @@ function TetrisItemData.getItemDefinitonByItemScript(itemScript, squished)
 
     local fType = itemScript:getFullName()
     local item = nil
-    if not TetrisItemData._itemData[fType] then
+    if not TetrisItemData._itemData[fType] or (squished and not TetrisItemData._itemData[fType .. SQUISHED_SUFFIX]) then
         item = instanceItem(fType)
     end
-    return TetrisItemData._getItemDataByFullType(item, fType, false)
+    return TetrisItemData._getItemDataByFullType(item, fType .. (squished and SQUISHED_SUFFIX or ""), squished)
 end
 
 function TetrisItemData._getItemData(item, noSquish)

@@ -69,6 +69,10 @@ end
 ---@param item InventoryItem
 ---@return boolean
 function TetrisContainerData.validateInsert(container, containerDef, item)
+    if not container:isItemAllowed(item) then
+        return false
+    end
+
     if item:IsInventoryContainer() and SandboxVars.InventoryTetris.PreventTardisStacking then
         ---@cast item InventoryContainer
 
@@ -212,23 +216,22 @@ function TetrisContainerData._findLeafTardis(container, tardisList)
 end
 
 
-local itemScriptToContainerKey = {}
+local itemScriptToContainer = {}
 
 function TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
-    if not itemScriptToContainerKey[itemScript] then
+    if not itemScriptToContainer[itemScript] then
         local item = instanceItem(itemScript)
         if not item:IsInventoryContainer() then
             return nil
         end
         ---@cast item InventoryContainer
         local container = item:getItemContainer()
-        local containerKey = TetrisContainerData._getContainerKey(container)
-        itemScriptToContainerKey[itemScript] = containerKey
-
-        return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
+        itemScriptToContainer[itemScript] = container
     end
-
-    return TetrisContainerData._getContainerDefinitionByKey(nil, itemScriptToContainerKey[itemScript])
+    
+    local container = itemScriptToContainer[itemScript]
+    local containerKey = TetrisContainerData._getContainerKey(container)
+    return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
 end
 
 

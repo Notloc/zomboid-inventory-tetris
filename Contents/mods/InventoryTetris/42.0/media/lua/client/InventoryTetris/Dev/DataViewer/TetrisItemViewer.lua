@@ -120,7 +120,6 @@ end
 function TetrisItemViewer:close()
     self:setVisible(false);
     self:removeFromUIManager();
-    TetrisItemViewer.instance = nil -- For faster debugging, rebuild a new instance each time
 end
 
 function TetrisItemViewer.OnOpenPanel()

@@ -38,7 +38,8 @@ end
 
 function TetrisContainerInfo.isSquishable(itemScript)
     local containerDef = TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
-    return containerDef and containerDef.isSquishable or false
+    local isRigid = containerDef and containerDef.isRigid
+    return not isRigid
 end
 
 function TetrisContainerInfo.getSquishedSize(itemScript)

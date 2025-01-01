@@ -192,6 +192,13 @@ function TetrisItemData._calculateContainerItemSizeFromInner(innerSize)
     return bestX, bestY
 end
 
+function TetrisItemData._calculateMiscSize(item)
+    if item:getFluidContainer() then
+        return TetrisItemData._calculateFluidContainerSize(item)
+    end
+    return TetrisItemData._calculateItemSizeWeightBased(item)
+end
+
 function TetrisItemData._calculateItemSizeWeightBased(item)
     local width = 1
     local height = 1
@@ -218,6 +225,25 @@ function TetrisItemData._calculateItemSizeWeightBased(item)
     end
 
     return width, height
+end
+
+function TetrisItemData._calculateFoodSize(item)
+    if item:getFluidContainer() then
+        return TetrisItemData._calculateFluidContainerSize(item)
+    end
+    return TetrisItemData._calculateItemSizeWeightBasedTall(item)
+end
+
+function TetrisItemData._calculateFluidContainerSize(item)
+    local fluidContainer = item:getFluidContainer()
+    local fluidCapacity = fluidContainer:getCapacity()
+    local slots = math.ceil(math.max(fluidCapacity, 0.1) / 0.5)
+    local x, y = TetrisContainerData._calculateDimensions(slots, 2)
+
+    if x > y then
+        return y, x
+    end
+    return x, y
 end
 
 function TetrisItemData._calculateItemSizeWeightBasedTall(item)
@@ -255,18 +281,23 @@ TetrisItemData._itemClassToSizeCalculation = {
     [TetrisItemCategory.CLOTHING] = TetrisItemData._calculateItemSizeClothing,
     [TetrisItemCategory.CONTAINER] = TetrisItemData._calculateItemSizeContainer,
     [TetrisItemCategory.ENTERTAINMENT] = TetrisItemData._calculateEntertainmentSize,
-    [TetrisItemCategory.DRINK] = TetrisItemData._calculateItemSizeWeightBasedTall,
-    [TetrisItemCategory.FOOD] = TetrisItemData._calculateItemSizeWeightBasedTall,
+    [TetrisItemCategory.FOOD] = TetrisItemData._calculateFoodSize,
     [TetrisItemCategory.HEALING] = TetrisItemData._calculateItemSizeWeightBased,
     [TetrisItemCategory.KEY] = {x = 1, y = 1},
     [TetrisItemCategory.MAGAZINE] = TetrisItemData._calculateItemSizeMagazine,
     [TetrisItemCategory.ATTACHMENT] = TetrisItemData._calculateItemSizeWeightBased,
     [TetrisItemCategory.MELEE] = TetrisItemData._calculateMeleeWeaponSize,
-    [TetrisItemCategory.MISC] = TetrisItemData._calculateItemSizeWeightBased,
+    [TetrisItemCategory.MISC] = TetrisItemData._calculateMiscSize,
     [TetrisItemCategory.MOVEABLE] = TetrisItemData._calculateMoveableSize,
     [TetrisItemCategory.RANGED] = TetrisItemData._calculateRangedWeaponSize,
     [TetrisItemCategory.SEED] = {x = 1, y = 1},
 }
+
+
+function TetrisItemData._simpleWeightStackability(item)
+    local weight = item:getActualWeight()
+    return math.ceil(0.75 / weight)
+end
 
 function TetrisItemData._calculateItemStackability(item, itemClass)
     local maxStack = 1
@@ -312,29 +343,6 @@ function TetrisItemData._calculateEntertainmentStackability(item)
     return maxStack
 end
 
-function TetrisItemData._calculateMiscStackability(item)
-    local maxStack = 1
-
-    if instanceof(item, "Drainable") then
-        return 1;
-    end
-
-    local weight = item:getActualWeight()
-    if weight <= 0.025 then
-        maxStack = 50
-    elseif weight <= 0.05 then
-        maxStack = 25
-    elseif weight <= 0.1 then
-        maxStack = 10
-    elseif weight <= 0.25 then
-        maxStack = 5
-    elseif weight <= 0.5 then
-        maxStack = 3
-    end
-
-    return maxStack
-end
-
 function TetrisItemData._calculateSeedStackability(item)
     local type = item:getFullType()
 
@@ -361,23 +369,26 @@ function TetrisItemData._calculateMoveableStackability(item)
 end
 
 function TetrisItemData._calculateFoodStackability(item)
+    if item:getFluidContainer() then
+        return 1
+    end
+
     local weight = item:getActualWeight()
     return math.max(1, math.floor(1 / weight))
 end
 
 TetrisItemData._itemClassToStackabilityCalculation = {
     [TetrisItemCategory.AMMO] = TetrisItemData._calculateAmmoStackability,
-    [TetrisItemCategory.BOOK] = 2,
-    [TetrisItemCategory.CLOTHING] = 2,
+    [TetrisItemCategory.BOOK] = TetrisItemData._simpleWeightStackability,
+    [TetrisItemCategory.CLOTHING] = TetrisItemData._simpleWeightStackability,
     [TetrisItemCategory.CONTAINER] = 1,
-    [TetrisItemCategory.DRINK] = 1,
     [TetrisItemCategory.ENTERTAINMENT] = TetrisItemData._calculateEntertainmentStackability,
-    [TetrisItemCategory.HEALING] = 1,
+    [TetrisItemCategory.HEALING] = TetrisItemData._simpleWeightStackability,
     [TetrisItemCategory.FOOD] = TetrisItemData._calculateFoodStackability,
     [TetrisItemCategory.KEY] = 1,
-    [TetrisItemCategory.MAGAZINE] = 1,
+    [TetrisItemCategory.MAGAZINE] = TetrisItemData._simpleWeightStackability,
     [TetrisItemCategory.MELEE] = 1,
-    [TetrisItemCategory.MISC] = TetrisItemData._calculateMiscStackability,
+    [TetrisItemCategory.MISC] = TetrisItemData._simpleWeightStackability,
     [TetrisItemCategory.MOVEABLE] = TetrisItemData._calculateMoveableStackability,
     [TetrisItemCategory.RANGED] = 1,
     [TetrisItemCategory.SEED] = TetrisItemData._calculateSeedStackability,

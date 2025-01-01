@@ -168,7 +168,6 @@ local ammo_strap = {
 }
 
 TetrisPocketData.defaultPocketDefinitionsBySlot = {
-    ["AmmoStrap"] = ammo_strap,
     ["BathRobe"] = two_big_pockets,
     ["Boilersuit"] = boiler_suit,
     ["Dress"] = two_pockets,
@@ -184,6 +183,7 @@ TetrisPocketData.defaultPocketDefinitionsBySlot = {
     ["Legs"] = four_pockets,
     ["LowerBody"] = four_pockets,
     ["Pants"] = four_pockets,
+    ["ShortPants"] = four_pockets,
     ["ShortsShort"] = four_pockets,
     ["Skirt"] = two_pockets,
     ["Sweater"] = two_big_pockets,

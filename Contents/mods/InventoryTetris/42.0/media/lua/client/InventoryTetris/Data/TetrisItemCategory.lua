@@ -7,7 +7,6 @@ TetrisItemCategory = {
     MAGAZINE = "MAGAZINE",
     ATTACHMENT = "ATTACHMENT",
     FOOD = "FOOD",
-    DRINK = "DRINK",
     CLOTHING = "CLOTHING",
     CONTAINER = "CONTAINER",
     HEALING = "HEALING",
@@ -54,7 +53,7 @@ function TetrisItemCategory.getCategory(item)
     elseif category == "Clothing" then
         return TetrisItemCategory.CLOTHING
 
-    elseif category == "Food" then
+    elseif category == "Food" or category == "WaterContainer" then
         return TetrisItemCategory.FOOD
 
     elseif category == "FirstAid" then
@@ -69,7 +68,7 @@ function TetrisItemCategory.getCategory(item)
     elseif category == "Key" then
         return TetrisItemCategory.KEY
 
-    elseif string.find(type, "Seed") then 
+    elseif string.find(type, "Seed") and not string.find(type, "Paste") then 
         return TetrisItemCategory.SEED
     end
 
@@ -82,7 +81,6 @@ TetrisItemCategory.categoryIcons = {
     [TetrisItemCategory.AMMO] = getTexture("media/textures/InventoryTetris/Categories/AMMO.png"),
     [TetrisItemCategory.MAGAZINE] = getTexture("media/textures/InventoryTetris/Categories/MAGAZINE.png"),
     [TetrisItemCategory.FOOD] = getTexture("media/textures/InventoryTetris/Categories/FOOD.png"),
-    [TetrisItemCategory.DRINK] = getTexture("media/textures/InventoryTetris/Categories/DRINK.png"),
     [TetrisItemCategory.CLOTHING] = getTexture("media/textures/InventoryTetris/Categories/CLOTHING.png"),
     [TetrisItemCategory.CONTAINER] = getTexture("media/textures/InventoryTetris/Categories/CONTAINER.png"),
     [TetrisItemCategory.HEALING] = getTexture("media/textures/InventoryTetris/Categories/HEALING.png"),
