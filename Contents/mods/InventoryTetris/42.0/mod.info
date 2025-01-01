@@ -1,5 +1,5 @@
-name=Inventory Tetris - UNSTABLE
-id=INVENTORY_TETRIS_DEV
+name=Inventory Tetris
+id=INVENTORY_TETRIS
 description=A full grid-based inventory overhaul for Project Zomboid.
 require=\EQUIPMENT_UI
 poster=poster.png
