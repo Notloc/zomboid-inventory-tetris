@@ -1,6 +1,9 @@
 require("InventoryTetris/Data/TetrisItemData")
 require("InventoryTetris/Data/TetrisContainerData")
 
+-- DISABLED
+if true then return end
+
 -- All packs except this default should be registered in the OnGameBoot event.
 -- I go first so that you can overwrite my defaults with your own.
 

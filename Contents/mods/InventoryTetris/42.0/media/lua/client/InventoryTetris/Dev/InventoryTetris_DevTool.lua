@@ -4,6 +4,17 @@ local OPT = require("InventoryTetris/Settings")
 local JSON = require("InventoryTetris/Dev/JSON.lua")
 local ContextUtil = require("Notloc/ContextUtil")
 
+local function copyTable(from, to)
+    for k,v in pairs(from) do
+        if type(v) == "table" then
+            to[k] = {}
+            copyTable(v, to[k])
+        else
+            to[k] = v
+        end
+    end
+end
+
 local function readJsonFile(fileName)
     local reader = getFileReader(fileName, false);
     if reader then
@@ -107,6 +118,80 @@ function TetrisDevTool.insertDebugOptions(context, item)
     if item:IsClothing() then
         subMenu:addOption("Edit Pocket Data", item, TetrisDevTool.openPocketEdit);
     end
+
+    subMenu:addOption("Copy Item Data", item, TetrisDevTool.copyItemData);
+    if TetrisDevTool.clipboard then
+        subMenu:addOption("Paste Item Data", item, TetrisDevTool.pasteItemData);
+    end
+end
+
+function TetrisDevTool.copyItemData(item)
+    local data = TetrisItemData.getItemData_squishState(item, false);
+    local dataSquished = data.isSquishable and TetrisItemData.getItemData_squishState(item, true) or nil;
+    local containerData = nil
+    if item:IsInventoryContainer() then
+        containerData = TetrisContainerData.getContainerDefinition(item:getItemContainer());
+    end
+    
+    -- Only copy data that isn't auto calculated
+    if data and data._autoCalculated then
+        data = nil;
+    end
+    if dataSquished and dataSquished._autoCalculated then
+        dataSquished = nil;
+    end
+    if containerData and containerData._autoCalculated then
+        containerData = nil;
+    end
+
+    TetrisDevTool.clipboard = {
+        itemData=data,
+        itemDataSquished=dataSquished,
+        containerData=containerData
+    };
+
+    local check = TetrisDevTool.clipboard
+    return 5
+end
+
+function TetrisDevTool.pasteItemData(item)
+    if not TetrisDevTool.clipboard then
+        return;
+    end
+
+    if TetrisDevTool.clipboard.itemData then
+        local itemData = {}
+        copyTable(TetrisDevTool.clipboard.itemData, itemData);
+
+        itemData._autoCalculated = nil; -- Avoid saving this value
+        local fType = item:getFullType();
+        TetrisDevTool.itemEdits[fType] = itemData;
+        writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
+    end
+
+    if TetrisDevTool.clipboard.itemDataSquished then
+        local itemDataSquished = {}
+        copyTable(TetrisDevTool.clipboard.itemDataSquished, itemDataSquished);
+
+        itemDataSquished._autoCalculated = nil; -- Avoid saving this value
+        local fType = TetrisItemData.getSquishedFullType(item);
+        TetrisDevTool.itemEdits[fType] = itemDataSquished;
+        writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
+    end
+
+    if item:IsInventoryContainer() then
+        if TetrisDevTool.clipboard.containerData then
+            local containerData = {}
+            copyTable(TetrisDevTool.clipboard.containerData, containerData);
+
+            containerData._autoCalculated = nil; -- Avoid saving this value
+            containerData.invalidCategories = nil;
+
+            local key = TetrisContainerData._getContainerKey(item:getItemContainer());
+            TetrisDevTool.containerEdits[key] = containerData;
+            writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
+        end
+    end
 end
 
 ---@param context ISContextMenu
@@ -197,8 +282,7 @@ function TetrisDevTool.openEditItem(item)
             editWindow:addChild(squishableTitle);
 
             -- Squishable toggle button
-            local isSquished = TetrisItemData.isSquished(item);
-            local squishableButton = ISButton:new(230, 90, 100, 20, isSquished and "True" or "False", editWindow);
+            local squishableButton = ISButton:new(230, 90, 100, 20, "False", editWindow);
             squishableButton:initialise();
             squishableButton:instantiate();
             squishableButton:setAnchorLeft(false);
@@ -211,7 +295,7 @@ function TetrisDevTool.openEditItem(item)
 
     editWindow.maxStackInput = maxStackInput;
     editWindow.item = item;
-    editWindow.squished = TetrisItemData.isSquished(item);
+    editWindow.squished = false;
 
     local okButton = ISButton:new(10, 75, 100, 20, "Save", editWindow);
     okButton:setOnClick(TetrisDevTool.onEditItem, okButton);
@@ -342,18 +426,6 @@ function TetrisDevTool.applyEdits(item, x, y, maxStack, squished)
     TetrisDevTool.itemEdits[fType] = newData;
 
     writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
-end
-
-
-local function copyTable(from, to)
-    for k,v in pairs(from) do
-        if type(v) == "table" then
-            to[k] = {}
-            copyTable(v, to[k])
-        else
-            to[k] = v
-        end
-    end
 end
 
 function TetrisDevTool.getGridXYFromHandle(handle)

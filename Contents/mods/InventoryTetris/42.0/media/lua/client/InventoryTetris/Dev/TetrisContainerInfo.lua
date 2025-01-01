@@ -37,8 +37,8 @@ function TetrisContainerInfo.getSlotDensity(itemScript)
 end
 
 function TetrisContainerInfo.isSquishable(itemScript)
-    local containerDef = TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
-    return containerDef and containerDef.isSquishable or false
+    local containerDef = TetrisItemData.getItemDefinitonByItemScript(itemScript)
+    return not (containerDef and not containerDef.isRigid or false)
 end
 
 function TetrisContainerInfo.getSquishedSize(itemScript)
