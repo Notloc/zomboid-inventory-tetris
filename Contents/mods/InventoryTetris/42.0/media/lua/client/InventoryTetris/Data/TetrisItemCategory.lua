@@ -24,8 +24,10 @@ for _, category in pairs(TetrisItemCategory) do
 end
 TetrisItemCategory.list = list
 
+---@param item InventoryItem
 function TetrisItemCategory.getCategory(item)
-    local category = item:getDisplayCategory()
+    local displayCategory = item:getDisplayCategory()
+    local category = item:getCategory()
     local type = item:getFullType()
 
     if instanceof(item, "Moveable") then
@@ -34,7 +36,7 @@ function TetrisItemCategory.getCategory(item)
     elseif item:IsInventoryContainer() then
         return TetrisItemCategory.CONTAINER
 
-    elseif item:IsWeapon() or category == "Weapon" then
+    elseif item:IsWeapon() or displayCategory == "Weapon" then
         if item:getAmmoType() then
             return TetrisItemCategory.RANGED
         else
@@ -44,25 +46,25 @@ function TetrisItemCategory.getCategory(item)
     elseif item:getMaxAmmo() > 0 then
             return TetrisItemCategory.MAGAZINE
 
-    elseif category == "WeaponPart" then
+    elseif displayCategory == "WeaponPart" then
         return TetrisItemCategory.ATTACHMENT
 
-    elseif category == "Ammo" then
+    elseif displayCategory == "Ammo" then
         return TetrisItemCategory.AMMO
 
-    elseif category == "Clothing" then
+    elseif displayCategory == "Clothing" then
         return TetrisItemCategory.CLOTHING
 
-    elseif category == "Food" or category == "WaterContainer" then
+    elseif displayCategory == "Food" or displayCategory == "WaterContainer" then
         return TetrisItemCategory.FOOD
 
-    elseif category == "FirstAid" then
+    elseif displayCategory == "FirstAid" then
         return TetrisItemCategory.HEALING
 
-    elseif category == "Literature" or category == "SkillBook" then
+    elseif displayCategory == "Literature" or displayCategory == "SkillBook" then
         return TetrisItemCategory.BOOK
 
-    elseif category == "Entertainment" then
+    elseif displayCategory == "Entertainment" then
         return TetrisItemCategory.ENTERTAINMENT
 
     elseif category == "Key" then

@@ -1,0 +1,7 @@
+version=1
+id=3397561666
+title=Inventory Tetris - Grid Based Inventory Overhaul [B42]
+description=Inv Tetris for b42.
+description=I am out of gas. Will fix description later.
+tags=Build 42;Balance;Hardmode;Interface;Misc;Realistic;WIP
+visibility=public
