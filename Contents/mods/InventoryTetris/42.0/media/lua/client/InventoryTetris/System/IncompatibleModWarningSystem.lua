@@ -18,7 +18,11 @@ function InventoryTetrisIncompatibleModWarningSystem.showCompatibilityIssues()
         cpw:addToUIManager()
     end
 
+    local modDat = ModData.getOrCreate("tetris_compat_popup")
+    if modDat.doNotShowAgain then return end
+
     local incompatibilityPopup = CompatibilityPopupWindow:new(200, 200, TETRIS_IMG, InventoryTetris.version)
+    incompatibilityPopup:setModData(modDat)
     incompatibilityPopup:initialise()
 
     InventoryTetrisIncompatibleModWarningSystem.handleItemCategoryMods(incompatibilityPopup)

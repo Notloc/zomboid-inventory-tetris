@@ -6,6 +6,7 @@ require("ISUI/ISMouseDrag")
 require("ISUI/ISLayoutManager")
 require("defines")
 
+---@class Window : ISPanel
 local Window =  ISPanel:derive("Window");
 
 function Window:new(x, y, width, height, title, playerNum)

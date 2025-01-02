@@ -15,13 +15,13 @@ require("ISUI/ISMouseDrag")
 require("ISUI/ISLayoutManager")
 require("defines")
 
----@class CompatibilityPopupWindow : ISPanel
+---@class CompatibilityPopupWindow : Window
 local CompatibilityPopupWindow = Window:derive("CompatibilityPopupWindow");
 
 
 function CompatibilityPopupWindow:new (x, y, sourceImage, sourceVersion, targetImage, targetVersion, minTargetVersion)
     local o = {}
-    o = Window:new(x, y, 600, 250, targetImage and "Version Issue Detected" or "Incompatible Mod Detected");
+    o = Window:new(x, y, 450, 250, targetImage and "Version Issue Detected" or "Incompatible Mod Detected");
     setmetatable(o, self);
     self.__index = self
 
@@ -39,8 +39,28 @@ function CompatibilityPopupWindow:new (x, y, sourceImage, sourceVersion, targetI
     return o;
 end
 
+function CompatibilityPopupWindow:setModData(modData)
+    self.modData = modData
+end
+
 function CompatibilityPopupWindow:addModIncompatibility(modName, modId, reason)
     table.insert(self.incompatibleMods, {modName, modId, reason});
+end
+
+function CompatibilityPopupWindow:createChildren()
+    Window.createChildren(self);
+    if self.modData then
+        local doNotShowAgain = ISButton:new(self.width - 104, self.height - 24, 100, 20, "Do Not Show Again", self, CompatibilityPopupWindow.onDoNotShowAgain);
+        doNotShowAgain:initialise();
+        doNotShowAgain:instantiate();
+        self:addChild(doNotShowAgain);
+        self.doNotShowAgain = doNotShowAgain;
+    end
+end
+
+function CompatibilityPopupWindow:onDoNotShowAgain()
+    self.modData.doNotShowAgain = true
+    self:close()
 end
 
 function CompatibilityPopupWindow:render()
@@ -107,6 +127,11 @@ function CompatibilityPopupWindow:render()
 
         if info then
             self:doInfoTooltip(mouseX, mouseY + 14, info)
+        end
+
+        if self.doNotShowAgain then
+            self.doNotShowAgain:setY(self.height - 24)
+            self.doNotShowAgain:setX(self.width - self.doNotShowAgain:getWidth() - 4)
         end
 
     end
