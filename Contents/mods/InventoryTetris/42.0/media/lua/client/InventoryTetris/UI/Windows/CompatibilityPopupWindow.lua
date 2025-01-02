@@ -21,7 +21,7 @@ local CompatibilityPopupWindow = Window:derive("CompatibilityPopupWindow");
 
 function CompatibilityPopupWindow:new (x, y, sourceImage, sourceVersion, targetImage, targetVersion, minTargetVersion)
     local o = {}
-    o = Window:new(x, y, 256 + 48 + 24*2, 232, targetImage and "Version Issue Detected" or "Incompatible Mod Detected");
+    o = Window:new(x, y, 600, 250, targetImage and "Version Issue Detected" or "Incompatible Mod Detected");
     setmetatable(o, self);
     self.__index = self
 
