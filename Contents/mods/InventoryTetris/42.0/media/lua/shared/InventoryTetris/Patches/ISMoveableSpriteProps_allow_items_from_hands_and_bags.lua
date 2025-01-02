@@ -7,8 +7,8 @@ Events.OnGameBoot.Add(function()
     local og_findInInventory = ISMoveableSpriteProps.findInInventory
 
     ---@diagnostic disable-next-line: duplicate-set-field
-    function ISMoveableSpriteProps:findInInventory(playerObj, _origSpriteName)
-        local item = og_findInInventory(self, playerObj, _origSpriteName)
+    function ISMoveableSpriteProps:findInInventory(playerObj, _spriteName)
+        local item = og_findInInventory(self, playerObj, _spriteName)
         if item then return item end
 
         local containers = ItemUtil.getAllEquippedContainers(playerObj, false)
@@ -17,8 +17,15 @@ Events.OnGameBoot.Add(function()
             local itemCount = container:getItems():size() - 1
             for i = 0, itemCount do
                 local item = items:get(i)
-                if instanceof(item, "Moveable") and item:getWorldSprite() == _origSpriteName then
-                    return item
+                if instanceof(item, "Moveable") and item:getWorldSprite() then
+                    if (item:getWorldSprite() == _spriteName) then
+                        return item;
+                    else
+                        local worldSprite = getSprite(item:getWorldSprite());
+                        if worldSprite and worldSprite:getSpriteGrid() and worldSprite:getSpriteGrid():getAnchorSprite() and worldSprite:getSpriteGrid():getAnchorSprite():getName() == _spriteName then
+                            return item;
+                        end
+                    end
                 end
             end
         end
