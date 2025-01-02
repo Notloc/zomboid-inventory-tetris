@@ -15,6 +15,7 @@ local TITLE_Y_PADDING = 4
 local BASIC_INV_TEXTURE = getTexture("media/ui/Icon_InventoryBasic.png")
 local SHELF_TEXTURE = getTexture("media/ui/Container_Shelf.png")
 local CONTAINER_BG = getTexture("media/textures/InventoryTetris/ContainerBG.png")
+local PROX_INV_TEXTURE = getTexture("media/ui/ProximityInventory.png") or SHELF_TEXTURE
 
 local BLACK = {r=0, g=0, b=0, a=1}
 
@@ -42,6 +43,10 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
         o.invTexture = o.getWorldTexture(inventory) or ContainerButtonIcons[inventory:getType()] or SHELF_TEXTURE
     else
         o.invTexture = o.item and o.item:getTex() or BASIC_INV_TEXTURE;
+    end
+
+    if inventory:getType() == "proxInv" then
+        o.invTexture = PROX_INV_TEXTURE
     end
 
     o.containerGrid = ItemContainerGrid.GetOrCreate(inventory, playerNum, containerDefOverride)
