@@ -43,9 +43,9 @@ function InventoryTetrisIncompatibleModWarningSystem.handleItemCategoryMods(inco
     if isModActive("BetterSortCC") then
         incompatibilityPopup:addModIncompatibility("Better Sorting", "BetterSortCC", explaination)
     end
-    --if isModActive("organizedCategories_core") then
-    --    incompatibilityPopup:addModIncompatibility("organizedCategories: Core", "organizedCategories_core", explaination)
-    --end
+    if isModActive("organizedCategories_core") then
+        incompatibilityPopup:addModIncompatibility("organizedCategories: Core", "organizedCategories_core", explaination)
+    end
 
     local failingItems = InventoryTetrisIncompatibleModWarningSystem.spotCheckItemCategories()
     if failingItems > 0 then
