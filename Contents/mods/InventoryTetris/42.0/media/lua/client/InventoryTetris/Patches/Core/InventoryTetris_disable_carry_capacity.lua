@@ -16,43 +16,36 @@ local function isPlayerInv(container)
     return container == inv1 or container == inv2 or container == inv3 or container == inv4
 end
 
----@param container ItemContainer
-local function determineMaxCapacity(container)
-    if container:getParent() and instanceof(container:getParent(), "BaseVehicle") then
-        return 100 -- Decompiled code seems to imply the limit is 1000 for vehicles, but that error spams...
-    elseif container:getContainingItem() and container:getContainingItem():IsInventoryContainer() then
-        return 50
-    end
-    return 100
-end
-
 -- Sets the container's capacity to a very high value, calls the callback function, and then resets the container's capacity
 -- Even if an error occurs, the container's capacity will be reset to its original value
 local function disableCarryWeightOnContainer(container, callback, ...)
+    if instanceof(container, "InventoryContainer") then
+        container = container:getInventory()
+    end
+
     -- Skip player's main inventory or fragile containers or if the option is disabled
     if not container or SandboxVars.InventoryTetris.EnforceCarryWeight or isPlayerInv(container) then
         return callback(...)
     end
 
-    if instanceof(container, "InventoryContainer") then
-        container = container:getInventory()
-    end
-    local targetCapacity = determineMaxCapacity(container)
-
-    local originalCapacity = container:getCapacity()
     local containerDef = TetrisContainerData.getContainerDefinition(container)
-    if containerDef.isFragile or originalCapacity >= targetCapacity then
+    if containerDef.isFragile then
         return callback(...)
     end
 
-    container:setCapacity(targetCapacity) -- Limited to 50 as of B42 due to hardcoded limits
+    local originalCapacity = container:getCapacity()
+    local originalType = container:getType()
 
-    -- Because definition is retrieved and calculated by capacity we set it manually here to avoid issues
+    container:setCapacity(50)
+    container:setType("floor") -- Pretend we're the floor
+
+    local originalFloorDef = TetrisContainerData.getContainerDefinition(container)
     TetrisContainerData.setContainerDefinition(container, containerDef)
 
     local results = {pcall(callback, ...)}
 
-    TetrisContainerData.setContainerDefinition(container, nil)
+    TetrisContainerData.setContainerDefinition(container, originalFloorDef)
+    container:setType(originalType)
     container:setCapacity(originalCapacity)
 
     if results[1] then

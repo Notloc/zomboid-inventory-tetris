@@ -13,7 +13,11 @@
 ---@field isFloor boolean
 ---@field width number
 ---@field height number
+---@field gridKey string
+---@field isProxInv boolean
 ItemGrid = {}
+
+local PROX_INV_TYPE = "proxInv"
 
 ---@param containerGrid ItemContainerGrid
 ---@param gridIndex number
@@ -43,6 +47,7 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, 
     o.height = o.gridDefinition.size.height + SandboxVars.InventoryTetris.BonusGridSize
 
     o.gridKey = gridIndex .. (secondaryTarget and tostring(secondaryTarget) or "")
+    o.isProxInv = o.inventory:getType() == PROX_INV_TYPE
 
     o:refresh()
     return o
@@ -96,7 +101,7 @@ function ItemGrid:insertItem(item, xPos, yPos, isRotated)
     if item:getContainer() ~= self.inventory then
         return false
     end
-    if not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
+    if not self.isProxInv and not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
         return false
     end
 
@@ -338,7 +343,7 @@ function ItemGrid:_attemptToStackItem(item)
 end
 
 function ItemGrid:_attemptToInsertItem(item, preferRotated, isDisorganized)
-    if not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
+    if not self.isProxInv and not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
         return false
     end
 
@@ -791,8 +796,6 @@ end
 ItemGrid._floorModData = {} -- No need to save floor grids, but we do allow users to reposition items on the floor temporarily
 ItemGrid._proxData = {} -- Proximity inventory mod support, acts the same as floor grids
 
-local PROX_INV_TYPE = "proxInv"
-
 function ItemGrid:_getParentModData()
     if self.isPlayerInventory then
         local player = self.inventory:getParent()
@@ -803,7 +806,7 @@ function ItemGrid:_getParentModData()
         return ItemGrid._floorModData, nil
     end
 
-    if self.inventory:getType() == PROX_INV_TYPE then
+    if self.isProxInv then
         return ItemGrid._proxData, nil
     end
 
