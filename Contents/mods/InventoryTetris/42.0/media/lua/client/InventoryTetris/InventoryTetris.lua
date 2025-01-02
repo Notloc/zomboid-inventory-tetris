@@ -5,7 +5,7 @@ local TETRIS_IMG = getTexture("media/textures/Compatibility/tetris.png")
 local EQUIPMENT_IMG = getTexture("media/textures/Compatibility/equipment_ui.png")
 
 InventoryTetris = {
-    version = Version:new(6, 1, 4, "beta"),
+    version = Version:new(6, 1, 5, "beta"),
 }
 
 -- Handle the prepended slash bug
