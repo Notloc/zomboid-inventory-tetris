@@ -22,6 +22,7 @@ function GridAutoDropSystem._processItems(playerNum, items)
     local playerObj = getSpecificPlayer(playerNum)
     local isDisorganized = playerObj:HasTrait("Disorganized")
     local containers = ItemUtil.getAllEquippedContainers(playerObj)
+    local mainInv = playerObj:getInventory()
 
     for _, item in ipairs(items) do
         local addedToContainer = false
@@ -40,6 +41,22 @@ function GridAutoDropSystem._processItems(playerNum, items)
                         ISTimedActionQueue.add(transfer)
                         addedToContainer = true
                         break
+                    end
+                end
+
+                if TetrisItemCategory.getCategory(item) == TetrisItemCategory.KEY then
+                    local keyRings = mainInv:getAllTag("KeyRing", ArrayList.new())
+                    for i = 0, keyRings:size()-1 do
+                        local keyRing = keyRings:get(i)
+                        local container = keyRing:getItemContainer()
+                        local containerGrid = ItemContainerGrid.GetOrCreate(container, playerNum)
+                        if containerGrid:canAddItem(item) then
+                            local transfer = ISInventoryTransferAction:new(playerObj, item, currentContainer, container, 1)
+                            transfer.enforceTetrisRules = true
+                            ISTimedActionQueue.add(transfer)
+                            addedToContainer = true
+                            break
+                        end
                     end
                 end
             end

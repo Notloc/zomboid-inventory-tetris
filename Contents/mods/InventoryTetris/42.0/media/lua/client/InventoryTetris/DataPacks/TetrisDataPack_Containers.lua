@@ -2791,16 +2791,6 @@ local containerPack = {
 					["y"] = 0,
 				},
 			},
-			[3] = {
-				["size"] = {
-					["width"] = 1,
-					["height"] = 2,
-				},
-				["position"] = {
-					["x"] = 2,
-					["y"] = 0,
-				},
-			},
 		},
 		["validCategories"] = {
 			["AMMO"] = true,

@@ -69,7 +69,8 @@ end
 ---@param item InventoryItem
 ---@return boolean
 function TetrisContainerData.validateInsert(container, containerDef, item)
-    if not container:isItemAllowed(item) then
+    local itemInContainer = item:getContainer() == container
+    if not itemInContainer and not container:isItemAllowed(item) then
         return false
     end
 
