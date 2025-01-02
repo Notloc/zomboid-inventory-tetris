@@ -34,6 +34,9 @@ local function disableCarryWeightOnContainer(container, callback, ...)
         return callback(...)
     end
 
+    if instanceof(container, "InventoryContainer") then
+        container = container:getInventory()
+    end
     local targetCapacity = determineMaxCapacity(container)
 
     local originalCapacity = container:getCapacity()
@@ -72,7 +75,11 @@ Events.OnGameStart.Add(function()
     local og_canPutIn_pane = ISInventoryPane.canPutIn
     function ISInventoryPane:canPutIn()
         local container = self.inventory
+
+        ControllerDragAndDrop.currentPlayer = self.player
         local items = ISInventoryPane.getActualItems(ISMouseDrag.dragging)
+        ControllerDragAndDrop.currentPlayer = nil
+
         return disableBoth(container, items, og_canPutIn_pane, self)
     end
 
