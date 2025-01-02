@@ -40,12 +40,18 @@ end
 function InventoryTetrisIncompatibleModWarningSystem.handleItemCategoryMods(incompatibilityPopup)
     local explaination = "INCOMPATIBLE:\nBreaks item classifications and auto-balancing systems.\nMany items will be the wrong size and stack incorrectly."
 
+    local foundIncompatibility = false
+
     if isModActive("BetterSortCC") then
         incompatibilityPopup:addModIncompatibility("Better Sorting", "BetterSortCC", explaination)
+        foundIncompatibility = true
     end
     if isModActive("organizedCategories_core") then
         incompatibilityPopup:addModIncompatibility("organizedCategories: Core", "organizedCategories_core", explaination)
+        foundIncompatibility = true
     end
+
+    if foundIncompatibility then return end
 
     local failingItems = InventoryTetrisIncompatibleModWarningSystem.spotCheckItemCategories()
     if failingItems > 0 then
