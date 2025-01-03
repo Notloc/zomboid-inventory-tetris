@@ -88,7 +88,7 @@ Events.OnGameBoot.Add(function()
 	end
 
 	function ISInventoryPage:updateLootButtonsForTetrisSearch()
-        local needsSearch = self.needSearch or self.sisterPage.needSearch
+        local needsSearch = self.needSearch or (self.sisterPage and self.sisterPage.needSearch)
         if self.onCharacter then
 			self.transferAll:setVisible(not needsSearch)
             self.tetrisSearchButton:setX(self.transferAll:getX())

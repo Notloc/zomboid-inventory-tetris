@@ -1,6 +1,16 @@
 Sandbox_EN = {
 	Sandbox_InventoryTetris = "Inventory Tetris",
-	Sandbox_InventoryTetris_EnableSearch = "Enable Container Searching",
+	Sandbox_InventoryTetrisSearch = "Inventory Tetris: Search",
+	Sandbox_InventoryTetris_EnforceCarryWeight = "Enforce Vanilla Container Capacity",
+	Sandbox_InventoryTetris_PreventTardisStacking = "Prevent Infinite Container Stacking",
+	Sandbox_InventoryTetris_UseItemTransferTime = "Item Transfer Time",
+	Sandbox_InventoryTetris_ItemTransferSpeedMultiplier = "Transfer Speed Multiplier",
+	Sandbox_InventoryTetris_BonusGridSize = "Bonus Grid Size",
+	Sandbox_InventoryTetris_EnableGravity = "Gravity Mode",
+	Sandbox_InventoryTetris_EnableSearch = "Enable Search Mode",
 	Sandbox_InventoryTetris_SearchTime = "Search Time",
-	Sandbox_InventoryTetris_BonusGridSize = "Bonus Grid Size"
+	Sandbox_InventoryTetris_SearchBodies = "Corpse Search",
+	Sandbox_InventoryTetris_SearchBodies_option1 = "Disabled",
+	Sandbox_InventoryTetris_SearchBodies_option2 = "Some Items",
+	Sandbox_InventoryTetris_SearchBodies_option3 = "Enabled",
 }

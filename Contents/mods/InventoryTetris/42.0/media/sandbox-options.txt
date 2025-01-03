@@ -4,21 +4,14 @@ option InventoryTetris.EnforceCarryWeight
 {
 	type = boolean, default = false,
 	page = InventoryTetris,
-	translation = InventoryTetris_EnforceCarryWeight
+	translation = InventoryTetris_EnforceCarryWeight,
 }
 
-option InventoryTetris.EnableSearch
+option InventoryTetris.PreventTardisStacking
 {
-	type = boolean, default = false,
+	type = boolean, default = true,
 	page = InventoryTetris,
-	translation = InventoryTetris_EnableSearch,
-}
-
-option InventoryTetris.SearchTime
-{
-	type = integer, min = 1, max = 250, default = 40,
-	page = InventoryTetris,
-	translation = InventoryTetris_SearchTime,
+	translation = InventoryTetris_PreventTardisStacking,
 }
 
 option InventoryTetris.UseItemTransferTime
@@ -32,7 +25,7 @@ option InventoryTetris.ItemTransferSpeedMultiplier
 {
 	type = integer, min = 1, max = 99, default = 3,
 	page = InventoryTetris,
-	translation = InventoryTetris_ItemTransferSpeedMultiplier
+	translation = InventoryTetris_ItemTransferSpeedMultiplier,
 }
 
 option InventoryTetris.BonusGridSize
@@ -42,6 +35,7 @@ option InventoryTetris.BonusGridSize
 	translation = InventoryTetris_BonusGridSize,
 }
 
+
 option InventoryTetris.EnableGravity
 {
 	type = boolean, default = false,
@@ -49,9 +43,24 @@ option InventoryTetris.EnableGravity
 	translation = InventoryTetris_EnableGravity,
 }
 
-option InventoryTetris.PreventTardisStacking
+option InventoryTetris.EnableSearch
 {
-	type = boolean, default = true,
-	page = InventoryTetris,
-	translation = InventoryTetris_PreventTardisStacking
+	type = boolean, default = false,
+	page = InventoryTetrisSearch,
+	translation = InventoryTetris_EnableSearch,
+}
+
+option InventoryTetris.SearchTime
+{
+	type = integer, min = 1, max = 250, default = 40,
+	page = InventoryTetrisSearch,
+	translation = InventoryTetris_SearchTime,
+}
+
+option InventoryTetris.SearchBodies
+{
+	type = enum, numValues=3, default = 2,
+	page = InventoryTetrisSearch,
+	translation = InventoryTetris_SearchBodies,
+	valueTranslation = InventoryTetris_SearchBodies,
 }

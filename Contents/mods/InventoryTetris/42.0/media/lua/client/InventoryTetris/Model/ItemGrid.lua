@@ -15,6 +15,7 @@
 ---@field height number
 ---@field gridKey string
 ---@field isProxInv boolean
+---@field isCorpse boolean
 ItemGrid = {}
 
 local PROX_INV_TYPE = "proxInv"
@@ -48,6 +49,7 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, 
 
     o.gridKey = gridIndex .. (secondaryTarget and tostring(secondaryTarget) or "")
     o.isProxInv = o.inventory:getType() == PROX_INV_TYPE
+    o.isCorpse = instanceof(o.inventory:getParent(), "IsoDeadBody")
 
     o:refresh()
     return o
@@ -596,8 +598,16 @@ ItemGrid._searchSessions = {}
 -- Didn't foresee the community modding in custom containers with so many grids, but I like the enthusiasm (used to be 10)
 ItemGrid.SESSION_MEMORY_LIMIT = 100
 
+local DISABLE_BODY_SEARCH = 1
+local SOME_BODY_SEARCH = 2
+local ENABLE_BODY_SEARCH = 3
+
 function ItemGrid:isUnsearched(playerNum)
     if not SandboxVars.InventoryTetris.EnableSearch then
+        return false
+    end
+
+    if self.isCorpse and SandboxVars.InventoryTetris.SearchBodies == DISABLE_BODY_SEARCH then
         return false
     end
 
@@ -620,6 +630,9 @@ function ItemGrid._getSearchSession(playerNum, grid)
     end
 
     if not ItemGrid._searchSessions[playerNum][grid.inventory] then
+        if grid.isCorpse and SandboxVars.InventoryTetris.SearchBodies == SOME_BODY_SEARCH then
+            return ItemGrid._createAndCacheSession(playerNum, grid)
+        end
         return nil
     end
 
@@ -632,6 +645,20 @@ function ItemGrid._getOrCreateSearchSession(playerNum, grid)
         return existingSession
     end
 
+    return ItemGrid._createAndCacheSession(playerNum, grid)
+end
+
+function ItemGrid._findAllEquippedItems(grid, session)
+    local stacks = grid:getStacks()
+    for _, stack in ipairs(stacks) do
+        local item = ItemStack.getFrontItem(stack, grid.inventory)
+        if item and item:isEquipped() then
+            session.searchedStackIDs[item:getID()] = true
+        end
+    end
+end
+
+function ItemGrid._createAndCacheSession(playerNum, grid)
     local sessions = ItemGrid._searchSessions[playerNum]
     if not sessions[grid.inventory] then
         sessions[grid.inventory] = {}
@@ -656,6 +683,12 @@ function ItemGrid._createSearchSession(grid)
     session.isGridRevealed = false
     session.searchedStackIDs = {}
     session.progressTicks = 0
+
+    if grid.isCorpse and SandboxVars.InventoryTetris.SearchBodies == SOME_BODY_SEARCH then
+        session.isGridRevealed = true
+        ItemGrid._findAllEquippedItems(grid, session)
+    end
+
     return session
 end
 

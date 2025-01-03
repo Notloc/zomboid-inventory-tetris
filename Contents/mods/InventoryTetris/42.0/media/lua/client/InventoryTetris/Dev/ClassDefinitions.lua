@@ -23,6 +23,7 @@
 ---@field BonusGridSize number
 ---@field EnableGravity boolean
 ---@field PreventTardisStacking boolean
+---@field SearchBodies number
 
 -- Declare some built-in functions that do exist, but normally don't in lua 5.1
 ---@class string
