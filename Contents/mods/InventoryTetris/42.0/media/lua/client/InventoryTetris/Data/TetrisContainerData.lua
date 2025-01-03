@@ -5,6 +5,7 @@ require("InventoryTetris/Data/TetrisItemCategory")
 ---@field validCategories table<TetrisItemCategory, boolean>
 ---@field invalidCategories TetrisItemCategory[] -- Deprecated
 ---@field isFragile boolean
+---@field isRigid boolean
 
 ---@class GridDefinition
 ---@field size Size2D
@@ -14,6 +15,13 @@ TetrisContainerData = TetrisContainerData or {}  -- Partial class
 
 TetrisContainerData._containerDefinitions = {}
 TetrisContainerData._vehicleStorageNames = {}
+
+-- Containers that must never be marked as non-fragile due to java side hardcoding
+-- Without this the disable carry weight feature causes the containers to misbehave
+local MUST_BE_FRAGILE = {
+    ["clothingwasher"] = true,
+    ["clothingdryer"] = true,
+}
 
 function TetrisContainerData.setContainerDefinition(container, containerDef)
     local containerKey = TetrisContainerData._getContainerKey(container)
@@ -48,15 +56,35 @@ function TetrisContainerData._getContainerKey(container)
 end
 
 function TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
+    local def = nil
+
     local devToolOverride = TetrisDevTool.getContainerOverride(containerKey)
     if devToolOverride then
-        return devToolOverride
+        def = devToolOverride
     end
 
-    if not TetrisContainerData._containerDefinitions[containerKey] then
-        TetrisContainerData._containerDefinitions[containerKey] = TetrisContainerData._calculateContainerDefinition(container)
+    if def == nil then
+        if not TetrisContainerData._containerDefinitions[containerKey] then
+            TetrisContainerData._containerDefinitions[containerKey] = TetrisContainerData._calculateContainerDefinition(container)
+        end
+        def = TetrisContainerData._containerDefinitions[containerKey]
     end
-    return TetrisContainerData._containerDefinitions[containerKey]
+
+    TetrisContainerData._enforceCorrections(container, def)
+    return def
+end
+
+function TetrisContainerData._enforceCorrections(container, containerDef)
+    if containerDef.corrected then
+        return
+    end
+
+    local containerType = container:getType()
+    if MUST_BE_FRAGILE[containerType] then
+        containerDef.isFragile = true
+    end
+
+    containerDef.corrected = true
 end
 
 function TetrisContainerData.recalculateContainerData()

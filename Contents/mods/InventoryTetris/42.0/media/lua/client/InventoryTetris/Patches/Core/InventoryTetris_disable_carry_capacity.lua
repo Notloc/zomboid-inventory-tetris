@@ -23,8 +23,11 @@ local function disableCarryWeightOnContainer(container, callback, ...)
         container = container:getInventory()
     end
 
+    local originalCapacity = container:getCapacity()
+    local originalType = container:getType()
+
     -- Skip player's main inventory or fragile containers or if the option is disabled
-    if not container or SandboxVars.InventoryTetris.EnforceCarryWeight or isPlayerInv(container) then
+    if not container or originalType == "floor" or SandboxVars.InventoryTetris.EnforceCarryWeight or isPlayerInv(container) then
         return callback(...)
     end
 
@@ -32,9 +35,6 @@ local function disableCarryWeightOnContainer(container, callback, ...)
     if containerDef.isFragile then
         return callback(...)
     end
-
-    local originalCapacity = container:getCapacity()
-    local originalType = container:getType()
 
     container:setCapacity(49) -- 49 so we don't match the real floor's key of floor_50
     container:setType("floor") -- Pretend we're the floor
@@ -53,25 +53,13 @@ local function disableCarryWeightOnContainer(container, callback, ...)
     end
 end
 
-local function disableBoth(container, items, callback, ...)
-    --local doItems = function (...)
-    --    return disableCarryWeightOnItems(...)
-    --end
-    return disableCarryWeightOnContainer(container, callback, ...)
-end
-
 -- All vanilla functions that I found that check the container's capacity
 Events.OnGameStart.Add(function()
     require("ISUI/ISInventoryPane")
     local og_canPutIn_pane = ISInventoryPane.canPutIn
     function ISInventoryPane:canPutIn()
         local container = self.inventory
-
-        ControllerDragAndDrop.currentPlayer = self.player
-        local items = ISInventoryPane.getActualItems(ISMouseDrag.dragging)
-        ControllerDragAndDrop.currentPlayer = nil
-
-        return disableBoth(container, items, og_canPutIn_pane, self)
+        return disableCarryWeightOnContainer(container, og_canPutIn_pane, self)
     end
 
     local og_update_draggedItems = ISInventoryPaneDraggedItems.update
@@ -91,8 +79,7 @@ Events.OnGameStart.Add(function()
     local og_isValid = ISInventoryTransferAction.isValid
     function ISInventoryTransferAction:isValid()
         local container = self.destContainer
-        local items = {self.item}
-        return disableBoth(container, items, og_isValid, self)
+        return disableCarryWeightOnContainer(container, og_isValid, self)
     end
 
     require("ISUI/ISInventoryPaneContextMenu")

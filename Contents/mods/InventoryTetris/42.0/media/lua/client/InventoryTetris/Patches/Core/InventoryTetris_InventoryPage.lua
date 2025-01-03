@@ -3,6 +3,14 @@
 
 Events.OnGameBoot.Add(function()
 
+	function ISInventoryPage:tetrisGetSisterPage()
+		local inv = getPlayerInventory(self.player)
+		if inv ~= self then
+			return inv
+		end
+		return getPlayerLoot(self.player)
+	end
+
 	local og_createChildren = ISInventoryPage.createChildren
 	function ISInventoryPage:createChildren()
 		og_createChildren(self)
@@ -88,7 +96,8 @@ Events.OnGameBoot.Add(function()
 	end
 
 	function ISInventoryPage:updateLootButtonsForTetrisSearch()
-        local needsSearch = self.needSearch or (self.sisterPage and self.sisterPage.needSearch)
+		local sisterPage = self:tetrisGetSisterPage()
+        local needsSearch = self.needSearch or (sisterPage and sisterPage.needSearch)
         if self.onCharacter then
 			self.transferAll:setVisible(not needsSearch)
             self.tetrisSearchButton:setX(self.transferAll:getX())
@@ -178,7 +187,8 @@ Events.OnGameBoot.Add(function()
 	local og_onRightMouseDownOutside = ISInventoryPage.onRightMouseDownOutside
 	function ISInventoryPage:onRightMouseDownOutside(x, y)
 		og_onRightMouseDownOutside(self, x, y)
-		if (self.sisterPage and self.sisterPage:isMouseOver()) then
+		local sisterPage = self:tetrisGetSisterPage()
+		if (sisterPage and sisterPage:isMouseOver()) then
 			self.isCollapsed = false;
 			self:clearMaxDrawHeight();
 		end
@@ -187,8 +197,8 @@ Events.OnGameBoot.Add(function()
 	local og_onMouseDownOutside = ISInventoryPage.onMouseDownOutside
 	function ISInventoryPage:onMouseDownOutside(x, y)
 		og_onMouseDownOutside(self, x, y)
-
-		if (self.sisterPage and self.sisterPage:isMouseOver()) then
+		local sisterPage = self:tetrisGetSisterPage()
+		if (sisterPage and sisterPage:isMouseOver()) then
 			self.isCollapsed = false;
 			self:clearMaxDrawHeight();
 		end
