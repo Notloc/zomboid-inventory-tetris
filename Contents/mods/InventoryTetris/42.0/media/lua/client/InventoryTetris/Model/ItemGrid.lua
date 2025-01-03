@@ -41,7 +41,7 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, 
     o.secondaryTarget = secondaryTarget
 
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
-    o.isFloor = inventory:getType() == "floor"
+    o.isFloor = inventory:getType() == "floor" and inventory:getCapacity() == 50
 
     o.width = o.gridDefinition.size.width + SandboxVars.InventoryTetris.BonusGridSize
     o.height = o.gridDefinition.size.height + SandboxVars.InventoryTetris.BonusGridSize
@@ -250,7 +250,7 @@ function ItemGrid:_isItemInBounds(item, stack)
 end
 
 function ItemGrid:canAddItem(item, isRotated)
-    if self.inventory:getType() == "floor" then
+    if self.isFloor then
         return true;
     end
 
@@ -802,7 +802,7 @@ function ItemGrid:_getParentModData()
         return player:getModData(), player
     end
 
-    if self.inventory:getType() == "floor" then
+    if self.isFloor then
         return ItemGrid._floorModData, nil
     end
 
