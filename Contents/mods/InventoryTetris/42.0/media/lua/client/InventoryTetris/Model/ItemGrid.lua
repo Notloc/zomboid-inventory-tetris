@@ -204,6 +204,18 @@ function ItemGrid:_insertStack(xPos, yPos, item, isRotated)
     self:_sendModData()
 end
 
+function ItemGrid:_tryInsertStack_premade(stack, x, y, isRotated)
+    local item = ItemStack.getFrontItem(stack, self.inventory)
+    local w, h = TetrisItemData.getItemSize(item, isRotated)
+    if not self:_isAreaFree(x, y, w, h, {[stack] = true}) then
+        return false
+    end
+
+    self:_removeStack(stack)
+    self:_insertStack_premade(stack, x, y, isRotated)
+    return true
+end
+
 function ItemGrid:_insertStack_premade(stack, x, y, isRotated)
     stack.x = x
     stack.y = y

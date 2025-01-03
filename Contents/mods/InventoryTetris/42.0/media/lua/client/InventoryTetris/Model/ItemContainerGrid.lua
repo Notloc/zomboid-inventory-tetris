@@ -649,15 +649,33 @@ function ItemContainerGrid:refreshSecondaryGrids(forceFull)
 
     local items = self:getWornItemsWithPockets()
 
+    local displacedStacks = {}
     for target, _ in pairs(self.secondaryGrids) do
         if not items[target] or forceFull then
-            self:removeSecondaryGrid(target)
+            local stacks = self:removeSecondaryGrid(target)
+            table.insert(displacedStacks, stacks)
         end
     end
 
+    local insertedGrids = {}
     for item, _ in pairs(items) do
         if not self.secondaryGrids[item] then
-            self:addSecondaryGrid(item)
+            local grids = self:addSecondaryGrid(item)
+            table.insert(insertedGrids, grids)
+        end
+    end
+
+    -- If the clothing change was a 1-to-1 swap, try to move the stacks directly to the new grid
+    if #displacedStacks == 1 and #insertedGrids == 1 then
+        local displacedStacks = displacedStacks[1]
+        local insertedGrids = insertedGrids[1]
+
+        for _, stack in ipairs(displacedStacks) do
+            local grid = insertedGrids[stack.gridIndex]
+            if grid then
+                stack.gridIndex = nil
+                grid:_tryInsertStack_premade(stack, stack.x, stack.y, stack.isRotated)
+            end
         end
     end
 end
@@ -702,11 +720,19 @@ function ItemContainerGrid:addSecondaryGrid(secondaryTarget)
     for obj, callback in pairs(self._onSecondaryGridsAdded) do
         callback(obj, secondaryTarget, grids)
     end
+    return grids
 end
 
 function ItemContainerGrid:removeSecondaryGrid(secondaryTarget)
+    local stacks = {}
+    
     local grids = self.secondaryGrids[secondaryTarget]
     for _, grid in ipairs(grids) do
+        local gridStacks = grid:getStacks()
+        for _, stack in ipairs(gridStacks) do
+            stack.gridIndex = grid.gridIndex
+            table.insert(stacks, stack)
+        end
         grid:deleteGridData()
     end
 
@@ -714,6 +740,8 @@ function ItemContainerGrid:removeSecondaryGrid(secondaryTarget)
     for obj, callback in pairs(self._onSecondaryGridsRemoved) do
         callback(obj, secondaryTarget)
     end
+
+    return stacks
 end
 
 -- Keep the player's main inventory grid refreshed, so it drops unpositioned items even if the ui isn't open
