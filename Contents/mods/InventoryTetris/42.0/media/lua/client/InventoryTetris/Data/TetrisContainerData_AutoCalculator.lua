@@ -74,7 +74,7 @@ end
 function TetrisContainerData._calculateVehicleTrunkContainerDefinition(container)
     local capacity = container:getCapacity()
 
-    local size = 20 + capacity * 2
+    local size = 50 + capacity * 2.5
     local x, y = TetrisContainerData._calculateDimensions(size)
     return {
         gridDefinitions = {{
