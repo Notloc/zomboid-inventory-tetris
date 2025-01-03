@@ -42,13 +42,13 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, 
     o.secondaryTarget = secondaryTarget
 
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
-    o.isFloor = inventory:getType() == "floor" and inventory:getCapacity() == 50
+    o.isFloor = containerDefinition.trueType == "floor"
 
     o.width = o.gridDefinition.size.width + SandboxVars.InventoryTetris.BonusGridSize
     o.height = o.gridDefinition.size.height + SandboxVars.InventoryTetris.BonusGridSize
 
     o.gridKey = gridIndex .. (secondaryTarget and tostring(secondaryTarget) or "")
-    o.isProxInv = o.inventory:getType() == PROX_INV_TYPE
+    o.isProxInv = containerDefinition.trueType == PROX_INV_TYPE
     o.isCorpse = instanceof(o.inventory:getParent(), "IsoDeadBody")
 
     o:refresh()
@@ -830,7 +830,7 @@ function ItemGrid:_getSavedContainerData()
         modData.gridContainers = {}
     end
 
-    local invType = self.secondaryTarget and self.secondaryTarget:getID() or self.inventory:getType()
+    local invType = self.secondaryTarget and self.secondaryTarget:getID() or self.containerDefinition.trueType
     if not modData.gridContainers[invType] then
         modData.gridContainers[invType] = { stacks = {} }
     end

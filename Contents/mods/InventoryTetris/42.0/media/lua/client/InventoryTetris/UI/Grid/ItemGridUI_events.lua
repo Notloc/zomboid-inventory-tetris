@@ -226,7 +226,7 @@ end
 function ItemGridUI:handleDropOnContainer(vanillaStack, container)
     if isClient() then -- Prevent MP duping
         if container:getContainingItem() then
-            if not self.grid.isOnPlayer and self.grid.inventory:getType() ~= "floor" then
+            if not self.grid.isOnPlayer and self.grid.containerDefinition.trueType ~= "floor" then
                 return
             end
         end

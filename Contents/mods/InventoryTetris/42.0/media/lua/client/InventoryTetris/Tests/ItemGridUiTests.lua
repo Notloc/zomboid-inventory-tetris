@@ -140,6 +140,7 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
         local grid1 = gridUi1.grid
 
         local containerGridUi2 = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
+        local containerGrid2 = containerGridUi2.containerGrid
         local gridUi2 = containerGridUi2.gridUis[containerGridUi2.inventory][1]
 
         local item = TestHelper.createItem_1x1(containerGrid1.inventory)
@@ -161,13 +162,13 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
             :next(function()
                 TestUtils.assert(not ISMouseDrag.dragging)
 
-                gridUi2.grid:refresh() -- refresh the grid to update the stack data
+                containerGrid2:refresh() -- refresh the grid to update the stack data
 
                 local stack = gridUi2.grid:getStack(1, 1, playerNum)
                 TestUtils.assert(stack ~= nil)
                 TestUtils.assert(ItemStack.containsItem(stack, item))
 
-                grid1:refresh()
+                containerGrid1:refresh()
                 stack = grid1:getStack(0, 0, playerNum)
                 TestUtils.assert(stack == nil)
             end)

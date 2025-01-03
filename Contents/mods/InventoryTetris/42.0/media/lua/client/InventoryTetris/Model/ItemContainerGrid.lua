@@ -32,7 +32,7 @@ function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
     o.containerDefinition = definitionOverride or TetrisContainerData.getContainerDefinition(inventory)
     o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
-    o.isFloor = inventory:getType() == "floor" and inventory:getCapacity() == 50
+    o.isFloor = o.containerDefinition.trueType == "floor"
     o.grids = o:createGrids(inventory)
     o.overflow = {}
 

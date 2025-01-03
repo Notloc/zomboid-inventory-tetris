@@ -31,8 +31,10 @@ Events.OnGameBoot.Add(function()
             local srcRoot = getOutermostContainer(srcContainer)
             local destRoot = getOutermostContainer(destContainer)
 
+            local destDef = TetrisContainerData.getContainerDefinition(destContainer)
+
             local isInInventory = inv == srcRoot and inv == destRoot
-            local isDroppingToFloor = inv == srcRoot and destContainer:getType() == "floor"
+            local isDroppingToFloor = inv == srcRoot and destDef.trueType == "floor"
             o.stopOnWalk = not (isInInventory or isDroppingToFloor)
 
             o.isDroppingToFloor = isDroppingToFloor

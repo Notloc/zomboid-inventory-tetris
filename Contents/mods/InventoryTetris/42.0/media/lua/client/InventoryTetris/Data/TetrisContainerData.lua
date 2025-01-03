@@ -6,6 +6,7 @@ require("InventoryTetris/Data/TetrisItemCategory")
 ---@field invalidCategories TetrisItemCategory[] -- Deprecated
 ---@field isFragile boolean
 ---@field isRigid boolean
+---@field trueType string
 
 ---@class GridDefinition
 ---@field size Size2D
@@ -83,6 +84,8 @@ function TetrisContainerData._enforceCorrections(container, containerDef)
     if MUST_BE_FRAGILE[containerType] then
         containerDef.isFragile = true
     end
+
+    containerDef.trueType = containerType
 
     containerDef.corrected = true
 end
