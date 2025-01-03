@@ -115,7 +115,7 @@ Events.OnGameBoot.Add(function()
             end
         end
 
-        if self.destContainer:getType() == "floor" then
+        if containerGrid.isFloor then
             return true
         else
             return containerGrid:canAddItem(self.item)

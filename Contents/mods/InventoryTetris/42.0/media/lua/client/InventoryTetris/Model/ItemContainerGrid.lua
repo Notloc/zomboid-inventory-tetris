@@ -10,6 +10,7 @@ local PHYSICS_DELAY = 600
 ---@field containerDefinition ContainerGridDefinition
 ---@field isPlayerInventory boolean
 ---@field isOnPlayer boolean
+---@field isFloor boolean
 ---@field grids ItemGrid[]
 ---@field overflow ItemStack[]
 ---@field secondaryGrids table
@@ -31,6 +32,7 @@ function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
     o.containerDefinition = definitionOverride or TetrisContainerData.getContainerDefinition(inventory)
     o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
+    o.isFloor = inventory:getType() == "floor" and inventory:getCapacity() == 50
     o.grids = o:createGrids(inventory)
     o.overflow = {}
 

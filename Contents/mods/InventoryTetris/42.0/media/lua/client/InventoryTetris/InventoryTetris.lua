@@ -1,5 +1,5 @@
 local Version = require("Notloc/Versioning/Version")
 
 InventoryTetris = {
-    version = Version:new(6, 3, 1, "beta"),
+    version = Version:new(6, 3, 2, "beta"),
 }
