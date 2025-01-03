@@ -1,6 +1,7 @@
 TetrisItemData = TetrisItemData or {} -- Partial class
 
 local SQUISH_FACTOR = 3
+local FLOAT_CORRECTION = 0.001
 
 function TetrisItemData._autoCalculateItemInfo(item, isSquished)
     local data = {}
@@ -244,7 +245,7 @@ function TetrisItemData._calculateFluidContainerSize(item)
     end
 
     -- Everything else is 1 slot per liter with a minimum size of 1x2
-    local slots = math.max(math.ceil(fluidCapacity), 2)
+    local slots = math.max(math.pow(fluidCapacity, 0.85), 2)
     local x, y = TetrisContainerData._calculateDimensions(slots, 2)
 
     if x > y then
@@ -384,6 +385,11 @@ function TetrisItemData._calculateFoodStackability(item)
     return math.max(1, math.floor(1 / weight))
 end
 
+function TetrisItemData._weaponStackability(item)
+    local weight = item:getActualWeight() * 2
+    return math.max(1, math.floor((1 / weight)+FLOAT_CORRECTION))
+end
+
 TetrisItemData._itemClassToStackabilityCalculation = {
     [TetrisItemCategory.AMMO] = TetrisItemData._calculateAmmoStackability,
     [TetrisItemCategory.BOOK] = TetrisItemData._simpleWeightStackability,
@@ -394,7 +400,7 @@ TetrisItemData._itemClassToStackabilityCalculation = {
     [TetrisItemCategory.FOOD] = TetrisItemData._calculateFoodStackability,
     [TetrisItemCategory.KEY] = 1,
     [TetrisItemCategory.MAGAZINE] = 1,
-    [TetrisItemCategory.MELEE] = 1,
+    [TetrisItemCategory.MELEE] = TetrisItemData._weaponStackability,
     [TetrisItemCategory.MISC] = TetrisItemData._simpleWeightStackability,
     [TetrisItemCategory.MOVEABLE] = TetrisItemData._calculateMoveableStackability,
     [TetrisItemCategory.RANGED] = 1,
