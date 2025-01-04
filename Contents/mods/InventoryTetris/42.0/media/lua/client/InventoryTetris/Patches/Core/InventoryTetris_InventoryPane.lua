@@ -370,7 +370,7 @@ Events.OnGameBoot.Add(function()
     function ISInventoryPane:scrollToContainer(inventory)
         for _, gridContainerUi in ipairs(self.gridContainerUis) do
             if gridContainerUi.inventory == inventory then
-                self.scrollView:ensureChildIsVisible(gridContainerUi, 2)
+                self.scrollView:scrollToPositionY(gridContainerUi:getAbsoluteY(), 2)
                 return
             end
         end

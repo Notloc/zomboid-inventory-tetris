@@ -136,6 +136,12 @@ function ItemGridUI.mousePositionToGridPosition(x, y)
     return gridX, gridY
 end
 
+function ItemGridUI:gridPositionToScreenPosition(gridX, gridY)
+    local effectiveCellSize = OPT.CELL_SIZE - 1
+    local lX, lY = gridX * effectiveCellSize, gridY * effectiveCellSize
+    return lX + self:getAbsoluteX(), lY + self:getAbsoluteY()
+end
+
 
 function ItemGridUI:handleDragAndDrop(mouseX, mouseY)
     local vanillaStack = DragAndDrop.getDraggedStack()
@@ -636,6 +642,10 @@ function ItemGridUI:controllerNodeOnJoypadDir(dx, dy, joypadData)
 
     self.selectedX = xSelected
     self.selectedY = ySelected
+
+    local screenX, screenY = self:gridPositionToScreenPosition(xSelected, ySelected)
+    NotlocControllerNode.ensureVisibleXY(self, screenX, screenY)
+
     return true
 end
 
