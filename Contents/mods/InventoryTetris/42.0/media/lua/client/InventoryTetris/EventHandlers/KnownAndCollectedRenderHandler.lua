@@ -1,86 +1,80 @@
 require("InventoryTetris/Events")
 require("RecordedMedia/recorded_media")
 
-if not getActivatedMods():contains("KnownAndCollected") then
+if not getActivatedMods():contains("KnownAndCollected") and not getActivatedMods():contains("\\KnownAndCollected") then
     return
 end
 
-local collectedTex = getTexture("media/textures/InventoryTetris/KnownAndCollected/iconUnCollected.png")
-local unknownTex = getTexture("media/textures/InventoryTetris/KnownAndCollected/iconUnKnown.png")
-local unavailableTex = getTexture("media/textures/InventoryTetris/KnownAndCollected/iconUnKnownUnavalable.png")
-local mediaTex = getTexture("media/textures/InventoryTetris/KnownAndCollected/iconUnKnownMedia.png")
-local unKnownUnfinishedTex = getTexture("media/textures/InventoryTetris/KnownAndCollected/iconUnKnownUnfinished.png")
+local SETTINGS = require("InventoryTetris/Settings")
+
+Events.OnGameBoot.Add(function()
+    ---@diagnostic disable-next-line: undefined-global
+    KnownAndCollected:disableRender()
+end)
+
+local collectedTex = {
+    [0.5]=getTexture("media/textures/InventoryTetris/KnownAndCollected/0.5x/iconUnCollected.png"),
+    [1]=getTexture("media/textures/InventoryTetris/KnownAndCollected/1x/iconUnCollected.png"),
+    [2]=getTexture("media/textures/InventoryTetris/KnownAndCollected/2x/iconUnCollected.png"),
+    [3]=getTexture("media/textures/InventoryTetris/KnownAndCollected/3x/iconUnCollected.png"),
+    [4]=getTexture("media/textures/InventoryTetris/KnownAndCollected/4x/iconUnCollected.png"),
+}
+local unknownTex = {
+    [0.5]=getTexture("media/textures/InventoryTetris/KnownAndCollected/0.5x/iconUnKnown.png"),
+    [1]=getTexture("media/textures/InventoryTetris/KnownAndCollected/1x/iconUnKnown.png"),
+    [2]=getTexture("media/textures/InventoryTetris/KnownAndCollected/2x/iconUnKnown.png"),
+    [3]=getTexture("media/textures/InventoryTetris/KnownAndCollected/3x/iconUnKnown.png"),
+    [4]=getTexture("media/textures/InventoryTetris/KnownAndCollected/4x/iconUnKnown.png"),
+}
+local unavailableTex = {
+    [0.5]=getTexture("media/textures/InventoryTetris/KnownAndCollected/0.5x/iconUnKnownUnavalable.png"),
+    [1]=getTexture("media/textures/InventoryTetris/KnownAndCollected/1x/iconUnKnownUnavalable.png"),
+    [2]=getTexture("media/textures/InventoryTetris/KnownAndCollected/2x/iconUnKnownUnavalable.png"),
+    [3]=getTexture("media/textures/InventoryTetris/KnownAndCollected/3x/iconUnKnownUnavalable.png"),
+    [4]=getTexture("media/textures/InventoryTetris/KnownAndCollected/4x/iconUnKnownUnavalable.png"),
+}
+local mediaTex = {
+    [0.5]=getTexture("media/textures/InventoryTetris/KnownAndCollected/0.5x/iconUnKnownMedia.png"),
+    [1]=getTexture("media/textures/InventoryTetris/KnownAndCollected/1x/iconUnKnownMedia.png"),
+    [2]=getTexture("media/textures/InventoryTetris/KnownAndCollected/2x/iconUnKnownMedia.png"),
+    [3]=getTexture("media/textures/InventoryTetris/KnownAndCollected/3x/iconUnKnownMedia.png"),
+    [4]=getTexture("media/textures/InventoryTetris/KnownAndCollected/4x/iconUnKnownMedia.png"),
+}
+local unKnownUnfinishedTex = {
+    [0.5]=getTexture("media/textures/InventoryTetris/KnownAndCollected/0.5x/iconUnKnownUnfinished.png"),
+    [1]=getTexture("media/textures/InventoryTetris/KnownAndCollected/1x/iconUnKnownUnfinished.png"),
+    [2]=getTexture("media/textures/InventoryTetris/KnownAndCollected/2x/iconUnKnownUnfinished.png"),
+    [3]=getTexture("media/textures/InventoryTetris/KnownAndCollected/3x/iconUnKnownUnfinished.png"),
+    [4]=getTexture("media/textures/InventoryTetris/KnownAndCollected/4x/iconUnKnownUnfinished.png"),
+}
+
 
 -- Original code adapted from Known and Collected mod
 -- All credit goes to UnCheat
 
-local moodleCodes = {
-    ANG = true, -- Anger
-    BOR = true, -- boredom
-    FAT = true, -- fatigue
-    HUN = true, -- hunger
-    STS = true, -- stress
-    FEA = true, -- Fear
-    PAN = true, -- Panic
-    SIC = true, -- Sickness
-    PAI = true, -- Pain
-    DRU = true, -- Drunkenness
-    THI = true, -- thirst
-    UHP = true, -- thirst ? Unhappiness !
-}
-
-local isSkillMediaCache = {} 
-
-local function isSkillCode(code)
-    local match = string.match(code, "^%u%u%u+")
-    return match and not moodleCodes[match]
-end
-
-local function determineIfSkillMedia(mediaId)
-    local mediaData = RecMedia[mediaId]
-    if not mediaData then return false end
-    
-    for _, line in ipairs(mediaData.lines) do
-        if line.codes and line.codes:len() > 0 then
-            if isSkillCode(line.codes) then
-                return true
-            end
-
-            -- try parse multicode from mods separated by ','
-            for code in string.gmatch(line.codes, "([^,]+)") do
-                if isSkillCode(code) then
-                    return true
-                end
-            end
-        end
-    end
-    return false
-end
-
-local function isSkillMedia(mediaId)
-    if isSkillMediaCache[mediaId] == nil then
-        isSkillMediaCache[mediaId] = determineIfSkillMedia(mediaId)
-    end
-    return isSkillMediaCache[mediaId]
-end
-
 local KnownAndCollectedRenderer = {}
 function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridStack, x, y, width, height, playerObj)
-    local knownAndCollected = playerObj:getModData().knownAndCollected
-    if not knownAndCollected then
+    local kacModData = playerObj:getModData().knownAndCollected
+    if not kacModData then
         return
     end
 
+    ---@diagnostic disable-next-line: undefined-global
+    local kAC = KnownAndCollected
+
     local recordedMedia = KnownAndCollectedRenderer.recordedMedia or getZomboidRadio():getRecordedMedia()
 
-    local collectedMap = knownAndCollected.collected or {}
-    local collectedMediaMap = knownAndCollected.collectedMedia or {}
+    local collectedMap = kacModData.collected or {}
+    local collectedMediaMap = kacModData.collectedMedia or {}
 
     local unCollected = false
     local unKnown = false
     local unKnownUnfinished = false
     local unKnownUnavailable = false
     local unPlayed = false
+    local unKnownFlier = false
+    local unKnownMap = false
+    local unKnownEntertainment = false
 
     if item:isRecordedMedia() then
         local mediaData = item:getMediaData()
@@ -91,7 +85,7 @@ function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridSta
         end
 
         if not recordedMedia:hasListenedToAll(playerObj, mediaData) then
-            if isSkillMedia(mediaId) then
+            if kAC.isSkillMedia(mediaId) then
                 unKnown = true
             else
                 unPlayed = true
@@ -101,17 +95,17 @@ function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridSta
         local _type = item:getFullType()
         local skillBook = SkillBook[item:getSkillTrained()]
         local recipes = item:getTeachedRecipes()
-
+        local printMedia = item:getModData().printMedia
         if skillBook then
             local maxTrained = item:getMaxLevelTrained()
             local minTrained = item:getLvlSkillTrained()
-            
+
             local playerSkillLevel = playerObj:getPerkLevel(skillBook.perk) + 1
-            
+
             if not collectedMap[_type] then
                 unCollected = true
             end
-            
+
             local pages = item:getNumberOfPages()
             local readPages = pages > 0 and playerObj:getAlreadyReadPages(_type) or false
             if readPages and readPages ~= pages and maxTrained >= playerSkillLevel then
@@ -131,30 +125,69 @@ function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridSta
             if not playerObj:getAlreadyReadBook():contains(_type) or not playerObj:getKnownRecipes():containsAll(recipes) then
                 unKnown = true
             end
+        elseif printMedia then
+            if not kAC.isCollected(kAC,printMedia) then
+                unCollected = true
+            end
+            if not kAC.isKnownPrintMedia(kAC,printMedia) then
+                unKnownFlier = true
+            end
+        else
+            title = item:getModData().literatureTitle
+            unKnownEntertainment = title and not playerObj:isLiteratureRead(title)
+
+            if title and not kAC.isCollected(kAC,title) then
+                unCollected = true
+            end
+        end
+    elseif item:IsMap() then
+        local _type = item:getFullType()
+        if not kAC.isCollected(kAC,_type) then
+            unCollected = true
+        end
+        if not kAC.isKnownMap(kAC,_type) then
+            unKnownMap = true
         end
     end
 
-    -- Textures are 13x13
-    local right = x+width-15
-    local bottom = y+height-15
+    if unKnownMap or unKnownFlier or unKnownEntertainment then
+        unKnown = true
+    end
+
+    local scale = SETTINGS.SCALE
+    local index = scale
+    if index == 0.75 or index == 1.5 then
+        index = 1
+    end
+
+    local texSize = 12*scale
+    if scale == 1.5 then
+        texSize = 12
+    end
+
+    local right = x+width-2 - texSize
+    local bottom = y+height-2 - texSize
+
+    ---@cast drawingContext ISUIElement
 
     if unCollected then
-        drawingContext:drawTexture(collectedTex, right+1, y+1, 1, 1, 1, 1)
-    end
-    
-    if unKnown then
-        drawingContext:drawTexture(unknownTex, right, bottom, 1, 1, 1, 1)
-    
-    elseif unKnownUnfinished then
-        drawingContext:drawTexture(unKnownUnfinishedTex, right, bottom, 1, 1, 1, 1)
-    
-    elseif unKnownUnavailable then
-        drawingContext:drawTexture(unavailableTex, right, bottom, 1, 1, 1, 1)
-    
-    elseif unPlayed then
-        drawingContext:drawTexture(mediaTex, right, bottom, 1, 1, 1, 1)
+        drawingContext:drawTexture(collectedTex[index], right+1, y+1, 1, 1, 1, 1)
     end
 
+    local bottomRightTex = nil
+    if unKnown then
+        bottomRightTex = unknownTex
+    elseif unKnownUnfinished then
+        bottomRightTex = unKnownUnfinishedTex
+    elseif unKnownUnavailable then
+        bottomRightTex = unavailableTex
+    elseif unPlayed then
+        bottomRightTex = mediaTex
+    end
+
+    if bottomRightTex then
+        drawingContext:drawTexture(bottomRightTex[index], right, bottom, 1, 1, 1, 1)
+    end
 end
 
 TetrisEvents.OnPostRenderGridItem:add(KnownAndCollectedRenderer)

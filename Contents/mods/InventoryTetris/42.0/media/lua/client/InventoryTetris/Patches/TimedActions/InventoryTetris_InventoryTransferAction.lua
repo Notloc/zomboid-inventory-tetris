@@ -84,13 +84,44 @@ Events.OnGameBoot.Add(function()
         return tetrisCanMerge
     end
 
+  
+
+    -- Temp overrides instanceof to ensure instanceof never reports a Moveable as such
+    -- At what point should I just dirty patch a method instead... this is kinda gross
+    local function moveablesArentRealScope(callback, ...)
+        local real_instanceof = instanceof
+        local fake_instanceof = function(obj, class)
+            if class == "Moveable" then return false end
+            return real_instanceof(obj, class)
+        end
+
+        instanceof = fake_instanceof
+        local results = {pcall(callback, ...)}
+        instanceof = real_instanceof
+
+        if results[1] then
+            return unpack(results, 2)
+        else
+            error(results[2])
+        end
+    end
+
     local og_isValid = ISInventoryTransferAction.isValid
     function ISInventoryTransferAction:isValid()
-        local valid = og_isValid(self)
+        local destDef = TetrisContainerData.getContainerDefinition(self.destContainer)
+        local destType = destDef.trueType
+
+        local valid;
+        -- If we are moving a Moveable to anywhere but the floor, ensure it does NOT appear to be a Moveable
+        if destType ~= "floor" and instanceof(self.item, "Moveable") then
+            valid = moveablesArentRealScope(og_isValid, self)
+        else
+            valid = og_isValid(self)
+        end
+
         if not valid or not self.enforceTetrisRules then
             return valid
         end
-
         return self:validateTetrisRules()
     end
 

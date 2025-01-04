@@ -561,7 +561,7 @@ end
 
 -- A bit finnicky, the changes are not permanent and reset shortly after.
 -- Seems to work fine during grid rendering in its current state.
-local function SetTextureParameters(texture)
+function ItemGridUI.setTextureAsCrunchy(texture)
     local TEXTURE_2D = 3553
 
     -- Fixes blurry textures from other mods
@@ -625,10 +625,10 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
         local xInset = (minDimension*TEXTURE_SIZE - width) / 2
         local yInset = (minDimension*TEXTURE_SIZE - height) / 2
 
-        SetTextureParameters(texture)
+        ItemGridUI.setTextureAsCrunchy(texture)
         ItemGridUI._drawTextureRotated(drawingContext, texture, x2 + xInset, y2 + yInset, width, height, alphaMult, r, g, b)
     else
-        SetTextureParameters(texture)
+        ItemGridUI.setTextureAsCrunchy(texture)
         drawingContext:drawTextureScaledUniform(texture, x2, y2, targetScale * correctiveScale, alphaMult, r, g, b);
     end
 
