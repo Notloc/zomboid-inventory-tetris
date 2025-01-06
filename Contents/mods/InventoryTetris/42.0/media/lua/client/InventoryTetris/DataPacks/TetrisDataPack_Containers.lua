@@ -102,11 +102,6 @@ local itemPack = {
 		["height"] = 1,
 		["maxStackSize"] = 1,
 	},
-	["Base.Bag_SaxophoneCase"] = {
-		["maxStackSize"] = 1,
-		["height"] = 4,
-		["width"] = 2,
-	},
 	["Base.Bag_TrashBag__squished"] = {
 		["width"] = 1,
 		["height"] = 1,
