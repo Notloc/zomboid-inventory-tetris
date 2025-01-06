@@ -7,6 +7,7 @@ Sandbox_EN = {
 	Sandbox_InventoryTetris_ItemTransferSpeedMultiplier = "Transfer Speed Multiplier",
 	Sandbox_InventoryTetris_BonusGridSize = "Bonus Grid Size",
 	Sandbox_InventoryTetris_EnableGravity = "Gravity Mode",
+	Sandbox_InventoryTetris_DevMode = "Enable Developer Tools",
 	Sandbox_InventoryTetris_EnableSearch = "Enable Search Mode",
 	Sandbox_InventoryTetris_SearchTime = "Search Time",
 	Sandbox_InventoryTetris_SearchBodies = "Corpse Search",

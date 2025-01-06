@@ -4,6 +4,11 @@ local OPT = require("InventoryTetris/Settings")
 local JSON = require("InventoryTetris/Dev/JSON.lua")
 local ContextUtil = require("Notloc/ContextUtil")
 
+local globalIsDebugEnabled = isDebugEnabled
+local isDebugEnabled = function()
+    return globalIsDebugEnabled() or SandboxVars.InventoryTetris.DevMode
+end
+
 local function copyTable(from, to)
     for k,v in pairs(from) do
         if type(v) == "table" then

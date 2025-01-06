@@ -43,6 +43,13 @@ option InventoryTetris.EnableGravity
 	translation = InventoryTetris_EnableGravity,
 }
 
+option InventoryTetris.DevMode
+{
+	type = boolean, default = false,
+	page = InventoryTetris,
+	translation = InventoryTetris_DevMode,
+}
+
 option InventoryTetris.EnableSearch
 {
 	type = boolean, default = false,
