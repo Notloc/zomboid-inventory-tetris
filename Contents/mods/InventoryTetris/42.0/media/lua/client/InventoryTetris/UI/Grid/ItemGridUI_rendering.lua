@@ -389,28 +389,36 @@ function ItemGridUI:_renderPlacementPreview(gridX, gridY, itemW, itemH, r, g, b)
 end
 
 function ItemGridUI.getItemColor(item, limit)
-    if not item then
+    if not item or item:getTextureColorMask() ~= nil then
         return 1,1,1
     end
-    if not item:allowRandomTint() then
-        return item:getR(), item:getG(), item:getB()
-    end
 
-    local colorInfo = item:getColorInfo()
-    local r = colorInfo:getR()
-    local g = colorInfo:getG()
-    local b = colorInfo:getB()
-    
-    if not limit then
-        limit = 0.2
-    end
+    local r = item:getR()
+    local g = item:getG()
+    local b = item:getB()
+
+    --if not limit then
+    --    limit = 0.2
+    --end
 
     -- Limit how dark the item can appear if all colors are close to 0
-    while r < limit and g < limit and b < limit do
-        r = r + limit / 4
-        g = g + limit / 4
-        b = b + limit / 4
+    --while r < limit and g < limit and b < limit do
+    --    r = r + limit / 4
+    --    g = g + limit / 4
+    --    b = b + limit / 4
+    --end
+    return r,g,b
+end
+
+function ItemGridUI.getMaskColor(item)
+    if not item or item:getTextureColorMask() == nil then
+        return 1,1,1
     end
+
+    local r = item:getR()
+    local g = item:getG()
+    local b = item:getB()
+
     return r,g,b
 end
 
@@ -596,7 +604,8 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     local minDimension = math.min(w, h)
     drawingContext:drawRect(x+1, y+1, w * CELL_SIZE - w - 1, h * CELL_SIZE - h - 1, 0.3 * alphaMult, unpackColors(colorsByCategory[stack.category], bgBright))
 
-    local texture = item:getTex()
+    local texture = item:getTex() or HIDDEN_ITEM
+
     local texW = texture:getWidth()
     local texH = texture:getHeight()
     local largestDimension = math.max(texW, texH)
@@ -615,21 +624,36 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     targetScale = targetScale * minDimension
 
     local r,g,b = ItemGridUI.getItemColor(item)
-    r = r * bgBright
-    g = g * bgBright
-    b = b * bgBright
 
     if rotate then
         local width = texW * targetScale * correctiveScale
         local height = texH * targetScale * correctiveScale
-        local xInset = (minDimension*TEXTURE_SIZE - width) / 2
-        local yInset = (minDimension*TEXTURE_SIZE - height) / 2
+        local xInset = (minDimension*TEXTURE_SIZE - height) / 2
+        local yInset = (minDimension*TEXTURE_SIZE - width) / 2
+        ItemGridUI._drawItemRotated2(drawingContext, texture, x2 + xInset, y2 + yInset, width, height, alphaMult, r*bgBright, g*bgBright, b*bgBright)
 
-        ItemGridUI.setTextureAsCrunchy(texture)
-        ItemGridUI._drawTextureRotated(drawingContext, texture, x2 + xInset, y2 + yInset, width, height, alphaMult, r, g, b)
+        local fluidContainer = item:getFluidContainer()
+        local fluidMask = item:getTextureFluidMask()
+        if fluidContainer and fluidMask then
+            
+            local texW = texture:getWidth()
+            local texH = texture:getHeight()
+            local largestDimension = math.max(texW, texH)
+
+            local correctiveScale = 1.0
+            if largestDimension > 34 then
+                correctiveScale = 34 / largestDimension
+            end
+
+            width = fluidMask:getWidth() * targetScale * correctiveScale
+            height = fluidMask:getHeight() * targetScale * correctiveScale
+
+            local percent = fluidContainer:getAmount() / fluidContainer:getCapacity()
+            local col = fluidContainer:getColor()
+            ItemGridUI._drawMask(drawingContext, fluidMask, percent, x2 + xInset, y2 + yInset, width, height, col:getR()*bgBright, col:getG()*bgBright, col:getB()*bgBright, alphaMult * col:getAlpha(), true)
+        end
     else
-        ItemGridUI.setTextureAsCrunchy(texture)
-        drawingContext:drawTextureScaledUniform(texture, x2, y2, targetScale * correctiveScale, alphaMult, r, g, b);
+        ItemGridUI._drawItem(drawingContext, item, x2, y2, targetScale * correctiveScale, alphaMult, bgBright)
     end
 
     if item:isBroken() then
@@ -647,39 +671,172 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     TetrisEvents.OnPostRenderGridItem:trigger(drawingContext, item, stack, x, y, totalWidth, totalHeight, playerObj)
 end
 
----@param drawingContext ISUIElement
-function ItemGridUI._drawTextureRotated(drawingContext, texture, x, y, width, height, alphaMult, r, g, b)
-    -- x,y define the center of the texture
-    -- We need to rotate around the center of the texture and define each corner with a 90 degree rotation, clockwise
-    local halfWidth = width / 2
-    local halfHeight = height / 2
-
-    x = x + halfWidth
-    y = y + halfHeight
-
+-- Rotation moves the top-left corner to the top right position
+function ItemGridUI._drawItemRotated2(drawingContext, texture, x, y, width, height, alphaMult, r, g, b)
     x = x + drawingContext:getAbsoluteX()
     y = y + drawingContext:getAbsoluteY()
 
-    -- The function takes top left, top right, bottom right, bottom left
-    -- We will feed it the top right, bottom right, bottom left, top left to achieve a 90 degree clockwise rotation
+    local realScalar = math.min(width / texture:getWidthOrig(), height / texture:getHeightOrig())
+    x = x + texture:getOffsetY() * realScalar
+    y = y + texture:getOffsetX() * realScalar
 
-    -- Height and width are swapped because we're rotating the texture onto its side
-    -- We also put the top-right data into the top-left, bottom-right into top-right, etc
+    local lx = x
+    local rx = x + height
+    local ty = y
+    local by = y + width
 
-    local tlx = x + halfHeight
-    local tly = y - halfWidth
-
-    local trx = x + halfHeight
-    local try = y + halfWidth
-
-    local brx = x - halfHeight
-    local bry = y + halfWidth
-
-    local blx = x - halfHeight
-    local bly = y - halfWidth
-
-    drawingContext:drawTextureAllPoint(texture, tlx, tly, trx, try, brx, bry, blx, bly, r, g, b, alphaMult)
+    ItemGridUI.setTextureAsCrunchy(texture)
+    drawingContext:drawTextureAllPoint(
+        texture,
+        rx, ty,
+        rx, by,
+        lx, by,
+        lx, ty,
+        r, g, b, alphaMult
+    )
 end
+
+function ItemGridUI._drawItem(drawingContext, item, x, y, scale, alphaMult, brightness)
+    local r,g,b = ItemGridUI.getItemColor(item)
+    r = r * brightness
+    g = g * brightness
+    b = b * brightness
+
+    local texture = item:getTex() or HIDDEN_ITEM
+    local scalar = math.min(texture:getWidth() * scale / texture:getWidthOrig(), texture:getHeight() * scale / texture:getHeightOrig())
+
+    local itemX = x + texture:getOffsetX() * scalar
+    local itemY = y + texture:getOffsetY() * scalar
+
+    ItemGridUI.setTextureAsCrunchy(texture)
+    drawingContext:drawTextureScaledUniform(texture, itemX, itemY, scale, alphaMult, r, g, b);
+
+    local fluidContainer = item:getFluidContainer()
+    local fluidMask = item:getTextureFluidMask()
+    if fluidContainer and fluidMask then
+        local col = fluidContainer:getColor()
+        local percent = fluidContainer:getAmount() / fluidContainer:getCapacity()
+        ItemGridUI.setTextureAsCrunchy(fluidMask)
+        ItemGridUI._drawMask(drawingContext, fluidMask, percent, x, y, fluidMask:getWidth()*scale, fluidMask:getHeight()*scale, col:getR(), col:getG(), col:getB(), alphaMult * col:getAlpha());
+    end
+end
+
+local function rotateUVs(
+    tlX, tlY,
+    trX, trY,
+    brX, brY,
+    blX, blY,
+    rotation, texture
+)
+
+    local sinTheta = math.sin(rotation)
+    local cosTheta = math.cos(rotation)
+
+    local centerX = texture:getXEnd() - (texture:getXEnd() - texture:getXStart()) / 2
+    local centerY = texture:getYEnd() - (texture:getYEnd() - texture:getYStart()) / 2
+
+    -- Localize the points
+    local tlX = tlX - centerX
+    local tlY = tlY - centerY
+    local trX = trX - centerX
+    local trY = trY - centerY
+    local brX = brX - centerX
+    local brY = brY - centerY
+    local blX = blX - centerX
+    local blY = blY - centerY
+
+    -- Rotate the points
+    local tlX2 = tlX * cosTheta - tlY * sinTheta
+    local tlY2 = tlX * sinTheta + tlY * cosTheta
+    local trX2 = trX * cosTheta - trY * sinTheta
+    local trY2 = trX * sinTheta + trY * cosTheta
+    local brX2 = brX * cosTheta - brY * sinTheta
+    local brY2 = brX * sinTheta + brY * cosTheta
+    local blX2 = blX * cosTheta - blY * sinTheta
+    local blY2 = blX * sinTheta + blY * cosTheta
+
+    return
+        tlX2 + centerX, tlY2 + centerY,
+        trX2 + centerX, trY2 + centerY,
+        brX2 + centerX, brY2 + centerY,
+        blX2 + centerX, blY2 + centerY
+end
+
+-- Ripped directly from the Java and modified a bit
+function ItemGridUI._drawMask(drawingContext, texture, percentage, x, y, w, h, r, g, b, a, rotate)
+    local realX = x + drawingContext:getAbsoluteX();
+    local realY = y + drawingContext:getAbsoluteY();
+    local hPercent;
+    local cutoffH;
+
+    local texW = texture:getWidth()
+    local texH = texture:getHeight()
+
+    if (texW > 0 and texH > 0 and w > 0.0 and h > 0.0) then
+        local realScalar = math.min(w / texture:getWidthOrig(), h / texture:getHeightOrig());
+
+        local insetX = (texture:getOffsetX() * realScalar);
+        local insetY = (texture:getOffsetY() * realScalar);
+
+        if rotate then
+            local temp = insetX;
+            insetX = insetY;
+            insetY = temp;
+        end
+
+        realX = realX + insetX;
+        realY = realY + insetY;
+    end
+
+    percentage = PZMath.max(0.15, percentage);
+    hPercent = math.floor((h * percentage));
+    realY = realY + h - hPercent;
+    h = hPercent;
+    hPercent = math.floor((texH * percentage));
+    cutoffH = texH - hPercent;
+
+    local texStartX = texture:getXStart();
+    local texStartY = texture:getYStart();
+    local texEndX = texture:getXEnd();
+    local texEndY = texture:getYEnd();
+
+    if (not (realY + h < 0.0) and not (realY > 4096.0)) then
+        local left = 0.0
+        local top = PZMath.clamp(cutoffH, 0.0, texH);
+        local right = PZMath.clamp((left + texW), 0.0, texW) - left;
+        local bottom = PZMath.clamp((top + hPercent), 0.0, texH) - top;
+        local lX = left / texW;
+        local tY = top / texH;
+        local rX = (left + right) / texW;
+        local bY = (top + bottom) / texH;
+        local texWidth = texEndX - texStartX;
+        local texHeight = texEndY - texStartY;
+
+        lX = texStartX + lX * texWidth;
+        rX = texStartX + rX * texWidth;
+        tY = texStartY + tY * texHeight;
+        bY = texStartY + bY * texHeight;
+
+
+        local tlX = lX
+        local tlY = tY
+        local trX = rX
+        local trY = tY
+        local brX = rX
+        local brY = bY
+        local blX = lX
+        local blY = bY
+
+        if rotate then
+            tlX, tlY, trX, trY, brX, brY, blX, blY = rotateUVs(tlX, tlY, trX, trY, brX, brY, blX, blY, math.rad(-90), texture)
+        end
+
+        SpriteRenderer.instance:render(texture, realX, realY, w, h, r, g, b, a, tlX, tlY, trX, trY, brX, brY, blX, blY)
+    end
+
+end
+
+
 
 function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x, y, alphaMult, force1x1)
     local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
