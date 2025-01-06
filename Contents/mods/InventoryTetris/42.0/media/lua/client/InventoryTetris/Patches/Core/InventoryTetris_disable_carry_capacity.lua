@@ -36,7 +36,9 @@ local function disableCarryWeightOnContainer(container, callback, ...)
         return callback(...)
     end
 
-    container:setCapacity(49) -- 49 so we don't match the real floor's key of floor_50
+    if originalCapacity == 50 then
+        container:setCapacity(49) -- 49 so we don't match the real floor's key of floor_50
+    end
     container:setType("floor") -- Pretend we're the floor
     TetrisContainerData.setContainerDefinition(container, containerDef)
 
@@ -44,7 +46,9 @@ local function disableCarryWeightOnContainer(container, callback, ...)
 
     TetrisContainerData.setContainerDefinition(container, nil)
     container:setType(originalType)
-    container:setCapacity(originalCapacity)
+    if originalCapacity == 50 then
+        container:setCapacity(originalCapacity)
+    end
 
     if results[1] then
         return unpack(results, 2)
