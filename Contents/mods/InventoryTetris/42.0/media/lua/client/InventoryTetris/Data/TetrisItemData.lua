@@ -66,6 +66,10 @@ end
 
 
 function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
+    if fType == "Base.CorpseAnimal" then
+        fType = fType .. tostring(item:getActualWeight())
+    end
+
     local devToolOverride = TetrisDevTool.getItemOverride(fType)
     if devToolOverride then
         return devToolOverride

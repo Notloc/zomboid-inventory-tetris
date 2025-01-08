@@ -45,6 +45,6 @@ function DragItemRenderer:render()
     end
 
     self:suspendStencil()
-    ItemGridUI._renderGridItem(self, playerObj, item, ItemStack.createTempStack(item), xPos, yPos, DragAndDrop.isDraggedItemRotated(), 1, force1x1)
+    ItemGridUI._renderGridItem(self, playerObj, item, ItemStack.createTempStack(item), xPos, yPos, itemW, itemH, DragAndDrop.isDraggedItemRotated(), 1, force1x1)
     self:resumeStencil()
 end

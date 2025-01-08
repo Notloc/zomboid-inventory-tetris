@@ -1,13 +1,7 @@
 -- A quick and drity tool used for adjusting item and container data in-game and exporting directly into a formatted lua file
-
 local OPT = require("InventoryTetris/Settings")
 local JSON = require("InventoryTetris/Dev/JSON.lua")
 local ContextUtil = require("Notloc/ContextUtil")
-
-local globalIsDebugEnabled = isDebugEnabled
-local isDebugEnabled = function()
-    return globalIsDebugEnabled() or SandboxVars.InventoryTetris.DevMode
-end
 
 local function copyTable(from, to)
     for k,v in pairs(from) do
@@ -64,7 +58,29 @@ local function writeText(fileName, text)
 end
 
 
+
+local ITEM_FILENAME = "InventoryTetris_ItemData"
+local CONTAINER_FILENAME = "InventoryTetris_ContainerData"
+local POCKET_FILENAME = "InventoryTetris_PocketData"
+
+Events.OnInitGlobalModData.Add(function()
+    if TetrisDevTool.isDebugEnabled() then
+        TetrisDevTool.itemEdits = readJsonFile(ITEM_FILENAME..".json") or {};
+        TetrisDevTool.containerEdits = readJsonFile(CONTAINER_FILENAME..".json") or {};
+        TetrisDevTool.pocketEdits = readJsonFile(POCKET_FILENAME..".json") or {};
+    else
+        TetrisDevTool.itemEdits = {}
+        TetrisDevTool.containerEdits = {}
+        TetrisDevTool.pocketEdits = {}
+    end
+end)
+
+
 TetrisDevTool = {}
+
+function TetrisDevTool.isDebugEnabled()
+    return isDebugEnabled() or SandboxVars.InventoryTetris.DevMode
+end
 
 TetrisDevTool.writeText = writeText;
 
@@ -72,43 +88,29 @@ TetrisDevTool.disableItemOverrides = false;
 TetrisDevTool.disableContainerOverrides = false;
 
 function TetrisDevTool.getContainerOverride(key)
-    if TetrisDevTool.disableContainerOverrides or not isDebugEnabled() then
+    if TetrisDevTool.disableContainerOverrides or not TetrisDevTool.isDebugEnabled() then
         return nil;
     end
     return TetrisDevTool.containerEdits[key];
 end
 
 function TetrisDevTool.getItemOverride(key)
-    if TetrisDevTool.disableItemOverrides or not isDebugEnabled() then
+    if TetrisDevTool.disableItemOverrides or not TetrisDevTool.isDebugEnabled() then
         return nil;
     end
     return TetrisDevTool.itemEdits[key];
 end
 
 function TetrisDevTool.getPocketOverride(key)
-    if TetrisDevTool.disableItemOverrides or not isDebugEnabled() then
+    if TetrisDevTool.disableItemOverrides or not TetrisDevTool.isDebugEnabled() then
         return nil;
     end
     return TetrisDevTool.pocketEdits[key];
 end
 
-local ITEM_FILENAME = "InventoryTetris_ItemData"
-local CONTAINER_FILENAME = "InventoryTetris_ContainerData"
-local POCKET_FILENAME = "InventoryTetris_PocketData"
-
-if isDebugEnabled() then
-    TetrisDevTool.itemEdits = readJsonFile(ITEM_FILENAME..".json") or {};
-    TetrisDevTool.containerEdits = readJsonFile(CONTAINER_FILENAME..".json") or {};
-    TetrisDevTool.pocketEdits = readJsonFile(POCKET_FILENAME..".json") or {};
-else
-    TetrisDevTool.itemEdits = {}
-    TetrisDevTool.containerEdits = {}
-    TetrisDevTool.pocketEdits = {}
-end
-
 ---@param context ISContextMenu
 function TetrisDevTool.insertDebugOptions(context, item)
-    if not isDebugEnabled() then
+    if not TetrisDevTool.isDebugEnabled() then
         return;
     end
 
@@ -201,7 +203,7 @@ end
 
 ---@param context ISContextMenu
 function TetrisDevTool.insertContainerDebugOptions(context, containerUi)
-    if not isDebugEnabled() then
+    if not TetrisDevTool.isDebugEnabled() then
         return;
     end
 
@@ -1287,7 +1289,7 @@ if not TetrisDevTool.og_createMenu then
     ---@diagnostic disable-next-line: duplicate-set-field
     ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
         local menu = TetrisDevTool.og_createMenu(player, isInPlayerInventory, items, x, y, origin)
-        if not isDebugEnabled() then return menu end
+        if not TetrisDevTool.isDebugEnabled() then return menu end
 
         local item = items[1]
         if not item then return menu end

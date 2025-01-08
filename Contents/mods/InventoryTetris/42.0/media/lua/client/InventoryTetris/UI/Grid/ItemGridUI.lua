@@ -21,6 +21,7 @@ function ItemGridUI:new(grid, containerGrid, inventoryPane, playerNum)
     o.containerGrid = containerGrid
     o.inventoryPane = inventoryPane
     o.playerNum = playerNum
+    o.playerObj = getSpecificPlayer(playerNum)
 
     o:setWidth(o:calculateWidth())
     o:setHeight(o:calculateHeight())

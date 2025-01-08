@@ -16,6 +16,7 @@ TetrisItemCategory = {
     MISC = "MISC",
     SEED = "SEED",
     MOVEABLE = "MOVEABLE",
+    CORPSEANIMAL = "CORPSEANIMAL",
 }
 
 local list = {}
@@ -32,6 +33,9 @@ function TetrisItemCategory.getCategory(item)
 
     if instanceof(item, "Moveable") then
         return TetrisItemCategory.MOVEABLE
+
+    elseif type == "Base.CorpseAnimal" then
+        return TetrisItemCategory.CORPSEANIMAL
 
     elseif item:IsInventoryContainer() then
         return TetrisItemCategory.CONTAINER

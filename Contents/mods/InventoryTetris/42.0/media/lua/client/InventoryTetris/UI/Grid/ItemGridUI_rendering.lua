@@ -22,6 +22,8 @@ local GridLineTexturesByScale = {
     [4] = getTexture("media/textures/InventoryTetris/Grid/GridLineX4.png")
 }
 
+local MEDIA_CHECKMARK_TEX = getTexture("media/ui/Tick_Mark-10.png")
+
 -- Color code the items by category
 local colorsByCategory = {
     [TetrisItemCategory.MELEE] = {0.95, 0.15, 0.7},
@@ -39,6 +41,7 @@ local colorsByCategory = {
     [TetrisItemCategory.MISC] = {0.5, 0.5, 0.5},
     [TetrisItemCategory.SEED] = {0.5, 0.5, 0.5},
     [TetrisItemCategory.MOVEABLE] = {0.7, 0.7, 0.7},
+    [TetrisItemCategory.CORPSEANIMAL] = {0.7, 0.7, 0.7}
 }
 
 -- When hover a stack over a stack that has an interaction handler, color the hovered stack with this color (or the interaction handler's color if it has one)
@@ -211,13 +214,15 @@ end
 
 function ItemGridUI:renderIncomingTransfers()
     local incomingActions = self.itemTransferData:getIncomingActions(self.grid.inventory, self.grid.gridKey)
-    local playerObj = getSpecificPlayer(self.playerNum)
 
     for item, action in pairs(incomingActions) do
         local stack = ItemStack.createTempStack(action.item)
         local item = action.item
         if action.gridX and action.gridY then
-            ItemGridUI._renderGridItem(self, playerObj, item, stack, action.gridX * OPT.CELL_SIZE - action.gridX, action.gridY * OPT.CELL_SIZE - action.gridY, action.isRotated, 0.18, false, false)
+            local x = action.gridX * OPT.CELL_SIZE - action.gridX
+            local y = action.gridY * OPT.CELL_SIZE - action.gridY
+            local w, h = TetrisItemData.getItemSize(item, action.isRotated)
+            ItemGridUI._renderGridItem(self, self.playerObj, item, stack, x, y, w, h, action.isRotated, 0.18, false)
         end
     end
 end
@@ -271,7 +276,6 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local isJoypad = JoypadState.players[self.playerNum+1]
     local draggedItem = isJoypad and ControllerDragAndDrop.getDraggedItem(self.playerNum) or DragAndDrop.getDraggedItem()
 
-    local playerObj = getSpecificPlayer(self.playerNum)
     local transferQueueData = self.itemTransferData
 
     local count = #stacks
@@ -297,15 +301,15 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                 if searchSession then
                     local revealed = searchSession.searchedStackIDs[item:getID()]
                     if revealed then
-                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult * transferAlpha, false, isBuried)
+                        self:_renderGridStack(self.playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult * transferAlpha, false, isBuried)
                     else
-                        self:_renderHiddenStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false)
+                        self:_renderHiddenStack(self.playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false)
                     end
                 else
                     if item ~= draggedItem then
-                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult * transferAlpha, false, isBuried)
+                        self:_renderGridStack(self.playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult * transferAlpha, false, isBuried)
                     else
-                        self:_renderGridStack(playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult * transferAlpha, false, isBuried)
+                        self:_renderGridStack(self.playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult * transferAlpha, false, isBuried)
                     end
                 end
             end
@@ -378,9 +382,10 @@ function ItemGridUI:_renderControllerDrag(opacity)
         local item = ControllerDragAndDrop.getDraggedItem(self.playerNum)
         local stack = ControllerDragAndDrop.getDraggedTetrisStack(self.playerNum)
         local isRotated = ControllerDragAndDrop.isDraggedItemRotated(self.playerNum)
-        local gridX, gridY = self.selectedX, self.selectedY
-        local player = getSpecificPlayer(self.playerNum)
-        self:_renderGridItem(player, item, stack, gridX * OPT.CELL_SIZE - gridX, gridY * OPT.CELL_SIZE - gridY, isRotated, opacity, false, false)
+        local x = self.selectedX * OPT.CELL_SIZE - self.selectedX
+        local y = self.selectedY * OPT.CELL_SIZE - self.selectedY
+        local w, h = TetrisItemData.getItemSize(item, isRotated)
+        self:_renderGridItem(self.playerObj, item, stack, x, y, w, h, isRotated, opacity, false)
     end
 end
 
@@ -422,6 +427,21 @@ function ItemGridUI.getMaskColor(item)
     return r,g,b
 end
 
+ItemGridUI.doLiteratureCheckmark = true
+
+function ItemGridUI._showLiteratureCheckmark(player, item)
+    return
+        ItemGridUI.doLiteratureCheckmark and
+        instanceof(item,"Literature") and
+        (
+            (player:isLiteratureRead(item:getModData().literatureTitle)) or
+            (SkillBook[item:getSkillTrained()] ~= nil and item:getMaxLevelTrained() < player:getPerkLevel(SkillBook[item:getSkillTrained()].perk) + 1) or
+            (item:getNumberOfPages() > 0 and player:getAlreadyReadPages(item:getFullType()) == item:getNumberOfPages()) or
+            (item:getTeachedRecipes() ~= nil and player:getKnownRecipes():containsAll(item:getTeachedRecipes())) or
+            (item:getModData().teachedRecipe ~= nil and player:getKnownRecipes():contains(item:getModData().teachedRecipe))
+        )
+end
+
 ---comment
 ---@param drawingContext any
 ---@param playerObj any
@@ -433,7 +453,13 @@ end
 ---@param force1x1 any
 ---@param isBuried any
 function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, alphaMult, force1x1, isBuried)
-    ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, stack.isRotated, alphaMult, force1x1, isBuried)
+    local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
+    if force1x1 then
+        w, h = 1, 1
+    end
+
+    ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, w, h, stack.isRotated, alphaMult, isBuried)
+
     if stack.count > 1 then
         local text = tostring(stack.count)
         ItemGridUI._drawTextOnTopLeft(drawingContext, text, item, x, y, stack.isRotated, alphaMult, force1x1)
@@ -459,15 +485,21 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         local percent = fluidContainer:getAmount() / fluidContainer:getCapacity()
         if percent > 0 then
             local color = fluidContainer:getColor()
-            ItemGridUI._drawVerticalBarWithColor(drawingContext, percent, item, x, y, stack.isRotated, alphaMult, force1x1, color:getAlpha(), color:getR(), color:getG(), color:getB())
+            ItemGridUI._drawVerticalBarWithColor(drawingContext, percent, x, y, w, h, alphaMult, color:getAlpha(), color:getR(), color:getG(), color:getB())
         end
     elseif stack.category == TetrisItemCategory.CONTAINER then
         if TetrisItemData.isSquished(item) then
-            local w,h = TetrisItemData.getItemSize(item, stack.isRotated)
             local x2 = x + OPT.CELL_SIZE*w - w - 16
             local y2 = y + 1
             drawingContext:drawTexture(SQUISHED_TEXTURE, x2, y2, alphaMult, 1, 1, 1);
         end
+    end
+
+    if ItemGridUI._showLiteratureCheckmark(playerObj, item) then
+        -- bottom right
+        local x2 = x + OPT.CELL_SIZE*w - w - 16
+        local y2 = y + OPT.CELL_SIZE*h - h - 16
+        drawingContext:drawTexture(MEDIA_CHECKMARK_TEX, x2, y2, 1, 1, 1, 1);
     end
 end
 
@@ -547,14 +579,7 @@ function ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, isRota
     drawingContext:drawRect(x, top + missing, 2, bottom - top - missing, alphaMult*a,r,g,b)
 end
 
-function ItemGridUI._drawVerticalBarWithColor(drawingContext, percent, item, x, y, isRotated, alphaMult, force1x1, a,r,g,b)
-    local font = UIFont.Small
-
-    local w,h = 1,1
-    if not force1x1 then
-        w,h = TetrisItemData.getItemSize(item, isRotated)
-    end
-
+function ItemGridUI._drawVerticalBarWithColor(drawingContext, percent, x, y, w, h, alphaMult, a,r,g,b)
     x = x + OPT.CELL_SIZE*w - w - 3
     local top = y + 1
     local bottom = y + OPT.CELL_SIZE*h - h+1
@@ -589,15 +614,10 @@ function ItemGridUI.setTextureAsCrunchy(texture)
 end
 
 ---@param drawingContext ISUIElement
-function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, rotate, alphaMult, force1x1, isBuried)
-    local w, h = TetrisItemData.getItemSize(item, rotate)
+function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, w, h, rotate, alphaMult, isBuried)
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
     local TEXTURE_PAD = OPT.TEXTURE_PAD
-
-    if force1x1 then
-        w, h = 1, 1
-    end
 
     local bgBright = isBuried and 0.35 or 1
 
@@ -741,14 +761,6 @@ function ItemGridUI._drawTextureScaledAndRotated(drawingContext, texture, x, y, 
 
     return centerX - drawingContext:getAbsoluteX(), centerY - drawingContext:getAbsoluteY()
 end
-
-
-function ItemGridUI._drawItemReference(drawingContext, item, x, y, scale)
-    local tex = item:getTex() or HIDDEN_ITEM
-    local texW = tex:getWidth()
-    local texH = tex:getHeight()
-    ISInventoryItem.renderItemIcon(drawingContext, item, x, y, 1, 64, 64)
-end 
 
 function ItemGridUI._drawItem(drawingContext, item, x, y, scale, alphaMult, brightness, rotated)
     local r,g,b = ItemGridUI.getItemColor(item)

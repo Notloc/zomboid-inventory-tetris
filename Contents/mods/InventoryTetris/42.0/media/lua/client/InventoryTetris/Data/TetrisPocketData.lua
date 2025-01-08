@@ -199,7 +199,7 @@ function TetrisPocketData.getPocketDefinition(item)
     end
 
     local key = item:getFullType()
-    if isDebugEnabled() and TetrisDevTool.getPocketOverride(key) then
+    if TetrisDevTool.getPocketOverride(key) then
         return TetrisDevTool.getPocketOverride(key)
     end
 

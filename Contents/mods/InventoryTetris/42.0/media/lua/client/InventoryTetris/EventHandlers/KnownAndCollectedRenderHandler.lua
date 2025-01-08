@@ -10,6 +10,7 @@ local SETTINGS = require("InventoryTetris/Settings")
 Events.OnGameBoot.Add(function()
     ---@diagnostic disable-next-line: undefined-global
     KnownAndCollected:disableRender()
+    ItemGridUI.doLiteratureCheckmark = false
 end)
 
 local collectedTex = {
@@ -133,7 +134,7 @@ function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridSta
                 unKnownFlier = true
             end
         else
-            title = item:getModData().literatureTitle
+            local title = item:getModData().literatureTitle
             unKnownEntertainment = title and not playerObj:isLiteratureRead(title)
 
             if title and not kAC.isCollected(kAC,title) then
