@@ -36,9 +36,16 @@ function ItemStack.createTempStack(item)
 end
 
 function ItemStack.getFrontItem(stack, inventory)
+    if stack._frontItem and stack._frontItem:getContainer() == inventory then
+        return stack._frontItem
+    end
+
     for itemID, _ in pairs(stack.itemIDs) do
         local item = inventory:getItemById(itemID)
-        if item then return item end
+        if item then
+            stack._frontItem = item
+            return item
+        end
     end
     return nil
 end

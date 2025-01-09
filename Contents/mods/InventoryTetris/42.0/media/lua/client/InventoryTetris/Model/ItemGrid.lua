@@ -487,10 +487,10 @@ function ItemGrid:_validateStackList(stacks, skipBounds)
             if newStack.count > 0 then
                 table.insert(validatedStacks, newStack)
             end
-            self:_sendModData()
         end
     end
 
+    self:_sendModData()
     return validatedStacks
 end
 

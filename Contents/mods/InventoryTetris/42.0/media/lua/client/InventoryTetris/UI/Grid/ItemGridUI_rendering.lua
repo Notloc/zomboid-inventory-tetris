@@ -229,9 +229,7 @@ end
 
 -- The vanilla inventory render is also in charge of aging and drying items, so we need to do that here as well
 function ItemGridUI.updateItem(item)
-    if instanceof(item, 'InventoryItem') then
-        item:updateAge()
-    end
+    item:updateAge()
     if instanceof(item, 'Clothing') then
         item:updateWetness()
     end
@@ -279,7 +277,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local transferQueueData = self.itemTransferData
 
     local count = #stacks
-    for i=count,1,-1 do
+    for i=1,count do
         local stack = stacks[i]
         local item = ItemStack.getFrontItem(stack, inventory)
 
@@ -603,7 +601,6 @@ function ItemGridUI.setTextureAsCrunchy(texture)
     local NEAREST = 9728
     SpriteRenderer.instance:glBind(texture:getID());
     SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, MAG_FILTER, NEAREST);
-    --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, MIN_FILTER, NEAREST); Is a bit hit or miss on improving the quality of textures, so I'm leaving it out for now
 
     -- Fixes pixel bleeding on the edge of textures from other mods
     local TEXTURE_WRAP_S = 10242
@@ -619,9 +616,9 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
     local TEXTURE_PAD = OPT.TEXTURE_PAD
 
+    local minDimension = math.min(w, h)
     local bgBright = isBuried and 0.35 or 1
 
-    local minDimension = math.min(w, h)
     drawingContext:drawRect(x+1, y+1, w * CELL_SIZE - w - 1, h * CELL_SIZE - h - 1, 0.3 * alphaMult, unpackColors(colorsByCategory[stack.category], bgBright))
 
     local texture = item:getTex() or HIDDEN_ITEM
@@ -778,8 +775,10 @@ function ItemGridUI._drawItem(drawingContext, item, x, y, scale, alphaMult, brig
     if fluidContainer and fluidMask then
         local col = fluidContainer:getColor()
         local percent = fluidContainer:getAmount() / fluidContainer:getCapacity()
-        ItemGridUI.setTextureAsCrunchy(fluidMask)
-        ItemGridUI._drawMask(drawingContext, fluidMask, percent, x, y, col:getR(), col:getG(), col:getB(), alphaMult * col:getAlpha(), scale, rotated, centerX, centerY);
+        if percent > 0 then
+            ItemGridUI.setTextureAsCrunchy(fluidMask)
+            ItemGridUI._drawMask(drawingContext, fluidMask, percent, x, y, col:getR(), col:getG(), col:getB(), alphaMult * col:getAlpha(), scale, rotated, centerX, centerY);
+        end
     end
 
     local colorMask = item:getTextureColorMask()
