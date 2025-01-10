@@ -12,12 +12,13 @@ ItemGridUI = ISPanel:derive("ItemGridUI")
 ---@param inventoryPane ISInventoryPane
 ---@param playerNum number
 ---@return ItemGridUI
-function ItemGridUI:new(grid, containerGrid, inventoryPane, playerNum)
+function ItemGridUI:new(grid, containerUi, containerGrid, inventoryPane, playerNum)
     local o = ISPanel:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
 
     o.grid = grid
+    o.containerUi = containerUi
     o.containerGrid = containerGrid
     o.inventoryPane = inventoryPane
     o.playerNum = playerNum

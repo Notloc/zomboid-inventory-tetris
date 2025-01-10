@@ -284,7 +284,7 @@ end
 function ItemGridContainerUI:createItemGridUIs(grids, secondaryKey)
     local uis = {}
     for _, grid in ipairs(grids) do
-        local itemGridUI = ItemGridUI:new(grid, self.containerGrid, self.inventoryPane, self.playerNum)
+        local itemGridUI = ItemGridUI:new(grid, self, self.containerGrid, self.inventoryPane, self.playerNum)
         itemGridUI:initialise()
         table.insert(uis, itemGridUI)
     end

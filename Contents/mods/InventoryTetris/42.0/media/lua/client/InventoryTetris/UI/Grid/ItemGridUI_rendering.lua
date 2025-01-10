@@ -278,11 +278,20 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 
     local transferQueueData = self.itemTransferData
 
+    local yCorrection = 0
+    local yCullBottom = 0
+    local yCullTop = 9999
+
+    if not self.containerUi.isPopup then
+        yCorrection = self:getY() + self.parent:getY() + self.parent.parent:getY() + self.parent.parent.parent:getY() - self.inventoryPane.scrollView:getYScroll()
+        yCullBottom = -self.inventoryPane.scrollView:getYScroll() - yCorrection
+        yCullTop = yCullBottom + self.inventoryPane.scrollView:getHeight()
+    end
+
     local count = #stacks
     for i=1,count do
-        local stack = stacks[i]
+        local stack = stacks[i]        
         local item = ItemStack.getFrontItem(stack, inventory)
-
         if item then
             if stack.count > 1 and stack.category == TetrisItemCategory.FOOD then
                 for itemId, _ in pairs(stack.itemIDs) do
@@ -295,22 +304,31 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 
             local x, y = stack.x, stack.y
             if x and y then
-                local isBuried = gravityEnabled and self.grid:isStackBuried(stack)
+                local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
+                local uiX = x * CELL_SIZE - x
+                local uiY = y * CELL_SIZE - y
 
-                local transferAlpha = transferQueueData:getOutgoingActions(inventory)[item] and 0.4 or 1
-                if searchSession then
-                    local revealed = searchSession.searchedStackIDs[item:getID()]
-                    if revealed then
-                        self:_renderGridStack(self.playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult * transferAlpha, false, isBuried)
+                local shouldCull = not self.containerUi.isPopup and (uiY + h * CELL_SIZE - h < yCullBottom or uiY > yCullTop)
+
+                if not shouldCull then
+                    local isBuried = gravityEnabled and self.grid:isStackBuried(stack)
+                    local transferAlpha = transferQueueData:getOutgoingActions(inventory)[item] and 0.4 or 1
+                    if searchSession then
+                        local revealed = searchSession.searchedStackIDs[item:getID()]
+                        if revealed then
+                            self:_renderGridStack(self.playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, isBuried)
+                        else
+                            self:_renderHiddenStack(self.playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult)
+                        end
                     else
-                        self:_renderHiddenStack(self.playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult, false)
+                        if item ~= draggedItem then
+                            self:_renderGridStack(self.playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, isBuried)
+                        else
+                            self:_renderGridStack(self.playerObj, stack, item, uiX, uiY, w, h, 0.4 * alphaMult * transferAlpha, isBuried)
+                        end
                     end
                 else
-                    if item ~= draggedItem then
-                        self:_renderGridStack(self.playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 1 * alphaMult * transferAlpha, false, isBuried)
-                    else
-                        self:_renderGridStack(self.playerObj, stack, item, x * CELL_SIZE - x, y * CELL_SIZE - y, 0.4 * alphaMult * transferAlpha, false, isBuried)
-                    end
+                    local hi = 1
                 end
             end
         end
@@ -452,12 +470,7 @@ end
 ---@param alphaMult any
 ---@param force1x1 any
 ---@param isBuried any
-function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, alphaMult, force1x1, isBuried)
-    local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
-    if force1x1 then
-        w, h = 1, 1
-    end
-
+function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isBuried)
     ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, w, h, stack.isRotated, alphaMult, isBuried)
 
     if stack.count > 1 then
@@ -854,12 +867,7 @@ end
 
 
 
-function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x, y, alphaMult, force1x1)
-    local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
-    if force1x1 then
-        w, h = 1, 1
-    end
-
+function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult)
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
     local TEXTURE_PAD = OPT.TEXTURE_PAD

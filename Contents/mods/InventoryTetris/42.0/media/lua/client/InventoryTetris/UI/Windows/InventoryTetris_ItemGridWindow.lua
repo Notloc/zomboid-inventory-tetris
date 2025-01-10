@@ -87,6 +87,7 @@ function ItemGridWindow:createChildren()
     gridContainerUi.showTitle = false
     gridContainerUi:initialise()
     gridContainerUi:setY(titleBarHeight)
+    gridContainerUi.isPopup = true
     self:addChild(gridContainerUi)
     self.gridContainerUi = gridContainerUi
 
