@@ -3,10 +3,9 @@ local EasyOptionType = {
     HIDDEN = "hidden",
     DROPDOWN = "dropdown",
     CHECKBOX = "checkbox",
+    TITLE = "title",
+    DESCRIPTION = "description",
+    SEPARATOR = "separator",
 }
-
-EasyOptionType.isModOptionsSupported = function(type)
-    return type == EasyOptionType.DROPDOWN or type == EasyOptionType.CHECKBOX
-end
 
 return EasyOptionType

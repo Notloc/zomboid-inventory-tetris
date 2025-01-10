@@ -8,6 +8,8 @@ TetrisItemData._itemData = {}
 TetrisItemData._itemDataPacks = {}
 TetrisItemData._alwaysStackOnSpawnItems = {}
 
+TetrisItemData._dynamicSizeItems = {["Base.CorpseAnimal"] = true}
+
 function TetrisItemData.getItemSize(item, isRotated)
     local data = TetrisItemData._getItemData(item)
     if isRotated then
@@ -66,7 +68,7 @@ end
 
 
 function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
-    if fType == "Base.CorpseAnimal" then
+    if TetrisItemData._dynamicSizeItems[fType] then
         fType = fType .. tostring(item:getActualWeight())
     end
 

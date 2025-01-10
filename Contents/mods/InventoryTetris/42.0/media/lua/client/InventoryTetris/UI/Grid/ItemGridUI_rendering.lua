@@ -468,30 +468,28 @@ end
 ---@param x any
 ---@param y any
 ---@param alphaMult any
----@param force1x1 any
 ---@param isBuried any
 function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isBuried)
     ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, w, h, stack.isRotated, alphaMult, isBuried)
 
+    local doShadow = OPT.DO_STACK_SHADOWS
+
     if stack.count > 1 then
         local text = tostring(stack.count)
-        ItemGridUI._drawTextOnTopLeft(drawingContext, text, item, x, y, stack.isRotated, alphaMult, force1x1)
+        ItemGridUI._drawTextOnTopLeft(drawingContext, text, x, y, alphaMult, doShadow)
     end
 
-    if item:getMaxAmmo() > 0 then
-        local text = tostring(item:getCurrentAmmoCount())
-        ItemGridUI._drawTextOnBottomRight(drawingContext, text, item, x, y, stack.isRotated, alphaMult, force1x1)
-    elseif item:IsFood() then
+    if item:IsFood() then
         ---@cast item Food
         local percent = item:getHungerChange() / item:getBaseHunger()
         if percent < 1.0 then
-            ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, stack.isRotated, alphaMult, force1x1)
+            ItemGridUI._drawVerticalBar(drawingContext, percent, x, y, w, h, alphaMult)
         end
     elseif item:IsDrainable() then
         ---@cast item DrainableComboItem
         local percent = item:getCurrentUses() / item:getMaxUses()
         if percent < 1.0 then
-            ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, stack.isRotated, alphaMult, force1x1)
+            ItemGridUI._drawVerticalBar(drawingContext, percent, x, y, w, h, alphaMult)
         end
     elseif item:getFluidContainer() then
         local fluidContainer = item:getFluidContainer()
@@ -506,9 +504,10 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
             local y2 = y + 1
             drawingContext:drawTexture(SQUISHED_TEXTURE, x2, y2, alphaMult, 1, 1, 1);
         end
-    end
-
-    if ItemGridUI._showLiteratureCheckmark(playerObj, item) then
+    elseif item:getMaxAmmo() > 0 then
+        local text = tostring(item:getCurrentAmmoCount())
+        ItemGridUI._drawTextOnBottomRight(drawingContext, text, x, y, w, h, alphaMult, doShadow)
+    elseif ItemGridUI._showLiteratureCheckmark(playerObj, item) then
         -- bottom right
         local x2 = x + OPT.CELL_SIZE*w - w - 16
         local y2 = y + OPT.CELL_SIZE*h - h - 16
@@ -516,33 +515,26 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
     end
 end
 
-function ItemGridUI._drawTextOnBottomRight(drawingContext, text, item, x, y, isRotated, alphaMult, force1x1)
+function ItemGridUI._drawTextOnBottomRight(drawingContext, text, x, y, w, h, alphaMult, doShadow)
     local font = UIFont.Small
-
-    local w,h = 1,1
-    if not force1x1 then
-        w,h = TetrisItemData.getItemSize(item, isRotated)
-    end
 
     x = x + OPT.CELL_SIZE*w - w - 2
     y = y + OPT.CELL_SIZE*h - h - ItemGridUI.lineHeight - 1
 
-    drawingContext:drawTextRight(text, x+1, y+1, 0, 0, 0, alphaMult, font)
+    if doShadow then
+        drawingContext:drawTextRight(text, x+1, y+1, 0, 0, 0, alphaMult, font)
+    end
     drawingContext:drawTextRight(text, x, y, 1, 1, 1, alphaMult, font)
 end
 
-function ItemGridUI._drawTextOnTopLeft(drawingContext, text, item, x, y, isRotated, alphaMult, force1x1)
+function ItemGridUI._drawTextOnTopLeft(drawingContext, text, x, y, alphaMult, doShadow)
     local font = UIFont.Small
-
-    local w,h = 1,1
-    if not force1x1 then
-        w,h = TetrisItemData.getItemSize(item, isRotated)
-    end
-
     x = x + 2
     y = y - 1
 
-    drawingContext:drawText(text, x+1, y+1, 0, 0, 0, alphaMult, font)
+    if doShadow then
+        drawingContext:drawText(text, x+1, y+1, 0, 0, 0, alphaMult, font)
+    end
     drawingContext:drawText(text, x, y, 1, 1, 1, alphaMult, font)
 end
 
@@ -574,14 +566,7 @@ end
 local fullCol = {r=0, g=1,b=1,a=1}
 local halfCol = {r=1,g=1,b=0,a=1}
 local emptyCol = {r=1,g=0,b=0,a=1}
-function ItemGridUI._drawVerticalBar(drawingContext, percent, item, x, y, isRotated, alphaMult, force1x1)
-    local font = UIFont.Small
-
-    local w,h = 1,1
-    if not force1x1 then
-        w,h = TetrisItemData.getItemSize(item, isRotated)
-    end
-
+function ItemGridUI._drawVerticalBar(drawingContext, percent, x, y, w, h, alphaMult)
     x = x + OPT.CELL_SIZE*w - w - 3
     local top = y + 1
     local bottom = y + OPT.CELL_SIZE*h - h+1

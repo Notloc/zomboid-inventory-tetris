@@ -10,8 +10,9 @@ local EasyOptionsBuilder = {}
 ---@param options any[]
 ---@param uiName string
 ---@return EasyOptionDefinition
-function EasyOptionsBuilder.defineDropdown(default, options, uiName)
+function EasyOptionsBuilder.defineDropdown(luaName, default, options, uiName)
     return EasyOptionDefinition.dropdown({
+        luaName = luaName,
         default = default,
         options = options,
         uiName = uiName,
@@ -21,19 +22,40 @@ end
 ---@param default any
 ---@param uiName string
 ---@return EasyOptionDefinition
-function EasyOptionsBuilder.defineCheckbox(default, uiName)
+function EasyOptionsBuilder.defineCheckbox(luaName, default, uiName, tooltip)
     return EasyOptionDefinition.checkbox({
+        luaName = luaName,
         default = default,
         uiName = uiName,
+        tooltip = tooltip,
     })
 end
 
 ---@param default any
 ---@return EasyOptionDefinition
-function EasyOptionsBuilder.defineHidden(default)
+function EasyOptionsBuilder.defineHidden(luaName, default)
     return EasyOptionDefinition.hidden({
+        luaName = luaName,
         default = default,
     })
+end
+
+---@param uiName string
+function EasyOptionsBuilder.defineTitle(uiName)
+    return EasyOptionDefinition.title({
+        uiName = uiName,
+    })
+end
+
+---@param uiName string
+function EasyOptionsBuilder.defineDescription(uiName)
+    return EasyOptionDefinition.description({
+        uiName = uiName,
+    })
+end
+
+function EasyOptionsBuilder.defineSeparator()
+    return EasyOptionDefinition.separator({})
 end
 
 ---@param optionDefinitions table<string, EasyOptionDefinition>
@@ -45,36 +67,45 @@ function EasyOptionsBuilder.build(optionDefinitions, modId, modUiName)
 
     local optionsObj = EasyOptions:new()
     local keys = {}
-    for key, definition in pairs(optionDefinitions) do
+    for i, definition in ipairs(optionDefinitions) do
         if definition:validate(errors) then
-            keys[#keys+1] = key
-            local optionInstance = EasyOptionInstance:new(optionsObj, key, definition)
-            optionsObj._optionInstances[key] = optionInstance
-            optionsObj.OnValueChanged[key] = optionInstance.OnValueChanged
-            optionsObj[key] = definition.default
+            local key = definition.luaName
+            if key then
+                keys[#keys+1] = key
+                local optionInstance = EasyOptionInstance:new(optionsObj, key, definition)
+                optionsObj._optionInstances[key] = optionInstance
+                optionsObj.OnValueChanged[key] = optionInstance.OnValueChanged
+                optionsObj[key] = definition.default
+            end
         end
     end
 
-    if false and ModOptions and ModOptions.getInstance then
-        EasyOptionsBuilder._buildModOptions(optionsObj, keys, modId, modUiName)
-    end
-
-    EasyOptionsBuilder._buildVanillaOptions(optionsObj, keys, modId, modUiName)
+    EasyOptionsBuilder._buildOptions(optionsObj, optionDefinitions, keys, modId, modUiName)
     EasyOptionsBuilder._reportErrorsAfterDelay(errors, 1000)
 
     return optionsObj
 end
 
-function EasyOptionsBuilder._buildVanillaOptions(optionsObj, keys, modId, modUiName)
+function EasyOptionsBuilder._buildOptions(optionsObj, optionDefinitions, keys, modId, modUiName)
     local vanillaOptions = PZAPI.ModOptions:create(modId, modUiName)
     optionsObj._vanillaOptions = vanillaOptions
 
-    for _, key in ipairs(keys) do
+    for i, definition in ipairs(optionDefinitions) do
+        local key = definition.luaName
         local optionInstance = optionsObj._optionInstances[key]
-        local definition = optionInstance.definition
 
         if definition.type == EasyOptionType.DROPDOWN then
-            EasyOptionsBuilder._buildVanillaDropdown(vanillaOptions, optionInstance)
+            EasyOptionsBuilder._buildDropdown(vanillaOptions, optionInstance)
+        elseif definition.type == EasyOptionType.CHECKBOX then
+            EasyOptionsBuilder._buildCheckbox(vanillaOptions, optionInstance)
+
+        -- Layout options
+        elseif definition.type == EasyOptionType.TITLE then
+            EasyOptionsBuilder._buildTitle(vanillaOptions, definition.uiName)
+        elseif definition.type == EasyOptionType.DESCRIPTION then
+            EasyOptionsBuilder._buildDescription(vanillaOptions, definition.uiName)
+        elseif definition.type == EasyOptionType.SEPARATOR then
+            vanillaOptions:addSeparator()
         end
     end
 
@@ -90,6 +121,14 @@ function EasyOptionsBuilder._buildVanillaOptions(optionsObj, keys, modId, modUiN
                 optionInstance.parent[key] = value
                 optionInstance.OnValueChanged:trigger(value)
             end
+
+            if definition.type == EasyOptionType.CHECKBOX then
+                local vOption = self:getOption(key)
+                local value = vOption:getValue()
+                optionInstance.parent[key] = value
+                optionInstance.OnValueChanged:trigger(value)
+            end
+
         end
     end
 
@@ -102,7 +141,7 @@ function EasyOptionsBuilder._buildVanillaOptions(optionsObj, keys, modId, modUiN
     end
 end
 
-function EasyOptionsBuilder._buildVanillaDropdown(vanillaOptions, optionInstance)
+function EasyOptionsBuilder._buildDropdown(vanillaOptions, optionInstance)
     local key = optionInstance.key
     local uiName = getText(optionInstance.definition.uiName)
     --local tooltip = getText(optionInstance.definition.tooltip)
@@ -113,6 +152,25 @@ function EasyOptionsBuilder._buildVanillaDropdown(vanillaOptions, optionInstance
         local optionName = getText(option.name)
         comboBox:addItem(optionName, i == optionInstance.defaultIndex)
     end
+end
+
+function EasyOptionsBuilder._buildCheckbox(vanillaOptions, optionInstance)
+    local key = optionInstance.key
+    local uiName = getText(optionInstance.definition.uiName)
+    local tooltip = getText(optionInstance.definition.tooltip) or ""
+
+    -- Create the dropdown and add the options to it
+    local tickbox = vanillaOptions:addTickBox(key, uiName, optionInstance.definition.default, tooltip)
+end
+
+function EasyOptionsBuilder._buildTitle(vanillaOptions, uiName)
+    local title = getText(uiName)
+    vanillaOptions:addTitle(title)
+end
+
+function EasyOptionsBuilder._buildDescription(vanillaOptions, uiName)
+    local description = getText(uiName)
+    vanillaOptions:addDescription(description)
 end
 
 -- Only throw errors after a delay, so we don't prevent the game from loading properly

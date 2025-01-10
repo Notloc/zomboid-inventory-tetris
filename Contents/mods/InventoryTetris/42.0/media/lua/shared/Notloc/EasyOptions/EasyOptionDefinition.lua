@@ -26,6 +26,24 @@ function EasyOptionDefinition.hidden(o)
     return o
 end
 
+function EasyOptionDefinition.title(o)
+    o.type = EasyOptionType.TITLE
+    setmetatable(o, EasyOptionDefinition)
+    return o
+end
+
+function EasyOptionDefinition.description(o)
+    o.type = EasyOptionType.DESCRIPTION
+    setmetatable(o, EasyOptionDefinition)
+    return o
+end
+
+function EasyOptionDefinition.separator(o)
+    o.type = EasyOptionType.SEPARATOR
+    setmetatable(o, EasyOptionDefinition)
+    return o
+end
+
 ---@param errorCollector ErrorCollector
 function EasyOptionDefinition:validate(errorCollector)
     if self.type == EasyOptionType.DROPDOWN then

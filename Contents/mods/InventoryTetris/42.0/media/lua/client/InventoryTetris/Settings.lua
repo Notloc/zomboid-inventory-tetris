@@ -33,15 +33,21 @@ if not INVENTORY_TETRIS_OPTIONS then
 
     -- Define the options
     local optionDefinitions = {
-        SCALE = EasyOptionsBuilder.defineDropdown(1.0, gridScaleOptions, "UI_tetris_options_grid_scale"),
-        TEXTURE_SIZE = EasyOptionsBuilder.defineHidden(32),
-        TEXTURE_PAD = EasyOptionsBuilder.defineHidden(2),
-        CELL_SIZE = EasyOptionsBuilder.defineHidden(35),
-        CONTAINER_INFO_SCALE = EasyOptionsBuilder.defineDropdown(1.0, containerInfoScaleOptions, "UI_tetris_options_container_info_scale"),
-        DOUBLE_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("interact", clickDropdownOptions, "UI_tetris_options_double_click_action"),
-        CTRL_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("move", clickDropdownOptions, "UI_tetris_options_ctrl_click_action"),
-        ALT_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("equip", clickDropdownOptions, "UI_tetris_options_alt_click_action"),
-        SHIFT_CLICK_ACTION = EasyOptionsBuilder.defineDropdown("multi", clickDropdownOptions, "UI_tetris_options_shift_click_action"),
+        EasyOptionsBuilder.defineTitle("UI_tetris_scale_options"),
+        EasyOptionsBuilder.defineDropdown("SCALE", 1.0, gridScaleOptions, "UI_tetris_options_grid_scale"),
+        EasyOptionsBuilder.defineDropdown("CONTAINER_INFO_SCALE", 1.0, containerInfoScaleOptions, "UI_tetris_options_container_info_scale"),
+        EasyOptionsBuilder.defineHidden("TEXTURE_SIZE", 32),
+        EasyOptionsBuilder.defineHidden("TEXTURE_PAD", 2),
+        EasyOptionsBuilder.defineHidden("CELL_SIZE", 35),
+
+        EasyOptionsBuilder.defineTitle("UI_tetris_control_options"),
+        EasyOptionsBuilder.defineDropdown("DOUBLE_CLICK_ACTION", "interact", clickDropdownOptions, "UI_tetris_options_double_click_action"),
+        EasyOptionsBuilder.defineDropdown("CTRL_CLICK_ACTION", "move", clickDropdownOptions, "UI_tetris_options_ctrl_click_action"),
+        EasyOptionsBuilder.defineDropdown("ALT_CLICK_ACTION", "equip", clickDropdownOptions, "UI_tetris_options_alt_click_action"),
+        EasyOptionsBuilder.defineDropdown("SHIFT_CLICK_ACTION", "multi", clickDropdownOptions, "UI_tetris_options_shift_click_action"),
+
+        EasyOptionsBuilder.defineTitle("UI_tetris_performance_options"),
+        EasyOptionsBuilder.defineCheckbox("DO_STACK_SHADOWS", true, "UI_tetris_options_do_stack_shadows", "UI_tetris_options_do_stack_shadows_desc"),
     }
 
     -- Build the options object
@@ -65,6 +71,7 @@ end
 ---@field CTRL_CLICK_ACTION string
 ---@field ALT_CLICK_ACTION string
 ---@field SHIFT_CLICK_ACTION string
+---@field DO_STACK_SHADOWS boolean
 local tetrisOptions = INVENTORY_TETRIS_OPTIONS
 
 return tetrisOptions

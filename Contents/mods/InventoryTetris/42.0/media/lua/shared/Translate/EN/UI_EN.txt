@@ -4,13 +4,14 @@ UI_EN = {
 	UI_optionscreen_binding_tetris_quick_equip = "Quick Equip Key",
 	UI_optionscreen_binding_tetris_stack_split = "Split Stacks Key",
 	UI_optionscreen_binding_tetris_close_window = "Close Popup Window",
+	UI_tetris_buttons_search = "Search",
 
+	UI_optionscreen_binding_InventoryTetris = "Inventory Tetris",
+	UI_tetris_scale_options = "Scaling",
 	UI_tetris_options_grid_scale = "Grid Scale",
 	UI_tetris_options_container_info_scale = "Container Info Scale",
-	UI_optionscreen_binding_InventoryTetris = "Inventory Tetris",
 
-	
-
+	UI_tetris_control_options = "Controls",
 	UI_optionscreen_binding_tetris_ctrl_button = "CTRL Key",
 	UI_optionscreen_binding_tetris_alt_button = "Alt Key",
 	UI_optionscreen_binding_tetris_shift_button = "Shift Key",
@@ -26,5 +27,7 @@ UI_EN = {
 	UI_tetris_options_do_equip = "Equip",
 	UI_tetris_options_do_drop = "Drop",
 
-	UI_tetris_buttons_search = "Search",
+	UI_tetris_performance_options = "Performance",
+	UI_tetris_options_do_stack_shadows = "Enable Text Shadowing",
+	UI_tetris_options_do_stack_shadows_desc = "Add a drop shadow to text displayed on items?"
 }
