@@ -229,6 +229,8 @@ end
 
 -- The vanilla inventory render is also in charge of aging and drying items, so we need to do that here as well
 function ItemGridUI.updateItem(item)
+    if not item then return end
+
     item:updateAge()
     if instanceof(item, 'Clothing') then
         item:updateWetness()

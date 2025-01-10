@@ -147,20 +147,22 @@ end
 
 function ItemGrid:moveStack(stack, x, y, isRotated)
     local item = ItemStack.getFrontItem(stack, self.inventory)
-    
+
     local w, h = TetrisItemData.getItemSize(item, isRotated)
     if not self:_isAreaFree(x, y, w, h, {[stack] = true}) then
         return false
     end
-    
+
     self:_removeStack(stack)
     self:_insertStack_premade(stack, x, y, isRotated)
-    
+
     self:_sendModData()
     return true
 end
 
 function ItemGrid:gatherSameItems(stack)
+    if self.isProxInv then return end
+
     -- Pull all the items from other stacks into this one
     local targetItem = ItemStack.getFrontItem(stack, self.inventory)
 
