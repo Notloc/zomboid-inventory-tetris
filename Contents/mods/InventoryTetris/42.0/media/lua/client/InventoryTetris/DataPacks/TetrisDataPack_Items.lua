@@ -1,6 +1,7 @@
 require("InventoryTetris/Data/TetrisItemData")
 require("InventoryTetris/Data/TetrisContainerData")
 
+-- Pack #1
 local itemPack = {
 	["Base.CeramicCrucibleSmall"] = {
 		["maxStackSize"] = 1,
@@ -993,9 +994,744 @@ local itemPack = {
 		["width"] = 4,
 	},
 }
-
-local containerPack = {
-}
-
 TetrisItemData.registerItemDefinitions(itemPack)
-TetrisContainerData.registerContainerDefinitions(containerPack)
+
+-- Pack #2
+local itemPack2 = {
+	["Base.Strainer"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Pliers"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Remote"] = {
+		["maxStackSize"] = 2,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.DumbBell"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 3,
+	},
+	["Base.RoastingPan"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Saxophone"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 2,
+	},
+	["Base.OilVegetable"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.TirePump"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 2,
+	},
+	["Base.BeerPack"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 3,
+	},
+	["Base.Kettle"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.MuffinTray"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.NoodleSoup"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.RamenBowl"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.BeanBowl"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.BrainTan"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.PastaBowl"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.RiceBowl"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.SoupBowl"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.StewBowl"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.CerealBowl"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Oatmeal"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.SeedPasteBowl"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.PanFriedVegetablesForged"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.GriddlePanFriedVegetables"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.PanFriedVegetables"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.PastaPan"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.PastaPanCopper"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.RicePan"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.RicePanCopper"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.PanFriedVegetables2"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Pancakes"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.PancakesRecipe"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.PancakesCraft"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.PotatoPancakes"] = {
+		["maxStackSize"] = 10,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Frozen_TatoDots"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.Frozen_FrenchFries"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.Frozen_FishFingers"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.Frozen_ChickenNuggets"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.CornFrozen"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.WineBox"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.ChickenWhole"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.CocoaPowder"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Coffee2"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.DeadRabbit"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.HalloweenPumpkin"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Muffintray_Biscuit"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.BakingTray_Muffin_Recipe"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.BakingTray_Muffin"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.PizzaRecipe"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.PizzaWhole"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Pumpkin"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.TurkeyWhole"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Bitters"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.GlassPanel"] = {
+		["maxStackSize"] = 10,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.PropaneTank"] = {
+		["maxStackSize"] = 1,
+		["height"] = 5,
+		["width"] = 4,
+	},
+	["Base.Plate"] = {
+		["maxStackSize"] = 5,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.BeerCanPack"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Kettle_Copper"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.CuttingBoardWooden"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.CuttingBoardPlastic"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.OvenMitt"] = {
+		["maxStackSize"] = 2,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.PizzaCutter"] = {
+		["maxStackSize"] = 2,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.BoxOfJars"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 3,
+	},
+	["Base.EmptyJar"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Hat_DeerHeadress"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Hat_EarMuff_Protectors"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Hat_EarMuffs"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Holster_Hide"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Holster_DuctTape"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.HolsterAnkle"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.HolsterSimple_Green"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.HolsterSimple_Black"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.HolsterSimple_Brown"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.HolsterSimple"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Hat_Fedora_Delmonte"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.Hat_Fedora"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.Oxygen_Tank"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 2,
+	},
+	["Base.FluffyfootBunny"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.WalkieTalkieMakeShift"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.WalkieTalkie3"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.WalkieTalkie4"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.WalkieTalkie1"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.WalkieTalkie5"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.WalkieTalkie2"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.PowerBar"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 3,
+	},
+	["Base.Speaker"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.CraftedFishingRod"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 1,
+	},
+	["Base.GardeningSprayEmpty"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.GardeningSprayAphids"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.GardeningSprayMilk"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.GardeningSprayCigarettes"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Scythe"] = {
+		["maxStackSize"] = 1,
+		["height"] = 5,
+		["width"] = 2,
+	},
+	["Base.ScytheForged"] = {
+		["maxStackSize"] = 1,
+		["height"] = 5,
+		["width"] = 2,
+	},
+	["Base.Shovel2"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 2,
+	},
+	["Base.Shovel"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 2,
+	},
+	["Base.SpadeForged"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 2,
+	},
+	["Base.PrimitiveScythe"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.CleaningLiquid2"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.MagnifyingGlass"] = {
+		["maxStackSize"] = 2,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.ScissorsBlunt"] = {
+		["maxStackSize"] = 4,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.UmbrellaBlack"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 2,
+	},
+	["Base.UmbrellaRed"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 2,
+	},
+	["Base.UmbrellaTINTED"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 2,
+	},
+	["Base.UmbrellaBlue"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 2,
+	},
+	["Base.UmbrellaWhite"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 2,
+	},
+	["Base.ClosedUmbrellaWhite"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 1,
+	},
+	["Base.ClosedUmbrellaTINTED"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 1,
+	},
+	["Base.ClosedUmbrellaBlue"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 1,
+	},
+	["Base.ClosedUmbrellaRed"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 1,
+	},
+	["Base.ClosedUmbrellaBlack"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 1,
+	},
+	["Base.Broom"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 1,
+	},
+	["Base.Mop"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 1,
+	},
+	["Base.TuningFork"] = {
+		["maxStackSize"] = 4,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.GuitarElectric"] = {
+		["maxStackSize"] = 1,
+		["height"] = 5,
+		["width"] = 2,
+	},
+	["Base.Guitarcase"] = {
+		["maxStackSize"] = 1,
+		["height"] = 5,
+		["width"] = 2,
+	},
+	["Base.GuitarElectricBass"] = {
+		["maxStackSize"] = 1,
+		["height"] = 5,
+		["width"] = 2,
+	},
+	["Base.BackgammonBoard"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.HolePuncher"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Money"] = {
+		["maxStackSize"] = 99,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.PlasticTray"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.CardDeck"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.SpadeHead"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.BrassNameplate"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.Aluminum"] = {
+		["maxStackSize"] = 8,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.OldAxeHead"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.BarbedWireStack"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 4,
+	},
+	["Base.GlazeBowl"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.AdhesiveTapeBox"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.DuctTapeBox"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.BrassIngot"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.CopperIngot"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.GoldBar"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.ClayIngotMoldUnfired"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.CeramicIngotCast"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.ClayIngotMold"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.CeramicIngotCastUnfired"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.SilverBar"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.IronIngotMold"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.IronIngot"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.PigIronIngot"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.PiercedIronIngot"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.SmallGoldBar"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.SmallSilverBar"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.SteelIngotMold"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.SteelIngot"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.PiercedSteelIngot"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.WoodenIngotCastMold"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 2,
+	},
+}
+TetrisItemData.registerItemDefinitions(itemPack2)
