@@ -232,7 +232,16 @@ function TetrisItemData._calculateFoodSize(item)
     if item:getFluidContainer() then
         return TetrisItemData._calculateFluidContainerSize(item)
     end
-    return TetrisItemData._calculateItemSizeWeightBasedTall(item)
+    local x, y = TetrisItemData._calculateItemSizeWeightBasedTall(item)
+
+    -- Cap the size of food items
+    -- Handles these stupid fish
+    if x * y > 18 then
+        local x2 = math.min(x, 6)
+        local y2 = math.min(y, 3)
+        return x2, y2
+    end
+    return x, y
 end
 
 function TetrisItemData._calculateFluidContainerSize(item)
@@ -310,6 +319,9 @@ end
 
 function TetrisItemData._calculateItemStackability(item, itemClass)
     local maxStack = 1
+    if TetrisItemData._dynamicSizeItems[item:getFullType()] then
+        return maxStack
+    end
 
     local calculation = TetrisItemData._itemClassToStackabilityCalculation[itemClass]
     if type(calculation) == "function" then

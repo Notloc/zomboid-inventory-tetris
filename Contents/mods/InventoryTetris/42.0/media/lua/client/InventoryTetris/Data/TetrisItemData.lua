@@ -8,7 +8,27 @@ TetrisItemData._itemData = {}
 TetrisItemData._itemDataPacks = {}
 TetrisItemData._alwaysStackOnSpawnItems = {}
 
-TetrisItemData._dynamicSizeItems = {["Base.CorpseAnimal"] = true}
+--TODO: Move into dev tool and datapacks
+TetrisItemData._dynamicSizeItems = {
+    ["Base.CorpseAnimal"] = true,
+
+    -- Fish
+    ["Base.AligatorGar"] = true,
+    ["Base.BlackCrappie"] = true,
+    ["Base.BlueCatfish"] = true,
+    ["Base.ChannelCatfish"] = true,
+    ["Base.FishFillet"] = true,
+    ["Base.FlatheadCatfish"] = true,
+    ["Base.FreshwaterDrum"] = true,
+    ["Base.LargemouthBass"] = true,
+    ["Base.Muskellunge"] = true,
+    ["Base.Paddlefish"] = true,
+    ["Base.SmallmouthBass"] = true,
+    ["Base.SpottedBass"] = true,
+    ["Base.Walleye"] = true,
+    ["Base.WhiteBass"] = true,
+    ["Base.WhiteCrappie"] = true,
+}
 
 function TetrisItemData.getItemSize(item, isRotated)
     local data = TetrisItemData._getItemData(item)
@@ -65,7 +85,6 @@ function TetrisItemData._getItemData(item, noSquish)
 
     return TetrisItemData._getItemDataByFullType(item, fType, isSquished)
 end
-
 
 function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
     if TetrisItemData._dynamicSizeItems[fType] then

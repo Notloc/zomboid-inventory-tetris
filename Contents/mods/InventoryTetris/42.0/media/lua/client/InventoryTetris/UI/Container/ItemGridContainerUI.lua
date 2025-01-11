@@ -37,13 +37,9 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
     o.player = getSpecificPlayer(playerNum)
     o.item = inventory:getContainingItem()
 
-    local isPlayerInv = inventory == o.player:getInventory()
+    o.isPlayerInventory = inventory == o.player:getInventory()
 
-    if not o.item and not isPlayerInv then
-        o.invTexture = o.getWorldTexture(inventory) or ContainerButtonIcons[inventory:getType()] or SHELF_TEXTURE
-    else
-        o.invTexture = o.item and o.item:getTex() or BASIC_INV_TEXTURE;
-    end
+    o:updateContainerTexture(inventory)
 
     if inventory:getType() == "proxInv" then
         o.invTexture = PROX_INV_TEXTURE
@@ -55,16 +51,21 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
 
     o.keepOnScreen = false -- Keep on screen is a menace inside scroll panes and these are always inside scroll panes or other panels
 
-    local player = getSpecificPlayer(playerNum)
-    if inventory == player:getInventory() then
-        o.isPlayerInventory = true
-    end
-
     o.isOnPlayer = o.isPlayerInventory or (o.item and o.item:isInPlayerInventory())
     o.showTitle = true
     o.isGridCollapsed = false
 
     return o
+end
+
+function ItemGridContainerUI:updateContainerTexture(container)
+    local item = container:getContainingItem()
+    local isPlayerInv = container == self.player:getInventory()
+    if not item and not isPlayerInv then
+        self.invTexture = self.getWorldTexture(container) or ContainerButtonIcons[container:getType()] or SHELF_TEXTURE
+    else
+        self.invTexture = item and item:getTex() or BASIC_INV_TEXTURE;
+    end
 end
 
 function ItemGridContainerUI:unregisterEvents()

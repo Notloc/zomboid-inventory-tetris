@@ -499,15 +499,20 @@ local function clearQuickButtons(context, quickId)
     context[quickId] = {};
 end
 
-function TetrisDevTool.remakeContainerUi(editWindow)
+function TetrisDevTool.remakeContainerUi(editWindow, realInv)
     if editWindow.containerUi then
         editWindow:removeChild(editWindow.containerUi);
         editWindow.containerUi = nil;
     end
 
     local containerUi = ItemGridContainerUI:new(editWindow.inventory, editWindow.inventoryPane, 0, editWindow.newContainerDefinition);
+    if realInv then
+        containerUi:updateContainerTexture(realInv)
+    end
+    
     containerUi:initialise();
 
+    
     containerUi:removeChild(containerUi.overflowRenderer);
 
     editWindow:addChild(containerUi);
@@ -604,7 +609,9 @@ function TetrisDevTool.openPocketEdit(item)
     TetrisDevTool.containerEdits[baseKey] = og_override
 end
 
-function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, containerDef, dataKey, dataTable, type)
+function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, containerDef, dataKey, dataTable, type)
+    local inventory = ItemContainer.new("DEV_TOOL", nil, nil) -- Create a new container to avoid effecting the actual inventory
+
     local editWindow = ISPanel:new(getMouseX(), getMouseY(), 50, 50);
     editWindow:initialise();
     editWindow.inventory = inventory;
@@ -618,7 +625,7 @@ function TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, contain
 
     editWindow.type = type;
 
-    TetrisDevTool.remakeContainerUi(editWindow);
+    TetrisDevTool.remakeContainerUi(editWindow, sourceInventory);
 
     editWindow.reflow = function(self)
         self.containerUi:applyScales(OPT.SCALE, OPT.CONTAINER_INFO_SCALE)

@@ -820,7 +820,7 @@ function ItemGrid:_getSavedGridData()
     local containerData, parent = self:_getSavedContainerData()
 
     if not containerData[self.gridIndex] then
-        containerData[self.gridIndex] = {}
+        containerData[self.gridIndex] = { stacks = {} }
     end
 
     return containerData[self.gridIndex], parent
