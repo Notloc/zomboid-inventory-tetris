@@ -116,7 +116,7 @@ function GridContainerInfo:prerender()
         self:drawTextureScaledUniform(WEIGHT_TEXTURE, weightX, weightY, scale, 1, math.max(r*0.65, 0.4), g*0.65, b*0.65);
     end
 
-    self:drawRectBorder(0, 0, self.width, self.height, 0.5,1,1,1)   
+    self:drawRectBorder(0, 0, self.width, self.height, 0.5,1,1,1)
 end
 
 local function isPointOverContainerIcon(x, y)

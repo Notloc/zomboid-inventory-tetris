@@ -59,11 +59,16 @@ function ItemStack.addItem(stack, item)
 end
 
 function ItemStack.removeItem(stack, item)
+    local itemId = item:getID()
     if not stack.itemIDs[item:getID()] then
         return -- Not in stack
     end
     stack.itemIDs[item:getID()] = nil
     stack.count = stack.count - 1
+
+    if stack._frontItem and stack._frontItem:getID() == itemId then
+        stack._frontItem = nil
+    end
 end
 
 function ItemStack.containsItem(stack, item)
