@@ -142,6 +142,7 @@ function ItemUtil.gatherItems(playerNum, itemType, count)
         end
     end
 
+    -- Search the floor
     if gatheredItems < count then
         local groundContainer = ISInventoryPage.GetFloorContainer(playerNum)
         local items = groundContainer:getItems()
@@ -158,10 +159,12 @@ function ItemUtil.gatherItems(playerNum, itemType, count)
         end
     end
 
+    -- Could not gather enough items
     if gatheredItems < count then
         return false
     end
 
+    -- Transfer the gathered items to the player's main inventory
     for i, itemAndSource in ipairs(itemAndSourcePairs) do
         local item = itemAndSource[1]
         local sourceContainer = itemAndSource[2]

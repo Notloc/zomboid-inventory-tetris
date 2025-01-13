@@ -1,15 +1,27 @@
+---@diagnostic disable: redundant-return-value
+
 -- An experiment with calling functions inside of behavior modified scopes
 -- The goal is to piggyback off of as much vanilla code as possible while still achieving desired behaviors
 -- While also avoiding lasting side effects when errors occur
 
 if not __GLOBAL_MOD_SCOPE then
+
+    ---@class ModScope
+    ---@field withItemReturnActions fun(playerObj: IsoPlayer, returnableItems: table<string, boolean>, callback: function)
+    ---@field withoutTransferNeeded fun(callback: function)
+    ---@field withoutTransferNeededOnSelf fun(callback: function)
+    ---@field withKeepActions fun(callback: function)
+    ---@field withNoActionQueueClear fun(callback: function)
     local ModScope = {};
+    
+    ---@type ModScope
     __GLOBAL_MOD_SCOPE = ModScope
 
     local ItemReturnScope = require("Notloc/ModScope/ItemReturnScope")
     local NoTransferNeededScope = require("Notloc/ModScope/NoTransferNeededScope")
     local NoTransferNeededOnSelfScope = require("Notloc/ModScope/NoTransferNeededOnSelfScope")
     local LuaUtilsKeepActionScope = require("Notloc/ModScope/LuaUtilsKeepActionScope")
+    local NoActionQueueClearScope = require("Notloc/ModScope/NoActionQueueClearScope")
 
     ---Reverse item transfers will be created after the callback for all items in the returnableItems table
     ---@param playerObj IsoPlayer
@@ -32,6 +44,11 @@ if not __GLOBAL_MOD_SCOPE then
     ---Checks to luautils.walkAdj() will always keep the action queue
     function ModScope.withKeepActions(callback)
         return LuaUtilsKeepActionScope:execute(callback)
+    end
+
+    ---Calls to clear the player's action queue will be ignored
+    function ModScope.withNoActionQueueClear(callback)
+        return NoActionQueueClearScope:execute(callback)
     end
 end
 
