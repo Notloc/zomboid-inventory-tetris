@@ -1735,3 +1735,138 @@ local itemPack2 = {
 	},
 }
 TetrisItemData.registerItemDefinitions(itemPack2)
+
+-- Pack #3
+local itemPack3 = {
+	["Base.HandScytheBlade"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.HacksawBlade"] = {
+		["maxStackSize"] = 2,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Log"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 5,
+	},
+	["Base.LogStacks2"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 5,
+	},
+	["Base.LogStacks4"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 6,
+	},
+	["Base.LogStacks3"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 6,
+	},
+	["Base.Jack"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 3,
+	},
+	["Base.LugWrench"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.BatteryBox"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.CandleBox"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Battery"] = {
+		["maxStackSize"] = 6,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Garbagebag_box"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.Bellows"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Calipers"] = {
+		["maxStackSize"] = 4,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Saw"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.HandAxe_Old"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.HandAxeForged"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.HandAxe"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.HeavyChain"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 3,
+	},
+	["Base.HeavyChain_Hook"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 3,
+	},
+	["Base.Multitool"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.SnowShovel"] = {
+		["maxStackSize"] = 1,
+		["height"] = 5,
+		["width"] = 2,
+	},
+	["Base.ViseGrips"] = {
+		["maxStackSize"] = 2,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.WeldingMask"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.GardenSaw"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.BlowTorch"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 1,
+	},
+}
+TetrisItemData.registerItemDefinitions(itemPack3)
