@@ -22,6 +22,10 @@ ItemContainerGrid = {}
 ItemContainerGrid._tempGrid = {} -- For hovering over container items, so we don't create a new grid every frame to evaluate if an item can be placed into a hovered backpack
 ItemContainerGrid._gridCache = {} -- Just created grids, so we don't end up creating a new grid multiple times in a single tick when looping or something
 
+---comment
+---@param inventory ItemContainer
+---@param playerNum number
+---@param definitionOverride any
 function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
     local o = {}
     setmetatable(o, self)
@@ -30,8 +34,10 @@ function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
     o.inventory = inventory
     o.playerNum = playerNum
     o.containerDefinition = definitionOverride or TetrisContainerData.getContainerDefinition(inventory)
+
     o.isPlayerInventory = inventory == getSpecificPlayer(playerNum):getInventory()
     o.isOnPlayer = o.isPlayerInventory or (inventory:getContainingItem() and inventory:getContainingItem():isInPlayerInventory())
+
     o.isFloor = o.containerDefinition.trueType == "floor"
     o.grids = o:createGrids(inventory)
     o.overflow = {}

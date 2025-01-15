@@ -50,6 +50,11 @@ function TetrisContainerData._calculateInnerSizeByDefinition(definition)
 end
 
 function TetrisContainerData._getContainerKey(container)
+    local modKey = TetrisModCompatibility.getModContainerKey(container)
+    if modKey then
+        return modKey
+    end
+
     if container:getType() == "none" then
         return "none"
     end

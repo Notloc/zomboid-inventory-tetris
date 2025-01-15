@@ -44,6 +44,8 @@ Events.OnGameBoot.Add(function()
             o.enforceTetrisRules = true
         end
 
+        TetrisModCompatibility.KnoxEventExpanded_HandleNpcItemTransfer(item, srcContainer)
+
         return o
     end
 

@@ -16,6 +16,7 @@ local BASIC_INV_TEXTURE = getTexture("media/ui/Icon_InventoryBasic.png")
 local SHELF_TEXTURE = getTexture("media/ui/Container_Shelf.png")
 local CONTAINER_BG = getTexture("media/textures/InventoryTetris/ContainerBG.png")
 local PROX_INV_TEXTURE = getTexture("media/ui/ProximityInventory.png") or SHELF_TEXTURE
+local NPC_INV_TEXTURE = instanceItem("Base.Spiffo"):getTex()
 
 local BLACK = {r=0, g=0, b=0, a=1}
 
@@ -41,9 +42,7 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
 
     o:updateContainerTexture(inventory)
 
-    if inventory:getType() == "proxInv" then
-        o.invTexture = PROX_INV_TEXTURE
-    end
+    o:doSpecialInventoryIcons(inventory)
 
     o.containerGrid = ItemContainerGrid.GetOrCreate(inventory, playerNum, containerDefOverride)
     o.containerGrid:addOnSecondaryGridsAdded(o, o._onSecondaryGridsAdded)
@@ -56,6 +55,28 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
     o.isGridCollapsed = false
 
     return o
+end
+
+function ItemGridContainerUI:doSpecialInventoryIcons(inventory)
+    if instanceof(inventory:getParent(), "IsoNpcPlayer") then
+        self.invTexture = NPC_INV_TEXTURE
+    elseif inventory:getType() == "proxInv" then
+        self.invTexture = PROX_INV_TEXTURE
+    end
+end
+
+function ItemGridContainerUI:getInventoryName(inventory)
+    if self.item then
+        return self.item:getName()
+    elseif self.isPlayerInventory then
+        local desc = self.player:getDescriptor()
+        return getText("IGUI_InventoryName", desc:getForename(), desc:getSurname())
+    elseif instanceof(inventory:getParent(), "IsoNpcPlayer") then
+        local desc = inventory:getParent():getDescriptor()
+        return getText("IGUI_InventoryName", desc:getForename(), desc:getSurname())
+    else
+        return getTextOrNull("IGUI_ContainerTitle_" .. inventory:getType()) or "Container"
+    end
 end
 
 function ItemGridContainerUI:updateContainerTexture(container)
@@ -471,16 +492,7 @@ function ItemGridContainerUI:prerender()
     self:setWidth(self.multiGridRenderer:getWidth() + infoWidth+2 + self.overflowRenderer:getWidth() + overflowPadding)
 
     if self.showTitle then
-        local invName = ""
-        if self.item then
-            invName = self.item:getName()
-        elseif self.isPlayerInventory then
-            invName = getText("IGUI_InventoryName", self.player:getDescriptor():getForename(), self.player:getDescriptor():getSurname())
-        else
-            invName = getTextOrNull("IGUI_ContainerTitle_" .. inv:getType()) or "Container"
-        end
-
-        local collapseX = self:renderTitle(invName, 0, 0, TITLE_Y_PADDING, 1) + 3
+        local collapseX = self:renderTitle(self:getInventoryName(inv), 0, 0, TITLE_Y_PADDING, 1) + 3
         
         self.collapseButton:setVisible(true)
         self.collapseButton:setX(collapseX)
