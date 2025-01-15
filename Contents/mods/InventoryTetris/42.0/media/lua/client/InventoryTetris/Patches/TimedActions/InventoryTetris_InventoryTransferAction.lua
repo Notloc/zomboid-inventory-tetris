@@ -2,8 +2,9 @@
 ---@diagnostic disable: duplicate-set-field
 
 require("TimedActions/ISInventoryTransferAction")
-local ItemUtil = require("Notloc/ItemUtil")
 
+local ItemUtil = require("Notloc/ItemUtil")
+local ModScope = require("Notloc/ModScope/ModScope")
 
 local function getOutermostContainer(container)
     if not container:getContainingItem() then
@@ -86,28 +87,6 @@ Events.OnGameBoot.Add(function()
         return tetrisCanMerge
     end
 
-  
-
-    -- Temp overrides instanceof to ensure instanceof never reports a Moveable as such
-    -- At what point should I just dirty patch a method instead... this is kinda gross
-    local function moveablesArentRealScope(callback, ...)
-        local real_instanceof = instanceof
-        local fake_instanceof = function(obj, class)
-            if class == "Moveable" then return false end
-            return real_instanceof(obj, class)
-        end
-
-        instanceof = fake_instanceof
-        local results = {pcall(callback, ...)}
-        instanceof = real_instanceof
-
-        if results[1] then
-            return unpack(results, 2)
-        else
-            error(results[2])
-        end
-    end
-
     local og_isValid = ISInventoryTransferAction.isValid
     function ISInventoryTransferAction:isValid()
         local destDef = TetrisContainerData.getContainerDefinition(self.destContainer)
@@ -116,7 +95,9 @@ Events.OnGameBoot.Add(function()
         local valid;
         -- If we are moving a Moveable to anywhere but the floor, ensure it does NOT appear to be a Moveable
         if destType ~= "floor" and instanceof(self.item, "Moveable") then
-            valid = moveablesArentRealScope(og_isValid, self)
+            valid = ModScope.withInstanceofExclusion(function ()
+                og_isValid(self)
+            end, "Moveable")
         else
             valid = og_isValid(self)
         end

@@ -22,6 +22,7 @@ if not __GLOBAL_MOD_SCOPE then
     local NoTransferNeededOnSelfScope = require("Notloc/ModScope/NoTransferNeededOnSelfScope")
     local LuaUtilsKeepActionScope = require("Notloc/ModScope/LuaUtilsKeepActionScope")
     local NoActionQueueClearScope = require("Notloc/ModScope/NoActionQueueClearScope")
+    local InstanceofExclusionsScope = require("Notloc/ModScope/InstanceofExclusionsScope")
 
     ---Reverse item transfers will be created after the callback for all items in the returnableItems table
     ---@param playerObj IsoPlayer
@@ -49,6 +50,10 @@ if not __GLOBAL_MOD_SCOPE then
     ---Calls to clear the player's action queue will be ignored
     function ModScope.withNoActionQueueClear(callback)
         return NoActionQueueClearScope:execute(callback)
+    end
+
+    function ModScope.withInstanceofExclusion(callback, exclusions)
+        return InstanceofExclusionsScope:execute(callback, exclusions)
     end
 end
 
