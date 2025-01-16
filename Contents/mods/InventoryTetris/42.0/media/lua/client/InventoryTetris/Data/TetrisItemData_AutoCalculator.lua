@@ -151,6 +151,8 @@ function TetrisItemData._calculateItemSizeClothing(item)
     return width, height
 end
 
+---comment
+---@param item InventoryContainer
 function TetrisItemData._calculateItemSizeContainer(item)
     local containerDefinition = TetrisContainerData.getContainerDefinition(item:getItemContainer())
     if #containerDefinition.gridDefinitions == 1 then
@@ -161,7 +163,7 @@ function TetrisItemData._calculateItemSizeContainer(item)
         return x, y
     end
 
-    local innerSize = TetrisContainerData.calculateInnerSize(item)
+    local innerSize = TetrisContainerData.calculateInnerSize(item:getItemContainer())
     local x, y = TetrisItemData._calculateContainerItemSizeFromInner(innerSize)
     return x, y
 end

@@ -3,6 +3,7 @@
 
 TetrisModCompatibility = {}
 
+---@param container ItemContainer
 function TetrisModCompatibility.getModContainerKey(container)
     -- Handles KnoxEventExpanded
     if instanceof(container:getParent(), "IsoNpcPlayer") then
@@ -10,6 +11,8 @@ function TetrisModCompatibility.getModContainerKey(container)
     end
 end
 
+---@param item InventoryItem
+---@param srcContainer ItemContainer
 function TetrisModCompatibility.KnoxEventExpanded_HandleNpcItemTransfer(item, srcContainer)
     if instanceof(srcContainer:getParent(), "IsoNpcPlayer") then
         -- Copied from KnoxEventExpanded

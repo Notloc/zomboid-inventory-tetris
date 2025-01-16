@@ -95,8 +95,8 @@ Events.OnGameBoot.Add(function()
         local valid;
         -- If we are moving a Moveable to anywhere but the floor, ensure it does NOT appear to be a Moveable
         if destType ~= "floor" and instanceof(self.item, "Moveable") then
-            valid = ModScope.withInstanceofExclusion(function ()
-                og_isValid(self)
+            ModScope.withInstanceofExclusion(function ()
+                valid = og_isValid(self)
             end, "Moveable")
         else
             valid = og_isValid(self)

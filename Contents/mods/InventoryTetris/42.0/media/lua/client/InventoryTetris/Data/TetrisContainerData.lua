@@ -34,6 +34,7 @@ function TetrisContainerData.getContainerDefinition(container)
     return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
 end
 
+---@param container ItemContainer
 function TetrisContainerData.calculateInnerSize(container)
     local definition = TetrisContainerData.getContainerDefinition(container)
     return TetrisContainerData._calculateInnerSizeByDefinition(definition)
