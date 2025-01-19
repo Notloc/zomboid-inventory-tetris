@@ -577,9 +577,9 @@ end
 function TetrisDevTool.openPocketEdit(item)
     local inventory = getSpecificPlayer(0):getInventory();
     local inventoryPane = getPlayerData(0).playerInventory.inventoryPane;
-    local containerDef = TetrisPocketData.getPocketDefinition(item);
-    if not containerDef then
-        containerDef = {
+    local pocketDef = TetrisPocketData.getPocketDefinition(item);
+    if not pocketDef then
+        pocketDef = {
             gridDefinitions = {
                 {
                     size = {
@@ -591,7 +591,7 @@ function TetrisDevTool.openPocketEdit(item)
                         y = 0,
                     }
                 }
-            }
+            },
         }
     end
 
@@ -600,9 +600,9 @@ function TetrisDevTool.openPocketEdit(item)
 
     local baseKey = inventory:getType() .. "_" .. inventory:getCapacity()
     local og_override = TetrisDevTool.containerEdits[baseKey]
-    TetrisDevTool.containerEdits[baseKey] = containerDef;
+    TetrisDevTool.containerEdits[baseKey] = pocketDef;
 
-    local editWindow = TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, containerDef, dataKey, dataTable, "POCKET");
+    local editWindow = TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, pocketDef, dataKey, dataTable, "POCKET");
     editWindow.containerUi.multiGridRenderer.renderers[inventory].previewTex = nil
     editWindow.containerUi.multiGridRenderer.renderers[inventory].secondaryTarget = item
 
@@ -610,7 +610,7 @@ function TetrisDevTool.openPocketEdit(item)
 end
 
 function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, containerDef, dataKey, dataTable, type)
-    local inventory = ItemContainer.new("DEV_TOOL", nil, nil) -- Create a new container to avoid effecting the actual inventory
+    local inventory = type == "POCKET" and sourceInventory or ItemContainer.new("DEV_TOOL", nil, nil) -- Create a new container to avoid effecting the actual inventory
 
     local editWindow = ISPanel:new(getMouseX(), getMouseY(), 50, 50);
     editWindow:initialise();

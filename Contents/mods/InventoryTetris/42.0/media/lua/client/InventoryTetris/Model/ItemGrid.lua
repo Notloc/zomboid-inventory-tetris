@@ -832,7 +832,7 @@ function ItemGrid:_getSavedContainerData()
         modData.gridContainers = {}
     end
 
-    local invType = self.secondaryTarget and self.secondaryTarget:getID() or self.containerDefinition.trueType
+    local invType = self.secondaryTarget and self.secondaryTarget:getID() or self.containerDefinition.trueType or self.inventory:getType()
     if not modData.gridContainers[invType] then
         modData.gridContainers[invType] = { stacks = {} }
     end
