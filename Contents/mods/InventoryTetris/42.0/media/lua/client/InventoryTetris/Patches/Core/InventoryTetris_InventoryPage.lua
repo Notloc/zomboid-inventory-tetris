@@ -156,7 +156,9 @@ Events.OnGameBoot.Add(function()
 	function ISInventoryPage:addContainerButton(container, texture, name, tooltip)
 		local button = og_addContainerButton(self, container, texture, name, tooltip)
 
-		if (container:getType() == "KeyRing") then
+		local containingItem = container:getContainingItem()
+        local isKeyRing = containingItem and containingItem:hasTag("KeyRing")
+		if (isKeyRing) then
 			self:removeChild(button)
 			self.backpacks[#self.backpacks] = nil
 			-- Prepend the button to buttonPool.
