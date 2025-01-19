@@ -23,6 +23,7 @@ local GridLineTexturesByScale = {
 }
 
 local MEDIA_CHECKMARK_TEX = getTexture("media/ui/Tick_Mark-10.png")
+local COLD_TEX = getTexture("media/textures/InventoryTetris/Cold.png")
 
 -- Color code the items by category
 local colorsByCategory = {
@@ -461,7 +462,7 @@ function ItemGridUI._showLiteratureCheckmark(player, item)
 end
 
 ---comment
----@param drawingContext any
+---@param drawingContext ISUIElement
 ---@param playerObj any
 ---@param stack any
 ---@param item InventoryItem
@@ -470,10 +471,27 @@ end
 ---@param alphaMult any
 ---@param isBuried any
 function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isBuried)
+    -- BACKGROUND EFFECTS
+    local totalWidth = w * OPT.CELL_SIZE - w + 1
+    local totalHeight = h * OPT.CELL_SIZE - h + 1
+    if item:IsFood() then
+        ---@cast item Food
+        local heat = item:getHeat() -- 1 = room, 0.2 = frozen, 3 = max
+        if heat < 1.0 then
+            local coldPercent =  -(heat - 1.0) / 0.8
+            drawingContext:drawRect(x, y, totalWidth, totalHeight, alphaMult * coldPercent, 0.1, 0.5, 0.7)
+        elseif heat > 1.0 then
+            local hotPercent = (heat - 1.0) / 1.5
+            if hotPercent > 1 then hotPercent = 1 end
+            drawingContext:drawRect(x, y, totalWidth, totalHeight, alphaMult * hotPercent, 1, 0.0, 0.0)
+        end
+    end
+    -- END BACKGROUND EFFECTS
+
     ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, w, h, stack.isRotated, alphaMult, isBuried)
 
+    -- FOREGROUND EFFECTS
     local doShadow = OPT.DO_STACK_SHADOWS
-
     if stack.count > 1 then
         local text = tostring(stack.count)
         ItemGridUI._drawTextOnTopLeft(drawingContext, text, x, y, alphaMult, doShadow)
@@ -485,6 +503,13 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         if percent < 1.0 then
             ItemGridUI._drawVerticalBar(drawingContext, percent, x, y, w, h, alphaMult)
         end
+
+        local frozen = item:isFrozen()
+        if frozen then
+            ItemGridUI.setTextureAsCrunchy(COLD_TEX)
+            drawingContext:drawTextureScaledUniform(COLD_TEX, x+totalWidth-8*OPT.SCALE, y, OPT.SCALE, alphaMult, 0.8, 0.8, 1)
+        end
+
     elseif item:IsDrainable() then
         ---@cast item DrainableComboItem
         local percent = item:getCurrentUses() / item:getMaxUses()

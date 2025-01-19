@@ -1228,15 +1228,19 @@ end
 function TetrisDevTool._exportDataPack()
     local items = FormattedLuaWriter.formatLocalVariable("itemPack", TetrisDevTool.itemEdits, 1);
     local containers = FormattedLuaWriter.formatLocalVariable("containerPack", TetrisDevTool.containerEdits, 1);
+    local pockets = FormattedLuaWriter.formatLocalVariable("pocketPack", TetrisDevTool.pocketEdits, 1);
 
     local text =   'Events.OnGameBoot.Add(function() \r\n'
     text = text .. '\t' .. 'if not TetrisItemData then return end\r\n'
     text = text .. items
     text = text .. '\r\n'
     text = text .. containers
+    text = text .. '\r\n'
+    text = text .. pockets
     text = text .. '\r\n\r\n'
     text = text .. '\t' .. 'TetrisItemData.registerItemDefinitions(itemPack)\r\n'
     text = text .. '\t' .. 'TetrisContainerData.registerContainerDefinitions(containerPack)\r\n'
+    text = text .. '\t' .. 'TetrisPocketData.registerPocketDefinitions(pocketPack)\r\n'
     text = text .. 'end)\r\n'
 
     local file = getFileWriter("TetrisDataPack.lua", true, false);
