@@ -1,12 +1,13 @@
 Inventory Tetris - The Plan
 
-Remove organized/disorganized
-	Disorganized behaviour is only for disorganized trait now
-	Organized will buff autosort
+Crafting table
+	See mockup
 
 Auto sort
+	Organized will buff autosort
 
-Remove generic recipe handler
+Ability to scroll through a stack
+	just reorder the item ids
 
 [GENERAL BUG FIXES]
 	Tooltips on overflow
@@ -20,7 +21,6 @@ Remove generic recipe handler
 [CONTROLLER SUPPORT]
 	Nav
 		Improved movement between grids
-		Keep selected grid spot in scrollview
 	Controls
 		Way to split stacks for controller (L3?)
 		Need a way to start searching and block controller selection until grid is revealed
@@ -64,26 +64,3 @@ Remove generic recipe handler
 	Split base datapack into several
 		One per category 
 
-	Saucepan with water size is wrong
-
-[CLOTHING POCKETS UPDATE]
-	Review clothing pocket balance
-		Just using the mod support right now, but the uniformity of it is appealing
-
-[FRAGILE]
-	Go through everything!
-	That includes world containers
-
-[Allow stacking of food items]
-	Will require 
-
-====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ====== BETA 6 ======  
-
-
-[ADDITIONAL CONTROL OPTIONS]
-	Goal:
-		Allow players to further customize their controls.
-		If a player wants the UI to act like Minecraft, why not?
-		Provide control scheme presets.
-
-A way to quickly move all of the same item type to target container

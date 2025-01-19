@@ -5,6 +5,9 @@ if not __GLOBAL_INSTACEOF_EXCLUSIONS_SCOPE then
     InstanceofExclusionsScope.exclusions = {}
     __GLOBAL_INSTACEOF_EXCLUSIONS_SCOPE = InstanceofExclusionsScope
 
+    ---@param callback function
+    ---@param exclusion string
+    ---@return boolean
     function InstanceofExclusionsScope:execute(callback, exclusion)
         local doAdd = self.exclusions[exclusion] == nil
         if doAdd then
@@ -23,10 +26,6 @@ if not __GLOBAL_INSTACEOF_EXCLUSIONS_SCOPE then
         local og_instanceof = instanceof
 
         function instanceof(obj, className)
-            -- Handle nil because someone else isn't
-            if obj == nil then
-                return false
-            end
             if InstanceofExclusionsScope:isActive() and InstanceofExclusionsScope.exclusions[className] then
                 return false
             end
