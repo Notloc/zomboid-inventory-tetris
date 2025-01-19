@@ -321,10 +321,10 @@ end
 
 function TetrisItemData._calculateItemStackability(item, itemClass)
     local maxStack = 1
-    if TetrisItemData._dynamicSizeItems[item:getFullType()] then
+    if item:getFluidContainer() or TetrisItemData._dynamicSizeItems[item:getFullType()] then
         return maxStack
     end
-
+    
     local calculation = TetrisItemData._itemClassToStackabilityCalculation[itemClass]
     if type(calculation) == "function" then
         maxStack = calculation(item)
@@ -392,10 +392,6 @@ function TetrisItemData._calculateMoveableStackability(item)
 end
 
 function TetrisItemData._calculateFoodStackability(item)
-    if item:getFluidContainer() then
-        return 1
-    end
-
     local weight = item:getActualWeight()
     return math.max(1, math.floor(1 / weight))
 end
