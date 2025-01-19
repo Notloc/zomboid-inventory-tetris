@@ -24,7 +24,7 @@ end
 function NotlocSidePanelToggle:createChildren()
     ISUIElement.createChildren(self);
 
-    self.toggleButton = ISButton:new(0, 0, self.width, self.height, "", self, self.onToggleEquipmentUiWindow)
+    self.toggleButton = ISButton:new(0, 0, self.width, self.height, "", self, self.onToggleSidePanel)
     self.toggleButton:initialise()
     self.toggleButton.image = self.texture
 
@@ -42,7 +42,7 @@ function NotlocSidePanelToggle:createChildren()
     self.toggleButton:bringToTop()
 end
 
-function NotlocSidePanelToggle:onToggleEquipmentUiWindow()
+function NotlocSidePanelToggle:onToggleSidePanel()
 	local state = not self.notlocSidePanel:isVisible()
 	self.notlocSidePanel:setVisible(state)
     self.notlocSidePanel.isClosed = not state

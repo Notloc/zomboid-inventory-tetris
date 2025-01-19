@@ -4,7 +4,8 @@
         "?.lua",
         "?/init.lua",
         "server/?.lua",
-        "client/?.lua"
+        "client/?.lua",
+        "shared/?.lua"
     ],
     "Lua.completion.requireSeparator": "/",
     "Lua.workspace.preloadFileSize": 800,

@@ -11,7 +11,7 @@ Events.OnGameBoot.Add(function()
     end
 
     function ISInventoryPage:createTetrisCraftingGrid()
-        local craftingGrid = TetrisCraftingGrid:new(200, self.inventoryPane, self.player)
+        local craftingGrid = TetrisCraftingGridPanel:new(200, self.inventoryPane, self.player)
         craftingGrid:addToInventoryPage(self)
     end
 
