@@ -34,6 +34,34 @@ local four_pockets = {
         }
     }
 }
+local six_pockets = {
+    gridDefinitions = {
+        {
+            size = {width=1, height=1},
+            position = {x=0, y=0},
+        },
+        {
+            size = {width=1, height=1},
+            position = {x=1, y=0},
+        },
+        {
+            size = {width=1, height=1},
+            position = {x=2, y=0},
+        },
+        {
+            size = {width=1, height=1},
+            position = {x=3, y=0},
+        },
+        {
+            size = {width=1, height=1},
+            position = {x=4, y=0},
+        },
+        {
+            size = {width=1, height=1},
+            position = {x=5, y=0},
+        }
+    }
+}
 local two_big_pockets = {
     gridDefinitions = {
         {
@@ -183,6 +211,7 @@ TetrisPocketData.defaultPocketDefinitionsBySlot = {
     ["Legs"] = four_pockets,
     ["LowerBody"] = four_pockets,
     ["Pants"] = four_pockets,
+    ["PantsExtra"] = six_pockets,
     ["ShortPants"] = four_pockets,
     ["ShortsShort"] = four_pockets,
     ["Skirt"] = two_pockets,
