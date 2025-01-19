@@ -16,6 +16,7 @@
 ---@field gridKey string
 ---@field isProxInv boolean
 ---@field isCorpse boolean
+---@field isCraftingGrid boolean
 ItemGrid = {}
 
 local PROX_INV_TYPE = "proxInv"
@@ -50,6 +51,8 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, 
     o.gridKey = gridIndex .. (secondaryTarget and tostring(secondaryTarget) or "")
     o.isProxInv = containerDefinition.trueType == PROX_INV_TYPE
     o.isCorpse = instanceof(o.inventory:getParent(), "IsoDeadBody")
+
+    o.isCraftingGrid = containerDefinition.trueType == "TETRIS_CRAFTING"
 
     o:refresh()
     return o
@@ -840,6 +843,7 @@ function ItemGrid:_getSavedContainerData()
     return modData.gridContainers[invType], parent
 end
 
+-- TODO: I think these being static was a mistake, will likely wig out in split screen
 ItemGrid._floorModData = {} -- No need to save floor grids, but we do allow users to reposition items on the floor temporarily
 ItemGrid._proxData = {} -- Proximity inventory mod support, acts the same as floor grids
 
@@ -871,7 +875,7 @@ function ItemGrid:_getParentModData()
         return isoObject:getModData(), isoObject
     end
 
-    print("Error: ItemGrid:_getParentModData() An invalid container setup was found. Data will not be saved.")
+    --print("Error: ItemGrid:_getParentModData() An invalid container setup was found. Data will not be saved.")
     return {} -- Return an empty table so we don't error out
 end
 

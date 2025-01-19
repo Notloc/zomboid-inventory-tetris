@@ -520,7 +520,7 @@ function ItemGridContainerUI.renderItemPreview(self)
     if self.previewTex then
         self:drawTextureScaledAspect(self.previewTex, x, y, size, size, 1, 1, 1, 1)
     else
-        local tex = self.secondaryTarget:getTex()
+        local tex = self.secondaryTarget:getTex() or BASIC_INV_TEXTURE
         self:drawTextureScaledAspect(tex, x, y, size, size, 1, ItemGridUI.getItemColor(self.secondaryTarget))
     end
 

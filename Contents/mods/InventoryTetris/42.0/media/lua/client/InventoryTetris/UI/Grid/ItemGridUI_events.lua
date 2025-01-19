@@ -7,6 +7,8 @@ local CONTROLLER_DOUBLE_PRESS_TIME = 200
 function ItemGridUI:initialise()
     ISPanel.initialise(self)
 
+    self:setWantKeyEvents(true)
+
     self.selectedX = 0
     self.selectedY = 0
     NotlocControllerNode
@@ -560,8 +562,15 @@ local function rotateDraggedItem(key)
     end
 end
 
-
 Events.OnKeyStartPressed.Add(rotateDraggedItem)
+
+function ItemGridUI:onKeyPressed(key)
+    print("ItemGridUI:onKeyStartPressed " .. tostring(key))
+end
+
+function ItemGridUI:onKeyRelease(key)
+    print("ItemGridUI:onKeyRelease " .. tostring(key))
+end
 
 function ItemGridUI.openItemContextMenu(uiContext, x, y, item, inventoryPane, playerNum)
     local container = item:getContainer()

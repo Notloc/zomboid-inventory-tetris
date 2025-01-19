@@ -13,5 +13,7 @@ function TetrisCraftingGridPanel:new(width, inventoryPane, playerNum)
 end
 
 function TetrisCraftingGridPanel:createChildren()
-    
+    local craftingGridUi = TetrisCraftingGridUI:new(0, 0, self.width, self.height, self.inventoryPane, self.playerNum)
+    craftingGridUi:initialise()
+    self:addChild(craftingGridUi)
 end

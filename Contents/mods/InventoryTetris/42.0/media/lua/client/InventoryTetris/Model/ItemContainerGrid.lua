@@ -17,6 +17,7 @@ local PHYSICS_DELAY = 600
 ---@field _onSecondaryGridsAdded table
 ---@field _onSecondaryGridsRemoved table
 ---@field disableSecondaryGrids boolean
+---@field isCraftingGrid boolean
 ItemContainerGrid = {}
 
 ItemContainerGrid._tempGrid = {} -- For hovering over container items, so we don't create a new grid every frame to evaluate if an item can be placed into a hovered backpack
@@ -47,6 +48,7 @@ function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
     o._onSecondaryGridsRemoved = {}
 
     o.disableSecondaryGrids = definitionOverride or not o.isPlayerInventory
+    o.isCraftingGrid = o.containerDefinition.trueType == "TETRIS_CRAFTING"
 
     if not o.disableSecondaryGrids then
         o.player = getSpecificPlayer(playerNum)
@@ -165,6 +167,28 @@ function ItemContainerGrid.FindInstance(inventory, playerNum)
         return containerGrid
     end
     return nil
+end
+
+function ItemContainerGrid.CreateCraftingContainerGrid(playerNum)
+    local craftingContainerDef = {
+        ["gridDefinitions"] = {
+            {
+                ["size"] = {
+                    ["width"] = 5,
+                    ["height"] = 5
+                },
+                ["position"] = {
+                    ["x"] = 0,
+                    ["y"] = 0
+                }
+            }
+        },
+        ["trueType"] = "TETRIS_CRAFTING"
+    }
+
+    local playerObj = getSpecificPlayer(playerNum)
+    local playerInv = playerObj:getInventory()
+    return ItemContainerGrid:new(playerInv, playerNum, craftingContainerDef)
 end
 
 ItemContainerGrid._playerMainGrids = {}
@@ -390,6 +414,7 @@ function ItemContainerGrid:shouldRefresh()
 end
 
 function ItemContainerGrid:shouldDoPhysics()
+    if self.isCraftingGrid then return false end
     if not self.lastPhysics then
         return true
     end
@@ -501,6 +526,10 @@ end
 
 
 function ItemContainerGrid:_updateGridPositions()
+    if self.isCraftingGrid then
+        return -- Crafting grid doesn't not claim items
+    end
+
     self.overflow = {}
     local unpositionedItems = self:_getUnpositionedItems()
 
