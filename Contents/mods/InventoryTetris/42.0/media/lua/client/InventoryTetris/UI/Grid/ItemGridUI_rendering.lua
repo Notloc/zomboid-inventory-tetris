@@ -540,7 +540,10 @@ local maskQueue = {
 }
 
 local stackFont = UIFont.Small
+local postRenderGridItem = TetrisEvents.OnPostRenderGridItem
 
+--- A monolithic function that renders an ItemStack along with its accompanying effects
+--- Written for maximum performance, not readability. Zomboid runs lua with all pcalls, so lua function calls here are too expensive.
 ---@param drawingContext ISUIElement
 ---@param playerObj any
 ---@param stack any
@@ -549,6 +552,7 @@ local stackFont = UIFont.Small
 ---@param y any
 ---@param alphaMult any
 function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isRotated)
+    local SCALE = OPT.SCALE
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
     local TEXTURE_PAD = OPT.TEXTURE_PAD
@@ -617,8 +621,8 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
     local x2 = 1 + x + TEXTURE_PAD * w + (w - minDimension) * texHalf
     local y2 = 1 + y + TEXTURE_PAD * h + (h - minDimension) * texHalf
 
-    local targetScale = OPT.SCALE * minDimension
-    local scale = correctiveScale * targetScale
+    local targetScale = SCALE * minDimension
+    local mainTexScale = correctiveScale * targetScale
     local colorMask = item:getTextureColorMask()
 
     local r,g,b = 1,1,1
@@ -634,11 +638,11 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         local mainTexX = x2 + absX
         local mainTexY = y2 + absY
 
-        local width = texture:getWidth() * scale
-        local height = texture:getHeight() * scale
+        local width = texture:getWidth() * mainTexScale
+        local height = texture:getHeight() * mainTexScale
 
-        local xOffset = texture:getOffsetX() * scale
-        local yOffset = texture:getOffsetY() * scale
+        local xOffset = texture:getOffsetX() * mainTexScale
+        local yOffset = texture:getOffsetY() * mainTexScale
 
         local lx = mainTexX + xOffset
         local rx = mainTexX + width + xOffset
@@ -702,9 +706,9 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         centerY = centerY - absY
     --end
 
-    local fluidMask = item:getTextureFluidMask()
-    if fluidContainer and fluidMask then
-        if fluidPercent > 0 then
+    if fluidContainer then
+        local fluidMask = item:getTextureFluidMask()
+        if fluidMask and fluidPercent > 0 then
             local col = fluidContainer:getColor()
             local maskData = maskQueue[1]
             maskData[1] = true
@@ -714,7 +718,6 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
             maskData[5] = col:getG()
             maskData[6] = col:getB()
             maskData[7] = col:getAlpha()
-
         else
             maskQueue[1][1] = false
         end
@@ -738,7 +741,6 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
     for i=1, 2 do
         local maskData = maskQueue[i]
         if maskData[1] then
-
             local texture = maskData[2]
             local percentage = maskData[3]
             local r = maskData[4]
@@ -767,8 +769,8 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
             local blX, blY = lX, bY
 
             local w, h = texW, texH
-            local offsetX = texture:getOffsetX() * scale
-            local offsetY = texture:getOffsetY() * scale
+            local offsetX = texture:getOffsetX() * mainTexScale
+            local offsetY = texture:getOffsetY() * mainTexScale
             local maskX = x2 + offsetX
             local maskY = y2 + offsetY
 
@@ -782,7 +784,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
                 trX = trX - yX * (1.0 - percentage)
 
                 maskX, maskY = rotateAround(maskX, maskY, centerX, centerY)
-                maskX = maskX - h * scale
+                maskX = maskX - h * mainTexScale
 
                 -- Swap the width and height
                 local temp = w
@@ -790,8 +792,8 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
                 h = temp
 
                 -- Account for the percentage of the texture
-                maskY = maskY + math.floor((1.0 - percentage) * h * scale)
-                h = math.ceil(h * percentage * scale)
+                maskY = maskY + math.floor((1.0 - percentage) * h * mainTexScale)
+                h = math.ceil(h * percentage * mainTexScale)
             else
                 -- Lower the mask by the percentage
                 local missing = 1.0 - percentage
@@ -800,8 +802,8 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
                 trY = trY - yD * missing
 
                 -- Account for the percentage of the texture
-                maskY = maskY + math.floor(missing * h * scale)
-                h = math.ceil(h * scale * percentage)
+                maskY = maskY + math.floor(missing * h * mainTexScale)
+                h = math.ceil(h * mainTexScale * percentage)
             end
 
             maskX = maskX + absX
@@ -816,19 +818,18 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
             spriteRenderer:glBind(texId);
             spriteRenderer:glTexParameteri(3553, 10240, 9728);
 
-            spriteRenderer:render(texture, maskX, maskY, w * scale, h, r, g, b, a, tlX, tlY, trX, trY, brX, brY, blX, blY)
+            spriteRenderer:render(texture, maskX, maskY, w * mainTexScale, h, r, g, b, a, tlX, tlY, trX, trY, brX, brY, blX, blY)
         end
     end
+
+    postRenderGridItem:trigger(drawingContext, item, stack, x, y, cellW+1, cellH+1, playerObj)
+
+    -- FOREGROUND EFFECTS
 
     if item:isBroken() then
         drawingContext:drawTextureScaledUniform(BROKEN_TEXTURE, x2, y2, targetScale, alphaMult * 0.5, 1, 1, 1);
     end
 
-    TetrisEvents.OnPostRenderGridItem:trigger(drawingContext, item, stack, x, y, cellW+1, cellH+1, playerObj)
-
-    local scale = OPT.SCALE
-
-    -- FOREGROUND EFFECTS
     local doShadow = OPT.DO_STACK_SHADOWS
     local count = stack.count
     if count > 1 then
@@ -853,7 +854,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         ---@cast item Food
         if item:isFrozen() then
             ItemGridUI.setTextureAsCrunchy(COLD_TEX)
-            javaObject:DrawTextureScaledUniform(COLD_TEX, x+totalWidth-8*scale, y+totalHeight-8*scale, scale, 0.8, 0.8, 1, alphaMult)
+            javaObject:DrawTextureScaledUniform(COLD_TEX, x+totalWidth-8*SCALE, y+totalHeight-8*SCALE, SCALE, 0.8, 0.8, 1, alphaMult)
         end
 
     elseif drainPercent < 1.0 then
@@ -871,22 +872,22 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
 
         local barX = x + totalWidth - 3
         local top = y + 1
-        local bottom = y + totalHeight
+        local bottom = y + totalHeight - 1
         local missing = (bottom - top) * (1.0 - fluidPercent)
         javaObject:DrawTextureScaledColor(nil, barX, top + missing, 2, bottom - top - missing, r, g, b, alphaMult*a)
 
 
     elseif stack.category == TetrisItemCategory.CONTAINER then
         if TetrisItemData.isSquished(item) then
-            local x2 = x + OPT.CELL_SIZE*w - w - 16
+            local x2 = x + CELL_SIZE*w - w - 16
             local y2 = y + 1
             javaObject:DrawTextureColor(SQUISHED_TEXTURE, x2, y2, 1, 1, 1, alphaMult);
         end
 
     elseif item:getMaxAmmo() > 0 then
         local text = tostring(item:getCurrentAmmoCount())
-        local brX = x + OPT.CELL_SIZE*w - w - 2
-        local brY = y + OPT.CELL_SIZE*h - h - ItemGridUI.lineHeight - 1
+        local brX = x + CELL_SIZE*w - w - 2
+        local brY = y + CELL_SIZE*h - h - ItemGridUI.lineHeight - 1
         if doShadow then
             javaObject:DrawTextRight(stackFont, text, brX+1, brY+1, 0, 0, 0, alphaMult)
         end
@@ -894,13 +895,13 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
 
     elseif ItemGridUI._showLiteratureCheckmark(playerObj, item) then
         -- bottom right
-        local x2 = x + OPT.CELL_SIZE*w - w - 16
-        local y2 = y + OPT.CELL_SIZE*h - h - 16
+        local x2 = x + CELL_SIZE*w - w - 16
+        local y2 = y + CELL_SIZE*h - h - 16
         javaObject:DrawTextureColor(MEDIA_CHECKMARK_TEX, x2, y2, 1, 1, 1, 1);
     end
 
     if item:isFavorite() then
-        local favTex = FAVOURITE_TEXTURE[scale]
+        local favTex = FAVOURITE_TEXTURE[SCALE]
         javaObject:DrawTextureColor(favTex, x + totalWidth - favTex:getWidth() - 1, y+1, 1, 1, 1, alphaMult)
     end
 end
@@ -908,7 +909,6 @@ end
 function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult)
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
-    local TEXTURE_PAD = OPT.TEXTURE_PAD
 
     local minDimension = math.min(w, h)
 
