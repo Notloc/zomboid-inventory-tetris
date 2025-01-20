@@ -194,14 +194,6 @@ end
 
 -- 3 draw calls
 function ItemGridUI:renderBackGrid()
-    local g = 1
-    local b = 1
-
-    if self.isOverflowing then
-        g = 0
-        b = 0
-    end
-
     local width = self.grid.width
     local height = self.grid.height
 
@@ -285,6 +277,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local gravityEnabled = SandboxVars.InventoryTetris.EnableGravity
     local isJoypad = JoypadState.players[self.playerNum+1]
     local draggedItem = isJoypad and ControllerDragAndDrop.getDraggedItem(self.playerNum) or DragAndDrop.getDraggedItem()
+    local playerObj = self.playerObj
 
     local transferQueueData = self.itemTransferData
 
@@ -300,7 +293,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 
     local count = #stacks
     for i=1,count do
-        local stack = stacks[i]        
+        local stack = stacks[i]
         local item = ItemStack.getFrontItem(stack, inventory)
         if item then
             if stack.count > 1 and stack.category == TetrisItemCategory.FOOD then
@@ -326,15 +319,15 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                     if searchSession then
                         local revealed = searchSession.searchedStackIDs[item:getID()]
                         if revealed then
-                            self:_renderGridStack(self.playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, isBuried)
+                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, isBuried)
                         else
-                            self:_renderHiddenStack(self.playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult)
+                            self:_renderHiddenStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult)
                         end
                     else
                         if item ~= draggedItem then
-                            self:_renderGridStack(self.playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, isBuried)
+                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, isBuried)
                         else
-                            self:_renderGridStack(self.playerObj, stack, item, uiX, uiY, w, h, 0.4 * alphaMult * transferAlpha, isBuried)
+                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 0.4 * alphaMult * transferAlpha, isBuried)
                         end
                     end
                 end
@@ -420,7 +413,7 @@ function ItemGridUI:_renderPlacementPreview(gridX, gridY, itemW, itemH, r, g, b)
 end
 
 function ItemGridUI.getItemColor(item, limit)
-    if not item or item:getTextureColorMask() ~= nil then
+    if not item or item:getTextureColorMask() then
         return 1,1,1
     end
 
@@ -493,8 +486,9 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
 
     -- FOREGROUND EFFECTS
     local doShadow = OPT.DO_STACK_SHADOWS
-    if stack.count > 1 then
-        local text = tostring(stack.count)
+    local count = stack.count
+    if count > 1 then
+        local text = tostring(count)
         ItemGridUI._drawTextOnTopLeft(drawingContext, text, x, y, alphaMult, doShadow)
     end
 
@@ -623,6 +617,7 @@ end
 
 -- A bit finnicky, the changes are not permanent and reset shortly after.
 -- Seems to work fine during grid rendering in its current state.
+local spriteRenderer = SpriteRenderer.instance
 function ItemGridUI.setTextureAsCrunchy(texture)
     local TEXTURE_2D = 3553
 
@@ -630,15 +625,15 @@ function ItemGridUI.setTextureAsCrunchy(texture)
     local MAG_FILTER = 10240
     --local MIN_FILTER = 10241
     local NEAREST = 9728
-    SpriteRenderer.instance:glBind(texture:getID());
-    SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, MAG_FILTER, NEAREST);
+    spriteRenderer:glBind(texture:getID());
+    spriteRenderer:glTexParameteri(TEXTURE_2D, MAG_FILTER, NEAREST);
 
     -- Fixes pixel bleeding on the edge of textures from other mods
-    local TEXTURE_WRAP_S = 10242
-    local TEXTURE_WRAP_T = 10243
-    local CLAMP_TO_EDGE = 33071
-    SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE);
-    SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE);
+    --local TEXTURE_WRAP_S = 10242
+    --local TEXTURE_WRAP_T = 10243
+    --local CLAMP_TO_EDGE = 33071
+    --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE);
+    --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE);
 end
 
 ---@param drawingContext ISUIElement
@@ -648,13 +643,12 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     local TEXTURE_PAD = OPT.TEXTURE_PAD
 
     local minDimension = math.min(w, h)
-    local bgBright = isBuried and 0.35 or 1
 
     local cellW = CELL_SIZE * w - w
     local cellH = CELL_SIZE * h - h
 
     local cols = colorsByCategory[stack.category]
-    drawingContext:drawRect(x+1, y+1, cellW - 1, cellH - 1, 0.3 * alphaMult, cols[1]*bgBright, cols[2]*bgBright, cols[3]*bgBright)
+    drawingContext:drawRect(x+1, y+1, cellW - 1, cellH - 1, 0.3 * alphaMult, cols[1], cols[2], cols[3])
 
     local texture = item:getTex() or HIDDEN_ITEM
 
@@ -672,7 +666,7 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     local y2 = 1 + y + TEXTURE_PAD * h + (h - minDimension) * texHalf
 
     local targetScale = OPT.SCALE * minDimension
-    ItemGridUI._drawItem(drawingContext, item, x2, y2, targetScale * correctiveScale, alphaMult, bgBright, rotate)
+    ItemGridUI._drawItem(drawingContext, item, x2, y2, targetScale * correctiveScale, alphaMult, rotate)
 
     if item:isBroken() then
         drawingContext:drawTextureScaledUniform(BROKEN_TEXTURE, x2, y2, targetScale, alphaMult * 0.5, 1, 1, 1);
@@ -785,7 +779,7 @@ function ItemGridUI._drawTextureScaledAndRotated(drawingContext, texture, x, y, 
     end
 
     ItemGridUI.setTextureAsCrunchy(texture)
-    drawingContext:drawTextureAllPoint(
+    drawingContext.javaObject:DrawTexture(
         texture,
         tlX, tlY,
         trX, trY,
@@ -797,11 +791,13 @@ function ItemGridUI._drawTextureScaledAndRotated(drawingContext, texture, x, y, 
     return centerX - dcX, centerY - dcY
 end
 
-function ItemGridUI._drawItem(drawingContext, item, x, y, scale, alphaMult, brightness, rotated)
-    local r,g,b = ItemGridUI.getItemColor(item)
-    r = r * brightness
-    g = g * brightness
-    b = b * brightness
+function ItemGridUI._drawItem(drawingContext, item, x, y, scale, alphaMult, rotated)
+    local colorMask = item:getTextureColorMask()
+
+    local r,g,b = 1,1,1
+    if not colorMask then
+        r,g,b = item:getR(), item:getG(), item:getB()
+    end
 
     local texture = item:getTex() or HIDDEN_ITEM
 
@@ -810,14 +806,13 @@ function ItemGridUI._drawItem(drawingContext, item, x, y, scale, alphaMult, brig
     local fluidContainer = item:getFluidContainer()
     local fluidMask = item:getTextureFluidMask()
     if fluidContainer and fluidMask then
-        local col = fluidContainer:getColor()
         local percent = fluidContainer:getAmount() / fluidContainer:getCapacity()
         if percent > 0 then
+            local col = fluidContainer:getColor()
             ItemGridUI._drawMask(drawingContext, fluidMask, percent, x, y, col:getR(), col:getG(), col:getB(), alphaMult * col:getAlpha(), scale, rotated, centerX, centerY);
         end
     end
 
-    local colorMask = item:getTextureColorMask()
     if colorMask then
         ItemGridUI._drawMask(drawingContext, colorMask, 1.0, x, y, item:getR(), item:getG(), item:getB(), alphaMult, scale, rotated, centerX, centerY)
     end

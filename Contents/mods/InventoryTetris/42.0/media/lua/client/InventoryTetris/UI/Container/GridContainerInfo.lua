@@ -7,6 +7,7 @@ local ICON_SIZE = 64
 
 local WEIGHT_TEXTURE = getTexture("media/textures/InventoryTetris/weight.png")
 local SELECTED_TEXTURE = getTexture("media/ui/FavoriteStar.png")
+local UNKNOWN_WEIGHT = "?"
 
 GridContainerInfo = ISUIElement:derive("GridContainerInfo")
 
@@ -51,8 +52,8 @@ function GridContainerInfo:prerender()
         r,g,b = ItemGridUI.getItemColor(containerUi.item, 0.5)
     end
     
-    local offsetX = (ICON_SIZE/2 + ICON_PADDING_X) * scale
-    local offsetY = (ICON_SIZE/2 + ICON_PADDING_Y) * scale
+    local offsetX = (ICON_SIZE*0.5 + ICON_PADDING_X) * scale
+    local offsetY = (ICON_SIZE*0.5 + ICON_PADDING_Y) * scale
     self:drawTextureCenteredAndSquare(containerUi.invTexture, offsetX, offsetY+4, ICON_SIZE * scale, 1, r,g,b)
 
     local topIconY = 3 * scale
@@ -83,23 +84,25 @@ function GridContainerInfo:prerender()
     local roundedWeight = round(realWeight, 1)
     if SandboxVars.InventoryTetris.EnableSearch then
         if self.containerUi.containerGrid:areAnyUnsearched() then
-            roundedWeight = "?"
+            roundedWeight = UNKNOWN_WEIGHT
         end
     end
 
-    local weightText = (containerDef.isFragile or SandboxVars.InventoryTetris.EnforceCarryWeight) and (roundedWeight .. " / " .. capacity) or (roundedWeight .. "")
-
+    if roundedWeight ~= self.lastWeight then
+        self.lastWeight = roundedWeight
+        self.weightText = (containerDef.isFragile or SandboxVars.InventoryTetris.EnforceCarryWeight) and (roundedWeight .. " / " .. capacity) or (roundedWeight .. "")
+    end
     local r,g,b = 1,1,1
 
     if containerUi.isPlayerInventory then
         r,g,b = getWeightColor(realWeight, capacity)
     end
 
-    local centerX = (ICON_SIZE/2 + ICON_PADDING_X) * scale - 8 * scale
+    local centerX = (ICON_SIZE*0.5 + ICON_PADDING_X) * scale - 8 * scale
     local textY = (ICON_PADDING_Y*2 + ICON_SIZE) * scale - scale * 2
-    self:drawTextCentre(weightText, centerX, textY, r,g,b, 1, UIFont.Medium);
+    self:drawTextCentre(self.weightText, centerX, textY, r,g,b, 1, UIFont.Medium);
     local lineHeight = getTextManager():getFontFromEnum(UIFont.Medium):getLineHeight()
-    local lineWidth = getTextManager():MeasureStringX(UIFont.Medium, weightText)
+    local lineWidth = getTextManager():MeasureStringX(UIFont.Medium, self.weightText)
 
     local weightXOff = 2
     local weightYOff = 0
@@ -108,7 +111,7 @@ function GridContainerInfo:prerender()
         weightYOff = weightYOff + ZombRand(-1/r,1/r)
     end
 
-    local weightX = centerX + lineWidth/2 + weightXOff * scale
+    local weightX = centerX + lineWidth*0.5 + weightXOff * scale
     local weightY = textY + lineHeight*0.75 + weightYOff - (8 * scale) - 2
     if r == 1 and g == 1 and b == 1 then
         self:drawTextureScaledUniform(WEIGHT_TEXTURE, weightX, weightY, scale, 1, 1, 0.92, 0.75);

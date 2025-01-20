@@ -20,6 +20,8 @@ local NPC_INV_TEXTURE = instanceItem("Base.Spiffo"):getTex()
 
 local BLACK = {r=0, g=0, b=0, a=1}
 
+local FONT_HEIGHT_SMALL = getTextManager():getFontHeight(UIFont.Small)
+
 ---@class ItemGridContainerUI : ISPanel
 ---@field inventory ItemContainer
 ---@field inventoryPane table
@@ -66,17 +68,21 @@ function ItemGridContainerUI:doSpecialInventoryIcons(inventory)
 end
 
 function ItemGridContainerUI:getInventoryName(inventory)
-    if self.item then
-        return self.item:getName()
-    elseif self.isPlayerInventory then
-        local desc = self.player:getDescriptor()
-        return getText("IGUI_InventoryName", desc:getForename(), desc:getSurname())
-    elseif instanceof(inventory:getParent(), "IsoNpcPlayer") then
-        local desc = inventory:getParent():getDescriptor()
-        return getText("IGUI_InventoryName", desc:getForename(), desc:getSurname())
-    else
-        return getTextOrNull("IGUI_ContainerTitle_" .. inventory:getType()) or "Container"
+    if not self.titleText then
+        if self.item then
+            self.titleText = self.item:getName()
+        elseif self.isPlayerInventory then
+            local desc = self.player:getDescriptor()
+            self.titleText = getText("IGUI_InventoryName", desc:getForename(), desc:getSurname())
+        elseif instanceof(inventory:getParent(), "IsoNpcPlayer") then
+            local desc = inventory:getParent():getDescriptor()
+            self.titleText = getText("IGUI_InventoryName", desc:getForename(), desc:getSurname())
+        else
+            self.titleText = getTextOrNull("IGUI_ContainerTitle_" .. inventory:getType()) or "Container"
+        end
     end
+
+    return self.titleText
 end
 
 function ItemGridContainerUI:updateContainerTexture(container)
@@ -201,7 +207,7 @@ function ItemGridContainerUI:createGridRenderer(gridUis, target)
     end
 
     gridRenderer.containerUi = self
-    gridRenderer.prerender = self.isPlayerInventory and gridRenderer.prerender or ItemGridContainerUI.prerenderGrids
+    gridRenderer.prerender = self.isPlayerInventory and gridRenderer.prerender or function() end
     gridRenderer.render = self.isPlayerInventory and ItemGridContainerUI.renderItemPreview or gridRenderer.render
     gridRenderer.grids = gridUis
     gridRenderer.secondaryTarget = target
@@ -227,7 +233,7 @@ function ItemGridContainerUI:onApplyContainerInfoScale(infoScale)
 end
 
 function ItemGridContainerUI:applyScales(gridScale, infoScale)
-    local lineHeight = getTextManager():getFontHeight(UIFont.Small)
+    local lineHeight = FONT_HEIGHT_SMALL
     local titleOffset = self.showTitle and lineHeight + (TITLE_Y_PADDING * 2) - 5 or 1
 
     local infoWidth = (ICON_SIZE + ICON_PADDING_X * 2) * infoScale
@@ -493,18 +499,12 @@ function ItemGridContainerUI:prerender()
 
     if self.showTitle then
         local collapseX = self:renderTitle(self:getInventoryName(inv), 0, 0, TITLE_Y_PADDING, 1) + 3
-        
+
         self.collapseButton:setVisible(true)
         self.collapseButton:setX(collapseX)
     else
         self.collapseButton:setVisible(false)
     end
-end
-
-function ItemGridContainerUI.prerenderGrids(self)
-    self:drawRect(0, 0, self.width, self.height, 0.9,0,0,0)
-    self:drawTextureScaled(CONTAINER_BG, 0, 0, self.width, self.height, 0.225, 1, 1, 1)
-    self:drawRectBorder(0, 0, self.width, self.height, 0.5,1,1,1)
 end
 
 function ItemGridContainerUI.renderItemPreview(self)
@@ -534,7 +534,7 @@ end
 
 function ItemGridContainerUI:renderTitle(text, xOffset, yOffset, paddingX, paddingY)
     local textW = getTextManager():MeasureStringX(UIFont.Small, text);
-    local textH = getTextManager():getFontHeight(UIFont.Small);
+    local textH = FONT_HEIGHT_SMALL;
 
     local color = (self.isGridCollapsed and self.controllerNode.isFocused) and NotlocControllerNode.FOCUS_COLOR or BLACK
 

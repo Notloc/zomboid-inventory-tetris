@@ -96,11 +96,12 @@ function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
         return devToolOverride
     end
 
-    if not TetrisItemData._itemData[fType] then
-        local data = TetrisItemData._autoCalculateItemInfo(item, isSquished)
+    local data = TetrisItemData._itemData[fType]
+    if not data then
+        data = TetrisItemData._autoCalculateItemInfo(item, isSquished)
         TetrisItemData._itemData[fType] = data
     end
-    return TetrisItemData._itemData[fType]
+    return data
 end
 
 function TetrisItemData.isSquishable(item)
