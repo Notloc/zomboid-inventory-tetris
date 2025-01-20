@@ -63,6 +63,15 @@ local OPT = require("InventoryTetris/Settings")
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
 local HIDDEN_ITEM = getTexture("media/textures/InventoryTetris/Hidden.png")
 local SQUISHED_TEXTURE = getTexture("media/textures/InventoryTetris/Squished.png")
+local FAVOURITE_TEXTURE = {
+    [0.5] =   getTexture("media/textures/InventoryTetris/0.5x/Favourite.png"),
+    [0.75] =  getTexture("media/textures/InventoryTetris/0.5x/Favourite.png"),
+    [1] =     getTexture("media/textures/InventoryTetris/1x/Favourite.png"),
+    [1.5] =   getTexture("media/textures/InventoryTetris/1x/Favourite.png"),
+    [2] =     getTexture("media/textures/InventoryTetris/2x/Favourite.png"),
+    [3] =     getTexture("media/textures/InventoryTetris/3x/Favourite.png"),
+    [4] =     getTexture("media/textures/InventoryTetris/4x/Favourite.png")
+}
 
 local function determineContainerHoverColor(draggedStack, hoveredStack, dragInv, hoverInv, playerNum)
     local draggedItem = ItemStack.getFrontItem(draggedStack, dragInv)
@@ -490,6 +499,8 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
 
     ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, w, h, stack.isRotated, alphaMult, isBuried)
 
+    local scale = OPT.SCALE
+
     -- FOREGROUND EFFECTS
     local doShadow = OPT.DO_STACK_SHADOWS
     if stack.count > 1 then
@@ -507,7 +518,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         local frozen = item:isFrozen()
         if frozen then
             ItemGridUI.setTextureAsCrunchy(COLD_TEX)
-            drawingContext:drawTextureScaledUniform(COLD_TEX, x+totalWidth-8*OPT.SCALE, y, OPT.SCALE, alphaMult, 0.8, 0.8, 1)
+            drawingContext:drawTextureScaledUniform(COLD_TEX, x+totalWidth-8*scale, y+totalHeight-8*scale, scale, alphaMult, 0.8, 0.8, 1)
         end
 
     elseif item:IsDrainable() then
@@ -537,6 +548,11 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         local x2 = x + OPT.CELL_SIZE*w - w - 16
         local y2 = y + OPT.CELL_SIZE*h - h - 16
         drawingContext:drawTexture(MEDIA_CHECKMARK_TEX, x2, y2, 1, 1, 1, 1);
+    end
+
+    if item:isFavorite() then
+        local favTex = FAVOURITE_TEXTURE[scale]
+        drawingContext:drawTexture(favTex, x + totalWidth - favTex:getWidth() - 1, y+1, alphaMult, 1, 1, 1)
     end
 end
 
