@@ -30,6 +30,10 @@ TetrisItemData._dynamicSizeItems = {
     ["Base.WhiteCrappie"] = true,
 }
 
+---@param item InventoryItem
+---@param isRotated boolean
+---@return integer
+---@return integer
 function TetrisItemData.getItemSize(item, isRotated)
     local data = TetrisItemData._getItemData(item)
     if isRotated then

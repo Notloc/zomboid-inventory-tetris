@@ -9,7 +9,7 @@
 ---@field public isRotated boolean
 ---@field public itemType string
 ---@field public category string
-
+---@field private _frontItem InventoryItem
 ItemStack = {}
 
 ---@return ItemStack
@@ -35,6 +35,10 @@ function ItemStack.createTempStack(item)
     return stack
 end
 
+---comment
+---@param stack ItemStack
+---@param inventory ItemContainer
+---@return InventoryItem
 function ItemStack.getFrontItem(stack, inventory)
     if stack._frontItem and stack._frontItem:getContainer() == inventory then
         return stack._frontItem
@@ -47,6 +51,8 @@ function ItemStack.getFrontItem(stack, inventory)
             return item
         end
     end
+
+    ---@diagnostic disable-next-line: return-type-mismatch
     return nil
 end
 
