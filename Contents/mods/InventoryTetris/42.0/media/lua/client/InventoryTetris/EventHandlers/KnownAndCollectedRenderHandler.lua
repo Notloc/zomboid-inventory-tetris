@@ -48,7 +48,27 @@ local unKnownUnfinishedTex = {
     [3]=getTexture("media/textures/InventoryTetris/KnownAndCollected/3x/iconUnKnownUnfinished.png"),
     [4]=getTexture("media/textures/InventoryTetris/KnownAndCollected/4x/iconUnKnownUnfinished.png"),
 }
-
+local unKnownEntertainmentTex = {
+    [0.5]=getTexture("media/textures/InventoryTetris/KnownAndCollected/0.5x/iconUnKnownEntertainment.png"),
+    [1]=getTexture("media/textures/InventoryTetris/KnownAndCollected/1x/iconUnKnownEntertainment.png"),
+    [2]=getTexture("media/textures/InventoryTetris/KnownAndCollected/2x/iconUnKnownEntertainment.png"),
+    [3]=getTexture("media/textures/InventoryTetris/KnownAndCollected/3x/iconUnKnownEntertainment.png"),
+    [4]=getTexture("media/textures/InventoryTetris/KnownAndCollected/4x/iconUnKnownEntertainment.png"),
+}
+local unKnownFlierTex = {
+    [0.5]=getTexture("media/textures/InventoryTetris/KnownAndCollected/0.5x/iconUnKnownFlier.png"),
+    [1]=getTexture("media/textures/InventoryTetris/KnownAndCollected/1x/iconUnKnownFlier.png"),
+    [2]=getTexture("media/textures/InventoryTetris/KnownAndCollected/2x/iconUnKnownFlier.png"),
+    [3]=getTexture("media/textures/InventoryTetris/KnownAndCollected/3x/iconUnKnownFlier.png"),
+    [4]=getTexture("media/textures/InventoryTetris/KnownAndCollected/4x/iconUnKnownFlier.png"),
+}
+local unKnownMapTex = {
+    [0.5]=getTexture("media/textures/InventoryTetris/KnownAndCollected/0.5x/iconUnKnownMap.png"),
+    [1]=getTexture("media/textures/InventoryTetris/KnownAndCollected/1x/iconUnKnownMap.png"),
+    [2]=getTexture("media/textures/InventoryTetris/KnownAndCollected/2x/iconUnKnownMap.png"),
+    [3]=getTexture("media/textures/InventoryTetris/KnownAndCollected/3x/iconUnKnownMap.png"),
+    [4]=getTexture("media/textures/InventoryTetris/KnownAndCollected/4x/iconUnKnownMap.png"),
+}
 
 -- Original code adapted from Known and Collected mod
 -- All credit goes to UnCheat
@@ -151,10 +171,6 @@ function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridSta
         end
     end
 
-    if unKnownMap or unKnownFlier or unKnownEntertainment then
-        unKnown = true
-    end
-
     local scale = SETTINGS.SCALE
     local index = scale
     if index == 0.75 or index == 1.5 then
@@ -184,6 +200,12 @@ function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridSta
         bottomRightTex = unavailableTex
     elseif unPlayed then
         bottomRightTex = mediaTex
+    elseif unKnownEntertainment then
+        bottomRightTex = unKnownEntertainmentTex
+    elseif unKnownFlier then
+        bottomRightTex = unKnownFlierTex
+    elseif unKnownMap then
+        bottomRightTex = unKnownMapTex
     end
 
     if bottomRightTex then
