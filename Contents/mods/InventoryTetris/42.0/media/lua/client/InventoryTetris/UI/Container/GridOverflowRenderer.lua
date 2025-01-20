@@ -81,7 +81,7 @@ function GridOverflowRenderer:render()
     for _, stack in ipairs(overflow) do
         local item = ItemStack.getFrontItem(stack, inventory)
         if item then
-            ItemGridUI.updateItem(item);
+            --ItemGridUI.updateItem(item);
 
             local yPos = yPositions[yi]
             local alpha = 1

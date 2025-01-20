@@ -1,6 +1,7 @@
 require("InventoryTetris/UI/Grid/ItemGridUI")
 require("InventoryTetris/Data/TetrisItemCategory")
 local ItemGridUI = ItemGridUI
+local TetrisItemCategory = TetrisItemCategory
 
 -- Premade textures for supported scales so that any scale gets pixel perfect grids
 local GridBackgroundTexturesByScale = {
@@ -200,15 +201,16 @@ end
 
 function ItemGridUI:renderIncomingTransfers()
     local incomingActions = self.itemTransferData:getIncomingActions(self.grid.inventory, self.grid.gridKey)
+    local playerObj = self.playerObj
 
-    for item, action in pairs(incomingActions) do
+    for _, action in pairs(incomingActions) do
         local stack = ItemStack.createTempStack(action.item)
         local item = action.item
         if action.gridX and action.gridY then
             local x = action.gridX * OPT.CELL_SIZE - action.gridX
             local y = action.gridY * OPT.CELL_SIZE - action.gridY
             local w, h = TetrisItemData.getItemSize(item, action.isRotated)
-            ItemGridUI._renderGridItem(self, self.playerObj, item, stack, x, y, w, h, action.isRotated, 0.18, false)
+            ItemGridUI._renderGridStack(self, playerObj, stack, item, x, y, w, h, 0.18, action.isRotated)
         end
     end
 end
@@ -226,6 +228,7 @@ end
 function ItemGridUI:renderGridItems(searchSession)
     local inventory = self.grid.inventory
     local stacks = self.grid:getStacks()
+
     self:renderStackLoop(inventory, stacks, 1, searchSession)
 
     if self.controllerNode.isFocused then
@@ -258,12 +261,11 @@ end
 
 function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local CELL_SIZE = OPT.CELL_SIZE
-    local gravityEnabled = SandboxVars.InventoryTetris.EnableGravity
     local isJoypad = JoypadState.players[self.playerNum+1]
     local draggedItem = isJoypad and ControllerDragAndDrop.getDraggedItem(self.playerNum) or DragAndDrop.getDraggedItem()
     local playerObj = self.playerObj
 
-    local transferQueueData = self.itemTransferData
+    local outgoingQueueData = self.itemTransferData:getOutgoingActions(inventory)
 
     local yCorrection = 0
     local yCullBottom = 0
@@ -276,18 +278,26 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     end
 
     local count = #stacks
-    for j=1, 5 do
     for i=1,count do
         local stack = stacks[i]
-        local item = ItemStack.getFrontItem(stack, inventory)
+        local item = stack._frontItem or ItemStack.getFrontItem(stack, inventory)
         if item then
             if stack.count > 1 and stack.category == TetrisItemCategory.FOOD then
                 for itemId, _ in pairs(stack.itemIDs) do
                     local item = inventory:getItemById(itemId)
-                    ItemGridUI.updateItem(item)
+                    if item then
+                        item:updateAge()
+                        if item:IsClothing() then
+                            item:updateWetness()
+                        end
+                    end
                 end
             else
-                ItemGridUI.updateItem(item);
+                item:updateAge()
+                if item:IsClothing() then
+                    ---@cast item Clothing
+                    item:updateWetness()
+                end
             end
 
             local x, y = stack.x, stack.y
@@ -299,26 +309,24 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                 local shouldCull = not self.containerUi.isPopup and (uiY + h * CELL_SIZE - h < yCullBottom or uiY > yCullTop)
 
                 if not shouldCull then
-                    local isBuried = gravityEnabled and self.grid:isStackBuried(stack)
-                    local transferAlpha = transferQueueData:getOutgoingActions(inventory)[item] and 0.4 or 1
+                    local transferAlpha = outgoingQueueData[item] and 0.4 or 1
                     if searchSession then
                         local revealed = searchSession.searchedStackIDs[item:getID()]
                         if revealed then
-                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, isBuried)
+                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, stack.isRotated)
                         else
                             self:_renderHiddenStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult)
                         end
                     else
                         if item ~= draggedItem then
-                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, isBuried)
+                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, stack.isRotated)
                         else
-                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 0.4 * alphaMult * transferAlpha, isBuried)
+                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 0.4 * alphaMult * transferAlpha, stack.isRotated)
                         end
                     end
                 end
             end
         end
-    end
     end
 end
 
@@ -390,7 +398,7 @@ function ItemGridUI:_renderControllerDrag(opacity)
         local x = self.selectedX * OPT.CELL_SIZE - self.selectedX
         local y = self.selectedY * OPT.CELL_SIZE - self.selectedY
         local w, h = TetrisItemData.getItemSize(item, isRotated)
-        self:_renderGridItem(self.playerObj, item, stack, x, y, w, h, isRotated, opacity, false)
+        self:_renderGridStack(self.playerObj, item, stack, x, y, w, h, opacity, isRotated)
     end
 end
 
@@ -437,6 +445,27 @@ function ItemGridUI._showLiteratureCheckmark(player, item)
         )
 end
 
+-- A bit finnicky, the changes are not permanent and reset shortly after.
+-- Seems to work fine during grid rendering in its current state.
+local spriteRenderer = SpriteRenderer.instance
+function ItemGridUI.setTextureAsCrunchy(texture)
+    local TEXTURE_2D = 3553
+
+    -- Fixes blurry textures from other mods
+    local MAG_FILTER = 10240
+    --local MIN_FILTER = 10241
+    local NEAREST = 9728
+    spriteRenderer:glBind(texture:getID());
+    spriteRenderer:glTexParameteri(TEXTURE_2D, MAG_FILTER, NEAREST);
+
+    -- Fixes pixel bleeding on the edge of textures from other mods
+    --local TEXTURE_WRAP_S = 10242
+    --local TEXTURE_WRAP_T = 10243
+    --local CLAMP_TO_EDGE = 33071
+    --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE);
+    --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE);
+end
+
 local col3 = {r=0, g=1,b=1,a=1}
 local col2 = {r=1,g=1,b=0,a=1}
 local col1 = {r=1,g=0,b=0,a=1}
@@ -459,6 +488,57 @@ local function triLerpColors(value)
     end
 end
 
+local sinTheta = math.sin(math.rad(90))
+local cosTheta = math.cos(math.rad(90))
+local function rotateAround(x, y, centerX, centerY)
+    local x2 = x - centerX
+    local y2 = y - centerY
+
+    local x3 = x2 * cosTheta - y2 * sinTheta
+    local y3 = x2 * sinTheta + y2 * cosTheta
+
+    return x3 + centerX, y3 + centerY
+end
+
+local function rotateUVs90(
+    tlX, tlY,
+    trX, trY,
+    brX, brY,
+    blX, blY
+)
+    return
+        blX, blY,
+        tlX, tlY,
+        trX, trY,
+        brX, brY
+end
+
+-- Color code the items by category
+local colorsByCategory = {
+    [TetrisItemCategory.MELEE] = {0.95, 0.15, 0.7},
+    [TetrisItemCategory.RANGED] = {0.35, 0, 0},
+    [TetrisItemCategory.AMMO] = {1, 1, 0},
+    [TetrisItemCategory.MAGAZINE] = {0.85, 0.5, 0.05},
+    [TetrisItemCategory.ATTACHMENT] = {0.85, 0.4, 0.2},
+    [TetrisItemCategory.FOOD] = {0.05, 0.65, 0.15},
+    [TetrisItemCategory.CLOTHING] = {0.5, 0.5, 0.5},
+    [TetrisItemCategory.CONTAINER] = {0.65, 0.6, 0.4},
+    [TetrisItemCategory.HEALING] = {0.1, 0.95, 1},
+    [TetrisItemCategory.BOOK] = {0.3, 0, 0.5},
+    [TetrisItemCategory.ENTERTAINMENT] = {0.3, 0, 0.5},
+    [TetrisItemCategory.KEY] = {0.5, 0.5, 0.5},
+    [TetrisItemCategory.MISC] = {0.5, 0.5, 0.5},
+    [TetrisItemCategory.SEED] = {0.5, 0.5, 0.5},
+    [TetrisItemCategory.MOVEABLE] = {0.7, 0.7, 0.7},
+    [TetrisItemCategory.CORPSEANIMAL] = {0.7, 0.7, 0.7}
+}
+
+local textureToId = {}
+local maskQueue = {
+    {},
+    {}
+}
+
 local stackFont = UIFont.Small
 
 ---@param drawingContext ISUIElement
@@ -468,10 +548,13 @@ local stackFont = UIFont.Small
 ---@param x any
 ---@param y any
 ---@param alphaMult any
----@param isBuried any
-function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isBuried)
-    local totalWidth = w * OPT.CELL_SIZE - w + 1
-    local totalHeight = h * OPT.CELL_SIZE - h + 1
+function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isRotated)
+    local CELL_SIZE = OPT.CELL_SIZE
+    local TEXTURE_SIZE = OPT.TEXTURE_SIZE
+    local TEXTURE_PAD = OPT.TEXTURE_PAD
+    
+    local totalWidth = w * CELL_SIZE - w + 1
+    local totalHeight = h * CELL_SIZE - h + 1
     local isFood = item:isFood()
 
     local fluidContainer = item:getFluidContainer()
@@ -486,7 +569,6 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
     ---@cast item InventoryItem
     local doVerticalBar = fluidPercent > 0 or hungerPercent < 1.0 or drainPercent < 1.0
 
-    -- TODO: Replace all calls to drawingContext with calls to this
     local javaObject = drawingContext.javaObject
 
     -- BACKGROUND EFFECTS
@@ -504,7 +586,245 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
     end
     -- END BACKGROUND EFFECTS
 
-    ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, w, h, stack.isRotated, alphaMult, isBuried, doVerticalBar)
+    local minDimension = w
+    if h < w then
+        minDimension = h
+    end
+
+    local cellW = CELL_SIZE * w - w
+    local cellH = CELL_SIZE * h - h
+
+    local barOffset = doVerticalBar and 3 or 0
+
+    local cols = colorsByCategory[stack.category]
+    javaObject:DrawTextureTiled(ITEM_BG_TEX, x+1, y+1, cellW - 1 - barOffset, cellH - 1, cols[1], cols[2], cols[3], 0.75 * alphaMult)
+
+    local texture = item:getTex() or HIDDEN_ITEM
+
+    local texW = texture:getWidthOrig()
+    local texH = texture:getHeightOrig()
+    local largestDimension = texW
+    if texW < texH then
+        largestDimension = texH
+    end
+
+    local correctiveScale = 1.0
+    if largestDimension > 32 then -- Handle large textures
+        correctiveScale = 32 / largestDimension
+    end
+
+    local texHalf = TEXTURE_SIZE * 0.5
+    local x2 = 1 + x + TEXTURE_PAD * w + (w - minDimension) * texHalf
+    local y2 = 1 + y + TEXTURE_PAD * h + (h - minDimension) * texHalf
+
+    local targetScale = OPT.SCALE * minDimension
+    local scale = correctiveScale * targetScale
+    local colorMask = item:getTextureColorMask()
+
+    local r,g,b = 1,1,1
+    if not colorMask then
+        r,g,b = item:getR(), item:getG(), item:getB()
+    end
+
+    local absX = javaObject:getAbsoluteX()
+    local absY = javaObject:getAbsoluteY()
+
+    -- draw main tex
+    --do
+        local mainTexX = x2 + absX
+        local mainTexY = y2 + absY
+
+        local width = texture:getWidth() * scale
+        local height = texture:getHeight() * scale
+
+        local xOffset = texture:getOffsetX() * scale
+        local yOffset = texture:getOffsetY() * scale
+
+        local lx = mainTexX + xOffset
+        local rx = mainTexX + width + xOffset
+        local ty = mainTexY + yOffset
+        local by = mainTexY + height + yOffset
+
+        local tlX, tlY = lx, ty
+        local trX, trY = rx, ty
+        local brX, brY = rx, by
+        local blX, blY = lx, by
+
+        local centerX = (lx + rx) * 0.5
+        local centerY = (ty + by) * 0.5
+        if isRotated then -- Rotate the UVs
+            tlX = tlX - centerX
+            tlY = tlY - centerY
+            trX = trX - centerX
+            trY = trY - centerY
+            brX = brX - centerX
+            brY = brY - centerY
+            blX = blX - centerX
+            blY = blY - centerY
+
+            local tlX2 = tlX * cosTheta - tlY * sinTheta
+            local tlY2 = tlX * sinTheta + tlY * cosTheta
+            local trX2 = trX * cosTheta - trY * sinTheta
+            local trY2 = trX * sinTheta + trY * cosTheta
+            local brX2 = brX * cosTheta - brY * sinTheta
+            local brY2 = brX * sinTheta + brY * cosTheta
+            local blX2 = blX * cosTheta - blY * sinTheta
+            local blY2 = blX * sinTheta + blY * cosTheta
+
+            tlX = tlX2 + centerX
+            tlY = tlY2 + centerY
+            trX = trX2 + centerX
+            trY = trY2 + centerY
+            brX = brX2 + centerX
+            brY = brY2 + centerY
+            blX = blX2 + centerX
+            blY = blY2 + centerY
+        end
+
+        -- Set the texture to crunchy
+        local texId = textureToId[texture]
+        if not texId then
+            texId = texture:getID()
+            textureToId[texture] = texId
+        end
+        spriteRenderer:glBind(texId);
+        spriteRenderer:glTexParameteri(3553, 10240, 9728);
+        javaObject:DrawTexture(
+            texture,
+            tlX, tlY,
+            trX, trY,
+            brX, brY,
+            blX, blY,
+            r, g, b, alphaMult
+        )
+
+        centerX = centerX - absX
+        centerY = centerY - absY
+    --end
+
+    local fluidMask = item:getTextureFluidMask()
+    if fluidContainer and fluidMask then
+        if fluidPercent > 0 then
+            local col = fluidContainer:getColor()
+            local maskData = maskQueue[1]
+            maskData[1] = true
+            maskData[2] = fluidMask
+            maskData[3] = fluidPercent
+            maskData[4] = col:getR()
+            maskData[5] = col:getG()
+            maskData[6] = col:getB()
+            maskData[7] = col:getAlpha()
+
+        else
+            maskQueue[1][1] = false
+        end
+    else
+        maskQueue[1][1] = false
+    end
+
+    if colorMask then
+        local maskData = maskQueue[2]
+        maskData[1] = true
+        maskData[2] = colorMask
+        maskData[3] = 1.0
+        maskData[4] = item:getR()
+        maskData[5] = item:getG()
+        maskData[6] = item:getB()
+        maskData[7] = 1.0
+    else
+        maskQueue[2][1] = false
+    end
+
+    for i=1, 2 do
+        local maskData = maskQueue[i]
+        if maskData[1] then
+
+            local texture = maskData[2]
+            local percentage = maskData[3]
+            local r = maskData[4]
+            local g = maskData[5]
+            local b = maskData[6]
+            local a = maskData[7] * alphaMult
+
+            if percentage < 0.15 then
+                percentage = 0.15
+            end
+
+            local texW = texture:getWidth()
+            local texH = texture:getHeight()
+            if (texW <= 0 or texH <= 0) then
+                return
+            end
+
+            local lX = texture:getXStart()
+            local rX = texture:getXEnd();
+            local tY = texture:getYStart()
+            local bY = texture:getYEnd();
+
+            local tlX, tlY = lX, tY
+            local trX, trY = rX, tY
+            local brX, brY = rX, bY
+            local blX, blY = lX, bY
+
+            local w, h = texW, texH
+            local offsetX = texture:getOffsetX() * scale
+            local offsetY = texture:getOffsetY() * scale
+            local maskX = x2 + offsetX
+            local maskY = y2 + offsetY
+
+            if isRotated then
+                -- Rotate the UVs
+                tlX, tlY, trX, trY, brX, brY, blX, blY = rotateUVs90(tlX, tlY, trX, trY, brX, brY, blX, blY)
+
+                -- Lower the mask by the percentage
+                local yX = tlX - blX
+                tlX = tlX - yX * (1.0 - percentage)
+                trX = trX - yX * (1.0 - percentage)
+
+                maskX, maskY = rotateAround(maskX, maskY, centerX, centerY)
+                maskX = maskX - h * scale
+
+                -- Swap the width and height
+                local temp = w
+                w = h
+                h = temp
+
+                -- Account for the percentage of the texture
+                maskY = maskY + math.floor((1.0 - percentage) * h * scale)
+                h = math.ceil(h * percentage * scale)
+            else
+                -- Lower the mask by the percentage
+                local missing = 1.0 - percentage
+                local yD = tlY - blY
+                tlY = tlY - yD * missing
+                trY = trY - yD * missing
+
+                -- Account for the percentage of the texture
+                maskY = maskY + math.floor(missing * h * scale)
+                h = math.ceil(h * scale * percentage)
+            end
+
+            maskX = maskX + absX
+            maskY = maskY + absY
+
+            -- Set the texture to crunchy
+            local texId = textureToId[texture]
+            if not texId then
+                texId = texture:getID()
+                textureToId[texture] = texId
+            end
+            spriteRenderer:glBind(texId);
+            spriteRenderer:glTexParameteri(3553, 10240, 9728);
+
+            spriteRenderer:render(texture, maskX, maskY, w * scale, h, r, g, b, a, tlX, tlY, trX, trY, brX, brY, blX, blY)
+        end
+    end
+
+    if item:isBroken() then
+        drawingContext:drawTextureScaledUniform(BROKEN_TEXTURE, x2, y2, targetScale, alphaMult * 0.5, 1, 1, 1);
+    end
+
+    TetrisEvents.OnPostRenderGridItem:trigger(drawingContext, item, stack, x, y, cellW+1, cellH+1, playerObj)
 
     local scale = OPT.SCALE
 
@@ -584,363 +904,6 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         javaObject:DrawTextureColor(favTex, x + totalWidth - favTex:getWidth() - 1, y+1, 1, 1, 1, alphaMult)
     end
 end
-
--- A bit finnicky, the changes are not permanent and reset shortly after.
--- Seems to work fine during grid rendering in its current state.
-local spriteRenderer = SpriteRenderer.instance
-function ItemGridUI.setTextureAsCrunchy(texture)
-    local TEXTURE_2D = 3553
-
-    -- Fixes blurry textures from other mods
-    local MAG_FILTER = 10240
-    --local MIN_FILTER = 10241
-    local NEAREST = 9728
-    spriteRenderer:glBind(texture:getID());
-    spriteRenderer:glTexParameteri(TEXTURE_2D, MAG_FILTER, NEAREST);
-
-    -- Fixes pixel bleeding on the edge of textures from other mods
-    --local TEXTURE_WRAP_S = 10242
-    --local TEXTURE_WRAP_T = 10243
-    --local CLAMP_TO_EDGE = 33071
-    --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE);
-    --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE);
-end
-
-local sinTheta = math.sin(math.rad(90))
-local cosTheta = math.cos(math.rad(90))
-local function rotateAround(x, y, centerX, centerY)
-    local x2 = x - centerX
-    local y2 = y - centerY
-
-    local x3 = x2 * cosTheta - y2 * sinTheta
-    local y3 = x2 * sinTheta + y2 * cosTheta
-
-    return x3 + centerX, y3 + centerY
-end
-
-local function rotateUVs90(
-    tlX, tlY,
-    trX, trY,
-    brX, brY,
-    blX, blY
-)
-    return
-        blX, blY,
-        tlX, tlY,
-        trX, trY,
-        brX, brY
-end
-
--- Color code the items by category
-local colorsByCategory = {
-    [TetrisItemCategory.MELEE] = {0.95, 0.15, 0.7},
-    [TetrisItemCategory.RANGED] = {0.35, 0, 0},
-    [TetrisItemCategory.AMMO] = {1, 1, 0},
-    [TetrisItemCategory.MAGAZINE] = {0.85, 0.5, 0.05},
-    [TetrisItemCategory.ATTACHMENT] = {0.85, 0.4, 0.2},
-    [TetrisItemCategory.FOOD] = {0.05, 0.65, 0.15},
-    [TetrisItemCategory.CLOTHING] = {0.5, 0.5, 0.5},
-    [TetrisItemCategory.CONTAINER] = {0.65, 0.6, 0.4},
-    [TetrisItemCategory.HEALING] = {0.1, 0.95, 1},
-    [TetrisItemCategory.BOOK] = {0.3, 0, 0.5},
-    [TetrisItemCategory.ENTERTAINMENT] = {0.3, 0, 0.5},
-    [TetrisItemCategory.KEY] = {0.5, 0.5, 0.5},
-    [TetrisItemCategory.MISC] = {0.5, 0.5, 0.5},
-    [TetrisItemCategory.SEED] = {0.5, 0.5, 0.5},
-    [TetrisItemCategory.MOVEABLE] = {0.7, 0.7, 0.7},
-    [TetrisItemCategory.CORPSEANIMAL] = {0.7, 0.7, 0.7}
-}
-
--- Disgusting monolith for performance reasons
----@param drawingContext ISUIElement
-function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y, w, h, rotated, alphaMult, isBuried, doVerticalBar)
-    local javaObject = drawingContext.javaObject
-    local CELL_SIZE = OPT.CELL_SIZE
-    local TEXTURE_SIZE = OPT.TEXTURE_SIZE
-    local TEXTURE_PAD = OPT.TEXTURE_PAD
-
-    local minDimension = math.min(w, h)
-
-    local cellW = CELL_SIZE * w - w
-    local cellH = CELL_SIZE * h - h
-
-    local barOffset = doVerticalBar and 3 or 0
-
-    local cols = colorsByCategory[stack.category]
-    javaObject:DrawTextureTiled(ITEM_BG_TEX, x+1, y+1, cellW - 1 - barOffset, cellH - 1, cols[1], cols[2], cols[3], 0.75 * alphaMult)
-
-    local texture = item:getTex() or HIDDEN_ITEM
-
-    local texW = texture:getWidthOrig()
-    local texH = texture:getHeightOrig()
-    local largestDimension = texW
-    if texW < texH then
-        largestDimension = texH
-    end
-
-    local correctiveScale = 1.0
-    if largestDimension > 32 then -- Handle large textures
-        correctiveScale = 32 / largestDimension
-    end
-
-    local texHalf = TEXTURE_SIZE * 0.5
-    local x2 = 1 + x + TEXTURE_PAD * w + (w - minDimension) * texHalf
-    local y2 = 1 + y + TEXTURE_PAD * h + (h - minDimension) * texHalf
-
-    local targetScale = OPT.SCALE * minDimension
-    local scale = correctiveScale * targetScale
-    local colorMask = item:getTextureColorMask()
-
-    local r,g,b = 1,1,1
-    if not colorMask then
-        r,g,b = item:getR(), item:getG(), item:getB()
-    end
-
-    local absX = javaObject:getAbsoluteX()
-    local absY = javaObject:getAbsoluteY()
-
-    -- draw main tex
-    --do
-        local mainTexX = x2 + absX
-        local mainTexY = y2 + absY
-
-        local width = texture:getWidth() * scale
-        local height = texture:getHeight() * scale
-
-        local xOffset = texture:getOffsetX() * scale
-        local yOffset = texture:getOffsetY() * scale
-
-        local lx = mainTexX + xOffset
-        local rx = mainTexX + width + xOffset
-        local ty = mainTexY + yOffset
-        local by = mainTexY + height + yOffset
-
-        local tlX, tlY = lx, ty
-        local trX, trY = rx, ty
-        local brX, brY = rx, by
-        local blX, blY = lx, by
-
-        local centerX = (lx + rx) * 0.5
-        local centerY = (ty + by) * 0.5
-        if rotated then -- Rotate the UVs
-            tlX = tlX - centerX
-            tlY = tlY - centerY
-            trX = trX - centerX
-            trY = trY - centerY
-            brX = brX - centerX
-            brY = brY - centerY
-            blX = blX - centerX
-            blY = blY - centerY
-
-            local tlX2 = tlX * cosTheta - tlY * sinTheta
-            local tlY2 = tlX * sinTheta + tlY * cosTheta
-            local trX2 = trX * cosTheta - trY * sinTheta
-            local trY2 = trX * sinTheta + trY * cosTheta
-            local brX2 = brX * cosTheta - brY * sinTheta
-            local brY2 = brX * sinTheta + brY * cosTheta
-            local blX2 = blX * cosTheta - blY * sinTheta
-            local blY2 = blX * sinTheta + blY * cosTheta
-
-            tlX = tlX2 + centerX
-            tlY = tlY2 + centerY
-            trX = trX2 + centerX
-            trY = trY2 + centerY
-            brX = brX2 + centerX
-            brY = brY2 + centerY
-            blX = blX2 + centerX
-            blY = blY2 + centerY
-        end
-
-        -- Set the texture to crunchy
-        spriteRenderer:glBind(texture:getID());
-        spriteRenderer:glTexParameteri(3553, 10240, 9728);
-        javaObject:DrawTexture(
-            texture,
-            tlX, tlY,
-            trX, trY,
-            brX, brY,
-            blX, blY,
-            r, g, b, alphaMult
-        )
-
-        centerX = centerX - absX
-        centerY = centerY - absY
-    --end
-
-    local maskQueue = {}
-
-    local fluidContainer = item:getFluidContainer()
-    local fluidMask = item:getTextureFluidMask()
-    if fluidContainer and fluidMask then
-        local percent = fluidContainer:getAmount() / fluidContainer:getCapacity()
-        if percent > 0 then
-            local col = fluidContainer:getColor()
-            --ItemGridUI._drawMask(javaObject, fluidMask, percent, x2, y2, col:getR(), col:getG(), col:getB(), alphaMult * col:getAlpha(), scale, rotated, centerX, centerY);
-            maskQueue[#maskQueue+1] = {fluidMask, percent, col:getR(), col:getG(), col:getB(), col:getAlpha()}
-        end
-
-
-    end
-
-    if colorMask then
-        --ItemGridUI._drawMask(javaObject, colorMask, 1.0, x2, y2, item:getR(), item:getG(), item:getB(), alphaMult, scale, rotated, centerX, centerY)
-        maskQueue[#maskQueue+1] = {colorMask, 1.0, item:getR(), item:getG(), item:getB(), 1.0}
-    end
-
-    for i=1, #maskQueue do
-        local maskData = maskQueue[i]
-        local texture = maskData[1]
-        local percentage = maskData[2]
-        local r = maskData[3]
-        local g = maskData[4]
-        local b = maskData[5]
-        local a = maskData[6] * alphaMult
-
-        if percentage < 0.15 then
-            percentage = 0.15
-        end
-
-        local texW = texture:getWidth()
-        local texH = texture:getHeight()
-        if (texW <= 0 or texH <= 0) then
-            return
-        end
-
-        local lX = texture:getXStart()
-        local rX = texture:getXEnd();
-        local tY = texture:getYStart()
-        local bY = texture:getYEnd();
-
-        local tlX, tlY = lX, tY
-        local trX, trY = rX, tY
-        local brX, brY = rX, bY
-        local blX, blY = lX, bY
-
-        local w, h = texW, texH
-        local offsetX = texture:getOffsetX() * scale
-        local offsetY = texture:getOffsetY() * scale
-        local maskX = x2 + offsetX
-        local maskY = y2 + offsetY
-
-        if rotated then
-            -- Rotate the UVs
-            tlX, tlY, trX, trY, brX, brY, blX, blY = rotateUVs90(tlX, tlY, trX, trY, brX, brY, blX, blY)
-
-            -- Lower the mask by the percentage
-            local yX = tlX - blX
-            tlX = tlX - yX * (1.0 - percentage)
-            trX = trX - yX * (1.0 - percentage)
-
-            maskX, maskY = rotateAround(maskX, maskY, centerX, centerY)
-            maskX = maskX - h * scale
-
-            -- Swap the width and height
-            local temp = w
-            w = h
-            h = temp
-
-            -- Account for the percentage of the texture
-            maskY = maskY + math.floor((1.0 - percentage) * h * scale)
-            h = math.ceil(h * percentage * scale)
-        else
-            -- Lower the mask by the percentage
-            local missing = 1.0 - percentage
-            local yD = tlY - blY
-            tlY = tlY - yD * missing
-            trY = trY - yD * missing
-
-            -- Account for the percentage of the texture
-            maskY = maskY + math.floor(missing * h * scale)
-            h = math.ceil(h * scale * percentage)
-        end
-
-        maskX = maskX + absX
-        maskY = maskY + absY
-
-        -- Set the texture to crunchy
-        spriteRenderer:glBind(texture:getID());
-        spriteRenderer:glTexParameteri(3553, 10240, 9728);
-
-        SpriteRenderer.instance:render(texture, maskX, maskY, w * scale, h, r, g, b, a, tlX, tlY, trX, trY, brX, brY, blX, blY)
-    end
-
-    if item:isBroken() then
-        drawingContext:drawTextureScaledUniform(BROKEN_TEXTURE, x2, y2, targetScale, alphaMult * 0.5, 1, 1, 1);
-    end
-
-    TetrisEvents.OnPostRenderGridItem:trigger(drawingContext, item, stack, x, y, cellW+1, cellH+1, playerObj)
-end
-
-function ItemGridUI._drawMask(javaObject, texture, percentage, x, y, r, g, b, a, scale, rotate, centerX, centerY)
-    if percentage < 0.15 then 
-        percentage = 0.15
-    end
-
-    local texW = texture:getWidth()
-    local texH = texture:getHeight()
-    if (texW <= 0 or texH <= 0) then
-        return
-    end
-
-    local lX = texture:getXStart()
-    local rX = texture:getXEnd();
-    local tY = texture:getYStart()
-    local bY = texture:getYEnd();
-
-    local tlX, tlY = lX, tY
-    local trX, trY = rX, tY
-    local brX, brY = rX, bY
-    local blX, blY = lX, bY
-
-    local w, h = texW, texH
-    local offsetX = texture:getOffsetX() * scale
-    local offsetY = texture:getOffsetY() * scale
-    x = x + offsetX
-    y = y + offsetY
-
-    if rotate then
-        -- Rotate the UVs
-        tlX, tlY, trX, trY, brX, brY, blX, blY = rotateUVs90(tlX, tlY, trX, trY, brX, brY, blX, blY)
-
-        -- Lower the mask by the percentage
-        local yX = tlX - blX
-        tlX = tlX - yX * (1.0 - percentage)
-        trX = trX - yX * (1.0 - percentage)
-
-        x, y = rotateAround(x, y, centerX, centerY)
-        x = x - h * scale
-
-        -- Swap the width and height
-        local temp = w
-        w = h
-        h = temp
-
-        -- Account for the percentage of the texture
-        y = y + math.floor((1.0 - percentage) * h * scale)
-        h = math.ceil(h * percentage * scale)
-    else
-        -- Lower the mask by the percentage
-        local missing = 1.0 - percentage
-        local yD = tlY - blY
-        tlY = tlY - yD * missing
-        trY = trY - yD * missing
-
-        -- Account for the percentage of the texture
-        y = y + math.floor(missing * h * scale)
-        h = math.ceil(h * scale * percentage)
-    end
-
-    x = x + javaObject:getAbsoluteX()
-    y = y + javaObject:getAbsoluteY()
-
-    -- Set the texture to crunchy
-    spriteRenderer:glBind(texture:getID());
-    spriteRenderer:glTexParameteri(3553, 10240, 9728);
-
-    SpriteRenderer.instance:render(texture, x, y, w * scale, h, r, g, b, a, tlX, tlY, trX, trY, brX, brY, blX, blY)
-end
-
-
 
 function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult)
     local CELL_SIZE = OPT.CELL_SIZE
