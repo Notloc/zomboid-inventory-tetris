@@ -337,8 +337,6 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                             self:_renderGridStack(self.playerObj, stack, item, uiX, uiY, w, h, 0.4 * alphaMult * transferAlpha, isBuried)
                         end
                     end
-                else
-                    local hi = 1
                 end
             end
         end
@@ -430,16 +428,6 @@ function ItemGridUI.getItemColor(item, limit)
     local g = item:getG()
     local b = item:getB()
 
-    --if not limit then
-    --    limit = 0.2
-    --end
-
-    -- Limit how dark the item can appear if all colors are close to 0
-    --while r < limit and g < limit and b < limit do
-    --    r = r + limit / 4
-    --    g = g + limit / 4
-    --    b = b + limit / 4
-    --end
     return r,g,b
 end
 
@@ -480,10 +468,12 @@ end
 ---@param alphaMult any
 ---@param isBuried any
 function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isBuried)
-    -- BACKGROUND EFFECTS
     local totalWidth = w * OPT.CELL_SIZE - w + 1
     local totalHeight = h * OPT.CELL_SIZE - h + 1
-    if item:IsFood() then
+    local isFood = item:isFood()
+
+    -- BACKGROUND EFFECTS
+    if isFood then
         ---@cast item Food
         local heat = item:getHeat() -- 1 = room, 0.2 = frozen, 3 = max
         if heat < 1.0 then
@@ -508,7 +498,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         ItemGridUI._drawTextOnTopLeft(drawingContext, text, x, y, alphaMult, doShadow)
     end
 
-    if item:IsFood() then
+    if isFood then
         ---@cast item Food
         local percent = item:getHungerChange() / item:getBaseHunger()
         if percent < 1.0 then
@@ -660,7 +650,11 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     local minDimension = math.min(w, h)
     local bgBright = isBuried and 0.35 or 1
 
-    drawingContext:drawRect(x+1, y+1, w * CELL_SIZE - w - 1, h * CELL_SIZE - h - 1, 0.3 * alphaMult, unpackColors(colorsByCategory[stack.category], bgBright))
+    local cellW = CELL_SIZE * w - w
+    local cellH = CELL_SIZE * h - h
+
+    local cols = colorsByCategory[stack.category]
+    drawingContext:drawRect(x+1, y+1, cellW - 1, cellH - 1, 0.3 * alphaMult, cols[1]*bgBright, cols[2]*bgBright, cols[3]*bgBright)
 
     local texture = item:getTex() or HIDDEN_ITEM
 
@@ -668,26 +662,24 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
     local texH = texture:getHeightOrig()
     local largestDimension = math.max(texW, texH)
 
-    local x2, y2 = nil, nil
-    local targetScale = OPT.SCALE
     local correctiveScale = 1.0
-
     if largestDimension > 32 then -- Handle large textures
         correctiveScale = 32 / largestDimension
     end
 
-    x2 = 1 + x + TEXTURE_PAD * w + (w - minDimension) * (TEXTURE_SIZE) / 2
-    y2 = 1 + y + TEXTURE_PAD * h + (h - minDimension) * (TEXTURE_SIZE) / 2
+    local texHalf = TEXTURE_SIZE * 0.5
+    local x2 = 1 + x + TEXTURE_PAD * w + (w - minDimension) * texHalf
+    local y2 = 1 + y + TEXTURE_PAD * h + (h - minDimension) * texHalf
 
-    targetScale = targetScale * minDimension
+    local targetScale = OPT.SCALE * minDimension
     ItemGridUI._drawItem(drawingContext, item, x2, y2, targetScale * correctiveScale, alphaMult, bgBright, rotate)
 
     if item:isBroken() then
         drawingContext:drawTextureScaledUniform(BROKEN_TEXTURE, x2, y2, targetScale, alphaMult * 0.5, 1, 1, 1);
     end
 
-    local totalWidth = w * CELL_SIZE - w + 1
-    local totalHeight = h * CELL_SIZE - h + 1
+    local totalWidth = cellW + 1
+    local totalHeight = cellH + 1
     if isBuried then
         drawingContext:drawRectBorder(x, y, totalWidth, totalHeight, 0.5, 0.55, 0.15, 0.15)
     else
@@ -698,8 +690,9 @@ function ItemGridUI._renderGridItem(drawingContext, playerObj, item, stack, x, y
 end
 
 local function rotateAround(x, y, centerX, centerY, angle)
-    local sinTheta = math.sin(math.rad(angle))
-    local cosTheta = math.cos(math.rad(angle))
+    local rot = math.rad(angle)
+    local sinTheta = math.sin(rot)
+    local cosTheta = math.cos(rot)
 
     local x2 = x - centerX
     local y2 = y - centerY
@@ -718,8 +711,9 @@ local function rotateUVs(
     rotation,
     centerX, centerY
 )
-    local sinTheta = math.sin(math.rad(rotation))
-    local cosTheta = math.cos(math.rad(rotation))
+    local rot = math.rad(rotation)
+    local sinTheta = math.sin(rot)
+    local cosTheta = math.cos(rot)
 
     -- Localize the points
     local tlX = tlX - centerX
@@ -762,14 +756,17 @@ local function rotateUVs90(
 end
 
 function ItemGridUI._drawTextureScaledAndRotated(drawingContext, texture, x, y, r, g, b, a, scale, rotated)
-    x = x + drawingContext:getAbsoluteX()
-    y = y + drawingContext:getAbsoluteY()
+    local dcX = drawingContext:getAbsoluteX()
+    local dcY = drawingContext:getAbsoluteY()
+
+    x = x + dcX
+    y = y + dcY
 
     local width = texture:getWidth() * scale
     local height = texture:getHeight() * scale
 
-    local xOffset = (texture:getOffsetX() * scale)
-    local yOffset = (texture:getOffsetY() * scale)
+    local xOffset = texture:getOffsetX() * scale
+    local yOffset = texture:getOffsetY() * scale
 
     local lx = x + xOffset
     local rx = x + width + xOffset
@@ -781,9 +778,9 @@ function ItemGridUI._drawTextureScaledAndRotated(drawingContext, texture, x, y, 
     local brX, brY = rx, by
     local blX, blY = lx, by
 
-    local centerX = (lx + rx) / 2
-    local centerY = (ty + by) / 2
-    if (rotated) then
+    local centerX = (lx + rx) * 0.5
+    local centerY = (ty + by) * 0.5
+    if rotated then
         tlX, tlY, trX, trY, brX, brY, blX, blY = rotateUVs(tlX, tlY, trX, trY, brX, brY, blX, blY, 90, centerX, centerY)
     end
 
@@ -797,7 +794,7 @@ function ItemGridUI._drawTextureScaledAndRotated(drawingContext, texture, x, y, 
         r, g, b, a
     )
 
-    return centerX - drawingContext:getAbsoluteX(), centerY - drawingContext:getAbsoluteY()
+    return centerX - dcX, centerY - dcY
 end
 
 function ItemGridUI._drawItem(drawingContext, item, x, y, scale, alphaMult, brightness, rotated)
@@ -808,7 +805,6 @@ function ItemGridUI._drawItem(drawingContext, item, x, y, scale, alphaMult, brig
 
     local texture = item:getTex() or HIDDEN_ITEM
 
-    ItemGridUI.setTextureAsCrunchy(texture)
     local centerX, centerY = ItemGridUI._drawTextureScaledAndRotated(drawingContext, texture, x, y, r, g, b, alphaMult, scale, rotated)
 
     local fluidContainer = item:getFluidContainer()
@@ -817,21 +813,19 @@ function ItemGridUI._drawItem(drawingContext, item, x, y, scale, alphaMult, brig
         local col = fluidContainer:getColor()
         local percent = fluidContainer:getAmount() / fluidContainer:getCapacity()
         if percent > 0 then
-            ItemGridUI.setTextureAsCrunchy(fluidMask)
             ItemGridUI._drawMask(drawingContext, fluidMask, percent, x, y, col:getR(), col:getG(), col:getB(), alphaMult * col:getAlpha(), scale, rotated, centerX, centerY);
         end
     end
 
     local colorMask = item:getTextureColorMask()
     if colorMask then
-        ItemGridUI.setTextureAsCrunchy(colorMask)
         ItemGridUI._drawMask(drawingContext, colorMask, 1.0, x, y, item:getR(), item:getG(), item:getB(), alphaMult, scale, rotated, centerX, centerY)
     end
 end
 
 
 function ItemGridUI._drawMask(drawingContext, texture, percentage, x, y, r, g, b, a, scale, rotate, centerX, centerY)
-    percentage = PZMath.max(0.15, percentage);
+    percentage = math.max(0.15, percentage);
 
     local texW = texture:getWidth()
     local texH = texture:getHeight()
@@ -877,17 +871,19 @@ function ItemGridUI._drawMask(drawingContext, texture, percentage, x, y, r, g, b
         h = math.ceil(h * percentage * scale)
     else
         -- Lower the mask by the percentage
+        local missing = 1.0 - percentage
         local yD = tlY - blY
-        tlY = tlY - yD * (1 - percentage)
-        trY = trY - yD * (1 - percentage)
+        tlY = tlY - yD * missing
+        trY = trY - yD * missing
 
         -- Account for the percentage of the texture
-        y = y + math.floor((1.0 - percentage) * h * scale)
+        y = y + math.floor(missing * h * scale)
         h = math.ceil(h * scale * percentage)
     end
 
     x = x + drawingContext:getAbsoluteX()
     y = y + drawingContext:getAbsoluteY()
+    ItemGridUI.setTextureAsCrunchy(texture)
     SpriteRenderer.instance:render(texture, x, y, w * scale, h, r, g, b, a, tlX, tlY, trX, trY, brX, brY, blX, blY)
 end
 

@@ -56,8 +56,9 @@ function TetrisItemCategory._getCategoryInternal(item, type)
     elseif displayCategory == "FirstAid" or displayCategory == "FirstAidWeapon" then
         return TetrisItemCategory.HEALING
 
-    elseif item:IsWeapon() or displayCategory == "Weapon" then
-        if item:getAmmoType() then
+    elseif item:IsWeapon() then
+        ---@cast item HandWeapon
+        if item:getAmmoType() or item:isRanged() then
             return TetrisItemCategory.RANGED
         else
             return TetrisItemCategory.MELEE
@@ -66,16 +67,16 @@ function TetrisItemCategory._getCategoryInternal(item, type)
     elseif item:getMaxAmmo() > 0 then
             return TetrisItemCategory.MAGAZINE
 
-    elseif displayCategory == "WeaponPart" then
+    elseif instanceof(item, "WeaponPart") or displayCategory == "WeaponPart" then
         return TetrisItemCategory.ATTACHMENT
 
-    elseif displayCategory == "Ammo" then
+    elseif displayCategory == "Ammo" then -- TODO: Compile a map of ammo types instead of checking displayCategory
         return TetrisItemCategory.AMMO
 
     elseif item:IsClothing() then
         return TetrisItemCategory.CLOTHING
 
-    elseif item:IsFood() or displayCategory == "WaterContainer" or displayCategory == "Water" then
+    elseif item:IsFood() or displayCategory == "WaterContainer" or displayCategory == "Water" then -- TODO: Check the fluidContainer instead for water?
         return TetrisItemCategory.FOOD
 
     elseif displayCategory == "Literature" or displayCategory == "SkillBook" then
