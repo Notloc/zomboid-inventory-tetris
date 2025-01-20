@@ -616,7 +616,7 @@ function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, c
     editWindow:initialise();
     editWindow.inventory = inventory;
     editWindow.inventoryPane = inventoryPane;
-    
+
     editWindow.dataTable = dataTable;
 
     editWindow.containerDataKey = dataKey;
@@ -634,7 +634,7 @@ function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, c
         self:setHeight(self.containerUi:getHeight() + 250 + 48);
         self.quickButtonsDirty = true
     end
-  
+
     -- Create titlebar
     local titleBar = ISPanel:new(0, 0, editWindow:getWidth(), 20);
     titleBar:initialise();
@@ -657,7 +657,7 @@ function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, c
     closeButton:setAlwaysOnTop(true);
     closeButton.internal = "CLOSE";
     closeButton:setOnClick(TetrisDevTool.onEditContainer, closeButton);
-    
+
     -- Alignment Title
     local alignmentTitle = ISLabel:new(10, 25, 16, "Alignment:", 1, 1, 1, 1, UIFont.Small, true);
     alignmentTitle:initialise();
@@ -737,7 +737,7 @@ function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, c
     local itemCategoryBoxes2 = ISTickBox:new(315, 42, 100, 16, "", editWindow, TetrisDevTool.onItemRestriction, firstCount);
     itemCategoryBoxes2:initialise();
     itemCategoryBoxes2:instantiate();
-    
+
     local j = 1
     for i, category in ipairs(TetrisItemCategory.list) do
         if i > #TetrisItemCategory.list/2 then
@@ -805,11 +805,11 @@ function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, c
                 local gridDef = gridUi.grid.gridDefinition;
                 local x = gridDef.position.x;
                 local y = gridDef.position.y;
-    
+
                 if not rightGrids[y] or rightGrids[y].grid.gridDefinition.position.x < x then
                     rightGrids[y] = gridUi;
                 end
-    
+
                 if not bottomGrids[x] or bottomGrids[x].grid.gridDefinition.position.y < y then
                     bottomGrids[x] = gridUi;
                 end
@@ -882,13 +882,13 @@ function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, c
                 local h = gridDef.size.height;
                 local x = gridDef.position.x;
                 local y = gridDef.position.y;
-    
+
                 if gridUi.dragHandle.moving then
                     w, h = TetrisDevTool.getGridXYFromHandle(gridUi.dragHandle);
                     w = w + 1;
                     h = h + 1;
                 end
-    
+
                 gridUi:drawText(w .. "x" .. h, 4, 22, 1, 1, 1, 1, UIFont.Medium);
                 --gridUi:drawText("Pos: " .. x .. "," .. y, 4, 20, 1, 1, 1, 1, UIFont.Medium);
             end
@@ -910,7 +910,7 @@ function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, c
     end
 
     titleBar:addChild(closeButton);
-    
+
     editWindow:reflow();
     editWindow:addToUIManager();
 

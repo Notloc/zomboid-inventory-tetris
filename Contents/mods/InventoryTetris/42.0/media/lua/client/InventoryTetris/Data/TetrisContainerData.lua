@@ -224,8 +224,10 @@ end
 
 ---@param container ItemContainer
 function TetrisContainerData.isTardis(container)
-    local type = container:getType()
-    if type == "none" or type == "KeyRing" then
+    local containingItem = container:getContainingItem()
+    local isKeyRing = containingItem and containingItem:hasTag("KeyRing")
+
+    if isKeyRing or container:getType() == "none" then
         return false
     end
 

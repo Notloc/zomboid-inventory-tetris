@@ -1,5 +1,5 @@
+---@diagnostic disable: inject-field
 ---@enum TetrisItemCategory
-
 TetrisItemCategory = {
     MELEE = "MELEE_WEAPON",
     RANGED = "RANGED_WEAPON",
@@ -25,11 +25,24 @@ for _, category in pairs(TetrisItemCategory) do
 end
 TetrisItemCategory.list = list
 
+TetrisItemCategory._categoryCache = {}
+
 ---@param item InventoryItem
 function TetrisItemCategory.getCategory(item)
+    local type = item:getFullType()
+    local category = TetrisItemCategory._categoryCache[type]
+    if not category then
+        category = TetrisItemCategory._getCategoryInternal(item, type)
+        TetrisItemCategory._categoryCache[type] = category
+    end
+    return category
+end
+
+---@param item InventoryItem
+---@param type string
+function TetrisItemCategory._getCategoryInternal(item, type)
     local displayCategory = item:getDisplayCategory()
     local category = item:getCategory()
-    local type = item:getFullType()
 
     if instanceof(item, "Moveable") then
         return TetrisItemCategory.MOVEABLE
@@ -59,10 +72,10 @@ function TetrisItemCategory.getCategory(item)
     elseif displayCategory == "Ammo" then
         return TetrisItemCategory.AMMO
 
-    elseif displayCategory == "Clothing" then
+    elseif item:IsClothing() then
         return TetrisItemCategory.CLOTHING
 
-    elseif displayCategory == "Food" or displayCategory == "WaterContainer" or displayCategory == "Water" then
+    elseif item:IsFood() or displayCategory == "WaterContainer" or displayCategory == "Water" then
         return TetrisItemCategory.FOOD
 
     elseif displayCategory == "Literature" or displayCategory == "SkillBook" then
@@ -74,7 +87,7 @@ function TetrisItemCategory.getCategory(item)
     elseif category == "Key" then
         return TetrisItemCategory.KEY
 
-    elseif string.find(type, "Seed") and not string.find(type, "Paste") then 
+    elseif string.find(type, "Seed") and not string.find(type, "Paste") then
         return TetrisItemCategory.SEED
     end
 

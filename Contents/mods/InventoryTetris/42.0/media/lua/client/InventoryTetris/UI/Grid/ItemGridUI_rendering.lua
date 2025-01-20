@@ -479,7 +479,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         local heat = item:getHeat() -- 1 = room, 0.2 = frozen, 3 = max
         if heat < 1.0 then
             local coldPercent =  -(heat - 1.0) / 0.8
-            drawingContext:drawRect(x, y, totalWidth, totalHeight, alphaMult * coldPercent, 0.1, 0.5, 0.7)
+            drawingContext:drawRect(x, y, totalWidth, totalHeight, alphaMult * coldPercent, 0.1, 0.35, 0.7)
         elseif heat > 1.0 then
             local hotPercent = (heat - 1.0) / 1.5
             if hotPercent > 1 then hotPercent = 1 end
