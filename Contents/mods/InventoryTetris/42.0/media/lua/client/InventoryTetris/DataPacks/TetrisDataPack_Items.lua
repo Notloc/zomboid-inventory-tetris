@@ -998,6 +998,11 @@ TetrisItemData.registerItemDefinitions(itemPack)
 
 -- Pack #2
 local itemPack2 = {
+	["Base.Cereal"] = {
+		["maxStackSize"] = 2,
+		["height"] = 2,
+		["width"] = 2,
+	},
 	["Base.Strainer"] = {
 		["maxStackSize"] = 1,
 		["height"] = 2,
