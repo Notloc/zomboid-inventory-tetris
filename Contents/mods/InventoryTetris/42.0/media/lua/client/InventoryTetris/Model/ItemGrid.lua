@@ -51,6 +51,14 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, 
     o.isProxInv = containerDefinition.trueType == PROX_INV_TYPE
     o.isCorpse = instanceof(o.inventory:getParent(), "IsoDeadBody")
 
+    if o.isFloor then
+        self._floorModData = {}
+    end
+
+    if o.isProxInv then
+        self._proxData = {}
+    end
+
     o:refresh()
     return o
 end
@@ -840,9 +848,6 @@ function ItemGrid:_getSavedContainerData()
     return modData.gridContainers[invType], parent
 end
 
-ItemGrid._floorModData = {} -- No need to save floor grids, but we do allow users to reposition items on the floor temporarily
-ItemGrid._proxData = {} -- Proximity inventory mod support, acts the same as floor grids
-
 function ItemGrid:_getParentModData()
     if self.isPlayerInventory then
         local player = self.inventory:getParent()
@@ -850,11 +855,11 @@ function ItemGrid:_getParentModData()
     end
 
     if self.isFloor then
-        return ItemGrid._floorModData, nil
+        return self._floorModData, nil
     end
 
     if self.isProxInv then
-        return ItemGrid._proxData, nil
+        return self._proxData, nil
     end
 
     local itemContainer = self.inventory:getContainingItem()
