@@ -198,11 +198,12 @@ function ItemGridUI:renderBackGrid()
     local totalHeight = OPT.CELL_SIZE * height - height + 1
     self:drawRect(0, 0, totalWidth, totalHeight, 0.8, background, background, background)
 
-    local gridLines = 0.45
+    local background = 0.62
+    local gridLines = 0.5
 
     local bgTex = GridBackgroundTexturesByScale[OPT.SCALE] or GridBackgroundTexturesByScale[1]
     local lineTex = GridLineTexturesByScale[OPT.SCALE] or GridLineTexturesByScale[1]
-    self.javaObject:DrawTextureTiled(bgTex, 1, 1, totalWidth-1, totalHeight-1, 0.65, 0.65, 0.65, 0.7)
+    self.javaObject:DrawTextureTiled(bgTex, 1, 1, totalWidth-1, totalHeight-1, background, background, background, 0.7)
     self.javaObject:DrawTextureTiled(lineTex, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
 end
 
@@ -221,7 +222,7 @@ function ItemGridUI:renderIncomingTransfers()
             local x = action.gridX * OPT.CELL_SIZE - action.gridX
             local y = action.gridY * OPT.CELL_SIZE - action.gridY
             local w, h = TetrisItemData.getItemSize(item, action.isRotated)
-            ItemGridUI._renderGridStack(self, playerObj, stack, item, x, y, w, h, 0.18, action.isRotated)
+            ItemGridUI._renderGridStack(self, playerObj, stack, item, x, y, w, h, 0.5, action.isRotated)
         end
     end
 end
@@ -527,13 +528,13 @@ local function rotateUVs90(
 end
 
 -- Color code the items by category
-local neutral = 0.6
+local neutral = 0.65
 local colorsByCategory = {
-    [TetrisItemCategory.MELEE] = {0.95, 0.15, 0.7},
-    [TetrisItemCategory.RANGED] = {0.3, 0.05, 0.05},
-    [TetrisItemCategory.AMMO] = {1, 1, 0},
+    [TetrisItemCategory.MELEE] = {0.825, 0.1, 0.6},
+    [TetrisItemCategory.RANGED] = {0.65, 0.05, 0.05},
+    [TetrisItemCategory.AMMO] = {1, 1, 0.1},
     [TetrisItemCategory.MAGAZINE] = {0.85, 0.5, 0.05},
-    [TetrisItemCategory.ATTACHMENT] = {0.85, 0.4, 0.2},
+    [TetrisItemCategory.ATTACHMENT] = {0.9, 0.5, 0.3},
     [TetrisItemCategory.FOOD] = {0.05, 0.65, 0.15},
     [TetrisItemCategory.CLOTHING] = {neutral, neutral, neutral},
     [TetrisItemCategory.CONTAINER] = {0.65, 0.6, 0.4},

@@ -597,7 +597,7 @@ function ItemContainerGrid:_getUnpositionedItems()
     for i = 0, items:size()-1 do
         local item = items:get(i);
         if not positionedItems[item:getID()] and self:_isItemValid(item) then
-            local w, h = TetrisItemData.getItemSize(item)
+            local w, h = TetrisItemData.getItemSize(item, false)
             local size = w * h
             table.insert(unpositionedItemData, {item = item, size = size})
             count = count + 1

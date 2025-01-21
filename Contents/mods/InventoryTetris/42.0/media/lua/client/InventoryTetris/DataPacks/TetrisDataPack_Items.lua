@@ -1743,6 +1743,16 @@ TetrisItemData.registerItemDefinitions(itemPack2)
 
 -- Pack #3
 local itemPack3 = {
+	["Base.Hat_GasMask"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Hat_GasMask_nofilter"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
 	["Base.HandScytheBlade"] = {
 		["maxStackSize"] = 3,
 		["height"] = 2,
