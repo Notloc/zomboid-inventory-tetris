@@ -88,7 +88,7 @@ function GridOverflowRenderer:render()
             local w, h = 1, 1
 
             if true then --or not isUnsearched or (searchSession and searchSession.searchedStackIDs[item:getID()]) then
-                ItemGridUI._renderGridStack(self, playerObj, stack, item, xPos, yPos, w, h, alpha)
+                ItemGridUI._renderGridStack(self, playerObj, stack, item, xPos, yPos, w, h, alpha, false, nil, true)
             else
                 ItemGridUI._renderHiddenStack(self, playerObj, stack, item, xPos, yPos, w, h, 1)
             end

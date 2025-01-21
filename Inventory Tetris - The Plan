@@ -7,7 +7,8 @@ Auto sort
 	Organized will buff autosort
 
 Ability to scroll through a stack
-	just reorder the item ids
+	just reorder the item ids ❌
+		ids are stored in a map, order is undefined
 
 [GENERAL BUG FIXES]
 	Tooltips on overflow

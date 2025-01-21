@@ -50,6 +50,6 @@ function DragItemRenderer:render()
     stack.count = vanillaStack and vanillaStack.count - 1 or 1
 
     self:suspendStencil()
-    ItemGridUI._renderGridStack(self, playerObj, stack, item, xPos, yPos, itemW, itemH, 1, DragAndDrop.isDraggedItemRotated())
+    ItemGridUI._renderGridStack(self, playerObj, stack, item, xPos, yPos, itemW, itemH, 1, DragAndDrop.isDraggedItemRotated(), nil, true)
     self:resumeStencil()
 end

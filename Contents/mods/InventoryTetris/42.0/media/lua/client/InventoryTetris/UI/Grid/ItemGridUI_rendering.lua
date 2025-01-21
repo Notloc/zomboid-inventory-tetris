@@ -43,7 +43,18 @@ end
 
 local OPT = require("InventoryTetris/Settings")
 
-local ITEM_BG_TEX = getTexture("media/textures/InventoryTetris/ItemBackground.png")
+local SEAMLESS_ITEM_BG_TEX = getTexture("media/textures/InventoryTetris/ItemBg.png")
+
+local ITEM_BG_TEXTURE = {
+    [0.5] = getTexture("media/textures/InventoryTetris/0.5x/ItemBg.png"),
+    [0.75] = getTexture("media/textures/InventoryTetris/0.75x/ItemBg.png"),
+    [1] = getTexture("media/textures/InventoryTetris/1x/ItemBg.png"),
+    [1.5] = getTexture("media/textures/InventoryTetris/1.5x/ItemBg.png"),
+    [2] = getTexture("media/textures/InventoryTetris/2x/ItemBg.png"),
+    [3] = getTexture("media/textures/InventoryTetris/3x/ItemBg.png"),
+    [4] = getTexture("media/textures/InventoryTetris/4x/ItemBg.png")
+}
+
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
 local HIDDEN_ITEM = getTexture("media/textures/InventoryTetris/Hidden.png")
 local SQUISHED_TEXTURE = getTexture("media/textures/InventoryTetris/Squished.png")
@@ -187,11 +198,11 @@ function ItemGridUI:renderBackGrid()
     local totalHeight = OPT.CELL_SIZE * height - height + 1
     self:drawRect(0, 0, totalWidth, totalHeight, 0.8, background, background, background)
 
-    local gridLines = 0.4
+    local gridLines = 0.425
 
     local bgTex = GridBackgroundTexturesByScale[OPT.SCALE] or GridBackgroundTexturesByScale[1]
     local lineTex = GridLineTexturesByScale[OPT.SCALE] or GridLineTexturesByScale[1]
-    self.javaObject:DrawTextureTiled(bgTex, 1, 1, totalWidth-1, totalHeight-1, 1, 1, 1, 0.35)
+    self.javaObject:DrawTextureTiled(bgTex, 1, 1, totalWidth-1, totalHeight-1, 0.65, 0.65, 0.65, 0.35)
     self.javaObject:DrawTextureTiled(lineTex, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
 end
 
@@ -277,6 +288,8 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
         yCullTop = yCullBottom + self.inventoryPane.scrollView:getHeight()
     end
 
+    local bgTex = ITEM_BG_TEXTURE[OPT.SCALE] or SEAMLESS_ITEM_BG_TEX
+
     local count = #stacks
     for i=1,count do
         local stack = stacks[i]
@@ -313,15 +326,15 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                     if searchSession then
                         local revealed = searchSession.searchedStackIDs[item:getID()]
                         if revealed then
-                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, stack.isRotated)
+                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, stack.isRotated, bgTex)
                         else
                             self:_renderHiddenStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult)
                         end
                     else
                         if item ~= draggedItem then
-                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, stack.isRotated)
+                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, stack.isRotated, bgTex)
                         else
-                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 0.4 * alphaMult * transferAlpha, stack.isRotated)
+                            self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 0.4 * alphaMult * transferAlpha, stack.isRotated, bgTex)
                         end
                     end
                 end
@@ -514,21 +527,22 @@ local function rotateUVs90(
 end
 
 -- Color code the items by category
+local neutral = 0.55
 local colorsByCategory = {
     [TetrisItemCategory.MELEE] = {0.95, 0.15, 0.7},
-    [TetrisItemCategory.RANGED] = {0.35, 0, 0},
+    [TetrisItemCategory.RANGED] = {0.3, 0.05, 0.05},
     [TetrisItemCategory.AMMO] = {1, 1, 0},
     [TetrisItemCategory.MAGAZINE] = {0.85, 0.5, 0.05},
     [TetrisItemCategory.ATTACHMENT] = {0.85, 0.4, 0.2},
     [TetrisItemCategory.FOOD] = {0.05, 0.65, 0.15},
-    [TetrisItemCategory.CLOTHING] = {0.5, 0.5, 0.5},
+    [TetrisItemCategory.CLOTHING] = {neutral, neutral, neutral},
     [TetrisItemCategory.CONTAINER] = {0.65, 0.6, 0.4},
     [TetrisItemCategory.HEALING] = {0.1, 0.95, 1},
     [TetrisItemCategory.BOOK] = {0.3, 0, 0.5},
     [TetrisItemCategory.ENTERTAINMENT] = {0.3, 0, 0.5},
     [TetrisItemCategory.KEY] = {0.5, 0.5, 0.5},
-    [TetrisItemCategory.MISC] = {0.5, 0.5, 0.5},
-    [TetrisItemCategory.SEED] = {0.5, 0.5, 0.5},
+    [TetrisItemCategory.MISC] = {neutral, neutral, neutral},
+    [TetrisItemCategory.SEED] = {neutral, neutral, neutral},
     [TetrisItemCategory.MOVEABLE] = {0.7, 0.7, 0.7},
     [TetrisItemCategory.CORPSEANIMAL] = {0.7, 0.7, 0.7}
 }
@@ -551,7 +565,7 @@ local postRenderGridItem = TetrisEvents.OnPostRenderGridItem
 ---@param x any
 ---@param y any
 ---@param alphaMult any
-function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isRotated)
+function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isRotated, itemBgTex, doBorder)
     local SCALE = OPT.SCALE
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
@@ -600,8 +614,13 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
 
     local barOffset = doVerticalBar and 3 or 0
 
+    itemBgTex = itemBgTex or SEAMLESS_ITEM_BG_TEX
     local cols = colorsByCategory[stack.category]
-    javaObject:DrawTextureTiled(ITEM_BG_TEX, x+1, y+1, cellW - 1 - barOffset, cellH - 1, cols[1], cols[2], cols[3], 0.75 * alphaMult)
+    javaObject:DrawTextureTiled(itemBgTex, x+1, y+1, cellW - 1 - barOffset, cellH - 1, cols[1], cols[2], cols[3], 0.75 * alphaMult)
+
+    if doBorder then
+        drawingContext:drawRectBorder(x, y+1, cellW, cellH, 0.5, 1, 1, 1)
+    end
 
     local texture = item:getTex() or HIDDEN_ITEM
 
