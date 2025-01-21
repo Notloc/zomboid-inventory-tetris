@@ -47,7 +47,8 @@ function DragItemRenderer:render()
     local stack = ItemStack.createTempStack(item)
     local vanillaStack = DragAndDrop.getDraggedStack()
 
-    stack.count = vanillaStack and vanillaStack.count - 1 or 1
+    stack.count = vanillaStack and vanillaStack.count or 2
+    stack.count = stack.count - 1
 
     self:suspendStencil()
     ItemGridUI._renderGridStack(self, playerObj, stack, item, xPos, yPos, itemW, itemH, 1, DragAndDrop.isDraggedItemRotated(), nil, true)

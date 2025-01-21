@@ -198,11 +198,11 @@ function ItemGridUI:renderBackGrid()
     local totalHeight = OPT.CELL_SIZE * height - height + 1
     self:drawRect(0, 0, totalWidth, totalHeight, 0.8, background, background, background)
 
-    local gridLines = 0.425
+    local gridLines = 0.45
 
     local bgTex = GridBackgroundTexturesByScale[OPT.SCALE] or GridBackgroundTexturesByScale[1]
     local lineTex = GridLineTexturesByScale[OPT.SCALE] or GridLineTexturesByScale[1]
-    self.javaObject:DrawTextureTiled(bgTex, 1, 1, totalWidth-1, totalHeight-1, 0.65, 0.65, 0.65, 0.35)
+    self.javaObject:DrawTextureTiled(bgTex, 1, 1, totalWidth-1, totalHeight-1, 0.65, 0.65, 0.65, 0.7)
     self.javaObject:DrawTextureTiled(lineTex, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
 end
 
@@ -527,7 +527,7 @@ local function rotateUVs90(
 end
 
 -- Color code the items by category
-local neutral = 0.55
+local neutral = 0.6
 local colorsByCategory = {
     [TetrisItemCategory.MELEE] = {0.95, 0.15, 0.7},
     [TetrisItemCategory.RANGED] = {0.3, 0.05, 0.05},
@@ -595,7 +595,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         local heat = item:getHeat() -- 1 = room, 0.2 = frozen, 3 = max
         if heat < 1.0 then
             local coldPercent =  -(heat - 1.0) / 0.8
-            javaObject:DrawTextureScaledColor(nil, x, y, totalWidth, totalHeight, 0.1, 0.35, 0.7, alphaMult * coldPercent)
+            javaObject:DrawTextureScaledColor(nil, x, y, totalWidth, totalHeight, 0.1, 0.5, 1, alphaMult * coldPercent)
         elseif heat > 1.0 then
             local hotPercent = (heat - 1.0) / 1.5
             if hotPercent > 1 then hotPercent = 1 end
@@ -616,7 +616,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
 
     itemBgTex = itemBgTex or SEAMLESS_ITEM_BG_TEX
     local cols = colorsByCategory[stack.category]
-    javaObject:DrawTextureTiled(itemBgTex, x+1, y+1, cellW - 1 - barOffset, cellH - 1, cols[1], cols[2], cols[3], 0.75 * alphaMult)
+    javaObject:DrawTextureTiled(itemBgTex, x+1, y+1, cellW - 1 - barOffset, cellH - 1, cols[1], cols[2], cols[3], 0.725 * alphaMult)
 
     if doBorder then
         drawingContext:drawRectBorder(x, y+1, cellW, cellH, 0.5, 1, 1, 1)
