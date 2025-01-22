@@ -1,11 +1,11 @@
-require("ISUI/ISPanel")
+require("ISUI/ISUIElement")
 
 ---@class ItemGridUI : ISPanel
 ---@field grid ItemGrid
 ---@field containerGrid ItemContainerGrid
 ---@field inventoryPane ISInventoryPane
 ---@field playerNum number
-ItemGridUI = ISPanel:derive("ItemGridUI")
+ItemGridUI = ISUIElement:derive("ItemGridUI")
 
 ---@param grid ItemGrid
 ---@param containerGrid ItemContainerGrid
@@ -13,7 +13,7 @@ ItemGridUI = ISPanel:derive("ItemGridUI")
 ---@param playerNum number
 ---@return ItemGridUI
 function ItemGridUI:new(grid, containerUi, containerGrid, inventoryPane, playerNum)
-    local o = ISPanel:new(0, 0, 0, 0)
+    local o = ISUIElement:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
 

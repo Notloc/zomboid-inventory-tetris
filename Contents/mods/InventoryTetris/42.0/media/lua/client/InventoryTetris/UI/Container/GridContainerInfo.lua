@@ -9,6 +9,9 @@ local WEIGHT_TEXTURE = getTexture("media/textures/InventoryTetris/weight.png")
 local SELECTED_TEXTURE = getTexture("media/ui/FavoriteStar.png")
 local UNKNOWN_WEIGHT = "?"
 
+local textManager = getTextManager()
+local mediumFont = UIFont.Medium
+
 GridContainerInfo = ISUIElement:derive("GridContainerInfo")
 
 function GridContainerInfo:new(containerUi)
@@ -51,7 +54,7 @@ function GridContainerInfo:prerender()
     if containerUi.item then
         r,g,b = ItemGridUI.getItemColor(containerUi.item, 0.5)
     end
-    
+
     local offsetX = (ICON_SIZE*0.5 + ICON_PADDING_X) * scale
     local offsetY = (ICON_SIZE*0.5 + ICON_PADDING_Y) * scale
     self:drawTextureCenteredAndSquare(containerUi.invTexture, offsetX, offsetY+4, ICON_SIZE * scale, 1, r,g,b)
@@ -77,7 +80,7 @@ function GridContainerInfo:prerender()
     capacity = math.floor(capacity)
 
     if containerUi.isPlayerInventory then
-        capacity = getSpecificPlayer(containerUi.playerNum):getMaxWeight()
+        capacity = containerUi.player:getMaxWeight()
     end
 
     local realWeight = inv:getCapacityWeight()
@@ -100,9 +103,9 @@ function GridContainerInfo:prerender()
 
     local centerX = (ICON_SIZE*0.5 + ICON_PADDING_X) * scale - 8 * scale
     local textY = (ICON_PADDING_Y*2 + ICON_SIZE) * scale - scale * 2
-    self:drawTextCentre(self.weightText, centerX, textY, r,g,b, 1, UIFont.Medium);
-    local lineHeight = getTextManager():getFontFromEnum(UIFont.Medium):getLineHeight()
-    local lineWidth = getTextManager():MeasureStringX(UIFont.Medium, self.weightText)
+    self:drawTextCentre(self.weightText, centerX, textY, r,g,b, 1, mediumFont);
+    local lineHeight = textManager:getFontFromEnum(mediumFont):getLineHeight()
+    local lineWidth = textManager:MeasureStringX(mediumFont, self.weightText)
 
     local weightXOff = 2
     local weightYOff = 0
