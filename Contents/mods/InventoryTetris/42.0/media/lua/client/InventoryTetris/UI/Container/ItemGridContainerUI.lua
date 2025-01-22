@@ -206,7 +206,6 @@ function ItemGridContainerUI:createGridRenderer(gridUis, target)
     end
 
     gridRenderer.containerUi = self
-    gridRenderer.prerender = self.isPlayerInventory and gridRenderer.prerender or function() end
     gridRenderer.render = self.isPlayerInventory and ItemGridContainerUI.renderItemPreview or gridRenderer.render
     gridRenderer.grids = gridUis
     gridRenderer.secondaryTarget = target
