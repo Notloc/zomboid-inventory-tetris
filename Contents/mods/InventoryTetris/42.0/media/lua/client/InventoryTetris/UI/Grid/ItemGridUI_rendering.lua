@@ -430,7 +430,7 @@ function ItemGridUI:_renderControllerDrag(opacity)
         local x = self.selectedX * OPT.CELL_SIZE - self.selectedX
         local y = self.selectedY * OPT.CELL_SIZE - self.selectedY
         local w, h = getItemSize(item, isRotated)
-        self:_renderGridStack(self.playerObj, item, stack, x, y, w, h, opacity, isRotated)
+        self:_renderGridStack(self.playerObj, stack, item, x, y, w, h, opacity, isRotated)
     end
 end
 
