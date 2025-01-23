@@ -438,7 +438,6 @@ ItemGridUI.doLiteratureCheckmark = true
 function ItemGridUI._showLiteratureCheckmark(player, item)
     return
         ItemGridUI.doLiteratureCheckmark and
-        instanceof(item,"Literature") and
         (
             (player:isLiteratureRead(item:getModData().literatureTitle)) or
             (SkillBook[item:getSkillTrained()] ~= nil and item:getMaxLevelTrained() < player:getPerkLevel(SkillBook[item:getSkillTrained()].perk) + 1) or
@@ -516,18 +515,53 @@ local colorsByCategory = {
     [TetrisItemCategory.CORPSEANIMAL] = {0.7, 0.7, 0.7}
 }
 
+local stackFont = UIFont.Small
+local postRenderGridItem = TetrisEvents.OnPostRenderGridItem
 local maskQueue = {
     {},
     {}
 }
+
+---@type table<string, ItemRenderData>
+local itemDataCache = {}
 
 local textureIdCache = {}
 local fluidColorCache = {}
 local textureDataCache = {}
 local stringCache = {}
 
-local stackFont = UIFont.Small
-local postRenderGridItem = TetrisEvents.OnPostRenderGridItem
+---@class ItemRenderData
+---@field isFood boolean
+---@field isFluidContainer boolean
+---@field fluidCapacity number
+---@field isDrainable boolean
+---@field maxUses number
+---@field hasAmmo boolean
+---@field isLiterature boolean
+
+---@param item InventoryItem
+---@return ItemRenderData
+local function getItemData(item, itemType)
+    local isFood = item:isFood()
+    local isFluidContainer = item:getFluidContainer() ~= nil
+    local fluidCapacity = isFluidContainer and item:getFluidContainer():getCapacity()
+    local isDrainable = item:IsDrainable()
+    local maxUses = isDrainable and item:getMaxUses()
+    local hasAmmo = item:getMaxAmmo() > 0
+    local isLiterature = instanceof(item, "Literature")
+
+    local data = {
+        isFood = isFood,
+        isFluidContainer = isFluidContainer,
+        fluidCapacity = fluidCapacity,
+        isDrainable = isDrainable,
+        maxUses = maxUses,
+        hasAmmo = hasAmmo,
+        isLiterature = isLiterature
+    }
+    itemDataCache[itemType] = data
+    return data
+end
 
 ---@param texture Texture
 local function getTextureId(texture)
@@ -554,8 +588,9 @@ local function getTextureData(texture)
     return data
 end
 
----@param fluid Fluid
+---@param fluid Fluid|nil
 local function getFluidColor(fluid)
+    if not fluid then return {r=1,g=1,b=1,a=1} end
     local color = {}
     local colorObj = fluid:getColor()
     color.r = colorObj:getR()
@@ -577,7 +612,7 @@ end
 --- Written for maximum performance, not readability. Zomboid runs lua with all pcalls, so lua function calls here are too expensive.
 ---@param drawingContext ISUIElement
 ---@param playerObj any
----@param stack any
+---@param stack ItemStack
 ---@param item InventoryItem
 ---@param x any
 ---@param y any
@@ -587,20 +622,22 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE
     local TEXTURE_PAD = OPT.TEXTURE_PAD
-    
+
     local totalWidth = w * CELL_SIZE - w + 1
     local totalHeight = h * CELL_SIZE - h + 1
-    local isFood = item:isFood()
 
-    local fluidContainer = item:getFluidContainer()
-    local fluid = fluidContainer and fluidContainer:getPrimaryFluid()
-    local fluidPercent = fluidContainer and (fluidContainer:getAmount() / fluidContainer:getCapacity()) or 0
+    local itemType = stack.itemType
+    local itemData = itemDataCache[itemType] or getItemData(item, itemType)
+
+    local fluidContainer = itemData.isFluidContainer and item:getFluidContainer()
+    local fluid = fluidContainer and fluidContainer:getPrimaryFluid() or nil
+    local fluidPercent = fluidContainer and (fluidContainer:getAmount() / itemData.fluidCapacity) or 0
 
     ---@cast item Food
-    local hungerPercent = isFood and (item:getHungerChange() / item:getBaseHunger()) or 1
+    local hungerPercent = itemData.isFood and (item:getHungerChange() / item:getBaseHunger()) or 1
 
     ---@cast item DrainableComboItem
-    local drainPercent = item:IsDrainable() and (item:getCurrentUses() / item:getMaxUses()) or 1
+    local drainPercent = itemData.isDrainable and (item:getCurrentUses() / itemData.maxUses) or 1
 
     ---@cast item InventoryItem
     local doVerticalBar = fluidPercent > 0 or hungerPercent < 1.0 or drainPercent < 1.0
@@ -608,7 +645,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
     local javaObject = drawingContext.javaObject
 
     -- BACKGROUND EFFECTS
-    if isFood then
+    if itemData.isFood then
         ---@cast item Food
         local heat = item:getHeat() -- 1 = room, 0.2 = frozen, 3 = max
         if heat < 1.0 then
@@ -876,7 +913,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         javaObject:DrawText(stackFont, text, x+2, y-1, 1, 1, 1, alphaMult)
     end
 
-    if isFood then
+    if itemData.isFood then
         if hungerPercent < 1.0 then
             local barX = x + totalWidth - 3
             local top = y + 1
@@ -919,7 +956,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
             javaObject:DrawTextureColor(SQUISHED_TEXTURE, x2, y2, 1, 1, 1, alphaMult);
         end
 
-    elseif item:getMaxAmmo() > 0 then
+    elseif itemData.hasAmmo then
         local ammo = item:getCurrentAmmoCount()
         local text = stringCache[ammo] or getString(ammo)
         local brX = x + CELL_SIZE*w - w - 2
@@ -929,7 +966,7 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
         end
         javaObject:DrawTextRight(stackFont, text, brX, brY, 1, 1, 1, alphaMult)
 
-    elseif ItemGridUI._showLiteratureCheckmark(playerObj, item) then
+    elseif itemData.isLiterature and ItemGridUI._showLiteratureCheckmark(playerObj, item) then
         -- bottom right
         local x2 = x + CELL_SIZE*w - w - 16
         local y2 = y + CELL_SIZE*h - h - 16
