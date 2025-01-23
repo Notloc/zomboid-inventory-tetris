@@ -7,7 +7,6 @@ if not __GLOBAL_INSTACEOF_EXCLUSIONS_SCOPE then
 
     ---@param callback function
     ---@param exclusion string
-    ---@return boolean
     function InstanceofExclusionsScope:execute(callback, exclusion)
         local doAdd = self.exclusions[exclusion] == nil
         if doAdd then
