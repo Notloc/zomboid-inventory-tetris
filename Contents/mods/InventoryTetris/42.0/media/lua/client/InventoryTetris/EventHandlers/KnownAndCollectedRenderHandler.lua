@@ -5,14 +5,17 @@ if not getActivatedMods():contains("KnownAndCollected") and not getActivatedMods
     return
 end
 
+-- You will need to require InventoryTetris' settings in order to calculate the cell size
 local SETTINGS = require("InventoryTetris/Settings")
 
+-- Disable KnownAndCollected's rendering and InventoryTetris' checkmark rendering
 Events.OnGameBoot.Add(function()
     ---@diagnostic disable-next-line: undefined-global
     KnownAndCollected:disableRender()
     ItemGridUI.doLiteratureCheckmark = false
 end)
 
+-- Textures per supported scale. I was lazy for 0.75 and 1.5 scales, so they both use the 1x textures
 local collectedTex = {
     [0.5]=getTexture("media/textures/InventoryTetris/KnownAndCollected/0.5x/iconUnCollected.png"),
     [1]=getTexture("media/textures/InventoryTetris/KnownAndCollected/1x/iconUnCollected.png"),
@@ -70,11 +73,28 @@ local unKnownMapTex = {
     [4]=getTexture("media/textures/InventoryTetris/KnownAndCollected/4x/iconUnKnownMap.png"),
 }
 
+-- Cache for immutable information about items to reduce the number of function calls
+local itemDataCache = {}
+local function getItemData(item, itemType)
+    local isRecordedMedia = item:isRecordedMedia()
+    local isLiterature = instanceof(item, 'Literature')
+
+    local data = {
+        isRecordedMedia = isRecordedMedia,
+        isLiterature = isLiterature,
+        isMap = item:IsMap(),
+    }
+
+    itemDataCache[itemType] = data
+    return data
+end
+
+
 -- Original code adapted from Known and Collected mod
 -- All credit goes to UnCheat
 
 local KnownAndCollectedRenderer = {}
-function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridStack, x, y, width, height, playerObj)
+function KnownAndCollectedRenderer.call(eventData, drawingContext, renderInstructions, instructionCount, playerObj)
     local kacModData = playerObj:getModData().knownAndCollected
     if not kacModData then
         return
@@ -84,133 +104,149 @@ function KnownAndCollectedRenderer.call(eventData, drawingContext, item, gridSta
     local kAC = KnownAndCollected
 
     local recordedMedia = KnownAndCollectedRenderer.recordedMedia or getZomboidRadio():getRecordedMedia()
-
     local collectedMap = kacModData.collected or {}
     local collectedMediaMap = kacModData.collectedMedia or {}
 
-    local unCollected = false
-    local unKnown = false
-    local unKnownUnfinished = false
-    local unKnownUnavailable = false
-    local unPlayed = false
-    local unKnownFlier = false
-    local unKnownMap = false
-    local unKnownEntertainment = false
+    local CELL_SIZE = SETTINGS.CELL_SIZE
 
-    if item:isRecordedMedia() then
-        local mediaData = item:getMediaData()
-        local mediaId = mediaData:getId()
+    for r=1,instructionCount do
+        local instruction = renderInstructions[r]
 
-        if not collectedMediaMap[mediaId] then
-            unCollected = true
-        end
+        local stack = instruction[1]
+        local item = instruction[2]
+        local x = instruction[3]
+        local y = instruction[4]
+        local w = instruction[5]
+        local h = instruction[6]
 
-        if not recordedMedia:hasListenedToAll(playerObj, mediaData) then
-            if kAC.isSkillMedia(mediaId) then
-                unKnown = true
-            else
-                unPlayed = true
-            end
-        end
-    elseif instanceof(item, 'Literature') then
-        local _type = item:getFullType()
-        local skillBook = SkillBook[item:getSkillTrained()]
-        local recipes = item:getTeachedRecipes()
-        local printMedia = item:getModData().printMedia
-        if skillBook then
-            local maxTrained = item:getMaxLevelTrained()
-            local minTrained = item:getLvlSkillTrained()
+        local width = w*CELL_SIZE
+        local height = h*CELL_SIZE
 
-            local playerSkillLevel = playerObj:getPerkLevel(skillBook.perk) + 1
+        local itemType = stack.itemType
+        local itemData = itemDataCache[itemType] or getItemData(item, itemType)
 
-            if not collectedMap[_type] then
+        local unCollected = false
+        local unKnown = false
+        local unKnownUnfinished = false
+        local unKnownUnavailable = false
+        local unPlayed = false
+        local unKnownFlier = false
+        local unKnownMap = false
+        local unKnownEntertainment = false
+
+        if itemData.isRecordedMedia then
+            local mediaData = item:getMediaData()
+            local mediaId = mediaData:getId()
+
+            if not collectedMediaMap[mediaId] then
                 unCollected = true
             end
 
-            local pages = item:getNumberOfPages()
-            local readPages = pages > 0 and playerObj:getAlreadyReadPages(_type) or false
-            if readPages and readPages ~= pages and maxTrained >= playerSkillLevel then
-                if minTrained > playerSkillLevel then
-                    unKnownUnavailable = true
-                elseif readPages > 0 then
-                    unKnownUnfinished = true
-                else
+            if not recordedMedia:hasListenedToAll(playerObj, mediaData) then
+                if kAC.isSkillMedia(mediaId) then
                     unKnown = true
+                else
+                    unPlayed = true
                 end
             end
+        elseif itemData.isLiterature then
+            local skillBook = SkillBook[item:getSkillTrained()]
+            local recipes = item:getTeachedRecipes()
+            local printMedia = item:getModData().printMedia
+            if skillBook then
+                local maxTrained = item:getMaxLevelTrained()
+                local minTrained = item:getLvlSkillTrained()
 
-        elseif recipes then
-            if not collectedMap[_type] then
+                local playerSkillLevel = playerObj:getPerkLevel(skillBook.perk) + 1
+
+                if not collectedMap[itemType] then
+                    unCollected = true
+                end
+
+                local pages = item:getNumberOfPages()
+                local readPages = pages > 0 and playerObj:getAlreadyReadPages(itemType) or false
+                if readPages and readPages ~= pages and maxTrained >= playerSkillLevel then
+                    if minTrained > playerSkillLevel then
+                        unKnownUnavailable = true
+                    elseif readPages > 0 then
+                        unKnownUnfinished = true
+                    else
+                        unKnown = true
+                    end
+                end
+
+            elseif recipes then
+                if not collectedMap[itemType] then
+                    unCollected = true
+                end
+                if not playerObj:getAlreadyReadBook():contains(itemType) or not playerObj:getKnownRecipes():containsAll(recipes) then
+                    unKnown = true
+                end
+            elseif printMedia then
+                if not kAC.isCollected(kAC,printMedia) then
+                    unCollected = true
+                end
+                if not kAC.isKnownPrintMedia(kAC,printMedia) then
+                    unKnownFlier = true
+                end
+            else
+                local title = item:getModData().literatureTitle
+                unKnownEntertainment = title and not playerObj:isLiteratureRead(title)
+
+                if title and not kAC.isCollected(kAC,title) then
+                    unCollected = true
+                end
+            end
+        elseif itemData.isMap then
+            if not kAC.isCollected(kAC,itemType) then
                 unCollected = true
             end
-            if not playerObj:getAlreadyReadBook():contains(_type) or not playerObj:getKnownRecipes():containsAll(recipes) then
-                unKnown = true
-            end
-        elseif printMedia then
-            if not kAC.isCollected(kAC,printMedia) then
-                unCollected = true
-            end
-            if not kAC.isKnownPrintMedia(kAC,printMedia) then
-                unKnownFlier = true
-            end
-        else
-            local title = item:getModData().literatureTitle
-            unKnownEntertainment = title and not playerObj:isLiteratureRead(title)
-
-            if title and not kAC.isCollected(kAC,title) then
-                unCollected = true
+            if not kAC.isKnownMap(kAC,itemType) then
+                unKnownMap = true
             end
         end
-    elseif item:IsMap() then
-        local _type = item:getFullType()
-        if not kAC.isCollected(kAC,_type) then
-            unCollected = true
+
+        local scale = SETTINGS.SCALE
+        local index = scale
+        if index == 0.75 or index == 1.5 then
+            index = 1
         end
-        if not kAC.isKnownMap(kAC,_type) then
-            unKnownMap = true
+
+        local texSize = 12*scale
+        if scale == 1.5 then
+            texSize = 12
         end
-    end
 
-    local scale = SETTINGS.SCALE
-    local index = scale
-    if index == 0.75 or index == 1.5 then
-        index = 1
-    end
+        local right = x+width-2 - texSize
+        local bottom = y+height-2 - texSize
 
-    local texSize = 12*scale
-    if scale == 1.5 then
-        texSize = 12
-    end
+        local javaObject = drawingContext.javaObject
 
-    local right = x+width-2 - texSize
-    local bottom = y+height-2 - texSize
+        if unCollected then
+            javaObject:DrawTexture(collectedTex[index], right+1, y+1, 1)
+        end
 
-    ---@cast drawingContext ISUIElement
+        local bottomRightTex = nil
+        if unKnown then
+            bottomRightTex = unknownTex
+        elseif unKnownUnfinished then
+            bottomRightTex = unKnownUnfinishedTex
+        elseif unKnownUnavailable then
+            bottomRightTex = unavailableTex
+        elseif unPlayed then
+            bottomRightTex = mediaTex
+        elseif unKnownEntertainment then
+            bottomRightTex = unKnownEntertainmentTex
+        elseif unKnownFlier then
+            bottomRightTex = unKnownFlierTex
+        elseif unKnownMap then
+            bottomRightTex = unKnownMapTex
+        end
 
-    if unCollected then
-        drawingContext:drawTexture(collectedTex[index], right+1, y+1, 1, 1, 1, 1)
-    end
-
-    local bottomRightTex = nil
-    if unKnown then
-        bottomRightTex = unknownTex
-    elseif unKnownUnfinished then
-        bottomRightTex = unKnownUnfinishedTex
-    elseif unKnownUnavailable then
-        bottomRightTex = unavailableTex
-    elseif unPlayed then
-        bottomRightTex = mediaTex
-    elseif unKnownEntertainment then
-        bottomRightTex = unKnownEntertainmentTex
-    elseif unKnownFlier then
-        bottomRightTex = unKnownFlierTex
-    elseif unKnownMap then
-        bottomRightTex = unKnownMapTex
-    end
-
-    if bottomRightTex then
-        drawingContext:drawTexture(bottomRightTex[index], right, bottom, 1, 1, 1, 1)
+        if bottomRightTex then
+            javaObject:DrawTexture(bottomRightTex[index], right, bottom, 1)
+        end
     end
 end
 
-TetrisEvents.OnPostRenderGridItem:add(KnownAndCollectedRenderer)
+TetrisEvents.OnPostRenderGrid:add(KnownAndCollectedRenderer)

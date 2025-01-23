@@ -548,7 +548,7 @@ local colorsByCategory = {
 }
 
 local stackFont = UIFont.Small
-local postRenderGridItem = TetrisEvents.OnPostRenderGridItem
+local postRenderGrid = TetrisEvents.OnPostRenderGrid
 
 local maskQueue = table.newarray()
 maskQueue[1] = table.newarray()
@@ -640,8 +640,8 @@ local function getString(obj)
     return str
 end
 
---- A monolithic function that renders an ItemStack along with its accompanying effects
---- Written for maximum performance, not readability. Zomboid runs lua with all pcalls, so function calls here are too expensive.
+
+---@deprecated Use ItemGridUI._bulkRenderGridStacks instead.
 ---@param drawingContext ISUIElement
 ---@param playerObj any
 ---@param stack ItemStack
@@ -655,6 +655,9 @@ function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, 
     ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, 1, playerObj, itemBgTex)
 end
 
+-- HEY MODDER!
+-- Want to add something to the item rendering? Use the OnPostRenderGrid event!
+-- See /client/InventoryTetris/Events.lua for more info.
 function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, instructionCount, playerObj, itemBgTex)
     local SCALE = OPT.SCALE
     local CELL_SIZE = OPT.CELL_SIZE
@@ -664,6 +667,8 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
     local javaObject = drawingContext.javaObject
     local absX = javaObject:getAbsoluteX()
     local absY = javaObject:getAbsoluteY()
+
+    itemBgTex = itemBgTex or SEAMLESS_ITEM_BG_TEX
 
     for r=1,instructionCount do
         local instruction = renderInstructions[r]
@@ -675,7 +680,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
         local h = instruction[6]
         local alphaMult = instruction[7]
         local isRotated = instruction[8]
-        --local hidden = instruction[9]
+        local hidden = instruction[9]
         local doBorder = instruction[10]
 
         local totalWidth = w * CELL_SIZE - w + 1
@@ -721,7 +726,6 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
 
         local barOffset = doVerticalBar and 3 or 0
 
-        itemBgTex = itemBgTex or SEAMLESS_ITEM_BG_TEX
         local cols = colorsByCategory[stack.category]
         javaObject:DrawTextureTiled(itemBgTex, x+1, y+1, cellW - 1 - barOffset, cellH - 1, cols[1], cols[2], cols[3], 0.725 * alphaMult)
 
@@ -939,12 +943,10 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 maskX = maskX + absX
                 maskY = maskY + absY
 
-                -- No crunchy texture fix, if you are making fluid masks you can pack your textures properly
+                -- No crunchy texture fix here, I'm just gonna assume the people who are making texture masks are the type of people who pack their textures properly
                 spriteRenderer:render(texture, maskX, maskY, w * mainTexScale, h, r, g, b, a, tlX, tlY, trX, trY, brX, brY, blX, blY)
             end
         end
-
-        --postRenderGridItem:trigger(drawingContext, item, stack, x, y, cellW+1, cellH+1, playerObj)
 
         -- FOREGROUND EFFECTS
 
@@ -1027,6 +1029,8 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
             javaObject:DrawTextureColor(favTex, x + totalWidth - favTex:getWidth() - 1, y+1, 1, 1, 1, alphaMult)
         end
     end
+
+    postRenderGrid:trigger(drawingContext, renderInstructions, instructionCount, playerObj)
 end
 
 function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult)
