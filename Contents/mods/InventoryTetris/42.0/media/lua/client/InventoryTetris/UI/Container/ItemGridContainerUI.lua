@@ -14,7 +14,6 @@ local TITLE_Y_PADDING = 4
 
 local BASIC_INV_TEXTURE = getTexture("media/ui/Icon_InventoryBasic.png")
 local SHELF_TEXTURE = getTexture("media/ui/Container_Shelf.png")
-local CONTAINER_BG = getTexture("media/textures/InventoryTetris/ContainerBG.png")
 local PROX_INV_TEXTURE = getTexture("media/ui/ProximityInventory.png") or SHELF_TEXTURE
 local NPC_INV_TEXTURE = instanceItem("Base.Spiffo"):getTex()
 
@@ -207,7 +206,6 @@ function ItemGridContainerUI:createGridRenderer(gridUis, target)
     end
 
     gridRenderer.containerUi = self
-    gridRenderer.prerender = self.isPlayerInventory and gridRenderer.prerender or function() end
     gridRenderer.render = self.isPlayerInventory and ItemGridContainerUI.renderItemPreview or gridRenderer.render
     gridRenderer.grids = gridUis
     gridRenderer.secondaryTarget = target

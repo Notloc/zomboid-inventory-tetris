@@ -296,24 +296,6 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
         local stack = stacks[i]
         local item = stack._frontItem or ItemStack.getFrontItem(stack, inventory)
         if item then
-            if stack.count > 1 and stack.category == TetrisItemCategory.FOOD then
-                for itemId, _ in pairs(stack.itemIDs) do
-                    local item = inventory:getItemById(itemId)
-                    if item then
-                        item:updateAge()
-                        if item:IsClothing() then
-                            item:updateWetness()
-                        end
-                    end
-                end
-            else
-                item:updateAge()
-                if item:IsClothing() then
-                    ---@cast item Clothing
-                    item:updateWetness()
-                end
-            end
-
             local x, y = stack.x, stack.y
             if x and y then
                 local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
@@ -323,6 +305,13 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                 local shouldCull = not self.containerUi.isPopup and (uiY + h * CELL_SIZE - h < yCullBottom or uiY > yCullTop)
 
                 if not shouldCull then
+                    -- Only update the first item in the stack, ISInventoryTransferAction handles the rest JIT style
+                    item:updateAge()
+                    if item:IsClothing() then
+                        ---@cast item Clothing
+                        item:updateWetness()
+                    end
+
                     local transferAlpha = outgoingQueueData[item] and 0.4 or 1
                     if searchSession then
                         local revealed = searchSession.searchedStackIDs[item:getID()]

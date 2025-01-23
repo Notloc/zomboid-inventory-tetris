@@ -1300,7 +1300,7 @@ if not TetrisDevTool.og_createMenu then
     ---@diagnostic disable-next-line: duplicate-set-field
     ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
         local menu = TetrisDevTool.og_createMenu(player, isInPlayerInventory, items, x, y, origin)
-        if not TetrisDevTool.isDebugEnabled() then return menu end
+        if not menu or not TetrisDevTool.isDebugEnabled() then return menu end
 
         local item = items[1]
         if not item then return menu end

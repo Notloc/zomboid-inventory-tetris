@@ -182,6 +182,16 @@ Events.OnGameBoot.Add(function()
 
     local og_transferItem = ISInventoryTransferAction.transferItem
     function ISInventoryTransferAction:transferItem(item)
+        -- The vanilla UI handles this for all items
+        -- For performance reasons, Inventory Tetris only handles this for the first item in visible stacks
+        -- We add this update here to ensure items are always updated just before they are transferred.
+        -- This ensure that the item is always up to date before they transfer and decouples this logic from the UI
+        item:updateAge()
+        if item:IsClothing() then
+            ---@cast item Clothing
+            item:updateWetness()
+        end
+
         local originalItemCount = self.destContainer:getItems():size()
         local wasAlreadyTransferred = self:isAlreadyTransferred(item)
 
