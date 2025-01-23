@@ -34,3 +34,4 @@
 
 ---@class tablelib
 ---@field wipe fun(t:table)
+---@field newarray fun():table
