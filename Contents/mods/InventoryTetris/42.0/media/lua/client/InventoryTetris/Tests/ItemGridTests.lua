@@ -151,6 +151,7 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function
         end
 
         containerGrid:_updateGridPositions()
+        containerGrid:_updateGridPositions()
 
         local otherStack = containerGrid:findStackByItem(item)
         TestUtils.assert(otherStack and stack == otherStack)
