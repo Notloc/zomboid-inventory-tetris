@@ -39,6 +39,7 @@ end
 
 function SearchGridAction:start()
     self:startActionAnim()
+	self.grid:resetSearchTimer(self.character:getPlayerNum())
 end
 
 function SearchGridAction:update()

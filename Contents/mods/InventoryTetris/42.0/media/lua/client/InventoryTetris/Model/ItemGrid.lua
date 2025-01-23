@@ -718,6 +718,14 @@ function ItemGrid:getSearchSession(playerNum)
     return ItemGrid._getSearchSession(playerNum, self)
 end
 
+function ItemGrid:resetSearchTimer(playerNum)
+    local session = ItemGrid._getSearchSession(playerNum, self)
+    if session then
+        session.lastUpdateTime = nil
+    end
+end
+
+local TIME_PER_TICK_MS = 1000 / 60
 function ItemGrid:updateSearch(player, playerNum)
     local session = ItemGrid._getOrCreateSearchSession(playerNum, self)
 
@@ -733,8 +741,19 @@ function ItemGrid:updateSearch(player, playerNum)
         searchTime = searchTime * 0.66
     end
 
-    
-    local progressTicks = session.progressTicks + 1
+    local lastTime = session.lastUpdateTime or getTimestampMs()
+    local currentTime = getTimestampMs()
+
+    local progress = (currentTime - lastTime) / TIME_PER_TICK_MS -- This used to be tied to framerate so might as well base this on 60fps
+    if progress < 1 then
+        session.lastUpdateTime = session.lastUpdateTime or currentTime
+        return false
+    end
+
+    progress = math.floor(progress)
+
+    local progressTicks = session.progressTicks + progress
+    session.lastUpdateTime = session.lastUpdateTime + (progress * TIME_PER_TICK_MS)
 
     if not session.isGridRevealed and progressTicks >= (searchTime * 2) then
         progressTicks = progressTicks - (searchTime * 2)
