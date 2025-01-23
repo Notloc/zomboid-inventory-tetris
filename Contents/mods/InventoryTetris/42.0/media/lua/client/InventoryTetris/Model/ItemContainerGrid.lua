@@ -364,6 +364,8 @@ end
 
 
 function ItemContainerGrid:refresh()
+    self.needsImmediateRefresh = false
+
     local doPhysics = SandboxVars.InventoryTetris.EnableGravity and self:shouldDoPhysics()
     for _, grid in ipairs(self.grids) do
         grid:refresh(doPhysics)
@@ -382,7 +384,7 @@ function ItemContainerGrid:refresh()
 end
 
 function ItemContainerGrid:shouldRefresh()
-    if not self.lastRefresh then
+    if not self.lastRefresh or self.needsImmediateRefresh then
         return true
     end
     local delay = self.isPlayerInventory and 100 or GRID_REFRESH_DELAY -- main inventory is more responsive
@@ -502,7 +504,7 @@ end
 
 function ItemContainerGrid:_updateGridPositions()
     self.overflow = {}
-    local unpositionedItems = self:_getUnpositionedItems()
+    local unpositionedItemData = self:_getUnpositionedItems()
 
     local isDisorganized = false
     if self.isOnPlayer then
@@ -511,7 +513,7 @@ function ItemContainerGrid:_updateGridPositions()
     end
 
     -- Sort the unpositioned items by size, so we can place the biggest ones first
-    table.sort(unpositionedItems, function(a, b) return a.size < b.size end)
+    table.sort(unpositionedItemData, function(a, b) return a.size < b.size end)
 
     ---@type ItemGrid[]
     local allGrids = {}
@@ -526,9 +528,9 @@ function ItemContainerGrid:_updateGridPositions()
 
     local gridCount = #allGrids
 
-    local remainingItems = {}
+    local remainingItemData = {}
     local gridIndex = 1
-    for _, item in ipairs(unpositionedItems) do
+    for _, itemData in ipairs(unpositionedItemData) do
         gridIndex = self.isOnPlayer and 1 or gridIndex
         local startIndex = gridIndex
         local placedItem = false
@@ -539,28 +541,25 @@ function ItemContainerGrid:_updateGridPositions()
                 gridIndex = 1
             end
 
-            if grid:_acceptUnpositionedItem(item.item, isDisorganized) then
+            if grid:_acceptUnpositionedItem(itemData.item, isDisorganized) then
                 placedItem = true
                 break
             end
         until gridIndex == startIndex
 
         if not placedItem then
-            remainingItems[#remainingItems+1] = item
+            remainingItemData[#remainingItemData+1] = itemData
         end
 
-        gridIndex = (gridIndex + ZombRand(0, gridCount+1)) % (gridCount + 1)
-        if gridIndex == 0 then
-            gridIndex = 1
-        end
+        gridIndex = ZombRand(1, gridCount+1)
     end
 
-    if #remainingItems == 0 then
+    if #remainingItemData == 0 then
         return
     end
 
-    for _, unpositionedItemData in ipairs(remainingItems) do
-        local item = unpositionedItemData.item
+    for _, itemData in ipairs(remainingItemData) do
+        local item = itemData.item
         if not self:_stackIntoOverflow(item) then
             local stack = ItemStack.create(0, 0, false, item:getFullType(), TetrisItemCategory.getCategory(item))
             ItemStack.addItem(stack, item)
@@ -571,7 +570,7 @@ function ItemContainerGrid:_updateGridPositions()
     if self.isOnPlayer then
         local playerObj = getSpecificPlayer(self.playerNum)
         if getPlayerHotbar(self.playerNum) then -- Wait for the hotbar to be initialized
-            for _, unpositionedItemData in ipairs(remainingItems) do
+            for _, unpositionedItemData in ipairs(remainingItemData) do
                 GridAutoDropSystem.queueItemForDrop(unpositionedItemData.item, playerObj)
             end
         end
@@ -601,7 +600,8 @@ function ItemContainerGrid:_getUnpositionedItems()
             local size = w * h
             table.insert(unpositionedItemData, {item = item, size = size})
             count = count + 1
-            if count >= 100 then -- Don't process too many items at once
+            if count >= 5 then -- Don't process too many items at once
+                self.needsImmediateRefresh = true
                 break
             end
         end
