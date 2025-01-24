@@ -483,26 +483,35 @@ function ItemGridUI.setTextureAsCrunchy(texture)
     --SpriteRenderer.instance:glTexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE);
 end
 
-local col3 = {r=0, g=1,b=1,a=1}
-local col2 = {r=1,g=1,b=0,a=1}
-local col1 = {r=1,g=0,b=0,a=1}
+-- Possible colors are limited to 101 total (0-100 int)
+local triLerpColorCache = {}
+
+local goodColor = {r=0, g=1,b=1}
+local midColor = {r=1,g=1,b=0}
+local badColor = {r=1,g=0,b=0}
 local function triLerpColors(value)
     if value < 0 then value = 0; end
-    if value > 1 then value = 1; end
+    if value > 100 then value = 100; end
 
+    local key = value
+    local value = value / 100.0
+    local col
     if value <= 0.5 then
         value = value * 2
-        return col1.a + (col2.a - col1.a) * value,
-               col1.r + (col2.r - col1.r) * value,
-               col1.g + (col2.g - col1.g) * value,
-               col1.b + (col2.b - col1.b) * value
+        col = table.newarray()
+        col[1] = badColor.r + (midColor.r - badColor.r) * value
+        col[2] = badColor.g + (midColor.g - badColor.g) * value
+        col[3] = badColor.b + (midColor.b - badColor.b) * value
     else
         value = (value - 0.5) * 2
-        return col2.a + (col3.a - col2.a) * value,
-               col2.r + (col3.r - col2.r) * value,
-               col2.g + (col3.g - col2.g) * value,
-               col2.b + (col3.b - col2.b) * value
+        col = table.newarray()
+        col[1] = midColor.r + (goodColor.r - midColor.r) * value
+        col[2] = midColor.g + (goodColor.g - midColor.g) * value
+        col[3] = midColor.b + (goodColor.b - midColor.b) * value
     end
+
+    triLerpColorCache[key] = col
+    return col
 end
 
 -- Precache the sin and cos of 90 degree rotations
@@ -546,7 +555,7 @@ local itemDataCache = {}
 local textureIdCache = {}
 local fluidColorCache = {}
 local textureDataCache = {}
-local stringCache = {}
+local numericStringCache = {}
 
 ---@class ItemRenderData
 ---@field isFood boolean
@@ -619,10 +628,10 @@ local function getFluidColor(fluid)
     return color
 end
 
----@param obj any
-local function getString(obj)
-    local str = tostring(obj)
-    stringCache[obj] = str
+---@param number number
+local function getNumericString(number)
+    local str = tostring(number)
+    numericStringCache[number] = str
     return str
 end
 
@@ -956,7 +965,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
             local doShadow = OPT.DO_STACK_SHADOWS
             local count = stack.count
             if count > 1 then
-                local text = stringCache[count] or getString(count)
+                local text = numericStringCache[count] or getNumericString(count)
                 if doShadow then
                     javaObject:DrawText(stackFont, text, x+3, y, 0, 0, 0, alphaMult)
                 end
@@ -970,8 +979,11 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                     local bottom = y + totalHeight
                     local missing = (bottom - top) * (1.0 - hungerPercent)
 
-                    local a,r,g,b = triLerpColors(hungerPercent)
-                    javaObject:DrawTextureScaledColor(nil, barX, top + missing, 2, bottom - top - missing,r,g,b,alphaMult*a)
+                    local colorVal = floor((hungerPercent * 100) + 0.5)
+                    if colorVal > 100 then colorVal = 100 end
+
+                    local col = triLerpColorCache[colorVal] or triLerpColors(colorVal)
+                    javaObject:DrawTextureScaledColor(nil, barX, top + missing, 2, bottom - top - missing, col[1], col[2], col[3], alphaMult)
                 end
 
                 ---@cast item Food
@@ -986,8 +998,11 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 local bottom = y + totalHeight
                 local missing = (bottom - top) * (1.0 - drainPercent)
 
-                local a,r,g,b = triLerpColors(drainPercent)
-                javaObject:DrawTextureScaledColor(nil, barX, top + missing, 2, bottom - top - missing,r,g,b,alphaMult*a)
+                local colorVal = floor((drainPercent * 100) + 0.5)
+                if colorVal > 100 then colorVal = 100 end
+
+                local col = triLerpColorCache[colorVal] or triLerpColors(colorVal)
+                javaObject:DrawTextureScaledColor(nil, barX, top + missing, 2, bottom - top - missing, col[1], col[2], col[3], alphaMult)
 
             elseif fluidPercent > 0 then
                 local color = fluidColorCache[fluid] or getFluidColor(fluid)
@@ -1008,7 +1023,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
 
             elseif itemData.hasAmmo then
                 local ammo = item:getCurrentAmmoCount()
-                local text = stringCache[ammo] or getString(ammo)
+                local text = numericStringCache[ammo] or getNumericString(ammo)
                 local brX = x + CELL_SIZE*w - w - 2
                 local brY = y + CELL_SIZE*h - h - ItemGridUI.lineHeight - 1
                 if doShadow then
