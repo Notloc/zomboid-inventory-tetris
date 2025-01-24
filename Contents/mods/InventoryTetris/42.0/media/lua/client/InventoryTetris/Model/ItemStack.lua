@@ -10,6 +10,7 @@
 ---@field public itemType string
 ---@field public category string
 ---@field private _frontItem InventoryItem
+---@field private _frontItemId number
 ItemStack = {}
 
 ---@return ItemStack
@@ -48,6 +49,7 @@ function ItemStack.getFrontItem(stack, inventory)
         local item = inventory:getItemById(itemID)
         if item then
             stack._frontItem = item
+            stack._frontItemId = itemID
             return item
         end
     end
@@ -74,6 +76,7 @@ function ItemStack.removeItem(stack, item)
 
     if stack._frontItem and stack._frontItem:getID() == itemId then
         stack._frontItem = nil
+        stack._frontItemId = nil
     end
 end
 

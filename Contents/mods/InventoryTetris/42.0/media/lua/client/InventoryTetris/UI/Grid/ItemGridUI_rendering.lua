@@ -301,6 +301,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     for i=1,count do
         local stack = stacks[i]
         local item = stack._frontItem or ItemStack.getFrontItem(stack, inventory)
+        local itemId = stack._frontItemId
         if item then
             local x, y = stack.x, stack.y
             if x and y then
@@ -312,20 +313,19 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                 if not shouldCull then
                     -- Only update the first item in the stack, ISInventoryTransferAction handles the rest JIT style
                     item:updateAge()
-                    if item:IsClothing() then
+                    if stack.category == TetrisItemCategory.CLOTHING then
                         ---@cast item Clothing
                         item:updateWetness()
                     end
 
                     local transferAlpha = outgoingQueueData[item] and 0.4 or 1
-                    local hidden = searchSession and not searchSession.searchedStackIDs[item:getID()]
+                    local hidden = searchSession and not searchSession.searchedStackIDs[itemId]
 
                     local alpha = alphaMult * transferAlpha
                     if item == draggedItem then
                         alpha = 0.4 * alpha
                     end
 
-                    --{stack, item, uiX, uiY, w, h, alpha, stack.isRotated, hidden, false}
                     instructionCount = instructionCount + 1
                     local instruction = instructionBuffer[instructionCount] or table.newarray()
                     instruction[1] = stack
@@ -340,21 +340,6 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                     instruction[10] = false
 
                     instructionBuffer[instructionCount] = instruction
-
-                    --if searchSession then
-                        --local revealed = searchSession.searchedStackIDs[item:getID()]
-                        --if revealed then
-                            --self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, stack.isRotated, bgTex)
-                        --else
-                            --self:_renderHiddenStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult)
-                        --end
-                    --else
-                    --    if item ~= draggedItem then
-                            --self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 1 * alphaMult * transferAlpha, stack.isRotated, bgTex)
-                     --   else
-                            --self:_renderGridStack(playerObj, stack, item, uiX, uiY, w, h, 0.4 * alphaMult * transferAlpha, stack.isRotated, bgTex)
-                    --    end
-                    --end
                 end
             end
         end

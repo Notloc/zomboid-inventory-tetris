@@ -1,9 +1,10 @@
-require("InventoryTetris/Events")
-require("RecordedMedia/recorded_media")
-
 if not getActivatedMods():contains("KnownAndCollected") and not getActivatedMods():contains("\\KnownAndCollected") then
     return
 end
+
+require("InventoryTetris/Events")
+require("RecordedMedia/recorded_media")
+require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
 
 -- You will need to require InventoryTetris' settings in order to calculate the cell size
 local SETTINGS = require("InventoryTetris/Settings")
