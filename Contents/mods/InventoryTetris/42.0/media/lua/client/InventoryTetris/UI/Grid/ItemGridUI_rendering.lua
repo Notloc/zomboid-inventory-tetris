@@ -628,13 +628,6 @@ end
 
 
 ---@deprecated Use ItemGridUI._bulkRenderGridStacks instead.
----@param drawingContext ISUIElement
----@param playerObj any
----@param stack ItemStack
----@param item InventoryItem
----@param x any
----@param y any
----@param alphaMult any
 function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isRotated, itemBgTex, doBorder)
     local renderInstructions = table.newarray()
     renderInstructions[1] = {stack, item, x, y, w, h, alphaMult, isRotated, false, doBorder}
@@ -644,6 +637,12 @@ end
 -- HEY MODDER!
 -- Want to add something to the item rendering? Use the OnPostRenderGrid event!
 -- See /client/InventoryTetris/Events.lua for more info.
+
+---@param drawingContext ISUIElement
+---@param renderInstructions TetrisRenderInstruction[]
+---@param instructionCount number
+---@param playerObj IsoPlayer
+---@param itemBgTex Texture|nil
 function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, instructionCount, playerObj, itemBgTex)
     local SCALE = OPT.SCALE
     local CELL_SIZE = OPT.CELL_SIZE
