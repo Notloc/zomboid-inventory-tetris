@@ -210,7 +210,17 @@ function ItemGrid:_insertStack(xPos, yPos, item, isRotated)
     local stack = ItemStack.create(xPos, yPos, isRotated, item:getFullType(), TetrisItemCategory.getCategory(item))
     ItemStack.addItem(stack, item)
     table.insert(self.persistentData.stacks, stack)
-    self:_rebuildStackMap()
+
+    if self._directWriteStackMap then -- Optimization during grid creation
+        local w,h = TetrisItemData.getItemSize(item, isRotated)
+        for x=xPos,xPos+w-1 do
+            for y=yPos,yPos+h-1 do
+                self.stackMap[x][y] = stack
+            end
+        end
+    else
+        self:_rebuildStackMap() -- Prefer full rebuilds for safety
+    end
     self:_sendModData()
 end
 
@@ -601,7 +611,10 @@ end
 
 -- TODO: Either remove this method or make it batch several items at once with minimal checks
 function ItemGrid:_acceptUnpositionedItem(item, isDisorganized)
-    return self:_attemptToInsertItem(item, false, isDisorganized)
+    self._directWriteStackMap = true
+    local result = self:_attemptToInsertItem(item, false, isDisorganized)
+    self._directWriteStackMap = false
+    return result
 end
 
 function ItemGrid:isEmpty()

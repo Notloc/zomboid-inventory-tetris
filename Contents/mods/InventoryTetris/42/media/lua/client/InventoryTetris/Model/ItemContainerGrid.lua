@@ -600,7 +600,7 @@ function ItemContainerGrid:_getUnpositionedItems()
             local size = w * h
             table.insert(unpositionedItemData, {item = item, size = size})
             count = count + 1
-            if count >= 15 then -- Don't process too many items at once
+            if count >= 10 then -- Don't process too many items at once
                 self.needsImmediateRefresh = true
                 break
             end

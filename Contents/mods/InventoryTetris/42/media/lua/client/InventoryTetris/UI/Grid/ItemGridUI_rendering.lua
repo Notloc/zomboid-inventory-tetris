@@ -1047,7 +1047,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 end
 
                 if itemInstanceData.showPoison or playerObj:isKnownPoison(item) or (enableTainted and item:isTainted()) then
-                    javaObject:DrawTextureColor(poisonTex, x+1, y+totalHeight - poisonTexH-1, 0, 1, 0, 1);
+                    javaObject:DrawTextureColor(poisonTex, x+1, y+totalHeight - poisonTexH-1, 0.55, 1, 0.3, 1);
                 end
 
             elseif drainPercent < 1.0 then
@@ -1072,7 +1072,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 javaObject:DrawTextureScaledColor(nil, barX, top + missing, 2, bottom - top - missing, color.r, color.g, color.b, alphaMult)
 
                 if fluid == Bleach or (enableTainted and fluid == TaintedWater and fluidContainer:getPoisonRatio() > 0.1) then
-                    javaObject:DrawTextureColor(poisonTex, x+1, y+totalHeight - poisonTexH-1, 0, 1, 0, 1);
+                    javaObject:DrawTextureColor(poisonTex, x+1, y+totalHeight - poisonTexH-1, 0.55, 1, 0.3, 1);
                 end
 
             elseif stack.category == TetrisItemCategory.CONTAINER then
