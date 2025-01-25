@@ -1,6 +1,7 @@
 require("InventoryTetris/UI/Grid/ItemGridUI")
 require("InventoryTetris/Data/TetrisItemCategory")
 require("InventoryTetris/Data/TetrisItemData")
+require("InventoryTetris/Events")
 local ItemGridUI = ItemGridUI
 local TetrisItemCategory = TetrisItemCategory
 local TetrisItemData = TetrisItemData
