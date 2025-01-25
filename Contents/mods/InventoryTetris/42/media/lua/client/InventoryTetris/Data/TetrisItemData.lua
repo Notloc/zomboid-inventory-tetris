@@ -8,6 +8,8 @@ TetrisItemData._itemData = {}
 TetrisItemData._itemDataPacks = {}
 TetrisItemData._alwaysStackOnSpawnItems = {}
 
+TetrisItemData._squishedIdCache = {}
+
 --TODO: Move into dev tool and datapacks
 TetrisItemData._dynamicSizeItems = {
     ["Base.CorpseAnimal"] = true,
@@ -84,10 +86,16 @@ function TetrisItemData._getItemData(item, noSquish)
     local isSquished = not noSquish and TetrisItemData.isSquished(item)
 
     if isSquished then
-        fType = fType .. SQUISHED_SUFFIX
+        fType = TetrisItemData._getSquishedId(fType)
     end
 
     return TetrisItemData._getItemDataByFullType(item, fType, isSquished)
+end
+
+function TetrisItemData._getSquishedId(fType)
+    local squishedId = fType .. SQUISHED_SUFFIX
+    TetrisItemData._squishedIdCache[fType] = squishedId
+    return squishedId
 end
 
 function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
