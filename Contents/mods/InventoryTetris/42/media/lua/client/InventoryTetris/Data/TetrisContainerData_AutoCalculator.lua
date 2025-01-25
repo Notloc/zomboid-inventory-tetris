@@ -84,7 +84,9 @@ function TetrisContainerData._calculateVehicleTrunkContainerDefinition(container
     }
 end
 
--- Determine two numbers that multiply *close* to the target slot count
+--- Determine two numbers that multiply *close* to the target slot count
+---@param target number -- The target slot count
+---@param accuracy number -- Reduces the importance of squaring the shape
 function TetrisContainerData._calculateDimensions(target, accuracy)
     local best = 99999999
     local bestX = 1

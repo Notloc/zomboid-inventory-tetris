@@ -29,6 +29,10 @@ function TetrisItemData._autoCalculateItemInfo(item, isSquished)
 end
 
 function TetrisItemData._calculateItemSize(item, category)
+    if item:getFluidContainer() then
+        return TetrisItemData._calculateFluidContainerSize(item)
+    end
+
     local calculation = TetrisItemData._itemClassToSizeCalculation[category]
     if type(calculation) == "function" then
         return calculation(item)
@@ -196,9 +200,6 @@ function TetrisItemData._calculateContainerItemSizeFromInner(innerSize)
 end
 
 function TetrisItemData._calculateMiscSize(item)
-    if item:getFluidContainer() then
-        return TetrisItemData._calculateFluidContainerSize(item)
-    end
     return TetrisItemData._calculateItemSizeWeightBased(item)
 end
 
@@ -231,9 +232,6 @@ function TetrisItemData._calculateItemSizeWeightBased(item)
 end
 
 function TetrisItemData._calculateFoodSize(item)
-    if item:getFluidContainer() then
-        return TetrisItemData._calculateFluidContainerSize(item)
-    end
     local x, y = TetrisItemData._calculateItemSizeWeightBasedTall(item)
 
     -- Cap the size of food items
@@ -255,7 +253,6 @@ function TetrisItemData._calculateFluidContainerSize(item)
         return 1, 1
     end
 
-    -- Everything else is 1 slot per liter with a minimum size of 1x2
     local slots = math.max(math.pow(fluidCapacity, 0.85), 2)
     local x, y = TetrisContainerData._calculateDimensions(slots, 2)
 

@@ -797,7 +797,6 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
             end
 
             local texture = item:getTex() or HIDDEN_ITEM
-
             local textureData = textureDataCache[texture] or getTextureData(texture)
 
             local texW = textureData.widthOrig

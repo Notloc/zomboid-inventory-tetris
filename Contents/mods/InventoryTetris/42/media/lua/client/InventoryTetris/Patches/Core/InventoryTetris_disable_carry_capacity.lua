@@ -16,8 +16,7 @@ local function isPlayerInv(container)
     return container == inv1 or container == inv2 or container == inv3 or container == inv4
 end
 
--- Sets the container's capacity to a very high value, calls the callback function, and then resets the container's capacity
--- Even if an error occurs, the container's capacity will be reset to its original value
+-- Spoofs the game's capacity check by pretending the target container is the floor, which does not enforce capacity limits.
 local function disableCarryWeightOnContainer(container, callback, ...)
     if instanceof(container, "InventoryContainer") then
         container = container:getInventory()
@@ -27,7 +26,7 @@ local function disableCarryWeightOnContainer(container, callback, ...)
     local originalType = container:getType()
 
     -- Skip player's main inventory or fragile containers or if the option is disabled
-    if not container or originalType == "floor" or SandboxVars.InventoryTetris.EnforceCarryWeight or isPlayerInv(container) then
+    if not container or originalType == "floor" or SandboxVars.InventoryTetris.EnforceCarryWeight --[[or isPlayerInv(container)]] then -- Disabling capacity for the player inv due to vanilla fluid bugs
         return callback(...)
     end
 

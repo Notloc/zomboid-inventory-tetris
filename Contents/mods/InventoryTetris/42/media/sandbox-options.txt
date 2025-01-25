@@ -7,6 +7,13 @@ option InventoryTetris.EnforceCarryWeight
 	translation = InventoryTetris_EnforceCarryWeight,
 }
 
+option InventoryTetris.EncumbranceSlow
+{
+	type = boolean, default = true,
+	page = InventoryTetris,
+	translation = InventoryTetris_EncumbranceSlow,
+}
+
 option InventoryTetris.PreventTardisStacking
 {
 	type = boolean, default = true,

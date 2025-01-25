@@ -170,9 +170,10 @@ function TetrisWindowManager:keepChildWindowsOnTop()
     end
 end
 
----@param item InventoryContainer
+---@param item InventoryItem
 function TetrisWindowManager:openContainerPopup(item)
     if not item or not item:IsInventoryContainer() then return end
+    ---@cast item InventoryContainer
 
     if isClient() then -- Prevent multiplayer dupe glitch
         local playerObj = getSpecificPlayer(self.playerNum)
