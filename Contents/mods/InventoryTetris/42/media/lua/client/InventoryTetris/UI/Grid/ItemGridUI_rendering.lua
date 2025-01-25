@@ -5,6 +5,7 @@ local ItemGridUI = ItemGridUI
 local TetrisItemCategory = TetrisItemCategory
 local isItemSquished = TetrisItemData.isSquished
 local getItemSize = TetrisItemData.getItemSize
+local getItemData = TetrisItemData._getItemData
 
 -- Premade textures for supported scales so that any scale gets pixel perfect grids
 local GridBackgroundTexturesByScale = {
@@ -303,7 +304,16 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
         if item then
             local x, y = stack.x, stack.y
             if x and y then
-                local w, h = getItemSize(item, stack.isRotated)
+                local w, h
+                local data = getItemData(item)
+                if stack.isRotated then
+                    w = data.height
+                    h = data.width
+                else
+                    w = data.width
+                    h = data.height
+                end
+
                 local uiX = x * CELL_SIZE - x
                 local uiY = y * CELL_SIZE - y
 
@@ -550,11 +560,6 @@ maskQueue[2] = table.newarray()
 ---@type table<string, ItemRenderData>
 local itemDataCache = {}
 
-local textureIdCache = {}
-local fluidColorCache = {}
-local textureDataCache = {}
-local numericStringCache = {}
-
 ---@class ItemRenderData
 ---@field isFood boolean
 ---@field isFluidContainer boolean
@@ -588,12 +593,16 @@ local function getItemData(item, itemType)
     return data
 end
 
+local textureIdCache = {}
+
 ---@param texture Texture
 local function getTextureId(texture)
     local id = texture:getID()
     textureIdCache[texture] = id
     return id
 end
+
+local textureDataCache = {}
 
 ---@param texture Texture
 local function getTextureData(texture)
@@ -613,6 +622,8 @@ local function getTextureData(texture)
     return data
 end
 
+local fluidColorCache = {}
+
 ---@param fluid Fluid|nil
 local function getFluidColor(fluid)
     if not fluid then return {r=1,g=1,b=1,a=1} end
@@ -625,6 +636,8 @@ local function getFluidColor(fluid)
     fluidColorCache[fluid] = color
     return color
 end
+
+local numericStringCache = {}
 
 ---@param number number
 local function getNumericString(number)
