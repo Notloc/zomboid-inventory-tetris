@@ -191,22 +191,20 @@ function ItemGridUI:renderUnsearched()
     self:drawTextCentre("?", self:getWidth()/2, self:getHeight()/2 - ItemGridUI.lineHeight, 1, 1, 1, 1, UIFont.Large)
 end
 
--- 3 draw calls
+-- 2 draw calls
 function ItemGridUI:renderBackGrid()
     local width = self.grid.width
     local height = self.grid.height
 
-    local background = 0.07
     local totalWidth = OPT.CELL_SIZE * width - width + 1
     local totalHeight = OPT.CELL_SIZE * height - height + 1
-    self:drawRect(0, 0, totalWidth, totalHeight, 0.8, background, background, background)
-
-    local background = 0.62
-    local gridLines = 0.5
 
     local bgTex = GridBackgroundTexturesByScale[OPT.SCALE] or GridBackgroundTexturesByScale[1]
+    local background = 0.62
+    self.javaObject:DrawTextureTiled(bgTex, 1, 1, totalWidth-1, totalHeight-1, background, background, background, 0.75)
+
     local lineTex = GridLineTexturesByScale[OPT.SCALE] or GridLineTexturesByScale[1]
-    self.javaObject:DrawTextureTiled(bgTex, 1, 1, totalWidth-1, totalHeight-1, background, background, background, 0.7)
+    local gridLines = 0.5
     self.javaObject:DrawTextureTiled(lineTex, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
 end
 
