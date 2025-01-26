@@ -92,6 +92,15 @@ Events.OnGameBoot.Add(function()
         local destDef = TetrisContainerData.getContainerDefinition(self.destContainer)
         local destType = destDef.trueType
 
+        -- If the target is not the player's inventory, we need to ensure the item fits somewhere
+        local isPlayerInv = self.character:getInventory() == self.destContainer
+        if not isPlayerInv then
+            local containerUi = ItemContainerGrid.GetOrCreate(self.destContainer, self.character:getPlayerNum())
+            if not containerUi:canAddItem(self.item) then
+                return false
+            end
+        end
+
         local valid;
         -- If we are moving a Moveable to anywhere but the floor, ensure it does NOT appear to be a Moveable
         if destType ~= "floor" and instanceof(self.item, "Moveable") then
