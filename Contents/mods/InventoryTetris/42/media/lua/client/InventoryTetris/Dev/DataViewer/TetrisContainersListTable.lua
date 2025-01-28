@@ -2,7 +2,7 @@
 
 require("ISUI/ISPanel")
 
-TetrisContainersListTable = ISPanel:derive("TetrisContainersListTable");
+local TetrisContainersListTable = ISPanel:derive("TetrisContainersListTable");
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
@@ -453,5 +453,4 @@ function TetrisContainersListTable:addItem(item)
     end
 end
 
-
-
+return TetrisContainersListTable

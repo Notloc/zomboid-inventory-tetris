@@ -1,4 +1,5 @@
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+local TetrisContainerCalculator = require("InventoryTetris/Data/TetrisContainerCalculator")
 
 ---@class ContainerGridDefinition
 ---@field gridDefinitions GridDefinition[]
@@ -12,12 +13,10 @@ local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 ---@field size Size2D
 ---@field position Vector2Lua
 
-local TetrisContainerCalculator = require("InventoryTetris/Data/TetrisContainerData_AutoCalculator")
 
 local TetrisContainerData = {}
 
 TetrisContainerData._containerDefinitions = {}
-TetrisContainerData._vehicleStorageNames = {}
 
 -- Containers that must never be marked as non-fragile due to java side hardcoding
 -- Without this the disable carry weight feature causes the containers to misbehave
@@ -175,7 +174,7 @@ end
 
 function TetrisContainerData.registerLargeVehicleStorageContainers(containerTypes)
     for _, type in ipairs(containerTypes) do
-        TetrisContainerData._vehicleStorageNames[type] = true
+        TetrisContainerCalculator._vehicleStorageNames[type] = true
     end
 end
 

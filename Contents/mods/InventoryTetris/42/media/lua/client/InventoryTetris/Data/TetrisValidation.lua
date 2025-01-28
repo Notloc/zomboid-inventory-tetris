@@ -2,7 +2,7 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 
-TetrisValidation = {}
+local TetrisValidation = {}
 
 ---@param container ItemContainer
 ---@param containerDef any
@@ -114,3 +114,5 @@ function TetrisValidation._findLeafTardis(container, tardisList)
         end
     end
 end
+
+return TetrisValidation

@@ -1,3 +1,6 @@
+local TetrisItemViewer = require("InventoryTetris/Dev/DataViewer/TetrisItemViewer")
+local TetrisContainerViewer = require("InventoryTetris/Dev/DataViewer/TetrisContainerViewer")
+
 ---@diagnostic disable: duplicate-set-field
 Events.OnGameBoot.Add(function()
     local ogSetup = ISDebugMenu.setupButtons

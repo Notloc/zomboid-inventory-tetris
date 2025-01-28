@@ -1,6 +1,7 @@
 require("InventoryTetris/UI/Grid/ItemGridUI")
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local TetrisValidation = require("InventoryTetris/Data/TetrisValidation")
 local TetrisEvents = require("InventoryTetris/Events")
 local OPT = require("InventoryTetris/Settings")
 local ItemUtil = require("Notloc/ItemUtil")

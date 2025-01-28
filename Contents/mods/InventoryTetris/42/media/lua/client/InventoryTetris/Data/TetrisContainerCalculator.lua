@@ -1,5 +1,7 @@
 local TetrisContainerCalculator = {}
 
+TetrisContainerCalculator._vehicleStorageNames = {}
+
 local MAX_CONTAINER_WIDTH = 12
 local MAX_CONTAINER_HEIGHT = 50
 

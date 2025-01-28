@@ -1,8 +1,5 @@
+local TetrisItemCalculator = require("InventoryTetris/Data/TetrisItemCalculator")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
-
-local SQUISHED_SUFFIX = "__squished"
-
-local TetrisItemCalculator = require("InventoryTetris/Data/TetrisItemData_AutoCalculator")
 
 local TetrisItemData = {}
 
@@ -10,10 +7,12 @@ TetrisItemData._itemData = {}
 TetrisItemData._itemDataPacks = {}
 TetrisItemData._alwaysStackOnSpawnItems = {}
 
+local SQUISHED_SUFFIX = "__squished"
 TetrisItemData._squishedIdCache = {}
 
---TODO: Move into dev tool and datapacks
-TetrisItemData._dynamicSizeItems = {
+-- TODO: Move into dev tool and datapacks
+-- Intentionally overriding TetrisItemCalculator._dynamicSizeItems
+TetrisItemCalculator._dynamicSizeItems = {
     ["Base.CorpseAnimal"] = true,
 
     -- Fish
@@ -101,7 +100,7 @@ function TetrisItemData._getSquishedId(fType)
 end
 
 function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
-    if TetrisItemData._dynamicSizeItems[fType] then
+    if TetrisItemCalculator._dynamicSizeItems[fType] then
         fType = fType .. tostring(item:getActualWeight())
     end
 
@@ -112,7 +111,12 @@ function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
 
     local data = TetrisItemData._itemData[fType]
     if not data then
-        data = TetrisItemCalculator.calculateItemInfo(item, isSquished)
+        if isSquished then
+            local unsquishedData = TetrisItemData._getItemDataByFullType(item, item:getFullType(), false)
+            data = TetrisItemCalculator.calculateItemInfoSquished(unsquishedData)
+        else
+            data = TetrisItemCalculator.calculateItemInfo(item)
+        end
         TetrisItemData._itemData[fType] = data
     end
     return data

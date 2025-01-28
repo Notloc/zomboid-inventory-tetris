@@ -3,30 +3,35 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
 local SQUISH_FACTOR = 3
 local FLOAT_CORRECTION = 0.001
-local MAX_ITEM_DIM = 12
+local MAX_ITEM_WIDTH = 10
+local MAX_ITEM_HEIGHT = 12
 
 local TetrisItemCalculator = {}
 
-function TetrisItemCalculator.calculateItemInfo(item, isSquished)
+TetrisItemCalculator._dynamicSizeItems = {} -- Defined in TetrisItemData instead, directly overwrites this
+
+function TetrisItemCalculator.calculateItemInfo(item)
+    local category = TetrisItemCategory.getCategory(item)
+
     local data = {}
+    data.maxStackSize = TetrisItemCalculator._calculateItemStackability(item, category)
+    data.width, data.height = TetrisItemCalculator._calculateItemSize(item, category)
 
-    if isSquished then
-        local regData = TetrisItemCalculator._getItemData(item, true)
-        data.width = regData.width
-        data.height = regData.height
-        data.maxStackSize = regData.maxStackSize
-    else
-        local category = TetrisItemCategory.getCategory(item)
-        data.maxStackSize = TetrisItemCalculator._calculateItemStackability(item, category)
-        data.width, data.height = TetrisItemCalculator._calculateItemSize(item, category)
-        if data.width > 10 then data.width = 10 end
-        if data.height > 12 then data.height = 12 end
-    end
+    if data.width > MAX_ITEM_WIDTH then data.width = MAX_ITEM_WIDTH end
+    if data.height > MAX_ITEM_HEIGHT then data.height = MAX_ITEM_HEIGHT end
 
-    if isSquished then
-        data.width = math.ceil(data.width / SQUISH_FACTOR)
-        data.height = math.ceil(data.height / SQUISH_FACTOR)
-    end
+    data._autoCalculated = true
+    return data
+end
+
+function TetrisItemCalculator.calculateItemInfoSquished(unsquishedData)
+    local data = {}
+    data.width = unsquishedData.width
+    data.height = unsquishedData.height
+    data.maxStackSize = unsquishedData.maxStackSize
+
+    data.width = math.ceil(data.width / SQUISH_FACTOR)
+    data.height = math.ceil(data.height / SQUISH_FACTOR)
 
     data._autoCalculated = true
     return data
@@ -336,8 +341,8 @@ function TetrisItemCalculator._calculateItemDimensions(target, accuracy)
         accuracy = 1
     end
 
-    for x = 1, MAX_ITEM_DIM do
-        for y = 1, MAX_ITEM_DIM do
+    for x = 1, MAX_ITEM_WIDTH do
+        for y = 1, MAX_ITEM_HEIGHT do
             local result = x * y
             local diff = math.abs(result - target) + math.abs(x - y)/accuracy -- Encourage square shapes 
             if diff < best then
@@ -368,7 +373,7 @@ function TetrisItemCalculator._calculateItemStackability(item, itemClass)
     if item:getFluidContainer() or TetrisItemCalculator._dynamicSizeItems[item:getFullType()] then
         return maxStack
     end
-    
+
     local calculation = TetrisItemCalculator._itemClassToStackabilityCalculation[itemClass]
     if type(calculation) == "function" then
         maxStack = calculation(item)

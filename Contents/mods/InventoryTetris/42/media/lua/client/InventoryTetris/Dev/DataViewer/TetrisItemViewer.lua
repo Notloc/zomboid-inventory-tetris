@@ -1,6 +1,7 @@
--- Based on ISItemsListViewer
+local TetrisItemsListTable = require("InventoryTetris/Dev/DataViewer/TetrisItemsListTable");
 
-TetrisItemViewer = ISPanel:derive("TetrisItemViewer");
+-- Based on ISItemsListViewer
+local TetrisItemViewer = ISPanel:derive("TetrisItemViewer");
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
@@ -134,3 +135,5 @@ function TetrisItemViewer.OnOpenPanel()
     modal:addToUIManager();
     modal.instance:setKeyboardFocus()
 end
+
+return TetrisItemViewer

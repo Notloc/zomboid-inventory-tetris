@@ -1,3 +1,5 @@
+---@diagnostic disable: deprecated
+
 require("InventoryTetris/UI/Grid/ItemGridUI")
 require("InventoryTetris/Data/TetrisItemCategory")
 require("InventoryTetris/Data/TetrisItemData")
@@ -740,6 +742,8 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
 
     local Bleach = Fluid.Bleach
     local TaintedWater = Fluid.TaintedWater
+
+    ---@diagnostic disable-next-line: undefined-field
     local enableTainted = getSandboxOptions():getOptionByName("EnableTaintedWaterText"):getValue()
 
     local favTex = FAVOURITE_TEXTURE[SCALE]
