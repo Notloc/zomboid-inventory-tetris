@@ -12,7 +12,9 @@ local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 ---@field size Size2D
 ---@field position Vector2Lua
 
-local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData_AutoCalculator")
+local TetrisContainerCalculator = require("InventoryTetris/Data/TetrisContainerData_AutoCalculator")
+
+local TetrisContainerData = {}
 
 TetrisContainerData._containerDefinitions = {}
 TetrisContainerData._vehicleStorageNames = {}
@@ -72,7 +74,7 @@ function TetrisContainerData._getContainerDefinitionByKey(container, containerKe
 
     if def == nil then
         if not TetrisContainerData._containerDefinitions[containerKey] then
-            TetrisContainerData._containerDefinitions[containerKey] = TetrisContainerData._calculateContainerDefinition(container)
+            TetrisContainerData._containerDefinitions[containerKey] = TetrisContainerCalculator.calculateContainerDefinition(container)
         end
         def = TetrisContainerData._containerDefinitions[containerKey]
     end

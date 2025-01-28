@@ -1,4 +1,5 @@
 ---@diagnostic disable: inject-field
+
 ---@enum TetrisItemCategory
 local TetrisItemCategory = {
     MELEE = "MELEE_WEAPON",

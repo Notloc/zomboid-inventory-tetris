@@ -3,21 +3,22 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
 local SQUISH_FACTOR = 3
 local FLOAT_CORRECTION = 0.001
+local MAX_ITEM_DIM = 12
 
-local TetrisItemData = {}
+local TetrisItemCalculator = {}
 
-function TetrisItemData._autoCalculateItemInfo(item, isSquished)
+function TetrisItemCalculator.calculateItemInfo(item, isSquished)
     local data = {}
 
     if isSquished then
-        local regData = TetrisItemData._getItemData(item, true)
+        local regData = TetrisItemCalculator._getItemData(item, true)
         data.width = regData.width
         data.height = regData.height
         data.maxStackSize = regData.maxStackSize
     else
         local category = TetrisItemCategory.getCategory(item)
-        data.maxStackSize = TetrisItemData._calculateItemStackability(item, category)
-        data.width, data.height = TetrisItemData._calculateItemSize(item, category)
+        data.maxStackSize = TetrisItemCalculator._calculateItemStackability(item, category)
+        data.width, data.height = TetrisItemCalculator._calculateItemSize(item, category)
         if data.width > 10 then data.width = 10 end
         if data.height > 12 then data.height = 12 end
     end
@@ -31,12 +32,12 @@ function TetrisItemData._autoCalculateItemInfo(item, isSquished)
     return data
 end
 
-function TetrisItemData._calculateItemSize(item, category)
+function TetrisItemCalculator._calculateItemSize(item, category)
     if item:getFluidContainer() then
-        return TetrisItemData._calculateFluidContainerSize(item)
+        return TetrisItemCalculator._calculateFluidContainerSize(item)
     end
 
-    local calculation = TetrisItemData._itemClassToSizeCalculation[category]
+    local calculation = TetrisItemCalculator._itemClassToSizeCalculation[category]
     if type(calculation) == "function" then
         return calculation(item)
     else
@@ -44,7 +45,7 @@ function TetrisItemData._calculateItemSize(item, category)
     end
 end
 
-function TetrisItemData._calculateItemSizeMagazine(item)
+function TetrisItemCalculator._calculateItemSizeMagazine(item)
     local width = 1
     local height = 1
 
@@ -65,7 +66,7 @@ function TetrisItemData._calculateItemSizeMagazine(item)
     return width, height
 end
 
-function TetrisItemData._calculateRangedWeaponSize(item)
+function TetrisItemCalculator._calculateRangedWeaponSize(item)
     local width = 2
     local height = 1
 
@@ -96,7 +97,7 @@ function TetrisItemData._calculateRangedWeaponSize(item)
     return width, height
 end
 
-function TetrisItemData._calculateMeleeWeaponSize(item)
+function TetrisItemCalculator._calculateMeleeWeaponSize(item)
     local width = 1
     local height = 1
 
@@ -126,13 +127,13 @@ function TetrisItemData._calculateMeleeWeaponSize(item)
     return width, height
 end
 
-function TetrisItemData._calculateItemSizeClothing(item)
+function TetrisItemCalculator._calculateItemSizeClothing(item)
     local width = 2
     local height = 2
 
     -- This shouldn't happen, but just in case a mod does something weird
     if item:IsClothing() == false then
-        TetrisItemData.itemSizes[item:getFullType()] = {x = width, y = height}
+        TetrisItemCalculator.itemSizes[item:getFullType()] = {x = width, y = height}
         return
     end
 
@@ -160,7 +161,7 @@ end
 
 ---comment
 ---@param item InventoryContainer
-function TetrisItemData._calculateItemSizeContainer(item)
+function TetrisItemCalculator._calculateItemSizeContainer(item)
     local containerDefinition = TetrisContainerData.getContainerDefinition(item:getItemContainer())
     if #containerDefinition.gridDefinitions == 1 then
         local gridDef = containerDefinition.gridDefinitions[1]
@@ -171,13 +172,13 @@ function TetrisItemData._calculateItemSizeContainer(item)
     end
 
     local innerSize = TetrisContainerData.calculateInnerSize(item:getItemContainer())
-    local x, y = TetrisItemData._calculateContainerItemSizeFromInner(innerSize)
+    local x, y = TetrisItemCalculator._calculateContainerItemSizeFromInner(innerSize)
     return x, y
 end
 
 -- Returns dimensions for a container item based on the number of items it can hold
 -- Always returns a dimension that is >= innerSize
-function TetrisItemData._calculateContainerItemSizeFromInner(innerSize)
+function TetrisItemCalculator._calculateContainerItemSizeFromInner(innerSize)
     local MAX_ITEM_DIM = 12
     if innerSize > MAX_ITEM_DIM * MAX_ITEM_DIM then
         return MAX_ITEM_DIM, MAX_ITEM_DIM
@@ -202,11 +203,11 @@ function TetrisItemData._calculateContainerItemSizeFromInner(innerSize)
     return bestX, bestY
 end
 
-function TetrisItemData._calculateMiscSize(item)
-    return TetrisItemData._calculateItemSizeWeightBased(item)
+function TetrisItemCalculator._calculateMiscSize(item)
+    return TetrisItemCalculator._calculateItemSizeWeightBased(item)
 end
 
-function TetrisItemData._calculateItemSizeWeightBased(item)
+function TetrisItemCalculator._calculateItemSizeWeightBased(item)
     local width = 1
     local height = 1
 
@@ -228,14 +229,14 @@ function TetrisItemData._calculateItemSizeWeightBased(item)
         width = 3
         height = 3
     else
-        return TetrisContainerData._calculateDimensions(weight * 2, 2)
+        return TetrisItemCalculator._calculateItemDimensions(weight * 2, 2)
     end
 
     return width, height
 end
 
-function TetrisItemData._calculateFoodSize(item)
-    local x, y = TetrisItemData._calculateItemSizeWeightBasedTall(item)
+function TetrisItemCalculator._calculateFoodSize(item)
+    local x, y = TetrisItemCalculator._calculateItemSizeWeightBasedTall(item)
 
     -- Cap the size of food items
     -- Handles these stupid fish
@@ -247,7 +248,7 @@ function TetrisItemData._calculateFoodSize(item)
     return x, y
 end
 
-function TetrisItemData._calculateFluidContainerSize(item)
+function TetrisItemCalculator._calculateFluidContainerSize(item)
     local fluidContainer = item:getFluidContainer()
 
     -- Small containers are 1x1
@@ -257,7 +258,7 @@ function TetrisItemData._calculateFluidContainerSize(item)
     end
 
     local slots = math.max(math.pow(fluidCapacity, 0.85), 2)
-    local x, y = TetrisContainerData._calculateDimensions(slots, 2)
+    local x, y = TetrisItemCalculator._calculateItemDimensions(slots, 2)
 
     if x > y then
         return y, x
@@ -265,12 +266,12 @@ function TetrisItemData._calculateFluidContainerSize(item)
     return x, y
 end
 
-function TetrisItemData._calculateItemSizeWeightBasedTall(item)
-    local width, height = TetrisItemData._calculateItemSizeWeightBased(item)
+function TetrisItemCalculator._calculateItemSizeWeightBasedTall(item)
+    local width, height = TetrisItemCalculator._calculateItemSizeWeightBased(item)
     return height, width
 end
 
-function TetrisItemData._calculateEntertainmentSize(item)
+function TetrisItemCalculator._calculateEntertainmentSize(item)
     local width = 1
     local height = 1
 
@@ -286,56 +287,89 @@ function TetrisItemData._calculateEntertainmentSize(item)
     return width, height
 end
 
-function TetrisItemData._calculateMoveableSize(item)
+function TetrisItemCalculator._calculateMoveableSize(item)
     local width = 1
     local height = 1
 
     local weight = item:getActualWeight()
-    return TetrisContainerData._calculateDimensions(weight * 2, 2)
+    return TetrisItemCalculator._calculateItemDimensions(weight * 2, 2)
 end
 
-function TetrisItemData._calculateAnimalCorpseSize(item)
+function TetrisItemCalculator._calculateAnimalCorpseSize(item)
     local weight = item:getActualWeight()
     if weight < 1 then
         return 1, 1
     end
 
     local slots = math.pow(weight, 1.5) * 2
-    return TetrisContainerData._calculateDimensions(slots, 3)
+    return TetrisItemCalculator._calculateItemDimensions(slots, 3)
 end
 
-TetrisItemData._itemClassToSizeCalculation = {
+TetrisItemCalculator._itemClassToSizeCalculation = {
     [TetrisItemCategory.AMMO] = {x = 1, y = 1},
-    [TetrisItemCategory.CORPSEANIMAL] = TetrisItemData._calculateAnimalCorpseSize,
+    [TetrisItemCategory.CORPSEANIMAL] = TetrisItemCalculator._calculateAnimalCorpseSize,
     [TetrisItemCategory.BOOK] = {x = 1, y = 2},
-    [TetrisItemCategory.CLOTHING] = TetrisItemData._calculateItemSizeClothing,
-    [TetrisItemCategory.CONTAINER] = TetrisItemData._calculateItemSizeContainer,
-    [TetrisItemCategory.ENTERTAINMENT] = TetrisItemData._calculateEntertainmentSize,
-    [TetrisItemCategory.FOOD] = TetrisItemData._calculateFoodSize,
-    [TetrisItemCategory.HEALING] = TetrisItemData._calculateItemSizeWeightBased,
+    [TetrisItemCategory.CLOTHING] = TetrisItemCalculator._calculateItemSizeClothing,
+    [TetrisItemCategory.CONTAINER] = TetrisItemCalculator._calculateItemSizeContainer,
+    [TetrisItemCategory.ENTERTAINMENT] = TetrisItemCalculator._calculateEntertainmentSize,
+    [TetrisItemCategory.FOOD] = TetrisItemCalculator._calculateFoodSize,
+    [TetrisItemCategory.HEALING] = TetrisItemCalculator._calculateItemSizeWeightBased,
     [TetrisItemCategory.KEY] = {x = 1, y = 1},
-    [TetrisItemCategory.MAGAZINE] = TetrisItemData._calculateItemSizeMagazine,
-    [TetrisItemCategory.ATTACHMENT] = TetrisItemData._calculateItemSizeWeightBased,
-    [TetrisItemCategory.MELEE] = TetrisItemData._calculateMeleeWeaponSize,
-    [TetrisItemCategory.MISC] = TetrisItemData._calculateMiscSize,
-    [TetrisItemCategory.MOVEABLE] = TetrisItemData._calculateMoveableSize,
-    [TetrisItemCategory.RANGED] = TetrisItemData._calculateRangedWeaponSize,
+    [TetrisItemCategory.MAGAZINE] = TetrisItemCalculator._calculateItemSizeMagazine,
+    [TetrisItemCategory.ATTACHMENT] = TetrisItemCalculator._calculateItemSizeWeightBased,
+    [TetrisItemCategory.MELEE] = TetrisItemCalculator._calculateMeleeWeaponSize,
+    [TetrisItemCategory.MISC] = TetrisItemCalculator._calculateMiscSize,
+    [TetrisItemCategory.MOVEABLE] = TetrisItemCalculator._calculateMoveableSize,
+    [TetrisItemCategory.RANGED] = TetrisItemCalculator._calculateRangedWeaponSize,
     [TetrisItemCategory.SEED] = {x = 1, y = 1},
 }
 
+--- Determine two numbers that multiply *close* to the target slot count
+---@param target number -- The target slot count
+---@param accuracy number -- Reduces the importance of squaring the shape
+function TetrisItemCalculator._calculateItemDimensions(target, accuracy)
+    local best = 99999999
+    local bestX = 1
+    local bestY = 1
 
-function TetrisItemData._simpleWeightStackability(item)
+    if not accuracy then
+        accuracy = 1
+    end
+
+    for x = 1, MAX_ITEM_DIM do
+        for y = 1, MAX_ITEM_DIM do
+            local result = x * y
+            local diff = math.abs(result - target) + math.abs(x - y)/accuracy -- Encourage square shapes 
+            if diff < best then
+                best = diff
+                bestX = x
+                bestY = y
+            end
+        end
+    end
+
+    return bestX, bestY
+end
+
+
+
+
+
+
+-- Item Stackability
+
+function TetrisItemCalculator._simpleWeightStackability(item)
     local weight = item:getActualWeight()
     return math.ceil(0.75 / weight)
 end
 
-function TetrisItemData._calculateItemStackability(item, itemClass)
+function TetrisItemCalculator._calculateItemStackability(item, itemClass)
     local maxStack = 1
-    if item:getFluidContainer() or TetrisItemData._dynamicSizeItems[item:getFullType()] then
+    if item:getFluidContainer() or TetrisItemCalculator._dynamicSizeItems[item:getFullType()] then
         return maxStack
     end
     
-    local calculation = TetrisItemData._itemClassToStackabilityCalculation[itemClass]
+    local calculation = TetrisItemCalculator._itemClassToStackabilityCalculation[itemClass]
     if type(calculation) == "function" then
         maxStack = calculation(item)
     elseif calculation then
@@ -345,7 +379,7 @@ function TetrisItemData._calculateItemStackability(item, itemClass)
     return maxStack
 end
 
-function TetrisItemData._calculateAmmoStackability(item)
+function TetrisItemCalculator._calculateAmmoStackability(item)
     local maxStack = 30
 
     local weight = item:getActualWeight()
@@ -362,7 +396,7 @@ function TetrisItemData._calculateAmmoStackability(item)
     return maxStack
 end
 
-function TetrisItemData._calculateEntertainmentStackability(item)
+function TetrisItemCalculator._calculateEntertainmentStackability(item)
     local maxStack = 1
 
     local mediaData = item:getMediaData()
@@ -376,7 +410,7 @@ function TetrisItemData._calculateEntertainmentStackability(item)
     return maxStack
 end
 
-function TetrisItemData._calculateSeedStackability(item)
+function TetrisItemCalculator._calculateSeedStackability(item)
     local type = item:getFullType()
 
     if string.find(type, "BagSeed") then
@@ -386,7 +420,7 @@ function TetrisItemData._calculateSeedStackability(item)
     end
 end
 
-function TetrisItemData._calculateMoveableStackability(item)
+function TetrisItemCalculator._calculateMoveableStackability(item)
     local name = tostring(item:getDisplayName()) or ""
 
     local a = string.find(name, "%(")
@@ -401,31 +435,31 @@ function TetrisItemData._calculateMoveableStackability(item)
     return 1
 end
 
-function TetrisItemData._calculateFoodStackability(item)
+function TetrisItemCalculator._calculateFoodStackability(item)
     local weight = item:getActualWeight()
     return math.max(1, math.floor(1 / weight))
 end
 
-function TetrisItemData._weaponStackability(item)
+function TetrisItemCalculator._weaponStackability(item)
     local weight = item:getActualWeight() * 2
     return math.max(1, math.floor((1 / weight)+FLOAT_CORRECTION))
 end
 
-TetrisItemData._itemClassToStackabilityCalculation = {
-    [TetrisItemCategory.AMMO] = TetrisItemData._calculateAmmoStackability,
-    [TetrisItemCategory.BOOK] = TetrisItemData._simpleWeightStackability,
-    [TetrisItemCategory.CLOTHING] = TetrisItemData._simpleWeightStackability,
+TetrisItemCalculator._itemClassToStackabilityCalculation = {
+    [TetrisItemCategory.AMMO] = TetrisItemCalculator._calculateAmmoStackability,
+    [TetrisItemCategory.BOOK] = TetrisItemCalculator._simpleWeightStackability,
+    [TetrisItemCategory.CLOTHING] = TetrisItemCalculator._simpleWeightStackability,
     [TetrisItemCategory.CONTAINER] = 1,
-    [TetrisItemCategory.ENTERTAINMENT] = TetrisItemData._calculateEntertainmentStackability,
-    [TetrisItemCategory.HEALING] = TetrisItemData._simpleWeightStackability,
-    [TetrisItemCategory.FOOD] = TetrisItemData._calculateFoodStackability,
+    [TetrisItemCategory.ENTERTAINMENT] = TetrisItemCalculator._calculateEntertainmentStackability,
+    [TetrisItemCategory.HEALING] = TetrisItemCalculator._simpleWeightStackability,
+    [TetrisItemCategory.FOOD] = TetrisItemCalculator._calculateFoodStackability,
     [TetrisItemCategory.KEY] = 1,
     [TetrisItemCategory.MAGAZINE] = 1,
-    [TetrisItemCategory.MELEE] = TetrisItemData._weaponStackability,
-    [TetrisItemCategory.MISC] = TetrisItemData._simpleWeightStackability,
-    [TetrisItemCategory.MOVEABLE] = TetrisItemData._calculateMoveableStackability,
+    [TetrisItemCategory.MELEE] = TetrisItemCalculator._weaponStackability,
+    [TetrisItemCategory.MISC] = TetrisItemCalculator._simpleWeightStackability,
+    [TetrisItemCategory.MOVEABLE] = TetrisItemCalculator._calculateMoveableStackability,
     [TetrisItemCategory.RANGED] = 1,
-    [TetrisItemCategory.SEED] = TetrisItemData._calculateSeedStackability,
+    [TetrisItemCategory.SEED] = TetrisItemCalculator._calculateSeedStackability,
 }
 
-return TetrisItemData
+return TetrisItemCalculator

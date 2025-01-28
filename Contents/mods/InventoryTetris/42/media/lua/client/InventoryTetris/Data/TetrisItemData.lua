@@ -2,7 +2,9 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
 local SQUISHED_SUFFIX = "__squished"
 
-local TetrisItemData = require("InventoryTetris/Data/TetrisItemData_AutoCalculator")
+local TetrisItemCalculator = require("InventoryTetris/Data/TetrisItemData_AutoCalculator")
+
+local TetrisItemData = {}
 
 TetrisItemData._itemData = {}
 TetrisItemData._itemDataPacks = {}
@@ -110,7 +112,7 @@ function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
 
     local data = TetrisItemData._itemData[fType]
     if not data then
-        data = TetrisItemData._autoCalculateItemInfo(item, isSquished)
+        data = TetrisItemCalculator.calculateItemInfo(item, isSquished)
         TetrisItemData._itemData[fType] = data
     end
     return data
