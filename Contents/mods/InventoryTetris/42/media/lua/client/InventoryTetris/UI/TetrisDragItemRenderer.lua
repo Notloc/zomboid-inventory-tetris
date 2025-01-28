@@ -1,8 +1,8 @@
 require("ISUI/ISUIElement")
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
 local OPT = require("InventoryTetris/Settings")
 
-local BG_TEXTURE = getTexture("media/textures/InventoryTetris/ItemSlot.png")
 
 DragItemRenderer = ISUIElement:derive("DragItemRenderer")
 

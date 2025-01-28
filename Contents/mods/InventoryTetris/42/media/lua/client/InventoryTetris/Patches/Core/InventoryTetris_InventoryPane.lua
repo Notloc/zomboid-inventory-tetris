@@ -2,6 +2,7 @@
 ---@diagnostic disable: duplicate-set-field
 
 local Version = require("Notloc/Versioning/Version")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
 
 require("ISUI/ISPanel")
 require("ISUI/ISButton")

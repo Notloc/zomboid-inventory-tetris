@@ -14,7 +14,7 @@ local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 ---@field public category string
 ---@field private _frontItem InventoryItem
 ---@field private _frontItemId number
-ItemStack = {}
+local ItemStack = {}
 
 ---@return ItemStack
 function ItemStack.create(x, y, isRotated, itemFullType, category)
@@ -164,3 +164,5 @@ function ItemStack._createVanillaStackFromItems(items, inventoryPane)
 
     return vanillaStack
 end
+
+return ItemStack

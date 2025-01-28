@@ -1,6 +1,7 @@
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local TetrisValidation = require("InventoryTetris/Data/TetrisValidation")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
 
 -- The primary model for the inventory grid.
 -- This class is responsible for managing the grid data, item stacks, and search sessions.

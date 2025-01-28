@@ -3,8 +3,9 @@ local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisValidation = require("InventoryTetris/Data/TetrisValidation")
 local TetrisEvents = require("InventoryTetris/Events")
-local OPT = require("InventoryTetris/Settings")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
 local ItemUtil = require("Notloc/ItemUtil")
+local OPT = require("InventoryTetris/Settings")
 
 local CONTROLLER_DOUBLE_PRESS_TIME = 200
 

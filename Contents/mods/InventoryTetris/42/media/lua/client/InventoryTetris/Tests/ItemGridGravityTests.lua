@@ -2,8 +2,9 @@ if not getActivatedMods():contains("\\TEST_FRAMEWORK") or not isDebugEnabled() t
 local TestFramework = require("TestFramework/TestFramework")
 local TestUtils = require("TestFramework/TestUtils")
 local AsyncTest = require("TestFramework/AsyncTest")
-
 local TestHelper = require("InventoryTetris/Tests/TestHelper")
+
+local ItemStack = require("InventoryTetris/Model/ItemStack")
 
 TestFramework.registerTestModule("Inventory Tetris", "Item Grid Gravity Tests", function ()
     local Tests = TestUtils.newTestModule("client/InventoryTetris/Tests/ItemGridGravityTests.lua")

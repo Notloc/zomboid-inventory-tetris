@@ -3,6 +3,7 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local TetrisValidation = require("InventoryTetris/Data/TetrisValidation")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
 
 local GRID_REFRESH_DELAY = 600
 local PHYSICS_DELAY = 600

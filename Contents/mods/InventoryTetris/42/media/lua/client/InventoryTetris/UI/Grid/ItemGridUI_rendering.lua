@@ -6,6 +6,8 @@ require("InventoryTetris/Data/TetrisItemData")
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local TetrisEvents = require("InventoryTetris/Events")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
+
 local ItemGridUI = ItemGridUI
 local isItemSquished = TetrisItemData.isSquished
 local getItemSize = TetrisItemData.getItemSize

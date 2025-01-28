@@ -1,7 +1,8 @@
 require("ISUI/ISUIElement")
 require("Notloc/NotUtil")
-
 local OPT = require("InventoryTetris/Settings")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
+
 local OVERFLOW_MARGIN = 3
 local OVERFLOW_RENDERER_SPACING = 8
 
