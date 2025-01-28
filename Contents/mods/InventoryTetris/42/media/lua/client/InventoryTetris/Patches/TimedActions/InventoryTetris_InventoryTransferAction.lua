@@ -11,7 +11,7 @@ local ItemUtil = require("Notloc/ItemUtil")
 local ModScope = require("Notloc/ModScope/ModScope")
 
 local function getOutermostContainer(container)
-    if not container:getContainingItem() then
+    if not container or not container:getContainingItem() then
         return container
     end
     return container:getContainingItem():getOutermostContainer()

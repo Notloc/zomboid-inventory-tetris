@@ -1,8 +1,7 @@
 -- Based on ISItemsListTable
-
 require("ISUI/ISPanel")
-
-local TetrisContainersListTable = ISPanel:derive("TetrisContainersListTable");
+local TetrisItemInfo = require("InventoryTetris/Dev/DataViewer/TetrisItemsListInfo")
+local TetrisContainerInfo = require("InventoryTetris/Dev/DataViewer/TetrisContainersListInfo")
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
@@ -10,14 +9,15 @@ local UI_BORDER_SPACING = 10
 local BUTTON_HGT = FONT_HGT_SMALL + 6
 local LABEL_HGT = FONT_HGT_MEDIUM + 6
 
+local TetrisContainersListTable = ISPanel:derive("TetrisContainersListTable");
+
 function TetrisContainersListTable:initialise()
     ISPanel.initialise(self);
 end
 
-
 function TetrisContainersListTable:render()
     ISPanel.render(self);
-    
+
     local filterInProgress = self.needsFilterRefresh and "..." or ""
 
     local y = self.datas.y + self.datas.height + UI_BORDER_SPACING + 3
@@ -26,7 +26,7 @@ function TetrisContainersListTable:render()
     self:drawText(getText("IGUI_ItemList_Info2"), 0, y + BUTTON_HGT*2, 1,1,1,1,UIFont.Small)
 
     y = self.filters:getBottom()
-    
+
     self:drawRectBorder(self.datas.x, y, self.datas:getWidth(), BUTTON_HGT, 1, self.borderColor.r, self.borderColor.g, self.borderColor.b);
     self:drawRect(self.datas.x, y, self.datas:getWidth(), BUTTON_HGT, self.listHeaderColor.a, self.listHeaderColor.r, self.listHeaderColor.g, self.listHeaderColor.b);
 

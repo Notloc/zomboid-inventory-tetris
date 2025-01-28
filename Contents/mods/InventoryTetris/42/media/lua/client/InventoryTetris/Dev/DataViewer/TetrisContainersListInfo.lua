@@ -1,26 +1,26 @@
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
-TetrisContainerInfo = TetrisContainerInfo or {}
+local TetrisContainersListInfo = {}
 
-function TetrisContainerInfo.isAutoCalculated(itemScript)
+function TetrisContainersListInfo.isAutoCalculated(itemScript)
     local containerDef = TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
     return containerDef and containerDef._autoCalculated or false
 end
 
-function TetrisContainerInfo.getSlotCount(itemScript)
+function TetrisContainersListInfo.getSlotCount(itemScript)
     local containerDef = TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
     if not containerDef then return nil end
     return TetrisContainerData._calculateInnerSizeByDefinition(containerDef)
 end
 
-function TetrisContainerInfo.isFragile(itemScript)
+function TetrisContainersListInfo.isFragile(itemScript)
     local containerDef = TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
     return containerDef and containerDef.isFragile or false
 end
 
 local capacityByFType = {}
-function TetrisContainerInfo.getCapacity(itemScript)
+function TetrisContainersListInfo.getCapacity(itemScript)
     local fType = itemScript:getFullName()
     if not capacityByFType[fType] then
         local item = instanceItem(fType)
@@ -33,26 +33,28 @@ function TetrisContainerInfo.getCapacity(itemScript)
     return capacityByFType[fType]
 end
 
-function TetrisContainerInfo.getSlotDensity(itemScript)
-    local capacity = TetrisContainerInfo.getCapacity(itemScript)
-    local slotCount = TetrisContainerInfo.getSlotCount(itemScript)
+function TetrisContainersListInfo.getSlotDensity(itemScript)
+    local capacity = TetrisContainersListInfo.getCapacity(itemScript)
+    local slotCount = TetrisContainersListInfo.getSlotCount(itemScript)
     return capacity / slotCount
 end
 
-function TetrisContainerInfo.isSquishable(itemScript)
+function TetrisContainersListInfo.isSquishable(itemScript)
     local containerDef = TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
     local isRigid = containerDef and containerDef.isRigid
     return not isRigid
 end
 
-function TetrisContainerInfo.getSquishedSize(itemScript)
+function TetrisContainersListInfo.getSquishedSize(itemScript)
     local itemDef = TetrisItemData.getItemDefinitonByItemScript(itemScript, true)
     if not itemDef then return nil end
     return itemDef.width * itemDef.height
 end
 
-function TetrisContainerInfo.isTardis(itemScript)
-    local slotCount = TetrisContainerInfo.getSlotCount(itemScript)
+function TetrisContainersListInfo.isTardis(itemScript)
+    local slotCount = TetrisContainersListInfo.getSlotCount(itemScript)
     local itemDef = TetrisItemData.getItemDefinitonByItemScript(itemScript)
     return slotCount > itemDef.width * itemDef.height
 end
+
+return TetrisContainersListInfo

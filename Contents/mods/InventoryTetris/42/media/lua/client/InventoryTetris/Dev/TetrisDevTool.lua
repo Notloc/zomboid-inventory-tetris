@@ -1,12 +1,13 @@
 -- A quick and drity tool used for adjusting item and container data in-game and exporting directly into a formatted lua file
-local OPT = require("InventoryTetris/Settings")
 local JSON = require("InventoryTetris/Dev/JSON.lua")
-local ContextUtil = require("Notloc/ContextUtil")
+local FormattedLuaWriter = require("InventoryTetris/Dev/FormattedLuaWriter")
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+local OPT = require("InventoryTetris/Settings")
+local ContextUtil = require("Notloc/ContextUtil")
 
 local function copyTable(from, to)
     for k,v in pairs(from) do

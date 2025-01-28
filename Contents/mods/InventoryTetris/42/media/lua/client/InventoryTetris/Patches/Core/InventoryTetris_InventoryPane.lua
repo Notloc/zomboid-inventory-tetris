@@ -1,16 +1,15 @@
 -- Injects the new rendering elements into the InventoryPane and disables the original system.
 ---@diagnostic disable: duplicate-set-field
 
-local Version = require("Notloc/Versioning/Version")
-local ItemStack = require("InventoryTetris/Model/ItemStack")
-
 require("ISUI/ISPanel")
 require("ISUI/ISButton")
 require("ISUI/ISMouseDrag")
 require("TimedActions/ISTimedActionQueue")
 require("TimedActions/ISEatFoodAction")
 require("ISUI/ISInventoryPane")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
 local OPT = require("InventoryTetris/Settings")
+local Version = require("Notloc/Versioning/Version")
 
 -- I use on game boot because I want to make sure other mods have loaded before I patch this in
 Events.OnGameBoot.Add(function()

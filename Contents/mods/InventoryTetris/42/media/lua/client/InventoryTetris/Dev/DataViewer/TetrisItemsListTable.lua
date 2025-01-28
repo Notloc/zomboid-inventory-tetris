@@ -1,6 +1,6 @@
 -- Based on ISItemsListTable
-
 require("ISUI/ISPanel")
+local TetrisItemInfo = require("InventoryTetris/Dev/DataViewer/TetrisItemsListInfo")
 
 local TetrisItemsListTable = ISPanel:derive("TetrisItemsListTable");
 
