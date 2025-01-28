@@ -6,18 +6,22 @@ Crafting table
 Auto sort
 	Organized will buff autosort
 
-Ability to scroll through a stack
-	just reorder the item ids ❌
-		ids are stored in a map, order is undefined
+Stack Viewer
+	Click stack to open same as Equipment UI slots
+	Will need pagination for huge stacks
 
 [GENERAL BUG FIXES]
 	Tooltips on overflow
 	Drag-n-drop events on overflow
 	Quick move events on overflow
+	Drop items out of car window
+	Shift vs Ctrl back changing vanilla option support
+	Item tooltip jank with controller
 	
 [GRAVITY MODE]
 	Extra sandbox options (speed)
 	Delay buried items instead of preventing
+	New render features as previous were removed
 
 [CONTROLLER SUPPORT]
 	Nav
@@ -49,19 +53,14 @@ Ability to scroll through a stack
 		Prevent confusion about why a bag can't accept an item or an item transfer is failing.
 		Make it look like RCT2's red text popup
 
-[MULTI SELECT]
-	Hold shift to select - Customizable
-	Items get highlighted, next action is processed on all selected items
 
-[Multiplayer]
+
+====== ON HOLD
+[Multiplayer] - Waiting on B42 MP
 	Trunks in MP moddata not working 
 		Data is getting sent, but the clients are all autopositioning items and sending that data with a newer timestamp
 			Might need to go per item and have autopositioned items write 0 for their time
 
 	See about fixing nested containers on the floor
 		Stutter the object in and out of the inventory to force a sync???
-
-[REBALANCE]
-	Split base datapack into several
-		One per category 
 
