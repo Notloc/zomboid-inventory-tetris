@@ -29,6 +29,21 @@ local ItemContainerGrid = {}
 ItemContainerGrid._tempGrid = {} -- For hovering over container items, so we don't create a new grid every frame to evaluate if an item can be placed into a hovered backpack
 ItemContainerGrid._gridCache = {} -- Just created grids, so we don't end up creating a new grid multiple times in a single tick when looping or something
 
+ItemContainerGrid._unpositionedItemSetsByPlayer = {} -- A list of items that failed to be positioned in inventories held by the player. Used by the auto drop system.
+
+function ItemContainerGrid.getUnpositionedItemSetByPlayerNum(playerNum)
+    local set = ItemContainerGrid._unpositionedItemSetsByPlayer[playerNum]
+    if not set then
+        set = {}
+        ItemContainerGrid._unpositionedItemSetsByPlayer[playerNum] = set
+    end
+    return set
+end
+
+function ItemContainerGrid.clearUnpositionedItemSetByPlayerNum(playerNum)
+    ItemContainerGrid._unpositionedItemSetsByPlayer[playerNum] = {}
+end
+
 ---comment
 ---@param inventory ItemContainer
 ---@param playerNum number
@@ -575,10 +590,11 @@ function ItemContainerGrid:_updateGridPositions()
     end
 
     if self.isOnPlayer then
-        local playerObj = getSpecificPlayer(self.playerNum)
+        local unpositionedItemSet = ItemContainerGrid.getUnpositionedItemSetByPlayerNum(self.playerNum)
         if getPlayerHotbar(self.playerNum) then -- Wait for the hotbar to be initialized
             for _, unpositionedItemData in ipairs(remainingItemData) do
-                GridAutoDropSystem.queueItemForDrop(unpositionedItemData.item, playerObj)
+                local item = unpositionedItemData.item
+                unpositionedItemSet[item] = true
             end
         end
     end

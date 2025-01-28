@@ -1,3 +1,5 @@
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+
 -- Injects the new control scheme into the InventoryPage class.
 ---@diagnostic disable: duplicate-set-field
 

@@ -4,7 +4,7 @@ local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 -- Responsible for forcing items out of the player's inventory when it slips into an invalid state
 local ItemUtil = require("Notloc/ItemUtil")
 
-GridAutoDropSystem = {}
+local GridAutoDropSystem = {}
 GridAutoDropSystem._dropQueues = {}
 GridAutoDropSystem._dropProcessing = {}
 
@@ -153,3 +153,5 @@ function GridAutoDropSystem._processQueues()
 end
 
 Events.OnTick.Add(GridAutoDropSystem._processQueues)
+
+return GridAutoDropSystem

@@ -1,5 +1,7 @@
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+
 -- Tracks the current drag and drop operation for controller players.
-ControllerDragAndDrop = {}
+local ControllerDragAndDrop = {}
 
 ControllerDragAndDrop.dragging = {}
 ControllerDragAndDrop.draggingTetris = {}
@@ -51,3 +53,5 @@ function ControllerDragAndDrop.endDrag(playerNum)
     ControllerDragAndDrop.rotateDrag[playerNum] = nil
     ControllerDragAndDrop.ownersForCancel = {}
 end
+
+return ControllerDragAndDrop

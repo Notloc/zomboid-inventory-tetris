@@ -609,16 +609,13 @@ end
 
 -- Determines if the stack is buried beneath other stacks when using gravity mode
 function ItemGrid:isStackBuried(stack)
-    local dragItem = DragAndDrop.getDraggedItem()
-    local mouseStack = dragItem and self:findStackByItem(dragItem) or nil
-
     local item = ItemStack.getFrontItem(stack, self.inventory)
     if item then
         local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
         for x=stack.x,stack.x+w-1 do
-            if self:_isInBounds(x, stack.y-1) then 
+            if self:_isInBounds(x, stack.y-1) then
                 local otherStack = self.stackMap[x][stack.y-1]
-                if otherStack and mouseStack ~= otherStack then
+                if otherStack then
                     return true
                 end
             end

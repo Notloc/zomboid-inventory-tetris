@@ -8,6 +8,8 @@ require("TimedActions/ISTimedActionQueue")
 require("TimedActions/ISEatFoodAction")
 require("ISUI/ISInventoryPane")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
 local OPT = require("InventoryTetris/Settings")
 local Version = require("Notloc/Versioning/Version")
 

@@ -8,6 +8,8 @@ local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local ItemUtil = require("Notloc/ItemUtil")
 local GenericSingleItemRecipeHandler = require("InventoryTetris/EventHandlers/GenericSingleItemRecipeHandler")
 local OPT = require("InventoryTetris/Settings")
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
 
 local CONTROLLER_DOUBLE_PRESS_TIME = 200
 

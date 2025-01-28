@@ -15,10 +15,8 @@
     },
     "Lua.workspace.checkThirdParty": false,
     "Lua.diagnostics.globals": [
-        "DragAndDrop",
         "EquipmentUI",
         "NotlocControllerNode",
-        "ControllerDragAndDrop",
         "NotlocScrollView"
     ],
     "Lua.workspace.library": [

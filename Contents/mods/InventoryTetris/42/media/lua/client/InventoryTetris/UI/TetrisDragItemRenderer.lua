@@ -2,7 +2,7 @@ require("ISUI/ISUIElement")
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
 local OPT = require("InventoryTetris/Settings")
-
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 
 DragItemRenderer = ISUIElement:derive("DragItemRenderer")
 

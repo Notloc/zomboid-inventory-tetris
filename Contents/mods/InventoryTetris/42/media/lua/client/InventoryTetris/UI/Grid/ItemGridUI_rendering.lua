@@ -7,6 +7,8 @@ local TetrisEvents = require("InventoryTetris/Events")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local GridTransferQueueData = require("InventoryTetris/Model/GridTransferQueueData")
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
 
 local ItemGridUI = ItemGridUI
 local getItemSize = TetrisItemData.getItemSize
