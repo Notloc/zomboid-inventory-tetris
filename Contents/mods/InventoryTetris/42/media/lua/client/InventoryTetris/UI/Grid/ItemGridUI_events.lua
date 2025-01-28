@@ -1,4 +1,7 @@
 require("InventoryTetris/UI/Grid/ItemGridUI")
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local TetrisEvents = require("InventoryTetris/Events")
 local OPT = require("InventoryTetris/Settings")
 local ItemUtil = require("Notloc/ItemUtil")
 
@@ -330,7 +333,7 @@ function ItemGridUI:handleDropOnContainer(vanillaStack, container)
 
     local frontItem = vanillaStack.items[1]
     local containerDef = TetrisContainerData.getContainerDefinition(container)
-    if not TetrisContainerData.validateInsert(container, containerDef, frontItem) then
+    if not TetrisValidation.validateInsert(container, containerDef, frontItem) then
         return
     end
 
@@ -356,7 +359,7 @@ function ItemGridUI:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
         return
     end
 
-    if not TetrisContainerData.validateInsert(self.grid.inventory, self.grid.containerDefinition, frontItem) then
+    if not TetrisValidation.validateInsert(self.grid.inventory, self.grid.containerDefinition, frontItem) then
         return
     end
 

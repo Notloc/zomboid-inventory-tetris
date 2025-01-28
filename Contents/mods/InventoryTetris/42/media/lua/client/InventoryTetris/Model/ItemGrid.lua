@@ -1,3 +1,7 @@
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+
 -- The primary model for the inventory grid.
 -- This class is responsible for managing the grid data, item stacks, and search sessions.
 
@@ -124,7 +128,7 @@ function ItemGrid:insertItem(item, xPos, yPos, isRotated)
     if item:getContainer() ~= self.inventory then
         return false
     end
-    if not self.isProxInv and not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
+    if not self.isProxInv and not TetrisValidation.validateInsert(self.inventory, self.containerDefinition, item) then
         return false
     end
 
@@ -390,7 +394,7 @@ function ItemGrid:_attemptToStackItem(item)
 end
 
 function ItemGrid:_attemptToInsertItem(item, preferRotated, isDisorganized)
-    if not self.isProxInv and not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
+    if not self.isProxInv and not TetrisValidation.validateInsert(self.inventory, self.containerDefinition, item) then
         return false
     end
 

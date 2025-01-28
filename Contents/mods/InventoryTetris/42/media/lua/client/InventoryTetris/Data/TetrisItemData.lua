@@ -1,8 +1,8 @@
-require("InventoryTetris/Data/TetrisItemCategory")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
 local SQUISHED_SUFFIX = "__squished"
 
-TetrisItemData = TetrisItemData or {}  -- Partial class
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData_AutoCalculator")
 
 TetrisItemData._itemData = {}
 TetrisItemData._itemDataPacks = {}
@@ -169,3 +169,5 @@ function TetrisItemData._onInitWorld()
 end
 
 Events.OnInitWorld.Add(TetrisItemData._onInitWorld)
+
+return TetrisItemData

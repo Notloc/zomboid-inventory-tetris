@@ -1,3 +1,5 @@
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+
 TetrisItemInfo = TetrisItemInfo or {}
 
 function TetrisItemInfo.getItemDimensions(itemScript)

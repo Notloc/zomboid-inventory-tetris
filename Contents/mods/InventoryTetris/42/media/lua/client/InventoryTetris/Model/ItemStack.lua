@@ -1,3 +1,6 @@
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+
 -- Keeps track of a stack of items in the item grid, holding the id of each item in the stack as well as position and rotation
 -- Purely static code as these need to be serialized into modData
 

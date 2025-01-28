@@ -1,4 +1,4 @@
-require("InventoryTetris/Data/TetrisItemCategory")
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 
 ---@class ContainerGridDefinition
 ---@field gridDefinitions GridDefinition[]
@@ -12,7 +12,7 @@ require("InventoryTetris/Data/TetrisItemCategory")
 ---@field size Size2D
 ---@field position Vector2Lua
 
-TetrisContainerData = TetrisContainerData or {}  -- Partial class
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData_AutoCalculator")
 
 TetrisContainerData._containerDefinitions = {}
 TetrisContainerData._vehicleStorageNames = {}
@@ -101,57 +101,6 @@ function TetrisContainerData.recalculateContainerData()
     TetrisContainerData._onInitWorld()
 end
 
----@param container ItemContainer
----@param containerDef any
----@param item InventoryItem
----@return boolean
-function TetrisContainerData.validateInsert(container, containerDef, item)
-    local itemInContainer = item:getContainer() == container
-    if not itemInContainer and not container:isItemAllowed(item) then
-        return false
-    end
-
-    if item:IsInventoryContainer() and SandboxVars.InventoryTetris.PreventTardisStacking then
-        ---@cast item InventoryContainer
-
-        -- Prevent the player from putting a bag of holding inside a bag of holding and blowing up the universe
-        local isInsideTardis = TetrisContainerData.isTardisRecursive(container)
-        if isInsideTardis then
-            local leafTardis = {}
-            TetrisContainerData._findLeafTardis(item:getItemContainer(), leafTardis)
-            if #leafTardis > 0 then
-                return false
-            end
-        end
-
-        -- Prevent a rigid container from being put inside a rigid container unless its smaller
-        -- i.e. You can't fit a 3x3 lunchbox inside a 3x3 lunchbox
-        local containerItem = container:getContainingItem()
-        if containerItem then
-            local itemContainerDef = TetrisContainerData.getContainerDefinition(item:getItemContainer())
-            if containerDef.isRigid and itemContainerDef.isRigid then
-                local x,y = TetrisItemData.getItemSizeUnsquished(containerItem, false)
-                local x2,y2 = TetrisItemData.getItemSizeUnsquished(item, false)
-                if x*y <= x2*y2 then
-                    return false
-                end
-            end
-        end
-    end
-
-    if containerDef.maxSize then
-        local w, h = TetrisItemData.getItemSizeUnsquished(item, false)
-        local size = w * h
-        if size > containerDef.maxSize then
-            return false
-        end
-    end
-
-    local itemCategory = TetrisItemCategory.getCategory(item)
-    return TetrisContainerData.canAcceptCategory(containerDef, itemCategory)
-end
-
-
 function TetrisContainerData.getSingleValidCategory(containerDef)
     local validCategories = TetrisContainerData._getValidCategories(containerDef)
     if not validCategories then
@@ -201,69 +150,6 @@ function TetrisContainerData._getValidCategories(containerDef)
     return validCategories
 end
 
----@param container ItemContainer
-function TetrisContainerData.isTardisRecursive(container)
-    local isTardis = TetrisContainerData.isTardis(container)
-    if isTardis then
-        return true
-    end
-
-    local item = container:getContainingItem()
-    if not item then
-        return false
-    end
-
-    container = item:getContainer()
-    if not container then
-        return false
-    end
-
-    return TetrisContainerData.isTardisRecursive(container)
-end
-
-
----@param container ItemContainer
-function TetrisContainerData.isTardis(container)
-    local containingItem = container:getContainingItem()
-    local isKeyRing = containingItem and containingItem:hasTag("KeyRing")
-
-    if isKeyRing or container:getType() == "none" then
-        return false
-    end
-
-    if not container:getContainingItem() then
-        return false
-    end
-
-    local containerDef = TetrisContainerData.getContainerDefinition(container)
-    if not TetrisContainerData.canAcceptCategory(containerDef, TetrisItemCategory.CONTAINER) then
-        return false
-    end
-
-    local w, h = TetrisItemData.getItemSizeUnsquished(container:getContainingItem(), false)
-    local size = w * h
-    local capacity = TetrisContainerData.calculateInnerSize(container)
-    return size < capacity
-end
-
----@param container ItemContainer
-function TetrisContainerData._findLeafTardis(container, tardisList)
-    local isTardis = TetrisContainerData.isTardis(container)
-    if isTardis then
-        table.insert(tardisList, container)
-    end
-
-    local items = container:getItems()
-    for i = 1, items:size() do
-        local item = items:get(i - 1)
-        if item:IsInventoryContainer() then
-            ---@cast item InventoryContainer
-            TetrisContainerData._findLeafTardis(item:getItemContainer(), tardisList)
-        end
-    end
-end
-
-
 local itemScriptToContainer = {}
 
 function TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
@@ -276,12 +162,11 @@ function TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
         local container = item:getItemContainer()
         itemScriptToContainer[itemScript] = container
     end
-    
+
     local container = itemScriptToContainer[itemScript]
     local containerKey = TetrisContainerData._getContainerKey(container)
     return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
 end
-
 
 
 -- Vehicle Storage Registration
@@ -328,3 +213,5 @@ function TetrisContainerData._onInitWorld()
     TetrisContainerData._initializeContainerPacks()
 end
 Events.OnInitWorld.Add(TetrisContainerData._onInitWorld)
+
+return TetrisContainerData

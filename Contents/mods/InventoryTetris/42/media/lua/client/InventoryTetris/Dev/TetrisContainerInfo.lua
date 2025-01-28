@@ -1,3 +1,6 @@
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+
 TetrisContainerInfo = TetrisContainerInfo or {}
 
 function TetrisContainerInfo.isAutoCalculated(itemScript)

@@ -1,4 +1,6 @@
-TetrisPocketData = {}
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+
+local TetrisPocketData = {}
 
 TetrisPocketData._pocketDefinitions = {}
 
@@ -273,3 +275,5 @@ function TetrisPocketData._onInitWorld()
     TetrisPocketData._initializePocketPacks()
 end
 Events.OnInitWorld.Add(TetrisPocketData._onInitWorld)
+
+return TetrisPocketData

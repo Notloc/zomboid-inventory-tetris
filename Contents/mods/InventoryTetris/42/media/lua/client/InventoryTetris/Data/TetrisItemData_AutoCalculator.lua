@@ -1,7 +1,10 @@
-TetrisItemData = TetrisItemData or {} -- Partial class
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
 local SQUISH_FACTOR = 3
 local FLOAT_CORRECTION = 0.001
+
+local TetrisItemData = {}
 
 function TetrisItemData._autoCalculateItemInfo(item, isSquished)
     local data = {}
@@ -424,3 +427,5 @@ TetrisItemData._itemClassToStackabilityCalculation = {
     [TetrisItemCategory.RANGED] = 1,
     [TetrisItemCategory.SEED] = TetrisItemData._calculateSeedStackability,
 }
+
+return TetrisItemData

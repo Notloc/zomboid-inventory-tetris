@@ -2,7 +2,7 @@ if not getActivatedMods():contains("KnownAndCollected") and not getActivatedMods
     return
 end
 
-require("InventoryTetris/Events")
+local TetrisEvents = require("InventoryTetris/Events")
 require("RecordedMedia/recorded_media")
 require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
 

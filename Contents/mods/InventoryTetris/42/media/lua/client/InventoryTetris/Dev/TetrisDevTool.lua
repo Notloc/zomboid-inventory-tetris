@@ -2,6 +2,10 @@
 local OPT = require("InventoryTetris/Settings")
 local JSON = require("InventoryTetris/Dev/JSON.lua")
 local ContextUtil = require("Notloc/ContextUtil")
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 
 local function copyTable(from, to)
     for k,v in pairs(from) do
@@ -610,6 +614,7 @@ function TetrisDevTool.openPocketEdit(item)
 end
 
 function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, containerDef, dataKey, dataTable, type)
+    ---@diagnostic disable-next-line: param-type-mismatch
     local inventory = type == "POCKET" and sourceInventory or ItemContainer.new("DEV_TOOL", nil, nil) -- Create a new container to avoid effecting the actual inventory
 
     local editWindow = ISPanel:new(getMouseX(), getMouseY(), 50, 50);

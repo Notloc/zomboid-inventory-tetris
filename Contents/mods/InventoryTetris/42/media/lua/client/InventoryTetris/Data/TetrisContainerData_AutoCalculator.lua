@@ -1,4 +1,4 @@
-TetrisContainerData = TetrisContainerData or {}  -- Partial class
+local TetrisContainerData = {}
 
 local MAX_CONTAINER_WIDTH = 12
 local MAX_CONTAINER_HEIGHT = 50
@@ -62,7 +62,7 @@ end
 function TetrisContainerData._calculateWorldContainerDefinition(container)
     local capacity = container:getCapacity()
     local size = 2 * math.ceil(capacity)
-    local x, y = TetrisContainerData._calculateDimensions(size)
+    local x, y = TetrisContainerData._calculateDimensions(size, 1)
     return {
         gridDefinitions = {{
             size = {width=x, height=y},
@@ -75,7 +75,7 @@ function TetrisContainerData._calculateVehicleTrunkContainerDefinition(container
     local capacity = container:getCapacity()
 
     local size = 50 + capacity * 2.5
-    local x, y = TetrisContainerData._calculateDimensions(size)
+    local x, y = TetrisContainerData._calculateDimensions(size, 1)
     return {
         gridDefinitions = {{
             size = {width=x, height=y},
@@ -135,7 +135,7 @@ function TetrisContainerData._buildGridDefinitionForSlottedContainer(slotCount, 
             y = temp
         end
 
-        pY = pocketCount > 6 and math.floor((i-1) / 4) or 0
+        local pY = pocketCount > 6 and math.floor((i-1) / 4) or 0
 
         local pocket = {
             size = { width = x, height = y },
@@ -147,3 +147,5 @@ function TetrisContainerData._buildGridDefinitionForSlottedContainer(slotCount, 
 
     return def
 end
+
+return TetrisContainerData

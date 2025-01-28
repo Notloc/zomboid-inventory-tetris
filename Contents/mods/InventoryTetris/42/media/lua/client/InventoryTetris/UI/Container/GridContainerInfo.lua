@@ -1,4 +1,6 @@
 require("ISUI/ISUIElement")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local OPT = require("InventoryTetris/Settings")
 
 local ICON_PADDING_X = 12

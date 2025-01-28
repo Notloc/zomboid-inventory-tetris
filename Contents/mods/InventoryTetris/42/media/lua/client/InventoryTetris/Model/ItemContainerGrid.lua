@@ -1,4 +1,7 @@
-require ("InventoryTetris/Data/TetrisPocketData")
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 
 local GRID_REFRESH_DELAY = 600
 local PHYSICS_DELAY = 600
@@ -337,7 +340,7 @@ function ItemContainerGrid:isItemAllowed(item)
         return false
     end
 
-    return TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item)
+    return TetrisValidation.validateInsert(self.inventory, self.containerDefinition, item)
 end
 
 ---@return boolean
