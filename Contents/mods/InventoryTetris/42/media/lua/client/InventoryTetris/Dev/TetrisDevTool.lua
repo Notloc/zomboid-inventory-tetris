@@ -1311,6 +1311,7 @@ if not TetrisDevTool.og_createMenu then
         if not item then return menu end
 
         pcall(function ()
+            print("item ID: " .. tostring(item:getID()))
             print("item display name: " .. item:getDisplayName())
             print("item display category: " .. (item:getDisplayCategory() or "none"))
             print("item CLASS: " .. TetrisItemCategory.getCategory(item))

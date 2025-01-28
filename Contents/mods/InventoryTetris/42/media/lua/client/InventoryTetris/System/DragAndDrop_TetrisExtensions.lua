@@ -27,3 +27,7 @@ function DragAndDrop.getDraggedStack()
 
     return ISMouseDrag.dragging
 end
+
+function DragAndDrop.getDraggedStacks()
+    return ISMouseDrag.dragging
+end

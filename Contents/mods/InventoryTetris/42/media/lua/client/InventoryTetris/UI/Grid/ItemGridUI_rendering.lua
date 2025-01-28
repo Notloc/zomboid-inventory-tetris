@@ -153,10 +153,10 @@ function ItemGridUI:calculateHeight()
     return self.grid.height * OPT.CELL_SIZE - self.grid.height + 1
 end
 
-function ItemGridUI:findGridStackUnderMouse(x, y)
+function ItemGridUI:findGridStackUnderMouse(mouseX, mouseY)
     local effectiveCellSize = OPT.CELL_SIZE - 1
-    local gridX = math.floor(x / effectiveCellSize)
-    local gridY = math.floor(y / effectiveCellSize)
+    local gridX = math.floor(mouseX / effectiveCellSize)
+    local gridY = math.floor(mouseY / effectiveCellSize)
     return self.grid:getStack(gridX, gridY, self.playerNum)
 end
 
@@ -174,28 +174,24 @@ end
 
 function ItemGridUI:render()
     ItemGridUI.lineHeight = getTextManager():getFontHeight(UIFont.Small)
-
     self.itemTransferData = GridTransferQueueData.build(self.playerNum)
+
+    self:renderBackGrid()
 
     if self.grid:isUnsearched(self.playerNum) then
         local searchSession = self.grid:getSearchSession(self.playerNum)
-        if searchSession then
-            self:renderBackGrid()
-            if searchSession.isGridRevealed then
-                self:renderGridItems(searchSession)
-            else
-                self:renderUnsearched()
-            end
+        if searchSession and searchSession.isGridRevealed then
+            self:renderGridItems(searchSession)
         else
-            self:renderBackGrid()
             self:renderUnsearched()
         end
     else
-        self:renderBackGrid()
         self:renderGridItems()
-        self:renderIncomingTransfers()
-        self:renderDragItemPreview()
     end
+
+    self:renderIncomingTransfers()
+    self:renderDragItemPreview()
+    self:renderMultiDrag()
 end
 
 function ItemGridUI:renderUnsearched()
@@ -284,6 +280,22 @@ function ItemGridUI:renderControllerSelection()
     self:drawRect(x * OPT.CELL_SIZE - x, y * OPT.CELL_SIZE - y, w*OPT.CELL_SIZE - w + 1, h*OPT.CELL_SIZE - h + 1, 0.5, 0.2, 1, 1)
 end
 
+function ItemGridUI:renderMultiDrag()
+    if not self.isMultiDragging then return end
+
+    local startX = self.multiDragStartMouseX
+    local startY = self.multiDragStartMouseY
+    local endX = self:getMouseX()
+    local endY = self:getMouseY()
+
+    local x1 = math.min(startX, endX)
+    local y1 = math.min(startY, endY)
+    local x2 = math.max(startX, endX)
+    local y2 = math.max(startY, endY)
+
+    self:drawRectBorder(x1, y1, x2-x1, y2-y1, 0.5, 0.2, 1, 1)
+end
+
 local instructionBuffer = table.newarray()
 function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local CELL_SIZE = OPT.CELL_SIZE
@@ -308,6 +320,8 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local allowDevTool = not (TetrisDevTool.disableItemOverrides or not TetrisDevTool.isDebugEnabled())
     local devOverrides = TetrisDevTool.itemEdits or {}
 
+    local selectedStacks = self.multiDragStacks or {}
+
     local instructionCount = 0
     local count = #stacks
     for i=1,count do
@@ -319,7 +333,11 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
             if x and y then
                 local itemType = stack.itemType
                 local category = stack.category
+
+                ---@cast item InventoryContainer
                 local isSquished = category == TetrisItemCategory.CONTAINER and TetrisItemData.isSquishable(item) and item:getItemContainer():isEmpty()
+                ---@cast item InventoryItem
+
                 local fType = not isSquished and itemType or TetrisItemData._squishedIdCache[itemType] or TetrisItemData._getSquishedId(itemType)
 
                 local data = (allowDevTool and devOverrides[fType]) or TetrisItemData._itemData[fType] or TetrisItemData._getItemDataByFullType(item, fType, isSquished)
@@ -362,6 +380,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                     instruction[9] = hidden
                     instruction[10] = false
                     instruction[11] = isSquished
+                    instruction[12] = selectedStacks[stack]
 
                     instructionBuffer[instructionCount] = instruction
                 end
@@ -376,6 +395,15 @@ function ItemGridUI:renderDragItemPreview()
     local isJoyPad = JoypadState.players[self.playerNum+1]
     local noMouse = not isJoyPad and not self:isMouseOver()
     local noController = isJoyPad and not self.controllerNode.isFocused
+    local sameOwner = DragAndDrop.isDragOwner(self)
+
+    local draggedStacks = DragAndDrop.getDraggedStacks()
+    if not noMouse and draggedStacks and #draggedStacks > 1 then
+        if not sameOwner then
+            self:drawRect(0, 0, self:getWidth(), self:getHeight(), 0.5, 0.2, 1, 1)
+        end
+        return
+    end
 
     local item = isJoyPad and ControllerDragAndDrop.getDraggedItem(self.playerNum) or DragAndDrop.getDraggedItem()
     if not item or noMouse or noController then
@@ -720,6 +748,9 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
     local poisonTex = POISON_TEXTURE[SCALE]
     local poisonTexH = poisonTex:getHeight()
 
+    local doShadow = OPT.DO_STACK_SHADOWS
+    local shadowOffset = math.floor(OPT.SCALE + 0.5)
+
     for r=1,instructionCount do
         local instruction = renderInstructions[r]
         local stack = instruction[1]
@@ -733,6 +764,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
         local hidden = instruction[9]
         local doBorder = instruction[10]
         local isSquished = instruction[11]
+        local isSelected = instruction[12]
 
         local totalWidth = w * CELL_SIZE - w + 1
         local totalHeight = h * CELL_SIZE - h + 1
@@ -793,10 +825,21 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
             local barOffset = doVerticalBar and 3 or 0
 
             local cols = colorsByCategory[stack.category]
-            javaObject:DrawTextureTiled(itemBgTex, x+1, y+1, cellW - 1 - barOffset, cellH - 1, cols[1], cols[2], cols[3], 0.725 * alphaMult)
+            if isSelected then
+                javaObject:DrawTextureTiled(itemBgTex, x+1, y+1, cellW - 1 - barOffset, cellH - 1, cols[1]*1.5, cols[2]*1.5, cols[3]*1.5, alphaMult)
+            else
+                javaObject:DrawTextureTiled(itemBgTex, x+1, y+1, cellW - 1 - barOffset, cellH - 1, cols[1], cols[2], cols[3], 0.725 * alphaMult)
+            end
+            if doBorder or isSelected then
+                --drawingContext:drawRectBorder(x, y+1, cellW, cellH, 1, 1, 1, 1)
+                local w, h = cellW+1, cellH+1
+                local t = isSelected and 2 or 1
+                local a = isSelected and 1 or 0.5
 
-            if doBorder then
-                drawingContext:drawRectBorder(x, y+1, cellW, cellH, 0.5, 1, 1, 1)
+                javaObject:DrawTextureScaled(nil, x,     y, t, h, a);
+                javaObject:DrawTextureScaled(nil, x+1,   y, w-2, t, a);
+                javaObject:DrawTextureScaled(nil, x+w-t, y, t, h, a);
+                javaObject:DrawTextureScaled(nil, x+t,   y+h-t, w-t-1, t, a);
             end
 
             local texture = item:getTex() or HIDDEN_ITEM
@@ -1018,12 +1061,11 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 drawingContext:drawTextureScaledUniform(BROKEN_TEXTURE, x2, y2, targetScale, alphaMult * 0.5, 1, 1, 1);
             end
 
-            local doShadow = OPT.DO_STACK_SHADOWS
             local count = stack.count
             if count > 1 then
                 local text = numericStringCache[count] or getNumericString(count)
                 if doShadow then
-                    javaObject:DrawText(stackFont, text, x+3, y, 0, 0, 0, alphaMult)
+                    javaObject:DrawText(stackFont, text, x+2+shadowOffset, y-1+shadowOffset, 0, 0, 0, alphaMult)
                 end
                 javaObject:DrawText(stackFont, text, x+2, y-1, 1, 1, 1, alphaMult)
             end
@@ -1073,6 +1115,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 local missing = (bottom - top) * (1.0 - fluidPercent)
                 javaObject:DrawTextureScaledColor(nil, barX, top + missing, 2, bottom - top - missing, color.r, color.g, color.b, alphaMult)
 
+                ---@diagnostic disable-next-line: need-check-nil
                 if fluid == Bleach or (enableTainted and fluid == TaintedWater and fluidContainer:getPoisonRatio() > 0.1) then
                     javaObject:DrawTextureColor(poisonTex, x+1, y+totalHeight - poisonTexH-1, 0.55, 1, 0.3, 1);
                 end
@@ -1090,7 +1133,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 local brX = x + CELL_SIZE*w - w - 2
                 local brY = y + CELL_SIZE*h - h - ItemGridUI.lineHeight - 1
                 if doShadow then
-                    javaObject:DrawTextRight(stackFont, text, brX+1, brY+1, 0, 0, 0, alphaMult)
+                    javaObject:DrawTextRight(stackFont, text, brX+shadowOffset, brY+shadowOffset, 0, 0, 0, alphaMult)
                 end
                 javaObject:DrawTextRight(stackFont, text, brX, brY, 1, 1, 1, alphaMult)
 

@@ -46,7 +46,7 @@ function ItemStack.getFrontItem(stack, inventory)
     end
 
     for itemID, _ in pairs(stack.itemIDs) do
-        local item = inventory:getItemById(itemID)
+        local item = inventory:getItemWithID(itemID)
         if item then
             stack._frontItem = item
             stack._frontItemId = itemID
@@ -101,26 +101,46 @@ function ItemStack.getAllItems(stack, inventory)
     local items = {}
 
     for itemID, _ in pairs(stack.itemIDs) do
-        local item = inventory:getItemById(itemID)
+        local item = inventory:getItemWithID(itemID)
         if item then table.insert(items, item) end
     end
 
     return items
 end
 
-function ItemStack.convertToVanillaStacks(stack, inventory, inventoryPane)
-    local items = ItemStack.getAllItems(stack, inventory)
-    local vanillaStacks = ItemStack.createVanillaStacksFromItems(items, inventoryPane)
-    vanillaStacks[1].isRotated = stack.isRotated
+---@param stack ItemStack
+---@param inventory ItemContainer
+---@param inventoryPane ISInventoryPane
+function ItemStack.convertStackToVanillaStackList(stack, inventory, inventoryPane)
+    return ItemStack.convertStacksToVanillaStackList({stack}, inventory, inventoryPane)
+end
+
+---@param stacks ItemStack[]
+---@param inventory ItemContainer
+---@param inventoryPane ISInventoryPane
+function ItemStack.convertStacksToVanillaStackList(stacks, inventory, inventoryPane)
+    if #stacks == 0 then return {} end
+    local vanillaStacks = {}
+    for _, stack in ipairs(stacks) do
+        local items = ItemStack.getAllItems(stack, inventory)
+        local vanillaStack = ItemStack._createVanillaStackFromItems(items, inventoryPane)
+        vanillaStack.isRotated = stack.isRotated
+        table.insert(vanillaStacks, vanillaStack)
+    end
     return vanillaStacks
 end
 
-function ItemStack.createVanillaStacksFromItem(item, inventoryPane)
-    return ItemStack.createVanillaStacksFromItems({item}, inventoryPane)
+function ItemStack.createVanillaStackListFromItem(item, inventoryPane)
+    return {ItemStack._createVanillaStackFromItems({item}, inventoryPane)}
 end
 
 -- Assumes all items are the same type
-function ItemStack.createVanillaStacksFromItems(items, inventoryPane)
+function ItemStack.createVanillaStackListFromItems(items, inventoryPane)
+    return {ItemStack._createVanillaStackFromItems(items, inventoryPane)}
+end
+
+-- Assumes all items are the same type
+function ItemStack._createVanillaStackFromItems(items, inventoryPane)
     local vanillaStack = {}
     vanillaStack.items = {}
     vanillaStack.invPanel = inventoryPane
@@ -139,5 +159,5 @@ function ItemStack.createVanillaStacksFromItems(items, inventoryPane)
     vanillaStack.weight = weight
     vanillaStack.count = #items + 1 -- Vanilla stacks count as 1 over their actual count
 
-    return {vanillaStack}
+    return vanillaStack
 end

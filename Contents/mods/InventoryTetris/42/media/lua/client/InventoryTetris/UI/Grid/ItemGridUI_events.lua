@@ -32,12 +32,22 @@ local function isStackSplitDown()
     return isKeyDown(getCore():getKey("tetris_stack_split"))
 end
 
-function ItemGridUI:onMouseDown(x, y, gridStack)
+local function isMultiDragDown()
+    return isKeyDown(getCore():getKey("tetris_shift_button")) -- TODO: make custom keybind
+end
+
+function ItemGridUI:onMouseDown(x, y, selectedStacks)
 	if self.playerNum ~= 0 then return end
 	getSpecificPlayer(self.playerNum):nullifyAiming();
-    gridStack = gridStack or self:findGridStackUnderMouse(x, y)
-    if gridStack then 
-        local vanillaStacks = ItemStack.convertToVanillaStacks(gridStack, self.grid.inventory, self.inventoryPane)
+
+    if isMultiDragDown() then
+        self:startMultiDrag(x, y)
+        return true
+    end
+
+    selectedStacks = selectedStacks and {selectedStacks} or self:getSelectedStacks(x, y)
+    if selectedStacks then
+        local vanillaStacks = ItemStack.convertStacksToVanillaStackList(selectedStacks, self.grid.inventory, self.inventoryPane)
         DragAndDrop.prepareDrag(self, vanillaStacks, x, y)
     end
 
@@ -46,13 +56,26 @@ end
 
 function ItemGridUI:onMouseUp(x, y, gridStack)
 	if self.playerNum ~= 0 then return end
-    
+
+    if self.isMultiDragging then
+        self:endMultiDrag(x, y)
+        return true
+    end
+    self.readyToMultiDrag = false
+
+    if isMultiDragDown() then
+        self:toggleStackSelection(x, y)
+        return true
+    end
+
     if not DragAndDrop.isDragging() then
+        self:clearSelectedStacks()
         self:handleClick(x, y, gridStack)
         return true
     end
 
     self:handleDragAndDrop(x, y)
+    self:clearSelectedStacks()
     DragAndDrop.endDrag()
 
 	return true;
@@ -60,9 +83,21 @@ end
 
 function ItemGridUI:onMouseUpOutside(x, y)
     if self.playerNum ~= 0 then return end
-    if not DragAndDrop.isDragOwner(self) then return end
 
-    DragAndDrop.cancelDrag(self, ItemGridUI.cancelDragDropItem)
+    if self.isMultiDragging then
+        self:endMultiDrag(x, y)
+        return true
+    end
+    self.readyToMultiDrag = false
+
+    if DragAndDrop.isDragging() then
+        self:clearSelectedStacks()
+    end
+
+
+    if DragAndDrop.isDragOwner(self) then
+        DragAndDrop.cancelDrag(self, ItemGridUI.cancelDragDropItem)
+    end
 end
 
 function ItemGridUI:cancelDragDropItem()
@@ -80,7 +115,7 @@ function ItemGridUI:cancelDragDropItem()
 
         if not ISUIElement.isMouseOverAnyUI() then
             for itemId, _ in pairs(gridStack.itemIDs) do
-                local itm = self.grid.inventory:getItemById(itemId)
+                local itm = self.grid.inventory:getItemWithID(itemId)
                 ISInventoryPaneContextMenu.dropItem(itm, self.playerNum)
             end
         end
@@ -105,12 +140,16 @@ end
 
 function ItemGridUI:onMouseDoubleClick(x, y)
     if self.playerNum ~= 0 then return end
+    if isMultiDragDown() then return end
     self:handleDoubleClick(x, y)
 end
 
 function ItemGridUI:onMouseMove(dx, dy)
     if self.playerNum ~= 0 then return end
     DragAndDrop.startDrag(self)
+    if self.readyToMultiDrag then
+        self:updateMultiDrag(self:getMouseX(), self:getMouseY())
+    end
 end
 
 function ItemGridUI:onMouseMoveOutside(dx, dy)
@@ -142,15 +181,66 @@ function ItemGridUI:gridPositionToScreenPosition(gridX, gridY)
     return lX + self:getAbsoluteX(), lY + self:getAbsoluteY()
 end
 
+function ItemGridUI:getSelectedStacks(x, y)
+    local stackUnderMouse = self:findGridStackUnderMouse(x, y)
+    if not stackUnderMouse then return end
+
+    local multiSelectedStacks = self.multiDragStacks or {}
+    if not multiSelectedStacks[stackUnderMouse] then
+        return {stackUnderMouse}
+    end
+
+    local selectedStacks = {stackUnderMouse}
+    for stack, _ in pairs(multiSelectedStacks) do
+        if stack ~= stackUnderMouse then
+            table.insert(selectedStacks, stack)
+        end
+    end
+    return selectedStacks
+end
 
 function ItemGridUI:handleDragAndDrop(mouseX, mouseY)
-    local vanillaStack = DragAndDrop.getDraggedStack()
-    if not vanillaStack or not vanillaStack.items[1] then return end
+    local vanillaStacks = DragAndDrop.getDraggedStacks()
+    if not vanillaStacks then return end
+
+    if #vanillaStacks > 1 then
+        self:handleDragAndDrop_multi(vanillaStacks)
+    else
+        local stack = vanillaStacks.items and vanillaStacks or vanillaStacks[1]
+        self:handleDragAndDrop_single(stack, mouseX, mouseY)
+    end
+end
+
+function ItemGridUI:handleDragAndDrop_multi(vanillaStacks)
+    local playerObj = getSpecificPlayer(self.playerNum)
+    for _, vanillaStack in ipairs(vanillaStacks) do
+        local testItem = vanillaStack.items[1]
+        if self.grid:canAddItem(testItem) then
+            for i=2, #vanillaStack.items do
+                local item = vanillaStack.items[i]
+                ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.grid.inventory))
+            end
+        end
+    end
+end
+
+function ItemGridUI:handleDragAndDrop_single(vanillaStack, mouseX, mouseY)
     local dragItem = vanillaStack.items[1]
-    local gridX, gridY = ItemGridUI.covertItemAndLocalMouseToGridPosition(mouseX, mouseY, dragItem, DragAndDrop.isDraggedItemRotated())
-    local x, y = ItemGridUI.covertItemAndLocalMouseToGridPosition(mouseX, mouseY)
-    local hoveredStack = self.grid:getStack(x, y, self.playerNum)
-    return self:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hoveredStack)
+    if dragItem then
+        local offsetX = vanillaStack.offsetX or 0
+        local offsetY = vanillaStack.offsetY or 0
+
+        local gridX, gridY = ItemGridUI.covertItemAndLocalMouseToGridPosition(mouseX, mouseY, dragItem, DragAndDrop.isDraggedItemRotated())
+        gridX = gridX + offsetX
+        gridY = gridY + offsetY
+
+        local hoveredX, hoveredY = ItemGridUI.covertItemAndLocalMouseToGridPosition(mouseX, mouseY)
+        hoveredX = hoveredX + offsetX
+        hoveredY = hoveredY + offsetY
+
+        local hoveredStack = self.grid:getStack(hoveredX, hoveredY, self.playerNum)
+        self:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hoveredStack)
+    end
 end
 
 function ItemGridUI:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hoveredStack)
@@ -184,7 +274,7 @@ function ItemGridUI:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hovere
         end
 
         if hoveredStack and not isSameStack then
-            local targetStack = ItemStack.convertToVanillaStacks(hoveredStack, self.grid.inventory, self.inventoryPane)[1]
+            local targetStack = ItemStack.convertStackToVanillaStackList(hoveredStack, self.grid.inventory, self.inventoryPane)[1]
             TetrisEvents.OnStackDroppedOnStack:trigger(vanillaStack, dragInventory, targetStack, self.grid.inventory, self.playerNum)
             return
         end
@@ -431,7 +521,7 @@ function ItemGridUI:quickMoveItemToContainer(gridStack, targetContainers)
     if not targetContainer then return end
 
     for itemId, _ in pairs(gridStack.itemIDs) do
-        local item = self.grid.inventory:getItemById(itemId)
+        local item = self.grid.inventory:getItemWithID(itemId)
         local transfer = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), targetContainer)
         transfer.isRotated = gridStack.isRotated
         ISTimedActionQueue.add(transfer)
@@ -537,7 +627,7 @@ function ItemGridUI:contextualAction(gridStack)
         return
     end
 
-    local vanillaStack = ItemStack.convertToVanillaStacks(gridStack, item:getContainer(), self.inventoryPane)[1]
+    local vanillaStack = ItemStack.convertStackToVanillaStackList(gridStack, item:getContainer(), self.inventoryPane)[1]
     if GenericSingleItemRecipeHandler.call(nil, vanillaStack, item:getContainer(), self.playerNum) then
         return
     end
@@ -566,7 +656,7 @@ Events.OnKeyStartPressed.Add(rotateDraggedItem)
 function ItemGridUI.openItemContextMenu(uiContext, x, y, item, inventoryPane, playerNum)
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
-    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItem(item, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
+    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStackListFromItem(item, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
 
     if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
         NotlocControllerNode:focusContextMenu(playerNum, menu)
@@ -581,7 +671,7 @@ function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, 
     local items = ItemStack.getAllItems(gridStack, inventory)
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
-    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStacksFromItems(items, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
+    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStackListFromItems(items, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
 
     if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
         NotlocControllerNode:focusContextMenu(playerNum, menu)
@@ -721,7 +811,7 @@ function ItemGridUI:controllerNodeOnJoypadDown(button)
         if button == Joypad.BButton then
             local stack = self.grid:getStack(self.selectedX, self.selectedY, self.playerNum)
             if stack then
-                local vanillaStack = ItemStack.convertToVanillaStacks(stack, self.grid.inventory, self.inventoryPane)[1]
+                local vanillaStack = ItemStack.convertStackToVanillaStackList(stack, self.grid.inventory, self.inventoryPane)[1]
                 ControllerDragAndDrop.startDrag(self.playerNum, self, stack, vanillaStack)
                 self.selectedX = stack.x
                 self.selectedY = stack.y
@@ -767,4 +857,60 @@ function ItemGridUI.getOrderedBackpacks(inventoryPage)
     end
 
     return orderedBackpacks
+end
+
+function ItemGridUI:startMultiDrag(mouseX, mouseY)
+    local gridX, gridY = self.mousePositionToGridPosition(mouseX, mouseY)
+
+    self.multiDragStartMouseX = mouseX
+    self.multiDragStartMouseY = mouseY
+    self.multiDragStartX = gridX
+    self.multiDragStartY = gridY
+
+    self.readyToMultiDrag = true
+end
+
+function ItemGridUI:updateMultiDrag(mouseX, mouseY)
+    if not self.isMultiDragging then
+        local dx = mouseX - self.multiDragStartMouseX
+        local dy = mouseY - self.multiDragStartMouseY
+        if math.abs(dx) < 5 and math.abs(dy) < 5 then
+            return
+        end
+        self.isMultiDragging = true
+    end
+
+    local currentGridX, currentGridY = self.mousePositionToGridPosition(mouseX, mouseY)
+    local startGridX, startGridY = self.multiDragStartX, self.multiDragStartY
+
+    local gridX1 = math.min(startGridX, currentGridX)
+    local gridY1 = math.min(startGridY, currentGridY)
+    local gridX2 = math.max(startGridX, currentGridX)
+    local gridY2 = math.max(startGridY, currentGridY)
+
+    local draggedStacks = self.grid:getStacksInArea(gridX1, gridY1, gridX2, gridY2, self.playerNum)
+
+    self.multiDragStacks = self.multiDragStacks or {}
+    for _, stack in ipairs(draggedStacks) do
+        self.multiDragStacks[stack] = true
+    end
+end
+
+function ItemGridUI:endMultiDrag(mouseX, mouseY)
+    self:updateMultiDrag(mouseX, mouseY)
+    self.isMultiDragging = false
+    self.readyToMultiDrag = false
+end
+
+function ItemGridUI:toggleStackSelection(mouseX, mouseY)
+    local gridX, gridY = self.mousePositionToGridPosition(mouseX, mouseY)
+    local stack = self.grid:getStack(gridX, gridY, self.playerNum)
+    if stack then
+        self.multiDragStacks = self.multiDragStacks or {}
+        self.multiDragStacks[stack] = not self.multiDragStacks[stack]
+    end
+end
+
+function ItemGridUI:clearSelectedStacks()
+    self.multiDragStacks = {}
 end

@@ -160,18 +160,25 @@ function GridContainerInfo:onMouseMoveOutside(dx, dy)
 end
 
 function GridContainerInfo:onMouseUp(x, y)
-    local stack = DragAndDrop.getDraggedStack()
-    if stack and stack.items then
-        local item = stack.items[1]
-        local playerObj = getSpecificPlayer(self.containerUi.playerNum)
-        if self.containerUi.containerGrid:canAddItem(item) then
-            for i=2, #stack.items do
-                local item = stack.items[i]
-                ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.containerUi.inventory))
+    local stacks = DragAndDrop.getDraggedStacks()
+    if stacks then
+        if stacks.items then
+            stacks = {stacks}
+        end
+
+        if stacks and #stacks > 0 then
+            for _, stack in ipairs(stacks) do
+                local item = stack.items[1]
+                local playerObj = getSpecificPlayer(self.containerUi.playerNum)
+                if self.containerUi.containerGrid:canAddItem(item) then
+                    for i=2, #stack.items do
+                        local item = stack.items[i]
+                        ISTimedActionQueue.add(ISInventoryTransferAction:new(playerObj, item, item:getContainer(), self.containerUi.inventory))
+                    end
+                end
             end
         end
     end
-
     DragAndDrop.endDrag(self)
 end
 

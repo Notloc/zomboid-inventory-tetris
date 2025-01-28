@@ -291,9 +291,19 @@ function TetrisItemData._calculateMoveableSize(item)
     return TetrisContainerData._calculateDimensions(weight * 2, 2)
 end
 
+function TetrisItemData._calculateAnimalCorpseSize(item)
+    local weight = item:getActualWeight()
+    if weight < 1 then
+        return 1, 1
+    end
+
+    local slots = math.pow(weight, 1.5) * 2
+    return TetrisContainerData._calculateDimensions(slots, 3)
+end
+
 TetrisItemData._itemClassToSizeCalculation = {
     [TetrisItemCategory.AMMO] = {x = 1, y = 1},
-    [TetrisItemCategory.CORPSEANIMAL] = TetrisItemData._calculateItemSizeWeightBased,
+    [TetrisItemCategory.CORPSEANIMAL] = TetrisItemData._calculateAnimalCorpseSize,
     [TetrisItemCategory.BOOK] = {x = 1, y = 2},
     [TetrisItemCategory.CLOTHING] = TetrisItemData._calculateItemSizeClothing,
     [TetrisItemCategory.CONTAINER] = TetrisItemData._calculateItemSizeContainer,

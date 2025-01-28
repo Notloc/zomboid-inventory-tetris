@@ -240,7 +240,7 @@ function GridOverflowRenderer:controllerNodeOnJoypadDown(button)
         if button == Joypad.BButton then
             local stack = self.containerGrid.overflow[self.controllerSelection]
             if stack then
-                local vanillaStack = ItemStack.convertToVanillaStacks(stack, self.inventory, self.inventoryPane)[1]
+                local vanillaStack = ItemStack.convertStackToVanillaStackList(stack, self.inventory, self.inventoryPane)[1]
                 ControllerDragAndDrop.startDrag(self.playerNum, self, stack, vanillaStack)
             end
             return true

@@ -20,6 +20,7 @@ function DragItemRenderer:prerender()
 end
 
 function DragItemRenderer:render() 
+    local stacks = DragAndDrop.getDraggedStacks()
     local item = DragAndDrop.getDraggedItem()
     if not item then
         return
@@ -52,5 +53,10 @@ function DragItemRenderer:render()
 
     self:suspendStencil()
     ItemGridUI._renderGridStack(self, playerObj, stack, item, xPos, yPos, itemW, itemH, 1, DragAndDrop.isDraggedItemRotated(), nil, true)
+
+    if stacks and #stacks > 1 then
+        self:drawText("+"..tostring(#stacks - 1), xPos + itemW * OPT.CELL_SIZE, yPos, 1, 1, 1, 1, UIFont.Small, true)
+    end
+
     self:resumeStencil()
 end

@@ -86,6 +86,19 @@ function ItemGrid:getStack(x, y, playerNum)
     return stack
 end
 
+function ItemGrid:getStacksInArea(x1, y1, x2, y2, playerNum)
+    local stacks = {}
+    for x=x1,x2 do
+        for y=y1,y2 do
+            local stack = self:getStack(x, y, playerNum)
+            if stack then
+                table.insert(stacks, stack)
+            end
+        end
+    end
+    return stacks
+end
+
 function ItemGrid:getStackInternal(x, y)
     if self.stackMap[x] then
         return self.stackMap[x][y]
@@ -188,7 +201,7 @@ function ItemGrid:gatherSameItems(stack)
     -- Gather the items, taking from the smallest stacks first
     for _, s in ipairs(stacksToGather) do
         for itemId, _ in pairs(s.itemIDs) do
-            local item = self.inventory:getItemById(itemId)
+            local item = self.inventory:getItemWithID(itemId)
 
             if not ItemStack.canAddItem(stack, item) then
                 break
@@ -481,7 +494,7 @@ function ItemGrid:_validateStackList(stacks, skipBounds)
                 badStacks[stack] = true
             end
 
-            local item = self.inventory:getItemById(itemID)
+            local item = self.inventory:getItemWithID(itemID)
             if not item or not self.containerGrid:_isItemValid(item) then
                 badStacks[stack] = true
             end
@@ -498,7 +511,7 @@ function ItemGrid:_validateStackList(stacks, skipBounds)
             local newStack = ItemStack.copyWithoutItems(stack)
 
             for itemID, _ in pairs(stack.itemIDs) do
-                local item = self.inventory:getItemById(itemID)
+                local item = self.inventory:getItemWithID(itemID)
                 if not badItemIDs[itemID] and item and self.containerGrid:_isItemValid(item) and self:_isItemInBounds(item, newStack) then
                     ItemStack.addItem(newStack, item)
                 end
