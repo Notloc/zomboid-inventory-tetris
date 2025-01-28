@@ -1,15 +1,14 @@
 ---@diagnostic disable: deprecated
 
 require("InventoryTetris/UI/Grid/ItemGridUI")
-require("InventoryTetris/Data/TetrisItemCategory")
-require("InventoryTetris/Data/TetrisItemData")
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local TetrisEvents = require("InventoryTetris/Events")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+local GridTransferQueueData = require("InventoryTetris/Model/GridTransferQueueData")
 
 local ItemGridUI = ItemGridUI
-local isItemSquished = TetrisItemData.isSquished
 local getItemSize = TetrisItemData.getItemSize
 
 -- Premade textures for supported scales so that any scale gets pixel perfect grids

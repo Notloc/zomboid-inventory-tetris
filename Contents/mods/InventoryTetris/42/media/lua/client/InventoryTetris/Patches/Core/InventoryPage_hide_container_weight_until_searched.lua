@@ -1,3 +1,5 @@
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+
 -- Ensures the weight of a container is not displayed until the container has been searched when searching is enabled.
 ---@diagnostic disable: duplicate-set-field
 

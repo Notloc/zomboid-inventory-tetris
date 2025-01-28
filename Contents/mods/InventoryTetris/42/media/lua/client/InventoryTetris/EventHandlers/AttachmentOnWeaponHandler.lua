@@ -1,7 +1,8 @@
 local TetrisEvents = require("InventoryTetris/Events")
 require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
-local ItemUtil = require("Notloc/ItemUtil")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+local ItemUtil = require("Notloc/ItemUtil")
 
 ItemGridUI.registerItemHoverColor(TetrisItemCategory.ATTACHMENT, TetrisItemCategory.RANGED, ItemGridUI.GENERIC_ACTION_COLOR)
 

@@ -4,6 +4,7 @@ local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local TetrisValidation = require("InventoryTetris/Data/TetrisValidation")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
+local ItemGrid = require("InventoryTetris/Model/ItemGrid")
 
 local GRID_REFRESH_DELAY = 600
 local PHYSICS_DELAY = 600
@@ -23,7 +24,7 @@ local PHYSICS_DELAY = 600
 ---@field _onSecondaryGridsAdded table
 ---@field _onSecondaryGridsRemoved table
 ---@field disableSecondaryGrids boolean
-ItemContainerGrid = {}
+local ItemContainerGrid = {}
 
 ItemContainerGrid._tempGrid = {} -- For hovering over container items, so we don't create a new grid every frame to evaluate if an item can be placed into a hovered backpack
 ItemContainerGrid._gridCache = {} -- Just created grids, so we don't end up creating a new grid multiple times in a single tick when looping or something
@@ -775,3 +776,5 @@ Events.OnTick.Add(function()
         table.wipe(grids)
     end
 end)
+
+return ItemContainerGrid

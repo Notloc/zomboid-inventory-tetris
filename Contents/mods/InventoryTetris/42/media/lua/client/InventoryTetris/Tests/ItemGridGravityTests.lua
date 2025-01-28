@@ -5,6 +5,8 @@ local AsyncTest = require("TestFramework/AsyncTest")
 local TestHelper = require("InventoryTetris/Tests/TestHelper")
 
 local ItemStack = require("InventoryTetris/Model/ItemStack")
+local ItemGrid = require("InventoryTetris/Model/ItemGrid")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 
 TestFramework.registerTestModule("Inventory Tetris", "Item Grid Gravity Tests", function ()
     local Tests = TestUtils.newTestModule("client/InventoryTetris/Tests/ItemGridGravityTests.lua")

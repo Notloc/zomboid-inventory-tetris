@@ -1,5 +1,6 @@
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 
 -- Adjustments to the InventoryTransferAction to support the new rules for item transfers under the grid system and avoid illegal item placements.
 ---@diagnostic disable: duplicate-set-field

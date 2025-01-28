@@ -4,7 +4,9 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisValidation = require("InventoryTetris/Data/TetrisValidation")
 local TetrisEvents = require("InventoryTetris/Events")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local ItemUtil = require("Notloc/ItemUtil")
+local GenericSingleItemRecipeHandler = require("InventoryTetris/EventHandlers/GenericSingleItemRecipeHandler")
 local OPT = require("InventoryTetris/Settings")
 
 local CONTROLLER_DOUBLE_PRESS_TIME = 200

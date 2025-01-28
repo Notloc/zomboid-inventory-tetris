@@ -1,7 +1,7 @@
 -- Parses the player's action queue into data that summarizes item transfer information for use in renderering.
 -- Allows us to show previews of in-progress and upcoming item transfers.
 
-GridTransferQueueData = {}
+local GridTransferQueueData = {}
 
 function GridTransferQueueData.build(playerNum)
     local data = {}
@@ -70,3 +70,5 @@ end
 function GridTransferQueueData:getIncomingActions(container, gridKey)
     return self.incoming[container] and self.incoming[container][gridKey] or {}
 end
+
+return GridTransferQueueData

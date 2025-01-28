@@ -1,4 +1,5 @@
 require("ISUI/ISCollapsableWindow")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local OPT = require("InventoryTetris/Settings")
 
 ItemGridStackSplitWindow = ISCollapsableWindow:derive("ItemGridStackSplitWindow");

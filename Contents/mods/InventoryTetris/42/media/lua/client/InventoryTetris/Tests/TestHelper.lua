@@ -2,6 +2,7 @@ if not getActivatedMods():contains("\\TEST_FRAMEWORK") or not isDebugEnabled() t
 
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 
 local TestFramework = require("TestFramework/TestFramework")
 TestFramework.registerFileForReload("client/InventoryTetris/Tests/TestHelper.lua")

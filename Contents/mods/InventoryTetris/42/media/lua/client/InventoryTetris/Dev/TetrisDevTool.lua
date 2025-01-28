@@ -6,6 +6,7 @@ local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 
 local function copyTable(from, to)
     for k,v in pairs(from) do

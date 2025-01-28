@@ -21,7 +21,7 @@ local ItemStack = require("InventoryTetris/Model/ItemStack")
 ---@field gridKey string
 ---@field isProxInv boolean
 ---@field isCorpse boolean
-ItemGrid = {}
+local ItemGrid = {}
 
 local PROX_INV_TYPE = "proxInv"
 
@@ -952,3 +952,5 @@ function ItemGrid:_sendModData()
         end
     end
 end
+
+return ItemGrid

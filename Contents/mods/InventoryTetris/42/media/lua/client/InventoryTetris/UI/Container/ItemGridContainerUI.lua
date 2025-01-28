@@ -4,6 +4,7 @@ require("Definitions/ContainerButtonIcons")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local OPT = require("InventoryTetris/Settings")
 
 ItemGridContainerUI = ISPanel:derive("ItemGridContainerUI")

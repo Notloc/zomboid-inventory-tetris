@@ -1,4 +1,5 @@
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 
 -- Responsible for forcing items out of the player's inventory when it slips into an invalid state
 local ItemUtil = require("Notloc/ItemUtil")
