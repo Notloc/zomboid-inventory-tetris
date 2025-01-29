@@ -1,6 +1,7 @@
 ---@diagnostic disable: inject-field
+
 ---@enum TetrisItemCategory
-TetrisItemCategory = {
+local TetrisItemCategory = {
     MELEE = "MELEE_WEAPON",
     RANGED = "RANGED_WEAPON",
     AMMO = "AMMO",
@@ -115,3 +116,5 @@ TetrisItemCategory.categoryIcons = {
 function TetrisItemCategory.getCategoryIcon(category)
     return TetrisItemCategory.categoryIcons[category]
 end
+
+return TetrisItemCategory

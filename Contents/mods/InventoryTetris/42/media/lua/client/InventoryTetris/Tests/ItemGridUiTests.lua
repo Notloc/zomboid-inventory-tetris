@@ -2,8 +2,12 @@ if not getActivatedMods():contains("\\TEST_FRAMEWORK") or not isDebugEnabled() t
 local TestFramework = require("TestFramework/TestFramework")
 local TestUtils = require("TestFramework/TestUtils")
 local AsyncTest = require("TestFramework/AsyncTest")
-
 local TestHelper = require("InventoryTetris/Tests/TestHelper")
+
+local ItemStack = require("InventoryTetris/Model/ItemStack")
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 local OPT = require("InventoryTetris/Settings")
 
 TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", function ()

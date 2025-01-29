@@ -1,6 +1,6 @@
 require("TimedActions/ISBaseTimedAction")
 
-SearchGridAction = ISBaseTimedAction:derive("SearchGridAction");
+local SearchGridAction = ISBaseTimedAction:derive("SearchGridAction");
 
 function SearchGridAction:new (character, grid)
 	local o = ISBaseTimedAction.new(self, character);
@@ -71,3 +71,5 @@ function SearchGridAction:perform()
     -- needed to remove from queue / start next.
 	ISBaseTimedAction.perform(self);
 end
+
+return SearchGridAction;

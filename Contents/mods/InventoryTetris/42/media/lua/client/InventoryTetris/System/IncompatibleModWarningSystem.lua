@@ -1,10 +1,14 @@
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local CompatibilityPopupWindow = require("InventoryTetris/UI/Windows/CompatibilityPopupWindow")
 local Version = require("Notloc/Versioning/Version")
+
+---@diagnostic disable-next-line: undefined-global
+local EquipmentUI = require("EquipmentUI/UI/EquipmentUI") or EquipmentUI -- Temporary until EquipmentUI removes its globals
 
 local TETRIS_IMG = getTexture("media/textures/Compatibility/tetris.png")
 local EQUIPMENT_IMG = getTexture("media/textures/Compatibility/equipment_ui.png")
 
-InventoryTetrisIncompatibleModWarningSystem = {}
+local InventoryTetrisIncompatibleModWarningSystem = {}
 
 -- Handle the prepended slash bug
 local function isModActive(modID)
@@ -102,3 +106,5 @@ end
 Events.OnGameStart.Add(function()
     InventoryTetrisIncompatibleModWarningSystem.showCompatibilityIssues()
 end)
+
+return InventoryTetrisIncompatibleModWarningSystem

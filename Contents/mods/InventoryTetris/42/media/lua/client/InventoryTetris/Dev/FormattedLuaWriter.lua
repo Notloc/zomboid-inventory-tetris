@@ -1,4 +1,4 @@
-FormattedLuaWriter = {}
+local FormattedLuaWriter = {}
 
 local function indent(level)
     local indent = "";
@@ -41,3 +41,5 @@ function FormattedLuaWriter.formatTable(tableObj, indentLevel)
     text = text .. createLine("}", indentLevel);
     return text;
 end
+
+return FormattedLuaWriter;

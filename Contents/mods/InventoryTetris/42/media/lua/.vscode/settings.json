@@ -14,13 +14,7 @@
         "package": "disable"
     },
     "Lua.workspace.checkThirdParty": false,
-    "Lua.diagnostics.globals": [
-        "DragAndDrop",
-        "EquipmentUI",
-        "NotlocControllerNode",
-        "ControllerDragAndDrop",
-        "NotlocScrollView"
-    ],
+    "Lua.diagnostics.globals": [],
     "Lua.workspace.library": [
         "c:\\Users\\Colto\\.vscode\\extensions\\ilka.umbrella-vscode-1.1.19\\plugin\\library\\runtime",
         "c:\\Users\\Colto\\.vscode\\extensions\\ilka.umbrella-vscode-1.1.19\\plugin\\library\\natives\\umbrella",

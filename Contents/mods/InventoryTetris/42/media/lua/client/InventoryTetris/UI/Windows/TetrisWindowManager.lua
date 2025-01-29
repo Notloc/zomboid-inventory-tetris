@@ -1,9 +1,11 @@
+local ItemGridWindow = require("InventoryTetris/UI/Windows/ItemGridWindow")
+
 ---@class TetrisWindowManager
 ---@field inventoryPane ISInventoryPane
 ---@field playerNum number
 ---@field childWindows table[]
 ---@field openWindows table[]
-TetrisWindowManager = {}
+local TetrisWindowManager = {}
 
 TetrisWindowManager._instances = {}
 
@@ -304,3 +306,5 @@ Events.OnPlayerDeath.Add(function(player)
         windowManager:onPlayerDeath(player)
     end
 end)
+
+return TetrisWindowManager

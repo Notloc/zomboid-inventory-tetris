@@ -6,7 +6,10 @@ require("ISUI/ISMouseDrag")
 require("ISUI/ISLayoutManager")
 require("defines")
 
-ItemGridWindow = ISPanel:derive("ItemGridWindow");
+local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
+
+local ItemGridWindow = ISPanel:derive("ItemGridWindow");
 
 ItemGridWindow._globalInstances = {};
 
@@ -35,7 +38,7 @@ function ItemGridWindow:new(x, y, inventory, inventoryPane, playerNum, windowMan
     o.inventoryPane = inventoryPane;
     o.playerNum = playerNum;
     o.player = playerNum;
-    
+
     o.windowManager = windowManager
 
     o.titlebarbkg = getTexture("media/ui/Panel_TitleBar.png");
@@ -317,3 +320,5 @@ function ItemGridWindow:bringToTop()
     end
     table.insert(ItemGridWindow._globalInstances, self)
 end
+
+return ItemGridWindow

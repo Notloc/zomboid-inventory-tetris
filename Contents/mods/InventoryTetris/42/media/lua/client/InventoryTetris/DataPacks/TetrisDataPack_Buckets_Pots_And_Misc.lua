@@ -1,5 +1,5 @@
-require("InventoryTetris/Data/TetrisItemData")
-require("InventoryTetris/Data/TetrisContainerData")
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
 local itemPack = {
 	["Base.Salad"] = {

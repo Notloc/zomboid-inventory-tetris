@@ -1,10 +1,18 @@
-require("InventoryTetris/Events")
-require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
-require("Notloc/NotUtil")
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+local TetrisEvents = require("InventoryTetris/Events")
 local ItemUtil = require("Notloc/ItemUtil")
 
 ItemGridUI.registerItemHoverColor(TetrisItemCategory.AMMO, TetrisItemCategory.MAGAZINE, ItemGridUI.GENERIC_ACTION_COLOR)
 
+local function slice(tbl, start, stop)
+    local sliced = {}
+    for i = start, stop do
+        table.insert(sliced, tbl[i])
+    end
+    return sliced
+end
 
 local ammoMagazineHandler = {}
 
@@ -45,7 +53,7 @@ function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, target
     if #bullets - 1 > missingBullets then
         sliceEnd = missingBullets + 1
     end
-    bullets = NotUtil.slice(bullets, 2, sliceEnd)
+    bullets = slice(bullets, 2, sliceEnd)
 
     local playerObj = getSpecificPlayer(playerNum)
     local playerInv = playerObj:getInventory()

@@ -1,20 +1,22 @@
-TetrisContainerData = TetrisContainerData or {}  -- Partial class
+local TetrisContainerCalculator = {}
+
+TetrisContainerCalculator._vehicleStorageNames = {}
 
 local MAX_CONTAINER_WIDTH = 12
 local MAX_CONTAINER_HEIGHT = 50
 
-function TetrisContainerData._calculateContainerDefinition(container)
+function TetrisContainerCalculator.calculateContainerDefinition(container)
     local definition = nil
     local type = container:getType()
 
-    if TetrisContainerData._vehicleStorageNames[type] then
-        definition = TetrisContainerData._calculateVehicleTrunkContainerDefinition(container)
+    if TetrisContainerCalculator._vehicleStorageNames[type] then
+        definition = TetrisContainerCalculator._calculateVehicleTrunkContainerDefinition(container)
     else
         local item = container:getContainingItem()
         if item then
-            definition = TetrisContainerData._calculateItemContainerDefinition(container, item)
+            definition = TetrisContainerCalculator._calculateItemContainerDefinition(container, item)
         else
-            definition = TetrisContainerData._calculateWorldContainerDefinition(container)
+            definition = TetrisContainerCalculator._calculateWorldContainerDefinition(container)
         end
     end
 
@@ -24,7 +26,7 @@ end
 
 ---@param container InventoryContainer
 ---@param item InventoryContainer
-function TetrisContainerData._calculateItemContainerDefinition(container, item)
+function TetrisContainerCalculator._calculateItemContainerDefinition(container, item)
     local capacity = container:getCapacity()
     local weightReduction = item:getWeightReduction()
     local bonus = math.ceil(weightReduction / 10)
@@ -45,10 +47,10 @@ function TetrisContainerData._calculateItemContainerDefinition(container, item)
 
     -- Special case for slotted containers to build a pocketed grid
     if item:IsInventoryContainer() and item:getMaxItemSize() > 1 and item:getBodyLocation() ~= "" then
-        return TetrisContainerData._buildGridDefinitionForSlottedContainer(slotCount, item:getMaxItemSize())
+        return TetrisContainerCalculator._buildGridDefinitionForSlottedContainer(slotCount, item:getMaxItemSize())
     end
 
-    local x, y = TetrisContainerData._calculateDimensions(slotCount, 2)
+    local x, y = TetrisContainerCalculator._calculateContainerDimensions(slotCount, 2)
     if x<2 then x=2 end
     if y<2 then y=2 end
     return {
@@ -59,10 +61,10 @@ function TetrisContainerData._calculateItemContainerDefinition(container, item)
     }
 end
 
-function TetrisContainerData._calculateWorldContainerDefinition(container)
+function TetrisContainerCalculator._calculateWorldContainerDefinition(container)
     local capacity = container:getCapacity()
     local size = 2 * math.ceil(capacity)
-    local x, y = TetrisContainerData._calculateDimensions(size)
+    local x, y = TetrisContainerCalculator._calculateContainerDimensions(size, 1)
     return {
         gridDefinitions = {{
             size = {width=x, height=y},
@@ -71,11 +73,11 @@ function TetrisContainerData._calculateWorldContainerDefinition(container)
     }
 end
 
-function TetrisContainerData._calculateVehicleTrunkContainerDefinition(container)
+function TetrisContainerCalculator._calculateVehicleTrunkContainerDefinition(container)
     local capacity = container:getCapacity()
 
     local size = 50 + capacity * 2.5
-    local x, y = TetrisContainerData._calculateDimensions(size)
+    local x, y = TetrisContainerCalculator._calculateContainerDimensions(size, 1)
     return {
         gridDefinitions = {{
             size = {width=x, height=y},
@@ -87,7 +89,7 @@ end
 --- Determine two numbers that multiply *close* to the target slot count
 ---@param target number -- The target slot count
 ---@param accuracy number -- Reduces the importance of squaring the shape
-function TetrisContainerData._calculateDimensions(target, accuracy)
+function TetrisContainerCalculator._calculateContainerDimensions(target, accuracy)
     local best = 99999999
     local bestX = 1
     local bestY = 1
@@ -118,7 +120,7 @@ function TetrisContainerData._calculateDimensions(target, accuracy)
     return bestX, bestY
 end
 
-function TetrisContainerData._buildGridDefinitionForSlottedContainer(slotCount, maxItemSize)
+function TetrisContainerCalculator._buildGridDefinitionForSlottedContainer(slotCount, maxItemSize)
     local def = { gridDefinitions = {} }
 
     local maxPocketSize = math.max(math.floor(maxItemSize * 2), 2)
@@ -127,7 +129,7 @@ function TetrisContainerData._buildGridDefinitionForSlottedContainer(slotCount, 
     local pocketCount = math.max(math.floor(slotCount / maxPocketSize), 1)
 
     for i = 1, pocketCount do
-        local x, y = TetrisContainerData._calculateDimensions(maxPocketSize, 10)
+        local x, y = TetrisContainerCalculator._calculateContainerDimensions(maxPocketSize, 10)
         if pocketCount > 3 and x > y then
             -- Prefer tall pockets
             local temp = x
@@ -135,7 +137,7 @@ function TetrisContainerData._buildGridDefinitionForSlottedContainer(slotCount, 
             y = temp
         end
 
-        pY = pocketCount > 6 and math.floor((i-1) / 4) or 0
+        local pY = pocketCount > 6 and math.floor((i-1) / 4) or 0
 
         local pocket = {
             size = { width = x, height = y },
@@ -147,3 +149,5 @@ function TetrisContainerData._buildGridDefinitionForSlottedContainer(slotCount, 
 
     return def
 end
+
+return TetrisContainerCalculator

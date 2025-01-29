@@ -1,3 +1,5 @@
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+
 -- This patch disables the carry weight capacity check for all containers except for the player's main inventory.
 -- This implementation avoids lasting changes to the container's capacity by temporarily setting it to a very high value during the check.
 ---@diagnostic disable: duplicate-set-field

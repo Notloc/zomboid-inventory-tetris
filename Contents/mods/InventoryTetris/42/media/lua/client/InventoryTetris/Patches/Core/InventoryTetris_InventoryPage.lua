@@ -1,3 +1,7 @@
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local DragItemRenderer = require("InventoryTetris/UI/TetrisDragItemRenderer")
+local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+
 -- Injects the new control scheme into the InventoryPage class.
 ---@diagnostic disable: duplicate-set-field
 

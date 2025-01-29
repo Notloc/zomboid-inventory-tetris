@@ -1,11 +1,15 @@
-require("InventoryTetris/UI/Grid/ItemGridUI")
-require("InventoryTetris/Data/TetrisItemCategory")
-require("InventoryTetris/Data/TetrisItemData")
-require("InventoryTetris/Events")
-local ItemGridUI = ItemGridUI
-local TetrisItemCategory = TetrisItemCategory
-local TetrisItemData = TetrisItemData
-local isItemSquished = TetrisItemData.isSquished
+-- Split rendering into a separate file because of how much code it is
+
+---@diagnostic disable: deprecated
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+local TetrisEvents = require("InventoryTetris/Events")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+local GridTransferQueueData = require("InventoryTetris/Model/GridTransferQueueData")
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
+
 local getItemSize = TetrisItemData.getItemSize
 
 -- Premade textures for supported scales so that any scale gets pixel perfect grids
@@ -31,6 +35,37 @@ local GridLineTexturesByScale = {
 
 local MEDIA_CHECKMARK_TEX = getTexture("media/ui/Tick_Mark-10.png")
 local COLD_TEX = getTexture("media/textures/InventoryTetris/Cold.png")
+
+---@class ItemGridUI : ISPanel
+---@field grid ItemGrid
+---@field containerGrid ItemContainerGrid
+---@field inventoryPane ISInventoryPane
+---@field playerNum number
+local ItemGridUI = ISUIElement:derive("ItemGridUI")
+
+---@param grid ItemGrid
+---@param containerGrid ItemContainerGrid
+---@param inventoryPane ISInventoryPane
+---@param playerNum number
+---@return ItemGridUI
+function ItemGridUI:new(grid, containerUi, containerGrid, inventoryPane, playerNum)
+    local o = ISUIElement:new(0, 0, 0, 0)
+    setmetatable(o, self)
+    self.__index = self
+
+    o.grid = grid
+    o.containerUi = containerUi
+    o.containerGrid = containerGrid
+    o.inventoryPane = inventoryPane
+    o.playerNum = playerNum
+    o.playerObj = getSpecificPlayer(playerNum)
+
+    o:setWidth(o:calculateWidth())
+    o:setHeight(o:calculateHeight())
+
+    ---@type ItemGridUI
+    return o
+end
 
 -- When hover a stack over a stack that has an interaction handler, color the hovered stack with this color (or the interaction handler's color if it has one)
 ItemGridUI.GENERIC_ACTION_COLOR = {0, 0.7, 1}
@@ -317,8 +352,9 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     end
 
     local bgTex = ITEM_BG_TEXTURE[OPT.SCALE] or SEAMLESS_ITEM_BG_TEX
-    local allowDevTool = not (TetrisDevTool.disableItemOverrides or not TetrisDevTool.isDebugEnabled())
-    local devOverrides = TetrisDevTool.itemEdits or {}
+
+    local itemData = TetrisItemData._itemData
+    local devItemData = TetrisItemData._devItemData
 
     local selectedStacks = self.multiDragStacks or {}
 
@@ -340,7 +376,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 
                 local fType = not isSquished and itemType or TetrisItemData._squishedIdCache[itemType] or TetrisItemData._getSquishedId(itemType)
 
-                local data = (allowDevTool and devOverrides[fType]) or TetrisItemData._itemData[fType] or TetrisItemData._getItemDataByFullType(item, fType, isSquished)
+                local data = devItemData[fType] or itemData[fType] or TetrisItemData._getItemDataByFullType(item, fType, isSquished)
 
                 local w, h = data.width, data.height
                 if stack.isRotated then
@@ -740,6 +776,8 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
 
     local Bleach = Fluid.Bleach
     local TaintedWater = Fluid.TaintedWater
+
+    ---@diagnostic disable-next-line: undefined-field
     local enableTainted = getSandboxOptions():getOptionByName("EnableTaintedWaterText"):getValue()
 
     local favTex = FAVOURITE_TEXTURE[SCALE]
@@ -1171,3 +1209,5 @@ function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x
     drawingContext:drawTextureCenteredAndSquare(HIDDEN_ITEM, x2, y2, size, alphaMult, 1,1,1);
     drawingContext:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
 end
+
+return ItemGridUI
