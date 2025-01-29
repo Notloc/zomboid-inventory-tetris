@@ -12,7 +12,7 @@ local OPT = require("InventoryTetris/Settings")
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
 local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
-local ItemGridStackSplitWindow = require("InventoryTetris/UI/ItemGridStackSplitWindow")
+local ItemGridStackSplitWindow = require("InventoryTetris/UI/Grid/ItemGridStackSplitWindow")
 
 local CONTROLLER_DOUBLE_PRESS_TIME = 200
 
