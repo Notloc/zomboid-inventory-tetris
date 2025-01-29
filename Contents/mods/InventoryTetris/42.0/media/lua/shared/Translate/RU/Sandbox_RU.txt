@@ -1,6 +1,0 @@
-Sandbox_RU = {
-    Sandbox_InventoryTetris = "Инвентарь-Тетрис",
-    Sandbox_InventoryTetris_EnableSearch = "Включить поиск в контейнерах",
-    Sandbox_InventoryTetris_SearchTime = "Время Поиска",
-    Sandbox_InventoryTetris_BonusGridSize = "Размер бонусной сетки"
-}

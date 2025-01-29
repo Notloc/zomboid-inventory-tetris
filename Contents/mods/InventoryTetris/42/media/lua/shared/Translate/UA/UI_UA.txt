@@ -1,0 +1,11 @@
+UI_UA = {
+    UI_optionscreen_binding_tetris_rotate_item = "Повернути предмет",
+    UI_optionscreen_binding_tetris_quick_move = "Клавіша швидкого переміщення",
+    UI_optionscreen_binding_tetris_quick_equip = "Клавіша швидкого оснащення",
+    UI_optionscreen_binding_tetris_stack_split = "Клавіша розділення стаку",
+    UI_optionscreen_binding_tetris_close_window = "Закрити спливаюче вікно",
+
+    UI_tetris_options_grid_scale = "Масштаб сітки",
+    UI_tetris_options_container_info_scale = "Масштаб інформації контейнера",
+    UI_optionscreen_binding_InventoryTetris = "Інвентар-тетріс"
+}

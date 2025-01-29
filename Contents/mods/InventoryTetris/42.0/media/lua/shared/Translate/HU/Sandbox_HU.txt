@@ -1,6 +1,0 @@
-Sandbox_HU = {
-    Sandbox_InventoryTetris = "Felszerelés tetrisz",
-    Sandbox_InventoryTetris_EnableSearch = "Engedélyezze a tároló keresést",
-    Sandbox_InventoryTetris_SearchTime = "Keresési idõ",
-    Sandbox_InventoryTetris_BonusGridSize = "Bónusz rács méret"
-}

@@ -1,0 +1,26 @@
+UI_TH = {
+	UI_optionscreen_binding_tetris_rotate_item = "หมุนไอเท็ม",
+	UI_optionscreen_binding_tetris_quick_move = "ปุ่มเคลื่อนย้ายด่วน",
+	UI_optionscreen_binding_tetris_quick_equip = "ปุ่มสวมใส่ด่วน",
+	UI_optionscreen_binding_tetris_stack_split = "ปุ่มแยกกอง",
+	UI_optionscreen_binding_tetris_close_window = "ปิดหน้าต่างป๊อปอัป",
+
+	UI_tetris_options_grid_scale = "ขนาดช่องตาราง",
+	UI_tetris_options_container_info_scale = "ขนาดช่องข้อมูลบรรจุภัณฑ์",
+	UI_optionscreen_binding_InventoryTetris = "ช่องเก็บของสไตล์เตตริส",
+
+	UI_optionscreen_binding_tetris_ctrl_button = "ปุ่ม Ctrl",
+	UI_optionscreen_binding_tetris_alt_button = "ปุ่ม Alt",
+	UI_optionscreen_binding_tetris_shift_button = "ปุ่ม Shift",
+
+	UI_tetris_options_double_click_action = "การกระทำเมื่อดับเบิลคลิก",
+	UI_tetris_options_ctrl_click_action = "การกระทำเมื่อกดปุ่ม Ctrl + คลิก",
+	UI_tetris_options_alt_click_action = "การกระทำเมื่อกดปุ่ม Alt + คลิก",
+	UI_tetris_options_shift_click_action = "การกระทำเมื่อกดปุ่ม Shift + คลิก",
+
+	UI_tetris_options_do_nothing = "ไม่มี",
+	UI_tetris_options_do_interact = "ปฏิสัมพันธ์",
+	UI_tetris_options_do_move = "เคลื่อนย้าย",
+	UI_tetris_options_do_equip = "สวมใส่",
+	UI_tetris_options_do_drop = "ทิ้ง",
+}
