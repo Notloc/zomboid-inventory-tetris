@@ -12,7 +12,7 @@ local validKeys = {
     [VEHICLE_ITEM_PARTIAL] = true,
 }
 
-TetrisServer = {}
+local TetrisServer = {}
 
 function TetrisServer.getOrCreateUuid(tableObj)
     local uuid = tableObj[TETRIS_UUID]
@@ -68,3 +68,5 @@ local function onServerReceiveGlobalModData(key, data)
 end
 
 Events.OnReceiveGlobalModData.Add(onServerReceiveGlobalModData);
+
+return TetrisServer

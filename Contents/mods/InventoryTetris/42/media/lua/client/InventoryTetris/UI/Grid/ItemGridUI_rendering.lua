@@ -1,6 +1,6 @@
----@diagnostic disable: deprecated
+-- Split rendering into a separate file because of how much code it is
 
-require("InventoryTetris/UI/Grid/ItemGridUI")
+---@diagnostic disable: deprecated
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local TetrisEvents = require("InventoryTetris/Events")
@@ -10,7 +10,6 @@ local GridTransferQueueData = require("InventoryTetris/Model/GridTransferQueueDa
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
 
-local ItemGridUI = ItemGridUI
 local getItemSize = TetrisItemData.getItemSize
 
 -- Premade textures for supported scales so that any scale gets pixel perfect grids
@@ -36,6 +35,37 @@ local GridLineTexturesByScale = {
 
 local MEDIA_CHECKMARK_TEX = getTexture("media/ui/Tick_Mark-10.png")
 local COLD_TEX = getTexture("media/textures/InventoryTetris/Cold.png")
+
+---@class ItemGridUI : ISPanel
+---@field grid ItemGrid
+---@field containerGrid ItemContainerGrid
+---@field inventoryPane ISInventoryPane
+---@field playerNum number
+local ItemGridUI = ISUIElement:derive("ItemGridUI")
+
+---@param grid ItemGrid
+---@param containerGrid ItemContainerGrid
+---@param inventoryPane ISInventoryPane
+---@param playerNum number
+---@return ItemGridUI
+function ItemGridUI:new(grid, containerUi, containerGrid, inventoryPane, playerNum)
+    local o = ISUIElement:new(0, 0, 0, 0)
+    setmetatable(o, self)
+    self.__index = self
+
+    o.grid = grid
+    o.containerUi = containerUi
+    o.containerGrid = containerGrid
+    o.inventoryPane = inventoryPane
+    o.playerNum = playerNum
+    o.playerObj = getSpecificPlayer(playerNum)
+
+    o:setWidth(o:calculateWidth())
+    o:setHeight(o:calculateHeight())
+
+    ---@diagnostic disable-next-line: return-type-mismatch
+    return o
+end
 
 -- When hover a stack over a stack that has an interaction handler, color the hovered stack with this color (or the interaction handler's color if it has one)
 ItemGridUI.GENERIC_ACTION_COLOR = {0, 0.7, 1}
@@ -1178,3 +1208,5 @@ function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x
     drawingContext:drawTextureCenteredAndSquare(HIDDEN_ITEM, x2, y2, size, alphaMult, 1,1,1);
     drawingContext:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
 end
+
+return ItemGridUI

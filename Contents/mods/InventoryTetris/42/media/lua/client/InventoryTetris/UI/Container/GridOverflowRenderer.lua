@@ -2,11 +2,13 @@ require("ISUI/ISUIElement")
 local OPT = require("InventoryTetris/Settings")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
 local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
+local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 
 local OVERFLOW_MARGIN = 3
 local OVERFLOW_RENDERER_SPACING = 8
 
-GridOverflowRenderer = ISUIElement:derive("GridOverflowRenderer")
+local GridOverflowRenderer = ISUIElement:derive("GridOverflowRenderer")
 
 function GridOverflowRenderer:new(x,y, containerGridUi, gridUi, inventory, inventoryPane, playerNum)
     local o = ISUIElement:new(x, y, 0, 0)
@@ -274,3 +276,5 @@ function GridOverflowRenderer:controllerNodeOnJoypadDown(button)
 
     return false
 end
+
+return GridOverflowRenderer

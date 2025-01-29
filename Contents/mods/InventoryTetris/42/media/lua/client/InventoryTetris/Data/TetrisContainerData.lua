@@ -4,11 +4,11 @@ local TetrisModCompatibility = require("InventoryTetris/TetrisModCompatibility")
 
 ---@class ContainerGridDefinition
 ---@field gridDefinitions GridDefinition[]
----@field validCategories table<TetrisItemCategory, boolean>
+---@field validCategories table<TetrisItemCategory, boolean>|nil
 ---@field invalidCategories TetrisItemCategory[] -- Deprecated
----@field isFragile boolean
----@field isRigid boolean
----@field trueType string
+---@field isFragile boolean|nil
+---@field isRigid boolean|nil
+---@field trueType string|nil
 
 ---@class GridDefinition
 ---@field size Size2D

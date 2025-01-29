@@ -1,4 +1,5 @@
-require("EquipementUI/UI/WeaponSlot")
+---@diagnostic disable-next-line: undefined-global
+local WeaponSlot = require("EquipmentUI/UI/WeaponSlot") or WeaponSlot
 
 -- TODO: Move this into EquipmentUI instead
 ---@diagnostic disable-next-line: undefined-global

@@ -12,6 +12,8 @@ local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
 local OPT = require("InventoryTetris/Settings")
 local Version = require("Notloc/Versioning/Version")
+local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
+local TetrisWindowManager = require("InventoryTetris/UI/Windows/TetrisWindowManager")
 
 -- I use on game boot because I want to make sure other mods have loaded before I patch this in
 Events.OnGameBoot.Add(function()

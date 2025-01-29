@@ -3,6 +3,8 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local OPT = require("InventoryTetris/Settings")
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 
 local ICON_PADDING_X = 12
 local ICON_PADDING_Y = 8
@@ -15,7 +17,7 @@ local UNKNOWN_WEIGHT = "?"
 local textManager = getTextManager()
 local mediumFont = UIFont.Medium
 
-GridContainerInfo = ISUIElement:derive("GridContainerInfo")
+local GridContainerInfo = ISUIElement:derive("GridContainerInfo")
 
 function GridContainerInfo:new(containerUi)
     local o = ISUIElement:new(0,0, 500, 500)
@@ -225,5 +227,6 @@ function GridContainerInfo:controllerNodeOnJoypadDown(button)
         end
         return true
     end
-
 end
+
+return GridContainerInfo

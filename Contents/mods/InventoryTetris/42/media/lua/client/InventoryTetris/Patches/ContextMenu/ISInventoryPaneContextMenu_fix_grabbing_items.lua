@@ -1,5 +1,6 @@
 require("ISUI/ISInventoryPaneContextMenu")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 
 -- Fixes some quirks with the right click grab options
 ---@diagnostic disable: duplicate-set-field

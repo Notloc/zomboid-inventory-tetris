@@ -5,14 +5,15 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local GridContainerInfo = require("InventoryTetris/UI/Container/GridContainerInfo")
+local GridOverflowRenderer = require("InventoryTetris/UI/Container/GridOverflowRenderer")
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 local OPT = require("InventoryTetris/Settings")
-
-ItemGridContainerUI = ISPanel:derive("ItemGridContainerUI")
 
 local ICON_PADDING_X = 12
 local ICON_PADDING_Y = 8
 local ICON_SIZE = 64
-
 local GRID_PADDING = 5
 local TITLE_Y_PADDING = 4
 
@@ -20,9 +21,7 @@ local BASIC_INV_TEXTURE = getTexture("media/ui/Icon_InventoryBasic.png")
 local SHELF_TEXTURE = getTexture("media/ui/Container_Shelf.png")
 local PROX_INV_TEXTURE = getTexture("media/ui/ProximityInventory.png") or SHELF_TEXTURE
 local NPC_INV_TEXTURE = instanceItem("Base.Spiffo"):getTex()
-
 local BLACK = {r=0, g=0, b=0, a=1}
-
 local FONT_HEIGHT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 
 ---@class ItemGridContainerUI : ISPanel
@@ -32,11 +31,13 @@ local FONT_HEIGHT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 ---@field player IsoPlayer
 ---@field gridUis ItemGridUI[][]
 ---@field containerGrid ItemContainerGrid
+local ItemGridContainerUI = ISPanel:derive("ItemGridContainerUI")
+
 function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerDefOverride)
     local o = ISPanel:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
-    
+
     o.inventory = inventory
     o.inventoryPane = inventoryPane
     o.playerNum = playerNum
@@ -59,6 +60,7 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
     o.showTitle = true
     o.isGridCollapsed = false
 
+    ---@type ItemGridContainerUI
     return o
 end
 
@@ -99,8 +101,8 @@ function ItemGridContainerUI:updateContainerTexture(container)
 end
 
 function ItemGridContainerUI:unregisterEvents()
-    self.containerGrid:removeOnSecondaryGridsAdded(self, self._onSecondaryGridsAdded)
-    self.containerGrid:removeOnSecondaryGridsRemoved(self, self._onSecondaryGridsRemoved)
+    self.containerGrid:removeOnSecondaryGridsAdded(self)
+    self.containerGrid:removeOnSecondaryGridsRemoved(self)
 end
 
 ItemGridContainerUI.movableItemCache = {}
@@ -255,6 +257,7 @@ function ItemGridContainerUI:applyScales(gridScale, infoScale)
         local containerDef = self.containerGrid.containerDefinition
         local target = renderer.secondaryTarget
         if target ~= self.inventory then
+            ---@diagnostic disable-next-line: cast-local-type
             containerDef = TetrisPocketData.getPocketDefinition(target)
         end
 
@@ -489,9 +492,9 @@ end
 
 function ItemGridContainerUI:prerender()
     local inv = self.inventory
-    
+
     if self.containerGrid:shouldRefresh() or inv:isDrawDirty() then
-        self.containerGrid:refresh(self)
+        self.containerGrid:refresh()
         inv:setDrawDirty(false)
     end
 
@@ -742,3 +745,5 @@ function ItemGridContainerUI:_onSecondaryGridsRemoved(target)
         self.inventoryPane:refreshItemGrids()
     end
 end
+
+return ItemGridContainerUI

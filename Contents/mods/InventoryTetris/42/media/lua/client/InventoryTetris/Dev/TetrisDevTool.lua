@@ -8,6 +8,7 @@ local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local OPT = require("InventoryTetris/Settings")
 local ContextUtil = require("Notloc/ContextUtil")
+local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
 
 local function copyTable(from, to)
     for k,v in pairs(from) do

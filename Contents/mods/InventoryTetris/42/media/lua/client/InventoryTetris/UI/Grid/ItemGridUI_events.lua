@@ -1,4 +1,4 @@
-require("InventoryTetris/UI/Grid/ItemGridUI")
+require("ISUI/ISUIElement")
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisValidation = require("InventoryTetris/Data/TetrisValidation")
@@ -11,8 +11,12 @@ local GenericSingleItemRecipeHandler = require("InventoryTetris/EventHandlers/Ge
 local OPT = require("InventoryTetris/Settings")
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
+local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ItemGridStackSplitWindow = require("InventoryTetris/UI/ItemGridStackSplitWindow")
 
 local CONTROLLER_DOUBLE_PRESS_TIME = 200
+
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
 
 function ItemGridUI:initialise()
     ISPanel.initialise(self)
@@ -924,3 +928,5 @@ end
 function ItemGridUI:clearSelectedStacks()
     self.multiDragStacks = {}
 end
+
+return ItemGridUI

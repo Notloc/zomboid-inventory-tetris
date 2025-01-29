@@ -3,8 +3,9 @@ local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
 local OPT = require("InventoryTetris/Settings")
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 
-DragItemRenderer = ISUIElement:derive("DragItemRenderer")
+local DragItemRenderer = ISUIElement:derive("DragItemRenderer")
 
 function DragItemRenderer:new(equipmentUi, playerNum)
     local o = ISUIElement:new(0, 0, 0, 0)
@@ -61,3 +62,5 @@ function DragItemRenderer:render()
 
     self:resumeStencil()
 end
+
+return DragItemRenderer

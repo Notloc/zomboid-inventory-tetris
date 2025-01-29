@@ -6,6 +6,8 @@ local TestHelper = require("InventoryTetris/Tests/TestHelper")
 
 local ItemStack = require("InventoryTetris/Model/ItemStack")
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local ItemGridContainerUI = require("InventoryTetris/UI/ItemGridContainerUI")
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 local OPT = require("InventoryTetris/Settings")
 
 TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", function ()

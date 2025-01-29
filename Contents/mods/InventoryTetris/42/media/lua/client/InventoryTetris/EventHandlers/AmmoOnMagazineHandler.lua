@@ -1,4 +1,4 @@
-require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local TetrisEvents = require("InventoryTetris/Events")

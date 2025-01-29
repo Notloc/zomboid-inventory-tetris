@@ -3,8 +3,8 @@ if not getActivatedMods():contains("KnownAndCollected") and not getActivatedMods
 end
 
 local TetrisEvents = require("InventoryTetris/Events")
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 require("RecordedMedia/recorded_media")
-require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
 
 -- You will need to require InventoryTetris' settings in order to calculate the cell size
 local SETTINGS = require("InventoryTetris/Settings")
