@@ -5,6 +5,7 @@ local OPT = require("InventoryTetris/Settings")
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
 local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
+local TetrisDevTool = require("InventoryTetris/Dev/TetrisDevTool")
 
 local ICON_PADDING_X = 12
 local ICON_PADDING_Y = 8

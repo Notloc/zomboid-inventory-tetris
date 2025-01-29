@@ -1,8 +1,10 @@
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 
-local TetrisPocketData = {}
+-- Intentional global
+TetrisPocketData = {}
 
 TetrisPocketData._pocketDefinitions = {}
+TetrisPocketData._devPocketDefinitions = {}
 
 local two_pockets = {
     gridDefinitions = {
@@ -230,16 +232,13 @@ function TetrisPocketData.getPocketDefinition(item)
     end
 
     local key = item:getFullType()
-    if TetrisDevTool.getPocketOverride(key) then
-        return TetrisDevTool.getPocketOverride(key)
+    local def = TetrisPocketData._devPocketDefinitions[key] or TetrisPocketData._pocketDefinitions[key]
+    if not def then
+        def = TetrisPocketData.getDefaultPocketDefinition(item)
+        TetrisPocketData._pocketDefinitions[key] = def
     end
 
-    -- Try to inject a default pocket definition if one doesn't exist
-    if not TetrisPocketData._pocketDefinitions[key] then
-        TetrisPocketData._pocketDefinitions[key] = TetrisPocketData.getDefaultPocketDefinition(item)
-    end
-
-    return TetrisPocketData._pocketDefinitions[key]
+    return def
 end
 
 function TetrisPocketData.getDefaultPocketDefinition(item)

@@ -14,10 +14,11 @@ local TetrisModCompatibility = require("InventoryTetris/TetrisModCompatibility")
 ---@field size Size2D
 ---@field position Vector2Lua
 
-
-local TetrisContainerData = {}
+-- Intentional global
+TetrisContainerData = {}
 
 TetrisContainerData._containerDefinitions = {}
+TetrisContainerData._devContainerDefinitions = {}
 
 -- Containers that must never be marked as non-fragile due to java side hardcoding
 -- Without this the disable carry weight feature causes the containers to misbehave
@@ -58,31 +59,28 @@ function TetrisContainerData._getContainerKey(container)
         return modKey
     end
 
-    if container:getType() == "none" then
+    local type = container:getType()
+    if type == "none" then
         return "none"
     end
-    return container:getType() .. "_" .. container:getCapacity()
+    return type .. "_" .. container:getCapacity()
 end
 
 function TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
-    local def = nil
-
-    local devToolOverride = TetrisDevTool.getContainerOverride(containerKey)
-    if devToolOverride then
-        def = devToolOverride
+    local def = TetrisContainerData._devContainerDefinitions[containerKey] or TetrisContainerData._containerDefinitions[containerKey]
+    if not def then
+        def = TetrisContainerCalculator.calculateContainerDefinition(container)
+        TetrisContainerData._containerDefinitions[containerKey] = def
     end
 
-    if def == nil then
-        if not TetrisContainerData._containerDefinitions[containerKey] then
-            TetrisContainerData._containerDefinitions[containerKey] = TetrisContainerCalculator.calculateContainerDefinition(container)
-        end
-        def = TetrisContainerData._containerDefinitions[containerKey]
+    if not def.corrected then
+        TetrisContainerData._enforceCorrections(container, def)
     end
 
-    TetrisContainerData._enforceCorrections(container, def)
     return def
 end
 
+-- Inject new required fields and enforce certain rules
 function TetrisContainerData._enforceCorrections(container, containerDef)
     if containerDef.corrected then
         return

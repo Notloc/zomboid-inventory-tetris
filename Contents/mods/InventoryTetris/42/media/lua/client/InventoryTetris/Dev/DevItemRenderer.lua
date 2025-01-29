@@ -1,6 +1,6 @@
-OPT = require("InventoryTetris/Settings")
+local OPT = require("InventoryTetris/Settings")
 
-DevItemRenderer = ISPanel:derive("DevItemRenderer");
+local DevItemRenderer = ISPanel:derive("DevItemRenderer");
 
 function DevItemRenderer:new(x, y, item, w, h)
     local o = ISPanel:new(x, y, 1, 1);
@@ -30,3 +30,5 @@ end
 
 function DevItemRenderer:render()
 end
+
+return DevItemRenderer;

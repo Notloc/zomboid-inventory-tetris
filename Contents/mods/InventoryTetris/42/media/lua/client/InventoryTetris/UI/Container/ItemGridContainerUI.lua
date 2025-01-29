@@ -10,6 +10,7 @@ local GridContainerInfo = require("InventoryTetris/UI/Container/GridContainerInf
 local GridOverflowRenderer = require("InventoryTetris/UI/Container/GridOverflowRenderer")
 local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 local OPT = require("InventoryTetris/Settings")
+local TetrisDevTool = require("InventoryTetris/Dev/TetrisDevTool")
 
 local ICON_PADDING_X = 12
 local ICON_PADDING_Y = 8

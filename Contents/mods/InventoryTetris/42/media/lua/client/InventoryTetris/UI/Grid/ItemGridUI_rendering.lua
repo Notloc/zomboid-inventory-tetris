@@ -352,8 +352,9 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     end
 
     local bgTex = ITEM_BG_TEXTURE[OPT.SCALE] or SEAMLESS_ITEM_BG_TEX
-    local allowDevTool = not (TetrisDevTool.disableItemOverrides or not TetrisDevTool.isDebugEnabled())
-    local devOverrides = TetrisDevTool.itemEdits or {}
+
+    local itemData = TetrisItemData._itemData
+    local devItemData = TetrisItemData._devItemData
 
     local selectedStacks = self.multiDragStacks or {}
 
@@ -375,7 +376,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 
                 local fType = not isSquished and itemType or TetrisItemData._squishedIdCache[itemType] or TetrisItemData._getSquishedId(itemType)
 
-                local data = (allowDevTool and devOverrides[fType]) or TetrisItemData._itemData[fType] or TetrisItemData._getItemDataByFullType(item, fType, isSquished)
+                local data = devItemData[fType] or itemData[fType] or TetrisItemData._getItemDataByFullType(item, fType, isSquished)
 
                 local w, h = data.width, data.height
                 if stack.isRotated then

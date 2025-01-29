@@ -1,9 +1,11 @@
 local TetrisItemCalculator = require("InventoryTetris/Data/TetrisItemCalculator")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
-local TetrisItemData = {}
+-- Intentional global
+TetrisItemData = {}
 
 TetrisItemData._itemData = {}
+TetrisItemData._devItemData = {}
 TetrisItemData._itemDataPacks = {}
 TetrisItemData._alwaysStackOnSpawnItems = {}
 
@@ -70,7 +72,7 @@ function TetrisItemData.getSquishedFullType(item)
 end
 
 function TetrisItemData.getItemDefinitonByItemScript(itemScript, squished)
-    if squished == nil then 
+    if squished == nil then
         squished = false
     end
 
@@ -104,12 +106,7 @@ function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
         fType = fType .. tostring(item:getActualWeight())
     end
 
-    local devToolOverride = TetrisDevTool.getItemOverride(fType)
-    if devToolOverride then
-        return devToolOverride
-    end
-
-    local data = TetrisItemData._itemData[fType]
+    local data = TetrisItemData._devItemData[fType] or TetrisItemData._itemData[fType]
     if not data then
         if isSquished then
             local unsquishedData = TetrisItemData._getItemDataByFullType(item, item:getFullType(), false)

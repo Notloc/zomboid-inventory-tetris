@@ -3,6 +3,7 @@ if not getActivatedMods():contains("\\TEST_FRAMEWORK") or not isDebugEnabled() t
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+local TetrisDevTool = require("InventoryTetris/Dev/TetrisDevTool")
 
 local TestFramework = require("TestFramework/TestFramework")
 TestFramework.registerFileForReload("client/InventoryTetris/Tests/TestHelper.lua")
@@ -24,10 +25,10 @@ TestHelper.items = {
     ["1x1_s"] = {name="Base.Paperclip", x=1, y=1, stack=99},
 }
 
-TestHelper.devToolOverrideStack = {}
-
 -- Overrides the data pack definitions with known values for testing
 function TestHelper.applyDataPackOverrides()
+    TetrisDevTool.disableOverrides() -- Replaces the _dev{Data} tables in the Tetris{type}Data objects with fresh tables
+
     for _, data in pairs(TestHelper.containers) do
         local item = instanceItem(data.name)
 
@@ -35,7 +36,7 @@ function TestHelper.applyDataPackOverrides()
         local container = item:getItemContainer()
         local containerKey = TetrisContainerData._getContainerKey(container)
 
-        TetrisContainerData._containerDefinitions[containerKey] = {
+        TetrisContainerData._devContainerDefinitions[containerKey] = {
             gridDefinitions = {{
                 size = {width = data.x, height = data.y},
                 position = {x = 0, y = 0},
@@ -45,42 +46,16 @@ function TestHelper.applyDataPackOverrides()
 
     for _, data in pairs(TestHelper.items) do
         local item = instanceItem(data.name)
-        TetrisItemData._itemData[item:getFullType()] = {
+        TetrisItemData._devItemData[item:getFullType()] = {
             width = data.x,
             height = data.y,
             maxStackSize = data.stack,
         }
     end
-
-    TestHelper.devToolOverrideStack[#TestHelper.devToolOverrideStack+1] = {
-        disableItemOverrides = TetrisDevTool.disableItemOverrides,
-        disableContainerOverrides = TetrisDevTool.disableContainerOverrides,
-    }
-
-    TetrisDevTool.disableItemOverrides = true
-    TetrisDevTool.disableContainerOverrides = true
 end
 
 function TestHelper.removeDataPackOverrides()
-    for _, data in pairs(TestHelper.containers) do
-        local item = instanceItem(data.name)
-
-        ---@cast item InventoryContainer
-        local container = item:getItemContainer()
-        local containerKey = TetrisContainerData._getContainerKey(container)
-
-        TetrisContainerData._containerDefinitions[containerKey] = nil
-    end
-
-    for _, data in pairs(TestHelper.items) do
-        local item = instanceItem(data.name)
-        TetrisItemData._itemData[item:getFullType()] = nil
-    end
-
-    local overrides = TestHelper.devToolOverrideStack[#TestHelper.devToolOverrideStack]
-    TestHelper.devToolOverrideStack[#TestHelper.devToolOverrideStack] = nil
-    TetrisDevTool.disableItemOverrides = overrides.disableItemOverrides
-    TetrisDevTool.disableContainerOverrides = overrides.disableContainerOverrides
+    TetrisDevTool.enableOverrides() -- Restores the _dev{Data} tables in the Tetris{type}Data objects
 end
 
 
