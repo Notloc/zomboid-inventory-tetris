@@ -1,5 +1,4 @@
 require("ISUI/ISUIElement")
-require("Notloc/NotUtil")
 local OPT = require("InventoryTetris/Settings")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
 local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
@@ -133,10 +132,24 @@ function GridOverflowRenderer:findStackDataUnderMouse(x, y)
     return nil
 end
 
+---@param x number
+---@param y number
+---@param localSpace ISUIElement
+---@param targetSpace ISUIElement
+---@return number
+---@return number
+local function convertCoordinates(x, y, localSpace, targetSpace)
+    local x2 = x + localSpace:getAbsoluteX()
+    local y2 = y + localSpace:getAbsoluteY()
+    x2 = x2 - targetSpace:getAbsoluteX()
+    y2 = y2 - targetSpace:getAbsoluteY()
+    return x2, y2
+end
+
 function GridOverflowRenderer:onMouseDown(x, y)
 	local stack = self:findStackDataUnderMouse(x, y)
     if stack then
-        x, y = NotUtil.Ui.convertCoordinates(x, y, self, self.gridUi)
+        x, y = convertCoordinates(x, y, self, self.gridUi)
         return self.gridUi:onMouseDown(x, y, stack)
     end
 end
@@ -144,7 +157,7 @@ end
 function GridOverflowRenderer:onMouseUp(x, y)
 	local stack = self:findStackDataUnderMouse(x, y)
     if stack then
-        x, y = NotUtil.Ui.convertCoordinates(x, y, self, self.gridUi)
+        x, y = convertCoordinates(x, y, self, self.gridUi)
         return self.gridUi:onMouseUp(x, y, stack)
     end
 end
@@ -152,7 +165,7 @@ end
 function GridOverflowRenderer:onRightMouseUp(x, y)
 	local stack = self:findStackDataUnderMouse(x, y)
     if stack then
-        x, y = NotUtil.Ui.convertCoordinates(x, y, self, self.gridUi)
+        x, y = convertCoordinates(x, y, self, self.gridUi)
         return self.gridUi:onRightMouseUp(x, y, stack)
     end
 end
@@ -160,7 +173,7 @@ end
 function GridOverflowRenderer:onMouseDoubleClick(x, y)
     local stack = self:findStackDataUnderMouse(x, y)
     if stack then
-        x, y = NotUtil.Ui.convertCoordinates(x, y, self, self.gridUi)
+        x, y = convertCoordinates(x, y, self, self.gridUi)
         return self.gridUi:handleDoubleClick(x, y, stack)
     end
 end

@@ -1,25 +1,22 @@
-if not __GLOBAL_NO_TRANSFER_NEEDED_ON_SELF_SCOPE then
+local BaseScope = require("Notloc/ModScope/BaseScope")
+local NoTransferNeededOnSelfScope = BaseScope:new()
 
-    local BaseScope = require("Notloc/ModScope/BaseScope")
-    local NoTransferNeededOnSelfScope = BaseScope:new()
-    __GLOBAL_NO_TRANSFER_NEEDED_ON_SELF_SCOPE = NoTransferNeededOnSelfScope
-
-    function NoTransferNeededOnSelfScope:execute(callback)
-        return unpack(BaseScope.execute(self, callback))
-    end
-
-    Events.OnGameBoot.Add(function()
-        local og_haveToBeTransfered = luautils.haveToBeTransfered
-        ---@diagnostic disable-next-line: duplicate-set-field
-        function luautils.haveToBeTransfered(player, item, dontWalk)
-            if NoTransferNeededOnSelfScope:isActive() then
-                if player:getInventory() == item:getOutermostContainer() then
-                    return false
-                end
-            end
-            return og_haveToBeTransfered(player, item, dontWalk)
-        end
-    end)
+function NoTransferNeededOnSelfScope:execute(callback)
+    return unpack(BaseScope.execute(self, callback))
 end
 
-return __GLOBAL_NO_TRANSFER_NEEDED_ON_SELF_SCOPE
+Events.OnGameBoot.Add(function()
+    local og_haveToBeTransfered = luautils.haveToBeTransfered
+    ---@diagnostic disable-next-line: duplicate-set-field
+    function luautils.haveToBeTransfered(player, item, dontWalk)
+        if NoTransferNeededOnSelfScope:isActive() then
+            if player:getInventory() == item:getOutermostContainer() then
+                return false
+            end
+        end
+        return og_haveToBeTransfered(player, item, dontWalk)
+    end
+end)
+
+
+return NoTransferNeededOnSelfScope

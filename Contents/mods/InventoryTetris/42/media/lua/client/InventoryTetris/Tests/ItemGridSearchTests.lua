@@ -7,6 +7,7 @@ local TestHelper = require("InventoryTetris/Tests/TestHelper")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
 local ItemGrid = require("InventoryTetris/Model/ItemGrid")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+local SearchGridAction = require("InventoryTetris/TimedActions/SearchGridAction")
 
 TestFramework.registerTestModule("Inventory Tetris", "Item Grid Search Tests", function ()
     local Tests = TestUtils.newTestModule("client/InventoryTetris/Tests/ItemGridSearchTests.lua")

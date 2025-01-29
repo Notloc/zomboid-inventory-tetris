@@ -36,6 +36,34 @@ function EasyOptionInstance._init(optionInstance)
     end
 end
 
+---@class SimpleEvent
+---@field add fun(self:SimpleEvent, listener: function)
+---@field remove fun(self:SimpleEvent, listener: function)
+---@field trigger function
+---@field private _listeners function[]
+
+---@return SimpleEvent
+local function createSimpleEvent()
+    local event = {}
+    event._listeners = {}
+
+    function event:add(func)
+        table.insert(self._listeners, func)
+    end
+
+    function event:remove(func)
+        table.remove(self._listeners, func)
+    end
+
+    function event:trigger(...)
+        for _, func in ipairs(self._listeners) do
+            func(...)
+        end
+    end
+
+    return event
+end
+
 ---@class EasyOptionEvent : SimpleEvent
 ---@field addAndApply fun(self:EasyOptionEvent, callback: function)
 
@@ -43,7 +71,7 @@ end
 ---@return EasyOptionEvent
 function EasyOptionInstance._createEvent(optionInstance)
     ---@class EasyOptionEvent
-    local event = NotUtil.createSimpleEvent()
+    local event = createSimpleEvent()
     event.addAndApply = function(self, callback)
         self:add(callback)
         callback(optionInstance.parent[optionInstance.key])

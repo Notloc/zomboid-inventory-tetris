@@ -1,4 +1,5 @@
-local TetrisEvents = {}
+-- Intentional global
+TetrisEvents = {}
 
 function TetrisEvents._genericTrigger(event, ...)
     local data = TetrisEvents.createEventData(event)
@@ -87,7 +88,5 @@ end)
 TetrisEvents.OnPostRenderGrid = TetrisEvents.createEvent("OnPostRenderGrid", function(self, drawingContext, renderInstructions, instructionCount, playerObj)
     TetrisEvents._genericTrigger(self, drawingContext, renderInstructions, instructionCount, playerObj)
 end)
-
-print("[Tetris] Events loaded")
 
 return TetrisEvents

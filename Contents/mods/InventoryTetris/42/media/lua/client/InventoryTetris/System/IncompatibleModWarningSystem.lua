@@ -5,7 +5,7 @@ local Version = require("Notloc/Versioning/Version")
 local TETRIS_IMG = getTexture("media/textures/Compatibility/tetris.png")
 local EQUIPMENT_IMG = getTexture("media/textures/Compatibility/equipment_ui.png")
 
-InventoryTetrisIncompatibleModWarningSystem = {}
+local InventoryTetrisIncompatibleModWarningSystem = {}
 
 -- Handle the prepended slash bug
 local function isModActive(modID)
@@ -103,3 +103,5 @@ end
 Events.OnGameStart.Add(function()
     InventoryTetrisIncompatibleModWarningSystem.showCompatibilityIssues()
 end)
+
+return InventoryTetrisIncompatibleModWarningSystem

@@ -547,13 +547,9 @@ function ItemGrid:_rebuildStackMap(doPhysics)
                 for y=stack.y,stack.y+h-1 do
                     if self:_isInBounds(x, y) then
                         stackMap[x][y] = stack
-                    else
-                        print("ItemGrid:_rebuildStackMap() - Stack out of bounds: " .. tostring(x) .. ", " .. tostring(y) .. " - " .. tostring(item:getName()))
                     end
                 end
             end
-        else
-            print("ItemGrid:_rebuildStackMap() - Stack has no items: " .. tostring(stack.x) .. ", " .. tostring(stack.y))
         end
     end
 
@@ -923,7 +919,7 @@ function ItemGrid:_getParentModData()
         return isoObject:getModData(), isoObject
     end
 
-    print("Error: ItemGrid:_getParentModData() An invalid container setup was found. Data will not be saved.")
+    --print("Error: ItemGrid:_getParentModData() An invalid container setup was found. Data will not be saved.")
     return {} -- Return an empty table so we don't error out
 end
 

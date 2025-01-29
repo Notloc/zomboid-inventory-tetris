@@ -1,38 +1,28 @@
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
-
--- Responsible for forcing items out of the player's inventory when it slips into an invalid state
 local ItemUtil = require("Notloc/ItemUtil")
 
+-- Responsible for forcing items out of the player's inventory when it slips into an invalid state
 local GridAutoDropSystem = {}
-GridAutoDropSystem._dropQueues = {}
-GridAutoDropSystem._dropProcessing = {}
 
-function GridAutoDropSystem.queueItemForDrop(item, playerObj)
-    local queueObj = ISTimedActionQueue.getTimedActionQueue(playerObj)
-    local queueIsEmpty = #queueObj.queue == 0
-    if queueIsEmpty then
-        local playerNum = playerObj:getPlayerNum()
-        if GridAutoDropSystem._dropProcessing[playerNum] then return end
-        if not GridAutoDropSystem._dropQueues[playerNum] then GridAutoDropSystem._dropQueues[playerNum] = {} end
-        GridAutoDropSystem._dropQueues[playerNum][item] = true
-    end
-end
+GridAutoDropSystem._dropQueues = {}
 
 function GridAutoDropSystem._processItems(playerNum, items)
-    GridAutoDropSystem._dropProcessing[playerNum] = true
-
     local playerObj = getSpecificPlayer(playerNum)
     local isDisorganized = playerObj:HasTrait("Disorganized")
     local containers = ItemUtil.getAllEquippedContainers(playerObj)
     local mainInv = playerObj:getInventory()
+
+    local gridCache = {}
 
     for _, item in ipairs(items) do
         local addedToContainer = false
 
         local currentContainer = item:getContainer()
         if currentContainer then
-            local containerGrid = ItemContainerGrid.GetOrCreate(currentContainer, playerNum)
+            local containerGrid = gridCache[currentContainer] or ItemContainerGrid.GetOrCreate(currentContainer, playerNum)
+            gridCache[currentContainer] = containerGrid
+
             if containerGrid:canAddItem(item) and containerGrid:autoPositionItem(item, isDisorganized) then
                 addedToContainer = true
             else
@@ -63,19 +53,15 @@ function GridAutoDropSystem._processItems(playerNum, items)
                     end
                 end
             end
-        end
 
-        if not addedToContainer then
-            GridAutoDropSystem._handleDropItem(item, playerNum)
+            if not addedToContainer then
+                GridAutoDropSystem._handleDropItem(item, playerNum)
+            end
         end
     end
-
-    GridAutoDropSystem._dropProcessing[playerNum] = false
 end
 
 function GridAutoDropSystem._handleDropItem(item, playerNum)
-    GridAutoDropSystem._dropProcessing[playerNum] = true
-
     if GridAutoDropSystem._isItemUndroppable(item) then
         GridAutoDropSystem._forceItemIntoInventoryOrHands(item, playerNum)
     else
@@ -84,8 +70,6 @@ function GridAutoDropSystem._handleDropItem(item, playerNum)
         local transfer = ISInventoryTransferAction:new(playerObj, item, item:getContainer(), ISInventoryPage.GetFloorContainer(playerNum), 1)
         ISTimedActionQueue.add(transfer)
     end
-
-    GridAutoDropSystem._dropProcessing[playerNum] = false
 end
 
 -- Certain furniture items (like the fridge) can't be dropped on the floor as an item, they must be placed in the world.
@@ -141,12 +125,22 @@ end
 
 
 function GridAutoDropSystem._processQueues()
+    for playerNum, itemSet in pairs(ItemContainerGrid._unpositionedItemSetsByPlayer) do
+        local playerObj = getSpecificPlayer(playerNum)
+        local actionQueueObj = ISTimedActionQueue.getTimedActionQueue(playerObj)
+        local actionQueueIsEmpty = #actionQueueObj.queue == 0
+        if actionQueueIsEmpty then
+            GridAutoDropSystem._dropQueues[playerNum] = itemSet
+        end
+        ItemContainerGrid._unpositionedItemSetsByPlayer[playerNum] = {}
+    end
+
     for playerNum, itemMap in pairs(GridAutoDropSystem._dropQueues) do
         local itemsToDrop = {}
         for item, _ in pairs(itemMap) do
             table.insert(itemsToDrop, item)
         end
-        --print("Processing drop queue, " .. #itemsToDrop .. " items to drop")
+
         GridAutoDropSystem._processItems(playerNum, itemsToDrop)
         GridAutoDropSystem._dropQueues[playerNum] = nil
     end

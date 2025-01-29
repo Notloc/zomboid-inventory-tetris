@@ -5,6 +5,7 @@ local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local TetrisValidation = require("InventoryTetris/Data/TetrisValidation")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
 local ItemGrid = require("InventoryTetris/Model/ItemGrid")
+local SearchGridAction = require("InventoryTetris/TimedActions/SearchGridAction")
 
 local GRID_REFRESH_DELAY = 600
 local PHYSICS_DELAY = 600
@@ -38,10 +39,6 @@ function ItemContainerGrid.getUnpositionedItemSetByPlayerNum(playerNum)
         ItemContainerGrid._unpositionedItemSetsByPlayer[playerNum] = set
     end
     return set
-end
-
-function ItemContainerGrid.clearUnpositionedItemSetByPlayerNum(playerNum)
-    ItemContainerGrid._unpositionedItemSetsByPlayer[playerNum] = {}
 end
 
 ---comment
@@ -462,15 +459,11 @@ end
 
 function ItemContainerGrid:autoPositionItem(item, isDisorganized)
     for _, grid in ipairs(self.grids) do
-        if grid:removeItem(item) then
-            print("ohno")
-        end
+        grid:removeItem(item)
     end
     for _, grids in pairs(self.secondaryGrids) do
         for _, grid in ipairs(grids) do
-            if grid:removeItem(item) then
-                print("ohno")
-            end
+            grid:removeItem(item)
         end
     end
 

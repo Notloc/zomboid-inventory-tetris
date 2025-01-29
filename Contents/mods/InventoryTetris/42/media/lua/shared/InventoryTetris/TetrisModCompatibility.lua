@@ -1,7 +1,7 @@
 -- This file will interact with other mods, so unknown globals are expected
 ---@diagnostic disable: undefined-global
 
-TetrisModCompatibility = {}
+local TetrisModCompatibility = {}
 
 ---@param container ItemContainer
 function TetrisModCompatibility.getModContainerKey(container)
@@ -37,3 +37,5 @@ function TetrisModCompatibility.KnoxEventExpanded_HandleNpcItemTransfer(item, sr
         end
     end
 end
+
+return TetrisModCompatibility

@@ -1,6 +1,7 @@
 -- Fixes the inability to add logs to a metal drum from other inventories.
 -- Vanilla expects all items to be in the player's main inventory
 require("client/Blacksmith/ISUI/ISBlacksmithMenu")
+local TetrisLambdaAction = require("Notloc/TimedActions/TetrisLambdaAction")
 local ItemUtil = require("Notloc/ItemUtil")
 local ModScope = require("Notloc/ModScope/ModScope")
 

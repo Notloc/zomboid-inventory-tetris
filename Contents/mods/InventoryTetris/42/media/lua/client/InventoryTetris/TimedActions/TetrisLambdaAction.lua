@@ -1,6 +1,6 @@
 require("TimedActions/ISBaseTimedAction")
 
-TetrisLambdaAction = ISBaseTimedAction:derive("TetrisLambdaAction");
+local TetrisLambdaAction = ISBaseTimedAction:derive("TetrisLambdaAction");
 
 function TetrisLambdaAction:new (character, callback, delayMs)
 	local o = ISBaseTimedAction.new(self, character);
@@ -34,3 +34,5 @@ function TetrisLambdaAction:perform()
     -- needed to remove from queue / start next.
 	ISBaseTimedAction.perform(self);
 end
+
+return TetrisLambdaAction

@@ -1,5 +1,6 @@
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local TetrisContainerCalculator = require("InventoryTetris/Data/TetrisContainerCalculator")
+local TetrisModCompatibility = require("InventoryTetris/TetrisModCompatibility")
 
 ---@class ContainerGridDefinition
 ---@field gridDefinitions GridDefinition[]
