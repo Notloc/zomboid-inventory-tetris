@@ -1,7 +1,7 @@
 -- There is a sizable amount of vanilla actions that do not properly unequip items from the player's hands before destroying them.
 -- Lets just do this and forget about it.
 
-TetrisHandMonitor = {}
+local TetrisHandMonitor = {}
 TetrisHandMonitor.ticksByPlayer = {}
 
 function TetrisHandMonitor.validateEquippedItems(playerObj)
@@ -26,3 +26,5 @@ function TetrisHandMonitor.validateEquippedItems(playerObj)
     end
 end
 Events.OnPlayerUpdate.Add(TetrisHandMonitor.validateEquippedItems)
+
+return TetrisHandMonitor

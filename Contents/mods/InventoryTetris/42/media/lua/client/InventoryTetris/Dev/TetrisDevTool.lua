@@ -1,7 +1,15 @@
 -- A quick and drity tool used for adjusting item and container data in-game and exporting directly into a formatted lua file
-local OPT = require("InventoryTetris/Settings")
 local JSON = require("InventoryTetris/Dev/JSON.lua")
+local FormattedLuaWriter = require("InventoryTetris/Dev/FormattedLuaWriter")
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+local OPT = require("InventoryTetris/Settings")
 local ContextUtil = require("Notloc/ContextUtil")
+local DevItemRenderer = require("InventoryTetris/Dev/DevItemRenderer")
+local ItemGridContainerUI = nil -- Required on demand to avoid circular dependencies
 
 local function copyTable(from, to)
     for k,v in pairs(from) do
@@ -57,7 +65,7 @@ local function writeText(fileName, text)
     writer:close();
 end
 
-
+local TetrisDevTool = {}
 
 local ITEM_FILENAME = "InventoryTetris_ItemData"
 local CONTAINER_FILENAME = "InventoryTetris_ContainerData"
@@ -68,6 +76,10 @@ Events.OnInitGlobalModData.Add(function()
         TetrisDevTool.itemEdits = readJsonFile(ITEM_FILENAME..".json") or {};
         TetrisDevTool.containerEdits = readJsonFile(CONTAINER_FILENAME..".json") or {};
         TetrisDevTool.pocketEdits = readJsonFile(POCKET_FILENAME..".json") or {};
+
+        TetrisItemData._devItemData = TetrisDevTool.itemEdits;
+        TetrisContainerData._devContainerDefinitions = TetrisDevTool.containerEdits;
+        TetrisPocketData._devPocketDefinitions = TetrisDevTool.pocketEdits;
     else
         TetrisDevTool.itemEdits = {}
         TetrisDevTool.containerEdits = {}
@@ -75,38 +87,23 @@ Events.OnInitGlobalModData.Add(function()
     end
 end)
 
+function TetrisDevTool.enableOverrides()
+    TetrisItemData._devItemData = TetrisDevTool.itemEdits;
+    TetrisContainerData._devContainerDefinitions = TetrisDevTool.containerEdits;
+    TetrisPocketData._devPocketDefinitions = TetrisDevTool.pocketEdits;
+end
 
-TetrisDevTool = {}
+function TetrisDevTool.disableOverrides()
+    TetrisItemData._devItemData = {};
+    TetrisContainerData._devContainerDefinitions = {};
+    TetrisPocketData._devPocketDefinitions = {};
+end
 
 function TetrisDevTool.isDebugEnabled()
     return isDebugEnabled() or SandboxVars.InventoryTetris.DevMode
 end
 
 TetrisDevTool.writeText = writeText;
-
-TetrisDevTool.disableItemOverrides = false;
-TetrisDevTool.disableContainerOverrides = false;
-
-function TetrisDevTool.getContainerOverride(key)
-    if TetrisDevTool.disableContainerOverrides or not TetrisDevTool.isDebugEnabled() then
-        return nil;
-    end
-    return TetrisDevTool.containerEdits[key];
-end
-
-function TetrisDevTool.getItemOverride(key)
-    if TetrisDevTool.disableItemOverrides or not TetrisDevTool.isDebugEnabled() then
-        return nil;
-    end
-    return TetrisDevTool.itemEdits[key];
-end
-
-function TetrisDevTool.getPocketOverride(key)
-    if TetrisDevTool.disableItemOverrides or not TetrisDevTool.isDebugEnabled() then
-        return nil;
-    end
-    return TetrisDevTool.pocketEdits[key];
-end
 
 ---@param context ISContextMenu
 function TetrisDevTool.insertDebugOptions(context, item)
@@ -500,6 +497,9 @@ local function clearQuickButtons(context, quickId)
 end
 
 function TetrisDevTool.remakeContainerUi(editWindow, realInv)
+    -- Required on demand to avoid circular dependencies
+    ItemGridContainerUI = ItemGridContainerUI or require("InventoryTetris/UI/Container/ItemGridContainerUI")
+
     if editWindow.containerUi then
         editWindow:removeChild(editWindow.containerUi);
         editWindow.containerUi = nil;
@@ -610,6 +610,7 @@ function TetrisDevTool.openPocketEdit(item)
 end
 
 function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, containerDef, dataKey, dataTable, type)
+    ---@diagnostic disable-next-line: param-type-mismatch
     local inventory = type == "POCKET" and sourceInventory or ItemContainer.new("DEV_TOOL", nil, nil) -- Create a new container to avoid effecting the actual inventory
 
     local editWindow = ISPanel:new(getMouseX(), getMouseY(), 50, 50);
@@ -1310,46 +1311,48 @@ if not TetrisDevTool.og_createMenu then
         end
         if not item then return menu end
 
-        pcall(function ()
-            print("item ID: " .. tostring(item:getID()))
-            print("item display name: " .. item:getDisplayName())
-            print("item display category: " .. (item:getDisplayCategory() or "none"))
-            print("item CLASS: " .. TetrisItemCategory.getCategory(item))
-            print("item full type: " .. item:getFullType())
+        if isDebugEnabled() then
+            pcall(function ()
+                print("item ID: " .. tostring(item:getID()))
+                print("item display name: " .. item:getDisplayName())
+                print("item display category: " .. (item:getDisplayCategory() or "none"))
+                print("item CLASS: " .. TetrisItemCategory.getCategory(item))
+                print("item full type: " .. item:getFullType())
 
-            print("item weight: " .. item:getWeight())
-            print("item actual weight: " .. item:getActualWeight())
+                print("item weight: " .. item:getWeight())
+                print("item actual weight: " .. item:getActualWeight())
 
-            if item:IsFood() then
-                print("item base hunger: " .. item:getBaseHunger())
-                print("item hunger change: " .. item:getHungerChange())
-            end
+                if item:IsFood() then
+                    print("item base hunger: " .. item:getBaseHunger())
+                    print("item hunger change: " .. item:getHungerChange())
+                end
 
-            if item:IsDrainable() then
-                print("item uses: " .. item:getCurrentUses())
-                print("item max uses: " .. item:getMaxUses())
-            end
+                if item:IsDrainable() then
+                    print("item uses: " .. item:getCurrentUses())
+                    print("item max uses: " .. item:getMaxUses())
+                end
 
-            local mediaData = item:getMediaData()
-            if mediaData then
-                print("mediaData: " .. mediaData:getCategory())
-            end
+                local mediaData = item:getMediaData()
+                if mediaData then
+                    print("mediaData: " .. mediaData:getCategory())
+                end
 
-            if item:IsInventoryContainer() then
-                local container = item:getItemContainer()
-                print("container type: " .. tostring(container:getType()))
-            end
+                if item:IsInventoryContainer() then
+                    local container = item:getItemContainer()
+                    print("container type: " .. tostring(container:getType()))
+                end
 
-            local tex = item:getTex()
-            if tex then
-                print("Texture Width: " .. tostring(tex:getWidth()))
-                print("Texture Height: " .. tostring(tex:getHeight()))
-            end
+                local tex = item:getTex()
+                if tex then
+                    print("Texture Width: " .. tostring(tex:getWidth()))
+                    print("Texture Height: " .. tostring(tex:getHeight()))
+                end
 
-            if item:IsClothing() then
-                print("Bodyslot: " .. item:getBodyLocation())
-            end
-        end)
+                if item:IsClothing() then
+                    print("Bodyslot: " .. item:getBodyLocation())
+                end
+            end)
+        end
 
         TetrisDevTool.insertDebugOptions(menu, item)
 
@@ -1367,3 +1370,5 @@ function TetrisDevTool.extractWorldContainers(containerDefs)
 
     writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
 end
+
+return TetrisDevTool

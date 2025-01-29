@@ -1,3 +1,8 @@
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
+local TetrisValidation = require("InventoryTetris/Data/TetrisValidation")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
+
 -- The primary model for the inventory grid.
 -- This class is responsible for managing the grid data, item stacks, and search sessions.
 
@@ -16,7 +21,7 @@
 ---@field gridKey string
 ---@field isProxInv boolean
 ---@field isCorpse boolean
-ItemGrid = {}
+local ItemGrid = {}
 
 local PROX_INV_TYPE = "proxInv"
 
@@ -124,7 +129,7 @@ function ItemGrid:insertItem(item, xPos, yPos, isRotated)
     if item:getContainer() ~= self.inventory then
         return false
     end
-    if not self.isProxInv and not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
+    if not self.isProxInv and not TetrisValidation.validateInsert(self.inventory, self.containerDefinition, item) then
         return false
     end
 
@@ -390,7 +395,7 @@ function ItemGrid:_attemptToStackItem(item)
 end
 
 function ItemGrid:_attemptToInsertItem(item, preferRotated, isDisorganized)
-    if not self.isProxInv and not TetrisContainerData.validateInsert(self.inventory, self.containerDefinition, item) then
+    if not self.isProxInv and not TetrisValidation.validateInsert(self.inventory, self.containerDefinition, item) then
         return false
     end
 
@@ -542,13 +547,9 @@ function ItemGrid:_rebuildStackMap(doPhysics)
                 for y=stack.y,stack.y+h-1 do
                     if self:_isInBounds(x, y) then
                         stackMap[x][y] = stack
-                    else
-                        print("ItemGrid:_rebuildStackMap() - Stack out of bounds: " .. tostring(x) .. ", " .. tostring(y) .. " - " .. tostring(item:getName()))
                     end
                 end
             end
-        else
-            print("ItemGrid:_rebuildStackMap() - Stack has no items: " .. tostring(stack.x) .. ", " .. tostring(stack.y))
         end
     end
 
@@ -604,16 +605,13 @@ end
 
 -- Determines if the stack is buried beneath other stacks when using gravity mode
 function ItemGrid:isStackBuried(stack)
-    local dragItem = DragAndDrop.getDraggedItem()
-    local mouseStack = dragItem and self:findStackByItem(dragItem) or nil
-
     local item = ItemStack.getFrontItem(stack, self.inventory)
     if item then
         local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
         for x=stack.x,stack.x+w-1 do
-            if self:_isInBounds(x, stack.y-1) then 
+            if self:_isInBounds(x, stack.y-1) then
                 local otherStack = self.stackMap[x][stack.y-1]
-                if otherStack and mouseStack ~= otherStack then
+                if otherStack then
                     return true
                 end
             end
@@ -921,7 +919,7 @@ function ItemGrid:_getParentModData()
         return isoObject:getModData(), isoObject
     end
 
-    print("Error: ItemGrid:_getParentModData() An invalid container setup was found. Data will not be saved.")
+    --print("Error: ItemGrid:_getParentModData() An invalid container setup was found. Data will not be saved.")
     return {} -- Return an empty table so we don't error out
 end
 
@@ -947,3 +945,5 @@ function ItemGrid:_sendModData()
         end
     end
 end
+
+return ItemGrid

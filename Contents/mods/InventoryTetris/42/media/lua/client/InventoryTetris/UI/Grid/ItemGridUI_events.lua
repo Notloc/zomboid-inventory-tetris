@@ -1,8 +1,22 @@
-require("InventoryTetris/UI/Grid/ItemGridUI")
-local OPT = require("InventoryTetris/Settings")
+require("ISUI/ISUIElement")
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local TetrisValidation = require("InventoryTetris/Data/TetrisValidation")
+local TetrisEvents = require("InventoryTetris/Events")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local ItemUtil = require("Notloc/ItemUtil")
+local SearchGridAction = require("InventoryTetris/TimedActions/SearchGridAction")
+local GenericSingleItemRecipeHandler = require("InventoryTetris/EventHandlers/GenericSingleItemRecipeHandler")
+local OPT = require("InventoryTetris/Settings")
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
+local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ItemGridStackSplitWindow = require("InventoryTetris/UI/Grid/ItemGridStackSplitWindow")
 
 local CONTROLLER_DOUBLE_PRESS_TIME = 200
+
+local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
 
 function ItemGridUI:initialise()
     ISPanel.initialise(self)
@@ -330,7 +344,7 @@ function ItemGridUI:handleDropOnContainer(vanillaStack, container)
 
     local frontItem = vanillaStack.items[1]
     local containerDef = TetrisContainerData.getContainerDefinition(container)
-    if not TetrisContainerData.validateInsert(container, containerDef, frontItem) then
+    if not TetrisValidation.validateInsert(container, containerDef, frontItem) then
         return
     end
 
@@ -356,7 +370,7 @@ function ItemGridUI:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
         return
     end
 
-    if not TetrisContainerData.validateInsert(self.grid.inventory, self.grid.containerDefinition, frontItem) then
+    if not TetrisValidation.validateInsert(self.grid.inventory, self.grid.containerDefinition, frontItem) then
         return
     end
 
@@ -914,3 +928,5 @@ end
 function ItemGridUI:clearSelectedStacks()
     self.multiDragStacks = {}
 end
+
+return ItemGridUI

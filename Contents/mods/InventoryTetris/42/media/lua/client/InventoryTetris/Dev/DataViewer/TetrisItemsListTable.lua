@@ -1,8 +1,8 @@
 -- Based on ISItemsListTable
-
 require("ISUI/ISPanel")
+local TetrisItemInfo = require("InventoryTetris/Dev/DataViewer/TetrisItemsListInfo")
 
-TetrisItemsListTable = ISPanel:derive("TetrisItemsListTable");
+local TetrisItemsListTable = ISPanel:derive("TetrisItemsListTable");
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
@@ -532,5 +532,4 @@ function TetrisItemsListTable:addItem(item)
     end
 end
 
-
-
+return TetrisItemsListTable

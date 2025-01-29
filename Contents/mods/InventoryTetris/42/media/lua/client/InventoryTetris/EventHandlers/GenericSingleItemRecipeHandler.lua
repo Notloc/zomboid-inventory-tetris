@@ -1,8 +1,10 @@
-GenericSingleItemRecipeHandler = {}
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+
+local GenericSingleItemRecipeHandler = {}
 function GenericSingleItemRecipeHandler.call(eventData, stack, inventory, playerNum)    
     local playerObj = getSpecificPlayer(playerNum)
     if playerObj:isDriving() then return false end
-    
+
     local item = stack.items[1]
     if not item then return false end
 
@@ -23,7 +25,7 @@ function GenericSingleItemRecipeHandler.call(eventData, stack, inventory, player
     if #singleItemRecipes ~= 1 then
         return false
     end
-    
+
     local recipe = singleItemRecipes[1]
 
     local numberOfTimes = RecipeManager.getNumberOfTimesRecipeCanBeDone(recipe, playerObj, containerList, item)
@@ -40,3 +42,5 @@ function GenericSingleItemRecipeHandler.call(eventData, stack, inventory, player
 
     return true
 end
+
+return GenericSingleItemRecipeHandler

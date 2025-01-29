@@ -1,4 +1,5 @@
-require("EquipmentUI/UI/NotlocControllerNode")
+---@diagnostic disable-next-line: undefined-global
+local NotlocControllerNode = require("EquipmentUI/UI/NotlocControllerNode") or NotlocControllerNode -- Temporary until EquipmentUI removes its globals
 
 function NotlocControllerNode.ensureVisible(uiElement)
     local current = uiElement.parent
@@ -23,3 +24,5 @@ function NotlocControllerNode.ensureVisibleXY(uiElement, screenX, screenY)
         current = current.parent
     end
 end
+
+return NotlocControllerNode

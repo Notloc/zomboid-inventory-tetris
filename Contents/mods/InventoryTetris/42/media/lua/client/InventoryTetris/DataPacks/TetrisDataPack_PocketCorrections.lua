@@ -1,4 +1,4 @@
-require("InventoryTetris/Data/TetrisPocketData")
+local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
 
 local pocketPack = {
     ["Base.PonchoYellow"] = {

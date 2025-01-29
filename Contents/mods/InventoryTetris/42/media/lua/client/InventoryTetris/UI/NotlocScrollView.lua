@@ -1,4 +1,5 @@
-require("EquipmentUI/UI/NotlocScrollView")
+---@diagnostic disable-next-line: undefined-global
+local NotlocScrollView = require("EquipmentUI/UI/NotlocScrollView") or NotlocScrollView -- Temporary until EquipmentUI removes its globals
 
 function NotlocScrollView:scrollToPositionX(screenXPos)
     local xPos = screenXPos - self:getAbsoluteX()
@@ -23,3 +24,5 @@ function NotlocScrollView:scrollToPositionY(screenYPos)
     self:setYScroll(newScroll)
     self:updateScroll()
 end
+
+return NotlocScrollView

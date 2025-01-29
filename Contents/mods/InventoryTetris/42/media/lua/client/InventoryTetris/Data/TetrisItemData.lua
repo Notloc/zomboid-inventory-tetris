@@ -1,17 +1,20 @@
-require("InventoryTetris/Data/TetrisItemCategory")
+local TetrisItemCalculator = require("InventoryTetris/Data/TetrisItemCalculator")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
-local SQUISHED_SUFFIX = "__squished"
-
-TetrisItemData = TetrisItemData or {}  -- Partial class
+-- Intentional global
+TetrisItemData = {}
 
 TetrisItemData._itemData = {}
+TetrisItemData._devItemData = {}
 TetrisItemData._itemDataPacks = {}
 TetrisItemData._alwaysStackOnSpawnItems = {}
 
+local SQUISHED_SUFFIX = "__squished"
 TetrisItemData._squishedIdCache = {}
 
---TODO: Move into dev tool and datapacks
-TetrisItemData._dynamicSizeItems = {
+-- TODO: Move into dev tool and datapacks
+-- Intentionally overriding TetrisItemCalculator._dynamicSizeItems
+TetrisItemCalculator._dynamicSizeItems = {
     ["Base.CorpseAnimal"] = true,
 
     -- Fish
@@ -69,7 +72,7 @@ function TetrisItemData.getSquishedFullType(item)
 end
 
 function TetrisItemData.getItemDefinitonByItemScript(itemScript, squished)
-    if squished == nil then 
+    if squished == nil then
         squished = false
     end
 
@@ -99,18 +102,18 @@ function TetrisItemData._getSquishedId(fType)
 end
 
 function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
-    if TetrisItemData._dynamicSizeItems[fType] then
+    if TetrisItemCalculator._dynamicSizeItems[fType] then
         fType = fType .. tostring(item:getActualWeight())
     end
 
-    local devToolOverride = TetrisDevTool.getItemOverride(fType)
-    if devToolOverride then
-        return devToolOverride
-    end
-
-    local data = TetrisItemData._itemData[fType]
+    local data = TetrisItemData._devItemData[fType] or TetrisItemData._itemData[fType]
     if not data then
-        data = TetrisItemData._autoCalculateItemInfo(item, isSquished)
+        if isSquished then
+            local unsquishedData = TetrisItemData._getItemDataByFullType(item, item:getFullType(), false)
+            data = TetrisItemCalculator.calculateItemInfoSquished(unsquishedData)
+        else
+            data = TetrisItemCalculator.calculateItemInfo(item)
+        end
         TetrisItemData._itemData[fType] = data
     end
     return data
@@ -169,3 +172,5 @@ function TetrisItemData._onInitWorld()
 end
 
 Events.OnInitWorld.Add(TetrisItemData._onInitWorld)
+
+return TetrisItemData

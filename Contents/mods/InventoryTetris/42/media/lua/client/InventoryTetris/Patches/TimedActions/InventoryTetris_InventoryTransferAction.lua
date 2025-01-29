@@ -1,3 +1,8 @@
+local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
+local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
+local TetrisModCompatibility = require("InventoryTetris/TetrisModCompatibility")
+
 -- Adjustments to the InventoryTransferAction to support the new rules for item transfers under the grid system and avoid illegal item placements.
 ---@diagnostic disable: duplicate-set-field
 
@@ -7,7 +12,7 @@ local ItemUtil = require("Notloc/ItemUtil")
 local ModScope = require("Notloc/ModScope/ModScope")
 
 local function getOutermostContainer(container)
-    if not container:getContainingItem() then
+    if not container or not container:getContainingItem() then
         return container
     end
     return container:getContainingItem():getOutermostContainer()

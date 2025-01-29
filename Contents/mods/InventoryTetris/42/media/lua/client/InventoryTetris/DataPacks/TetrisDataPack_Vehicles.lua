@@ -1,4 +1,4 @@
-require("InventoryTetris/Data/TetrisContainerData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
 local vehicleStoragePack = {
     "TruckBed",
