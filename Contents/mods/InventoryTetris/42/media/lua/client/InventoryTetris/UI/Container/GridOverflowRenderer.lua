@@ -80,24 +80,34 @@ function GridOverflowRenderer:render()
     local xPos = 0
     local yi = 1
 
+    local renderInstructions = table.newarray()
+
+    local controllerSelectionFound = false
+    local controllerX, controllerY
+
     local i = 1
     for _, stack in ipairs(overflow) do
         local item = ItemStack.getFrontItem(stack, inventory)
         if item then
-            --ItemGridUI.updateItem(item);
-
             local yPos = yPositions[yi]
-            local alpha = 1
-            local w, h = 1, 1
 
-            if true then --or not isUnsearched or (searchSession and searchSession.searchedStackIDs[item:getID()]) then
-                ItemGridUI._renderGridStack(self, playerObj, stack, item, xPos, yPos, w, h, alpha, false, nil, true)
-            else
-                ItemGridUI._renderHiddenStack(self, playerObj, stack, item, xPos, yPos, w, h, 1)
-            end
+            local instruction = table.newarray()
+            instruction[1] = stack
+            instruction[2] = item
+            instruction[3] = xPos
+            instruction[4] = yPos
+            instruction[5] = 1
+            instruction[6] = 1
+            instruction[7] = 1
+            instruction[8] = false
+            instruction[9] = false
+            instruction[10] = true
+            table.insert(renderInstructions, instruction)
 
             if self.controllerNode.isFocused and self.controllerSelection == i then
-                self:drawRect(xPos, yPos, OPT.CELL_SIZE, OPT.CELL_SIZE, 0.3, NotlocControllerNode.FOCUS_COLOR.r, NotlocControllerNode.FOCUS_COLOR.g, NotlocControllerNode.FOCUS_COLOR.b)
+                controllerSelectionFound = true
+                controllerX = xPos
+                controllerY = yPos
             end
 
             yi = yi + 1
@@ -107,6 +117,13 @@ function GridOverflowRenderer:render()
             end
         end
         i = i + 1
+    end
+
+    local instructionCount = #renderInstructions
+    ItemGridUI._bulkRenderGridStacks(self, renderInstructions, instructionCount, playerObj)
+
+    if controllerSelectionFound then
+        self:drawRectBorder(controllerX, controllerY, OPT.CELL_SIZE, OPT.CELL_SIZE, 0.3, NotlocControllerNode.FOCUS_COLOR.r, NotlocControllerNode.FOCUS_COLOR.g, NotlocControllerNode.FOCUS_COLOR.b)
     end
 end
 
@@ -123,7 +140,7 @@ function GridOverflowRenderer:findStackDataUnderMouse(x, y)
         if x >= xPos and x < xPos + OPT.CELL_SIZE and y >= yPos and y < yPos + OPT.CELL_SIZE then
             return stack
         end
-        
+
         yi = yi + 1
         if yi > #yPositions then
             yi = 1

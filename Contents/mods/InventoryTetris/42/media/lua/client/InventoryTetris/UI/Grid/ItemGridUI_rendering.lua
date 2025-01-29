@@ -63,7 +63,7 @@ function ItemGridUI:new(grid, containerUi, containerGrid, inventoryPane, playerN
     o:setWidth(o:calculateWidth())
     o:setHeight(o:calculateHeight())
 
-    ---@diagnostic disable-next-line: return-type-mismatch
+    ---@type ItemGridUI
     return o
 end
 
