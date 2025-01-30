@@ -212,11 +212,11 @@ function TetrisItemCalculator._calculateMiscSize(item)
     return TetrisItemCalculator._calculateItemSizeWeightBased(item)
 end
 
-function TetrisItemCalculator._calculateItemSizeWeightBased(item)
+function TetrisItemCalculator._calculateItemSizeWeightBased(item, weight)
     local width = 1
     local height = 1
 
-    local weight = item:getActualWeight()
+    local weight = weight or item:getActualWeight()
 
     if weight < 1 then
         width = 1
@@ -241,7 +241,9 @@ function TetrisItemCalculator._calculateItemSizeWeightBased(item)
 end
 
 function TetrisItemCalculator._calculateFoodSize(item)
-    local x, y = TetrisItemCalculator._calculateItemSizeWeightBasedTall(item)
+    -- Read weight from the script item to ignore half eaten weight and the like
+    local weight = item:getScriptItem():getActualWeight()
+    local x, y = TetrisItemCalculator._calculateItemSizeWeightBasedTall(item, weight)
 
     -- Cap the size of food items
     -- Handles these stupid fish
@@ -271,8 +273,8 @@ function TetrisItemCalculator._calculateFluidContainerSize(item)
     return x, y
 end
 
-function TetrisItemCalculator._calculateItemSizeWeightBasedTall(item)
-    local width, height = TetrisItemCalculator._calculateItemSizeWeightBased(item)
+function TetrisItemCalculator._calculateItemSizeWeightBasedTall(item, weight)
+    local width, height = TetrisItemCalculator._calculateItemSizeWeightBased(item, weight)
     return height, width
 end
 
@@ -375,8 +377,9 @@ local function roundStackability(stackability)
     return math.max(1, math.floor(stackability + 0.5))
 end
 
+---@param item InventoryItem
 function TetrisItemCalculator._simpleWeightStackability(item)
-    local weight = item:getActualWeight()
+    local weight = item:getScriptItem():getActualWeight() -- Avoid wetness effecting weight
     return math.ceil(0.75 / weight)
 end
 
@@ -452,8 +455,9 @@ function TetrisItemCalculator._calculateMoveableStackability(item)
     return 1
 end
 
+---@param item InventoryItem
 function TetrisItemCalculator._calculateFoodStackability(item)
-    local weight = item:getActualWeight()
+    local weight = item:getScriptItem():getActualWeight() -- Use the script item to avoid partially eaten food weight
     return roundStackability(1 / weight)
 end
 

@@ -1885,3 +1885,277 @@ local itemPack3 = {
 	},
 }
 TetrisItemData.registerItemDefinitions(itemPack3)
+
+local itemPack4 = {
+	["Base.Phonebook"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.OfficialDocument"] = {
+		["maxStackSize"] = 8,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.KatePic"] = {
+		["maxStackSize"] = 1,
+		["height"] = 8,
+		["width"] = 8,
+	},
+	["Base.BalsamicVinegar"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Chocolate_HeartBox"] = {
+		["maxStackSize"] = 2,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Ketchup"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.JamMarmalade"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Marinara"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.MayonnaiseFull"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.MapleSyrup"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Margarine"] = {
+		["maxStackSize"] = 2,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.MuttonChop"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.OmeletteRecipe"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.OmeletteRecipeForged"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.EggOmelette"] = {
+		["maxStackSize"] = 10,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.OilOlive"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Steak"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.TacoRecipe"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Taco"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.TacoShell"] = {
+		["maxStackSize"] = 10,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Venison"] = {
+		["maxStackSize"] = 2,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.SourCream"] = {
+		["maxStackSize"] = 2,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.RemouladeFull"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Dip_Ranch"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.SeasoningSalt"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Dip_Salsa"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Salmon"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.RiceVinegar"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.Pepper"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Salt"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Cabbage"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.HotDrinkTea"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Egg"] = {
+		["maxStackSize"] = 5,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.EggBoiled"] = {
+		["maxStackSize"] = 5,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.EggPoached"] = {
+		["maxStackSize"] = 5,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.JamFruit"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.HotDrinkRed"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.HotDrink"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.TestHotDrink"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.HotDrinkSpiffo"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.HotDrinkWhite"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Hotsauce"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.HotDrinkTeaCeramic"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Icecream"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.IcecreamMelted"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Lard"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.Dip_NachoCheese"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.PeanutButter"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.PorkChop"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.MixedVegetables"] = {
+		["maxStackSize"] = 2,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.TissueBox"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.BunsHamburger"] = {
+		["maxStackSize"] = 2,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.Chicken"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.PlasticTray"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 2,
+	},
+}
+TetrisItemData.registerItemDefinitions(itemPack4)

@@ -33,6 +33,9 @@ TetrisItemCalculator._dynamicSizeItems = {
     ["Base.Walleye"] = true,
     ["Base.WhiteBass"] = true,
     ["Base.WhiteCrappie"] = true,
+
+    -- Meat Cuts
+    ["FishFillet"] = true,
 }
 
 ---@param item InventoryItem
