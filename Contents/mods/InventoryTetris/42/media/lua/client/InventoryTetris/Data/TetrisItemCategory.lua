@@ -54,7 +54,7 @@ function TetrisItemCategory._getCategoryInternal(item, type)
     elseif item:IsInventoryContainer() then
         return TetrisItemCategory.CONTAINER
 
-    elseif displayCategory == "FirstAid" or displayCategory == "FirstAidWeapon" then
+    elseif displayCategory == "FirstAid" or displayCategory == "FirstAidWeapon" or displayCategory == "Medical" then
         return TetrisItemCategory.HEALING
 
     elseif item:IsWeapon() then
@@ -80,10 +80,10 @@ function TetrisItemCategory._getCategoryInternal(item, type)
     elseif item:IsFood() or displayCategory == "WaterContainer" or displayCategory == "Water" then -- TODO: Check the fluidContainer instead for water?
         return TetrisItemCategory.FOOD
 
-    elseif displayCategory == "Literature" or displayCategory == "SkillBook" then
+    elseif instanceof(item, 'Literature') or displayCategory == "Literature" or displayCategory == "SkillBook" then
         return TetrisItemCategory.BOOK
 
-    elseif displayCategory == "Entertainment" then
+    elseif item:isRecordedMedia() or displayCategory == "Entertainment" then
         return TetrisItemCategory.ENTERTAINMENT
 
     elseif category == "Key" then

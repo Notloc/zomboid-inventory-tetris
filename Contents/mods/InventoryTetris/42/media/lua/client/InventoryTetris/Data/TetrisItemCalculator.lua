@@ -310,10 +310,18 @@ function TetrisItemCalculator._calculateAnimalCorpseSize(item)
     return TetrisItemCalculator._calculateItemDimensions(slots, 3)
 end
 
+function TetrisItemCalculator._calculateBookSize(item)
+    local weight = item:getActualWeight()
+    if weight < 0.2 then
+        return 1, 1
+    end
+    return 1, 2
+end
+
 TetrisItemCalculator._itemClassToSizeCalculation = {
     [TetrisItemCategory.AMMO] = {x = 1, y = 1},
     [TetrisItemCategory.CORPSEANIMAL] = TetrisItemCalculator._calculateAnimalCorpseSize,
-    [TetrisItemCategory.BOOK] = {x = 1, y = 2},
+    [TetrisItemCategory.BOOK] = TetrisItemCalculator._calculateBookSize,
     [TetrisItemCategory.CLOTHING] = TetrisItemCalculator._calculateItemSizeClothing,
     [TetrisItemCategory.CONTAINER] = TetrisItemCalculator._calculateItemSizeContainer,
     [TetrisItemCategory.ENTERTAINMENT] = TetrisItemCalculator._calculateEntertainmentSize,
@@ -362,6 +370,10 @@ end
 
 
 -- Item Stackability
+
+local function roundStackability(stackability)
+    return math.max(1, math.floor(stackability + 0.5))
+end
 
 function TetrisItemCalculator._simpleWeightStackability(item)
     local weight = item:getActualWeight()
@@ -442,12 +454,12 @@ end
 
 function TetrisItemCalculator._calculateFoodStackability(item)
     local weight = item:getActualWeight()
-    return math.max(1, math.floor(1 / weight))
+    return roundStackability(1 / weight)
 end
 
 function TetrisItemCalculator._weaponStackability(item)
     local weight = item:getActualWeight() * 2
-    return math.max(1, math.floor((1 / weight)+FLOAT_CORRECTION))
+    return roundStackability(1 / weight)
 end
 
 TetrisItemCalculator._itemClassToStackabilityCalculation = {
