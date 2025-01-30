@@ -249,6 +249,15 @@ function ItemContainerGrid:doesItemFit(item, gridX, gridY, gridIndex, rotate, se
     return grid:doesItemFit(item, gridX, gridY, rotate)
 end
 
+function ItemContainerGrid:doesItemFitSpecificGrid(item, gridIndex, secondaryTarget)
+    local grid = self:getSpecificGrid(gridIndex, secondaryTarget)
+    if not grid then
+        return false
+    end
+    local w,h = TetrisItemData.getItemSize(item, false)
+    return grid:doesItemFitAnywhere(item, w, h)
+end
+
 function ItemContainerGrid:doesItemFitAnywhere(item, w, h, ignoreItems)
     local ignoreMap = {}
 
@@ -776,6 +785,7 @@ Events.OnTick.Add(function()
         local player = getSpecificPlayer(playerNum)
         if not player or player:isDead() or player:isNPC() then
             ItemContainerGrid._playerMainGrids[playerNum] = nil
+            ItemContainerGrid._unpositionedItemSetsByPlayer[playerNum] = nil
         else
             if grid:shouldRefresh() then
                 grid:refresh()

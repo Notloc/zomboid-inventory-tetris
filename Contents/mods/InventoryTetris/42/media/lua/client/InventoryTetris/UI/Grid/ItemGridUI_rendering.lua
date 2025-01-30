@@ -1,6 +1,5 @@
 -- Split rendering into a separate file because of how much code it is
 
----@diagnostic disable: deprecated
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local TetrisEvents = require("InventoryTetris/Events")
@@ -266,7 +265,7 @@ function ItemGridUI:renderIncomingTransfers()
             local x = action.gridX * OPT.CELL_SIZE - action.gridX
             local y = action.gridY * OPT.CELL_SIZE - action.gridY
             local w, h = getItemSize(item, action.isRotated)
-            ItemGridUI._renderGridStack(self, playerObj, stack, item, x, y, w, h, 0.5, action.isRotated)
+            ItemGridUI._renderSingleGridStack(self, playerObj, stack, item, x, y, w, h, 0.5, action.isRotated)
         end
     end
 end
@@ -356,7 +355,8 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local itemData = TetrisItemData._itemData
     local devItemData = TetrisItemData._devItemData
 
-    local selectedStacks = self.multiDragStacks or {}
+    local selectedStacks = self.selectedStacks or {}
+    local pendingSelection = self.activeMultiDragStacks or {}
 
     local instructionCount = 0
     local count = #stacks
@@ -416,7 +416,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                     instruction[9] = hidden
                     instruction[10] = false
                     instruction[11] = isSquished
-                    instruction[12] = selectedStacks[stack]
+                    instruction[12] = selectedStacks[stack] or pendingSelection[stack]
 
                     instructionBuffer[instructionCount] = instruction
                 end
@@ -433,14 +433,6 @@ function ItemGridUI:renderDragItemPreview()
     local noController = isJoyPad and not self.controllerNode.isFocused
     local sameOwner = DragAndDrop.isDragOwner(self)
 
-    local draggedStacks = DragAndDrop.getDraggedStacks()
-    if not noMouse and draggedStacks and #draggedStacks > 1 then
-        if not sameOwner then
-            self:drawRect(0, 0, self:getWidth(), self:getHeight(), 0.5, 0.2, 1, 1)
-        end
-        return
-    end
-
     local item = isJoyPad and ControllerDragAndDrop.getDraggedItem(self.playerNum) or DragAndDrop.getDraggedItem()
     if not item or noMouse or noController then
         return
@@ -448,6 +440,22 @@ function ItemGridUI:renderDragItemPreview()
 
     local hoveredStack = isJoyPad and self.grid:getStack(self.selectedX, self.selectedY, self.playerNum) or self:findGridStackUnderMouse(self:getMouseX(), self:getMouseY())
     local hoveredItem = hoveredStack and ItemStack.getFrontItem(hoveredStack, self.grid.inventory) or nil
+
+    local draggedStacks = DragAndDrop.getDraggedStacks()
+    if draggedStacks and #draggedStacks > 1 then
+        if hoveredItem and hoveredItem:IsInventoryContainer() then
+            local x = hoveredStack.x * OPT.CELL_SIZE - hoveredStack.x
+            local y = hoveredStack.y * OPT.CELL_SIZE - hoveredStack.y
+            local w, h = getItemSize(hoveredItem, hoveredStack.isRotated)
+            self:drawRect(x, y, w * OPT.CELL_SIZE - w, h * OPT.CELL_SIZE - h, 0.5, 0.2, 1, 1)
+            return
+        end
+
+        if not sameOwner then
+            self:drawRect(0, 0, self:getWidth(), self:getHeight(), 0.5, 0.2, 1, 1)
+        end
+        return
+    end
 
     -- Hovering over nothing or self
     if not hoveredStack or hoveredItem == item then
@@ -504,7 +512,7 @@ function ItemGridUI:_renderControllerDrag(opacity)
         local x = self.selectedX * OPT.CELL_SIZE - self.selectedX
         local y = self.selectedY * OPT.CELL_SIZE - self.selectedY
         local w, h = getItemSize(item, isRotated)
-        self:_renderGridStack(self.playerObj, stack, item, x, y, w, h, opacity, isRotated)
+        self:_renderSingleGridStack(self.playerObj, stack, item, x, y, w, h, opacity, isRotated)
     end
 end
 
@@ -748,6 +756,12 @@ end
 
 ---@deprecated Use ItemGridUI._bulkRenderGridStacks instead.
 function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isRotated, itemBgTex, doBorder)
+    local renderInstructions = table.newarray()
+    renderInstructions[1] = {stack, item, x, y, w, h, alphaMult, isRotated, false, doBorder}
+    ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, 1, playerObj, itemBgTex)
+end
+
+function ItemGridUI._renderSingleGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isRotated, itemBgTex, doBorder)
     local renderInstructions = table.newarray()
     renderInstructions[1] = {stack, item, x, y, w, h, alphaMult, isRotated, false, doBorder}
     ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, 1, playerObj, itemBgTex)
