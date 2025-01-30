@@ -427,7 +427,7 @@ function ItemGrid:_attemptToInsertItem(item, preferRotated, isDisorganized)
 end
 
 function ItemGrid:_attemptToInsertItem_outerLoop(item, w, h, isRotated, shuffleMode)
-    local startY = shuffleMode and ZombRand(0, self.height-h+1) or 0
+    local startY = shuffleMode and ZombRand(0, self.height-h+1) or (SandboxVars.InventoryTetris.EnableGravity and self.height-h or 0)
     local startX = shuffleMode and ZombRand(0, self.width-w+1) or 0
     
     local loopForward = not shuffleMode or ZombRand(0, 2) == 0
