@@ -1221,7 +1221,6 @@ end
 
 function TetrisDevTool.forceRefreshAllGrids()
     ItemContainerGrid._playerMainGrids = {}
-    ItemContainerGrid._getPlayerMainGrid(0)
     getPlayerInventory(0).inventoryPane:refreshItemGrids(true)
     getPlayerLoot(0).inventoryPane:refreshItemGrids(true)
 end

@@ -747,4 +747,8 @@ function ItemGridContainerUI:_onSecondaryGridsRemoved(target)
     end
 end
 
+function ItemGridContainerUI:onClothingUpdated(playerObj)
+    self.containerGrid:onClothingUpdated(playerObj)
+end
+
 return ItemGridContainerUI

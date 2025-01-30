@@ -15,6 +15,7 @@ local PHYSICS_DELAY = 600
 ---@class ItemContainerGrid
 ---@field inventory ItemContainer
 ---@field playerNum number
+---@field player IsoPlayer
 ---@field containerDefinition ContainerGridDefinition
 ---@field isPlayerInventory boolean
 ---@field isOnPlayer boolean
@@ -66,24 +67,11 @@ function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
     o._onSecondaryGridsRemoved = {}
 
     o.disableSecondaryGrids = definitionOverride or not o.isPlayerInventory
+    o.player = getSpecificPlayer(playerNum)
 
-    if not o.disableSecondaryGrids then
-        o.player = getSpecificPlayer(playerNum)
-
-        local _self = o
-        _self._onClothingUpdated = function(player)
-            if _self.player ~= player then
-                return
-            end
-            if _self.player:isDead() then
-                Events.OnClothingUpdated.Remove(_self._onClothingUpdated)
-                return
-            end
-            _self:refreshSecondaryGrids()
-        end
-        Events.OnClothingUpdated.Add(o._onClothingUpdated)
-    else
-        o:refresh() -- Don't refresh the player's main inventory before we register our secondary grids or the main pocket might claim items that are supposed to go into the secondary grids
+    -- Don't refresh the player's main inventory before we register our secondary grids or the main pocket might claim items that are supposed to go into the secondary grids
+    if o.disableSecondaryGrids then
+        o:refresh()
     end
 
     return o
@@ -169,7 +157,7 @@ function ItemContainerGrid.FindInstance(inventory, playerNum)
 
     local playerObj = getSpecificPlayer(playerNum)
     if inventory == playerObj:getInventory() then
-        return ItemContainerGrid._getPlayerMainGrid(playerNum)
+        return ItemContainerGrid._getPlayerMainGrid(playerObj, playerNum)
     end
 
     local invPage = getPlayerInventory(playerNum)
@@ -187,13 +175,20 @@ function ItemContainerGrid.FindInstance(inventory, playerNum)
 end
 
 ItemContainerGrid._playerMainGrids = {}
-function ItemContainerGrid._getPlayerMainGrid(playerNum)
-    if not ItemContainerGrid._playerMainGrids[playerNum] then
-        local playerObj = getSpecificPlayer(playerNum)
-        local inventory = playerObj:getInventory()
-        ItemContainerGrid._playerMainGrids[playerNum] = ItemContainerGrid:new(inventory, playerNum)
+function ItemContainerGrid._getPlayerMainGrid(playerObj, playerNum)
+    local inventory = playerObj:getInventory()
+
+    local containerGrid = ItemContainerGrid._playerMainGrids[playerNum]
+    if containerGrid and containerGrid.inventory ~= inventory then
+        containerGrid = nil
     end
-    return ItemContainerGrid._playerMainGrids[playerNum]
+
+    if not containerGrid then
+        containerGrid = ItemContainerGrid:new(inventory, playerNum)
+        ItemContainerGrid._playerMainGrids[playerNum] = containerGrid
+    end
+
+    return containerGrid
 end
 
 function ItemContainerGrid:createGrids(container)
@@ -766,6 +761,13 @@ function ItemContainerGrid:removeSecondaryGrid(secondaryTarget)
     end
 
     return stacks
+end
+
+function ItemContainerGrid:onClothingUpdated(player)
+    if self.player ~= player or self.player:isDead() then
+        return
+    end
+    self:refreshSecondaryGrids()
 end
 
 -- Keep the player's main inventory grid refreshed, so it drops unpositioned items even if the ui isn't open
