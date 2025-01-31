@@ -23,9 +23,11 @@ Stack Viewer
 	Delay buried items instead of preventing
 	New render features as previous were removed
 
-[CONTROLLER SUPPORT]
+[CONTROLLER SUPPORT POLISH]
 	Nav
 		Improved movement between grids
+		Improve auto scroll logic
+
 	Controls
 		Way to split stacks for controller (L3?)
 		Need a way to start searching and block controller selection until grid is revealed
@@ -34,9 +36,6 @@ Stack Viewer
 [QoL]
 	Allow load gun by dropping mag on equipment ui
 		Really we should just process stack drops onto equipment ui slots the exact same as dropping on the itemgrid, allow all drop combos to just work
-	
-	Gun upgrades without main inventory requirement (Half complete)
-		Should probably mess around with crafting and building and mechanics to sanity check some of these main inventory transfer requirements
 
 	Item swapping!
 		(Although, once swapped, the held item becomes overflow.)

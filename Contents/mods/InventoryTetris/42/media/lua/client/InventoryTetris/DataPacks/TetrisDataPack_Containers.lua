@@ -4217,11 +4217,7 @@ local containerPack = {
 				},
 			},
 		},
-		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-			["MISC"] = true,
-		},
+		["isRigid"] = true
 	},
 	["Wallet_Male_1"] = {
 		["gridDefinitions"] = {
@@ -4236,11 +4232,7 @@ local containerPack = {
 				},
 			},
 		},
-		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-			["MISC"] = true,
-		},
+		["isRigid"] = true
 	},
 	["Wallet_1"] = {
 		["gridDefinitions"] = {
@@ -4255,11 +4247,7 @@ local containerPack = {
 				},
 			},
 		},
-		["isRigid"] = true,
-		["validCategories"] = {
-			["KEY"] = true,
-			["MISC"] = true,
-		},
+		["isRigid"] = true
 	},
 }
 
