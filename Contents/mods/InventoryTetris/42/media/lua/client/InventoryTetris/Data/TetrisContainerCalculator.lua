@@ -42,9 +42,6 @@ function TetrisContainerCalculator._calculateItemContainerDefinition(container, 
 
     local slotCount = math.ceil(capacity) * 2 + bonus
 
-    local isInvCon = item:IsInventoryContainer()
-    local maxItemSize = isInvCon and item:getMaxItemSize() or -1
-
     -- Special case for slotted containers to build a pocketed grid
     if item:IsInventoryContainer() and item:getMaxItemSize() > 1 and item:getBodyLocation() ~= "" then
         return TetrisContainerCalculator._buildGridDefinitionForSlottedContainer(slotCount, item:getMaxItemSize())
@@ -76,7 +73,7 @@ end
 function TetrisContainerCalculator._calculateVehicleTrunkContainerDefinition(container)
     local capacity = container:getCapacity()
 
-    local size = 50 + capacity * 2.5
+    local size = 50 + capacity * 2.5 -- TODO: nerf base size once spec slots are added
     local x, y = TetrisContainerCalculator._calculateContainerDimensions(size, 1)
     return {
         gridDefinitions = {{

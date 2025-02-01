@@ -295,11 +295,8 @@ function TetrisItemCalculator._calculateEntertainmentSize(item)
 end
 
 function TetrisItemCalculator._calculateMoveableSize(item)
-    local width = 1
-    local height = 1
-
     local weight = item:getActualWeight()
-    return TetrisItemCalculator._calculateItemDimensions(weight * 2, 2)
+    return TetrisItemCalculator._calculateItemDimensions(weight * 2 + 2, 2)
 end
 
 function TetrisItemCalculator._calculateAnimalCorpseSize(item)
@@ -441,17 +438,6 @@ function TetrisItemCalculator._calculateSeedStackability(item)
 end
 
 function TetrisItemCalculator._calculateMoveableStackability(item)
-    local name = tostring(item:getDisplayName()) or ""
-
-    local a = string.find(name, "%(")
-    local b = string.find(name, "/")
-    local c = string.find(name, "%)")
-
-    local isPackaged = a and b and c and a < b and b < c
-    if isPackaged then
-        return 2
-    end
-
     return 1
 end
 
