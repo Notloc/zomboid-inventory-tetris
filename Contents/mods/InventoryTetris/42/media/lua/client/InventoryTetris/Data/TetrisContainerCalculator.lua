@@ -15,7 +15,7 @@ local KEYRING_CONTAINER_DEFINITION = {
 
 local KEYRING_LARGE_CONTAINER_DEFINITION = {
     gridDefinitions = {{
-        size = {width=10, height=10},
+        size = {width=8, height=8},
         position = {x=0, y=0},
     }},
     isRigid = true

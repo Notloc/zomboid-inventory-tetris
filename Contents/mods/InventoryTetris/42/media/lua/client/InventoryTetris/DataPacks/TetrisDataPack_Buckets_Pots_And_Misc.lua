@@ -177,6 +177,81 @@ local itemPack = {
 		["height"] = 1,
 		["width"] = 2,
 	},
+	["Base.BoltCutters"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 2,
+	},
+	["Base.HamRadio2"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 6,
+	},
+	["Base.ManPackRadio"] = {
+		["maxStackSize"] = 1,
+		["height"] = 5,
+		["width"] = 4,
+	},
+	["Base.HamRadio1"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 6,
+	},
+	["Base.HamRadioMakeShift"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 6,
+	},
+	["Base.RadioMakeShift"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.RadioRed"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.RadioBlack"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Katana_Blade"] = {
+		["maxStackSize"] = 2,
+		["height"] = 3,
+		["width"] = 1,
+	},
+	["Base.Sugar"] = {
+		["maxStackSize"] = 2,
+		["height"] = 2,
+		["width"] = 1,
+	},
+	["Base.DogChew"] = {
+		["maxStackSize"] = 3,
+		["height"] = 1,
+		["width"] = 2,
+	},
+	["Base.GardenFork_Forged"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 1,
+	},
+	["Base.CDplayer"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
+	},
+	["Base.Pillow"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 3,
+	},
+	["Base.BeerImported"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
 }
 
 local containerPack = {

@@ -652,7 +652,6 @@ local containerPack = {
 				},
 			},
 		},
-		["isFragile"] = true,
 	},
 	["crate_10"] = {
 		["gridDefinitions"] = {
@@ -1006,7 +1005,6 @@ local containerPack = {
 				},
 			},
 		},
-		["isOrganized"] = true,
 	},
 	["clothingrack_25"] = {
 		["gridDefinitions"] = {

@@ -2753,6 +2753,7 @@ local containerPack = {
 				},
 			},
 		},
+		["isFragile"] = true,
 	},
 	["Paperbag_Spiffos_2"] = {
 		["gridDefinitions"] = {
@@ -2767,6 +2768,7 @@ local containerPack = {
 				},
 			},
 		},
+		["isFragile"] = true,
 	},
 	["Paperbag_Jays_2"] = {
 		["gridDefinitions"] = {
@@ -2781,6 +2783,7 @@ local containerPack = {
 				},
 			},
 		},
+		["isFragile"] = true,
 	},
 	["Lunchbag_2"] = {
 		["gridDefinitions"] = {
@@ -2795,6 +2798,7 @@ local containerPack = {
 				},
 			},
 		},
+		["isFragile"] = true,
 	},
 	["Lunchbox_4"] = {
 		["gridDefinitions"] = {

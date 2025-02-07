@@ -1628,10 +1628,25 @@ local itemPack2 = {
 		["height"] = 1,
 		["width"] = 2,
 	},
+	["Base.BarbedWire"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 2,
+	},
 	["Base.BarbedWireStack"] = {
 		["maxStackSize"] = 1,
 		["height"] = 4,
-		["width"] = 4,
+		["width"] = 3,
+	},
+	["Base.Wire"] = {
+		["maxStackSize"] = 3,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.WireStack"] = {
+		["maxStackSize"] = 1,
+		["height"] = 4,
+		["width"] = 3,
 	},
 	["Base.GlazeBowl"] = {
 		["maxStackSize"] = 1,
@@ -2156,6 +2171,16 @@ local itemPack4 = {
 		["maxStackSize"] = 3,
 		["height"] = 2,
 		["width"] = 2,
+	},
+	["Base.Fleshing_Tool"] = {
+		["maxStackSize"] = 1,
+		["height"] = 3,
+		["width"] = 1,
+	},
+	["Base.BrokenGlass"] = {
+		["maxStackSize"] = 1,
+		["height"] = 1,
+		["width"] = 1,
 	},
 }
 TetrisItemData.registerItemDefinitions(itemPack4)

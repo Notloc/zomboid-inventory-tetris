@@ -37,13 +37,18 @@ function TetrisItemCalculator.calculateItemInfoSquished(unsquishedData)
     return data
 end
 
+---@param item InventoryItem
+---@param category string
+---@return number
+---@return number
 function TetrisItemCalculator._calculateItemSize(item, category)
     if item:getFluidContainer() then
-        return TetrisItemCalculator._calculateFluidContainerSize(item)
+        return TetrisItemCalculator._calculateFluidContainerSize(item, category)
     end
 
     local calculation = TetrisItemCalculator._itemClassToSizeCalculation[category]
     if type(calculation) == "function" then
+        ---@cast calculation fun(item: InventoryItem): number, number
         return calculation(item)
     else
         return calculation.x, calculation.y
@@ -259,7 +264,7 @@ function TetrisItemCalculator._calculateFoodSize(item)
     return x, y
 end
 
-function TetrisItemCalculator._calculateFluidContainerSize(item)
+function TetrisItemCalculator._calculateFluidContainerSize(item, category)
     local fluidContainer = item:getFluidContainer()
 
     -- Small containers are 1x1
@@ -272,8 +277,19 @@ function TetrisItemCalculator._calculateFluidContainerSize(item)
     local x, y = TetrisItemCalculator._calculateItemDimensions(slots, 2)
 
     if x > y then
-        return y, x
+        local temp = x
+        x = y
+        y = temp
     end
+
+    -- If the fluid container is a moveable item, use the moveable size calculation if it's larger
+    if category == TetrisItemCategory.MOVEABLE then
+        local mX, mY = TetrisItemCalculator._calculateMoveableSize(item)
+        if mX * mY > x * y then
+            return mX, mY
+        end
+    end
+
     return x, y
 end
 
@@ -285,21 +301,11 @@ end
 function TetrisItemCalculator._calculateEntertainmentSize(item)
     local width = 1
     local height = 1
-
-    local mediaData = item:getMediaData()
-    if mediaData then
-        local category = mediaData:getCategory()
-        if category == "CDs" then
-            width = 1
-            height = 1
-        end
-    end
-
     return width, height
 end
 
 function TetrisItemCalculator._calculateMoveableSize(item)
-    local weight = item:getActualWeight()
+    local weight = item:getWeight() -- Ignores the weight of fluidContainers
     return TetrisItemCalculator._calculateItemDimensions(weight * 2 + 2, 2)
 end
 

@@ -111,7 +111,13 @@ function TetrisDevTool.insertDebugOptions(context, item, container, containerUi)
         return;
     end
 
+    local hasSubMenu = ContextUtil.getSubMenu(context, "Tetris");
     local subMenu = ContextUtil.getOrCreateSubMenu(context, "Tetris");
+
+    -- Keep the export data option at the bottom
+    if hasSubMenu then
+        subMenu:removeOptionByName("Export Data");
+    end
 
     if item and not ContextUtil.getSubMenu(subMenu, "Item") then
         local itemMenu = ContextUtil.getOrCreateSubMenu(subMenu, "Item");
@@ -141,6 +147,8 @@ function TetrisDevTool.insertDebugOptions(context, item, container, containerUi)
         pocketMenu:addOption("Edit Pocket Data", item, TetrisDevTool.openPocketEdit);
         pocketMenu:addOption("Reset Pocket Data", item, TetrisDevTool.recalculatePocketData);
     end
+
+    subMenu:addOption("Export Data", nil, TetrisDevTool._exportDataPack);
 end
 
 
@@ -425,7 +433,10 @@ function TetrisDevTool.applyEdits(item, x, y, maxStack, squished)
     newData.width = x;
     newData.height = y;
     newData.maxStackSize = maxStack
-    newData._autoCalculated = nil; -- Avoid saving this value
+
+    newData._autoCalculated = nil; -- Avoid saving these values
+    newData.corrected = nil;
+    newData.trueType = nil;
 
     TetrisDevTool.itemEdits[fType] = newData;
 
@@ -765,20 +776,6 @@ function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, c
     acceptButton:setOnClick(TetrisDevTool.onEditContainer, acceptButton);
     editWindow:addChild(acceptButton);
 
-    -- Export button
-    local exportButton = ISButton:new(editWindow:getWidth() - 100, 55, 90, 16, "Export", editWindow);
-    exportButton:initialise();
-    exportButton:instantiate();
-    exportButton:setAnchorRight(true);
-    exportButton:setAnchorTop(true);
-    exportButton:setAnchorBottom(false);
-    exportButton:setAnchorLeft(false);
-    exportButton:setAlwaysOnTop(true);
-    exportButton.internal = "EXPORT";
-    exportButton:setOnClick(TetrisDevTool.onEditContainer, exportButton);
-
-    editWindow:addChild(exportButton);
-
     local og_prerender = editWindow.prerender
     ---@diagnostic disable-next-line: duplicate-set-field
     editWindow.prerender = function(self)
@@ -944,10 +941,6 @@ function TetrisDevTool.onEditContainer(self, button)
             TetrisDevTool.applyPocketEdit(self.containerDataKey, self.newContainerDefinition);
         end
         self:removeFromUIManager();
-    end
-
-    if button.internal == "EXPORT" then
-        TetrisDevTool._exportDataPack();
     end
 
     self:reflow();
