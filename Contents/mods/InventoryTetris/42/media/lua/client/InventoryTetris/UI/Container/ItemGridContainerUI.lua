@@ -588,7 +588,7 @@ function ItemGridContainerUI:onRightMouseUp(x, y)
     local target = self:didClickOnPocketPreview(x, y)
     if target then
         local menu = ItemGridUI.openItemContextMenu(self, self:getMouseX(), self:getMouseY(), target, self.inventoryPane, self.playerNum)
-        TetrisDevTool.insertContainerDebugOptions(menu, self)
+        TetrisDevTool.insertDebugOptions(menu, self.item, self.inventory, self)
     end
 end
 

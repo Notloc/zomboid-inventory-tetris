@@ -106,28 +106,45 @@ end
 TetrisDevTool.writeText = writeText;
 
 ---@param context ISContextMenu
-function TetrisDevTool.insertDebugOptions(context, item)
+function TetrisDevTool.insertDebugOptions(context, item, container, containerUi)
     if not TetrisDevTool.isDebugEnabled() then
         return;
     end
 
     local subMenu = ContextUtil.getOrCreateSubMenu(context, "Tetris");
-    subMenu:addOption("Edit Item Data", item, TetrisDevTool.openEditItem);
-    subMenu:addOption("Reset Item Data", item, TetrisDevTool.recalculateItemData);
 
-    if item:IsInventoryContainer() then
-        subMenu:addOption("Edit Container Data", item:getItemContainer(), TetrisDevTool.openContainerEdit_container);
+    if item and not ContextUtil.getSubMenu(subMenu, "Item") then
+        local itemMenu = ContextUtil.getOrCreateSubMenu(subMenu, "Item");
+        itemMenu:addOption("Edit Item Data", item, TetrisDevTool.openEditItem);
+        itemMenu:addOption("Reset Item Data", item, TetrisDevTool.recalculateItemData);
+        itemMenu:addOption("Copy Item Data", item, TetrisDevTool.copyItemData);
+        if TetrisDevTool.clipboard then
+            itemMenu:addOption("Paste Item Data", item, TetrisDevTool.pasteItemData);
+        end
     end
 
-    if item:IsClothing() then
-        subMenu:addOption("Edit Pocket Data", item, TetrisDevTool.openPocketEdit);
+    if container then
+        local hasContainerMenu = ContextUtil.getSubMenu(subMenu, "Container");
+        local containerMenu = ContextUtil.getOrCreateSubMenu(subMenu, "Container");
+        if not hasContainerMenu then
+            containerMenu:addOption("Edit Container Data", container, TetrisDevTool.openContainerEdit_container);
+            containerMenu:addOption("Reset Container Data", container, TetrisDevTool.recalculateContainerData);
+        end
+
+        if containerUi and ContextUtil.getOptionByName(containerMenu, "Reset Grid Data") then
+            containerMenu:addOption("Reset Grid Data", containerUi.containerGrid, TetrisDevTool.resetGridData);
+        end
     end
 
-    subMenu:addOption("Copy Item Data", item, TetrisDevTool.copyItemData);
-    if TetrisDevTool.clipboard then
-        subMenu:addOption("Paste Item Data", item, TetrisDevTool.pasteItemData);
+    if item and item:IsClothing() and not ContextUtil.getSubMenu(subMenu, "Pocket") then
+        local pocketMenu = ContextUtil.getOrCreateSubMenu(subMenu, "Pocket");
+        pocketMenu:addOption("Edit Pocket Data", item, TetrisDevTool.openPocketEdit);
+        pocketMenu:addOption("Reset Pocket Data", item, TetrisDevTool.recalculatePocketData);
     end
 end
+
+
+
 
 function TetrisDevTool.copyItemData(item)
     local data = TetrisItemData.getItemData_squishState(item, false);
@@ -196,23 +213,6 @@ function TetrisDevTool.pasteItemData(item)
             end
         end
     end
-end
-
----@param context ISContextMenu
-function TetrisDevTool.insertContainerDebugOptions(context, containerUi)
-    if not TetrisDevTool.isDebugEnabled() then
-        return;
-    end
-
-    local subMenu = ContextUtil.getOrCreateSubMenu(context, "Tetris");
-
-    local editContainerOption = ContextUtil.getOptionByName(subMenu, "Edit Container Data")
-    if not editContainerOption then
-        subMenu:addOption("Edit Container Data", containerUi, TetrisDevTool.openContainerEdit);
-    end
-
-    subMenu:addOption("Reset Grid Data", containerUi.containerGrid, TetrisDevTool.resetGridData);
-    subMenu:addOption("Reset Container Data", containerUi.containerGrid, TetrisDevTool.recalculateContainerData);
 end
 
 function TetrisDevTool.openEditItem(item)
@@ -564,16 +564,6 @@ function TetrisDevTool.openContainerEdit_container(container)
     TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, containerDef, dataKey, dataTable, "CONTAINER");
 end
 
-function TetrisDevTool.openContainerEdit(containerUi)
-    local inventory = containerUi.inventory;
-    local inventoryPane = containerUi.inventoryPane;
-    local containerDef = TetrisContainerData.getContainerDefinition(inventory);
-    local dataKey = TetrisContainerData._getContainerKey(inventory);
-    local dataTable = TetrisDevTool.containerEdits;
-
-    TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, containerDef, dataKey, dataTable, "CONTAINER");
-end
-
 function TetrisDevTool.openPocketEdit(item)
     local inventory = getSpecificPlayer(0):getInventory();
     local inventoryPane = getPlayerData(0).playerInventory.inventoryPane;
@@ -611,7 +601,13 @@ end
 
 function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, containerDef, dataKey, dataTable, type)
     ---@diagnostic disable-next-line: param-type-mismatch
-    local inventory = type == "POCKET" and sourceInventory or ItemContainer.new("DEV_TOOL", nil, nil) -- Create a new container to avoid effecting the actual inventory
+    local inventory = ItemContainer.new("DEV_TOOL", nil, nil)
+    if type == "POCKET" then
+        inventory:setType("none")
+    else
+        inventory:setType(sourceInventory:getType())
+        inventory:setCapacity(sourceInventory:getCapacity())
+    end
 
     local editWindow = ISPanel:new(getMouseX(), getMouseY(), 50, 50);
     editWindow:initialise();
@@ -1273,15 +1269,28 @@ function TetrisDevTool.recalculateItemData(item)
     -- Recalculation will happen when the item is next rendered
 end
 
-function TetrisDevTool.recalculateContainerData(containerGrid)
-    TetrisDevTool.containerEdits[TetrisContainerData._getContainerKey(containerGrid.inventory)] = nil;
+function TetrisDevTool.recalculateContainerData(container)
+    TetrisDevTool.containerEdits[TetrisContainerData._getContainerKey(container)] = nil;
     writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
-    
+
     TetrisContainerData.recalculateContainerData();
-    
-    local playerNum = containerGrid.playerNum
-    getPlayerInventory(playerNum).inventoryPane:refreshItemGrids(true)
-    getPlayerLoot(playerNum).inventoryPane:refreshItemGrids(true)
+
+    for i=0, getNumActivePlayers()-1 do
+        getPlayerInventory(i).inventoryPane:refreshItemGrids(true)
+        getPlayerLoot(i).inventoryPane:refreshItemGrids(true)
+    end
+end
+
+function TetrisDevTool.recalculatePocketData(item)
+    TetrisDevTool.pocketEdits[item:getFullType()] = nil;
+    writeJsonFile(POCKET_FILENAME..".json", TetrisDevTool.pocketEdits);
+
+    --TetrisPocketData.recalculatePocketData();
+
+    for i=0, getNumActivePlayers()-1 do
+        getPlayerInventory(i).inventoryPane:refreshItemGrids(true)
+        getPlayerLoot(i).inventoryPane:refreshItemGrids(true)
+    end
 end
 
 function TetrisDevTool.resetGridData(containerGrid)
@@ -1295,11 +1304,11 @@ function TetrisDevTool.resetGridData(containerGrid)
 end
 
 -- Avoid double patching when reloading
-if not TetrisDevTool.og_createMenu then
-    TetrisDevTool.og_createMenu = ISInventoryPaneContextMenu.createMenu
+if not TetrisDevTool_og_createMenu then
+    TetrisDevTool_og_createMenu = ISInventoryPaneContextMenu.createMenu
     ---@diagnostic disable-next-line: duplicate-set-field
     ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
-        local menu = TetrisDevTool.og_createMenu(player, isInPlayerInventory, items, x, y, origin)
+        local menu = TetrisDevTool_og_createMenu(player, isInPlayerInventory, items, x, y, origin)
         if not menu or not TetrisDevTool.isDebugEnabled() then return menu end
 
         local item = items[1]
@@ -1353,21 +1362,11 @@ if not TetrisDevTool.og_createMenu then
             end)
         end
 
-        TetrisDevTool.insertDebugOptions(menu, item)
+        local container = item:IsInventoryContainer() and item:getItemContainer() or nil
+        TetrisDevTool.insertDebugOptions(menu, item, container)
 
         return menu
     end
-end
-
-function TetrisDevTool.extractWorldContainers(containerDefs)
-    for key, containerDef in pairs(containerDefs) do
-        -- if key starts with a lowercase letter, it's a world container
-        if string.match(key, "^[a-z]") then
-            TetrisDevTool.containerEdits[key] = containerDef
-        end
-    end
-
-    writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
 end
 
 return TetrisDevTool

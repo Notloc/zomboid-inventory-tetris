@@ -137,13 +137,13 @@ local function isPointOverContainerIcon(x, y)
 end
 
 function GridContainerInfo:onRightMouseUp(x, y)
+    local menu
     if self.containerUi.item and isPointOverContainerIcon(x, y) then
-        local menu = ItemGridUI.openItemContextMenu(self, x, y, self.containerUi.item, self.containerUi.inventoryPane, self.containerUi.playerNum)
-        TetrisDevTool.insertContainerDebugOptions(menu, self.containerUi)
+        menu = ItemGridUI.openItemContextMenu(self, x, y, self.containerUi.item, self.containerUi.inventoryPane, self.containerUi.playerNum)
     else
-        local menu = ISContextMenu.get(0, getMouseX(), getMouseY());
-        TetrisDevTool.insertContainerDebugOptions(menu, self.containerUi)
+        menu = ISContextMenu.get(0, getMouseX(), getMouseY());
     end
+    TetrisDevTool.insertDebugOptions(menu, self.containerUi.item, self.containerUi.inventory, self.containerUi)
 end
 
 function GridContainerInfo:onMouseDown(x, y)
@@ -223,7 +223,7 @@ function GridContainerInfo:controllerNodeOnJoypadDown(button)
     if button == Joypad.AButton then
         if self.containerUi.item then
             local menu = ItemGridUI.openItemContextMenu(self, 10, 10, self.containerUi.item, self.containerUi.inventoryPane, self.containerUi.playerNum)
-            TetrisDevTool.insertContainerDebugOptions(menu, self.containerUi)
+            TetrisDevTool.insertDebugOptions(menu, self.containerUi.item, self.containerUi.inventory, self.containerUi)
 
         end
         return true
