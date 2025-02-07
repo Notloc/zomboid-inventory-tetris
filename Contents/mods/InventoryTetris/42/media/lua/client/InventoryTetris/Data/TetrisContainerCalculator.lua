@@ -5,6 +5,22 @@ TetrisContainerCalculator._vehicleStorageNames = {}
 local MAX_CONTAINER_WIDTH = 12
 local MAX_CONTAINER_HEIGHT = 50
 
+local KEYRING_CONTAINER_DEFINITION = {
+    gridDefinitions = {{
+        size = {width=6, height=6},
+        position = {x=0, y=0},
+    }},
+    isRigid = true
+}
+
+local KEYRING_LARGE_CONTAINER_DEFINITION = {
+    gridDefinitions = {{
+        size = {width=10, height=10},
+        position = {x=0, y=0},
+    }},
+    isRigid = true
+}
+
 function TetrisContainerCalculator.calculateContainerDefinition(container)
     local definition = nil
     local type = container:getType()
@@ -28,6 +44,15 @@ end
 ---@param item InventoryContainer
 function TetrisContainerCalculator._calculateItemContainerDefinition(container, item)
     local capacity = container:getCapacity()
+
+    if item:hasTag("KeyRing") then
+        if capacity <= 1.0 then
+            return KEYRING_CONTAINER_DEFINITION
+        else
+            return KEYRING_LARGE_CONTAINER_DEFINITION
+        end
+    end
+
     local weightReduction = item:getWeightReduction()
     local bonus = math.ceil(weightReduction / 10)
     if bonus < 0 then

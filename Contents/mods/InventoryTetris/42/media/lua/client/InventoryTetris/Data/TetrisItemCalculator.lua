@@ -167,6 +167,10 @@ end
 ---comment
 ---@param item InventoryContainer
 function TetrisItemCalculator._calculateItemSizeContainer(item)
+    if item:hasTag("KeyRing") then
+        return 1, 1
+    end
+
     local containerDefinition = TetrisContainerData.getContainerDefinition(item:getItemContainer())
     if #containerDefinition.gridDefinitions == 1 then
         local gridDef = containerDefinition.gridDefinitions[1]
