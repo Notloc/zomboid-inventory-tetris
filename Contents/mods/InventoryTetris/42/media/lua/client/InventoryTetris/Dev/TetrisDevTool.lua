@@ -10,6 +10,7 @@ local OPT = require("InventoryTetris/Settings")
 local ContextUtil = require("Notloc/ContextUtil")
 local DevItemRenderer = require("InventoryTetris/Dev/DevItemRenderer")
 local ItemGridContainerUI = nil -- Required on demand to avoid circular dependencies
+local SpecSlotEditor = require("InventoryTetris/Dev/SpecSlot/SpecSlotEditorUI")
 
 local function copyTable(from, to)
     for k,v in pairs(from) do
@@ -114,8 +115,9 @@ function TetrisDevTool.insertDebugOptions(context, item, container, containerUi)
     local hasSubMenu = ContextUtil.getSubMenu(context, "Tetris");
     local subMenu = ContextUtil.getOrCreateSubMenu(context, "Tetris");
 
-    -- Keep the export data option at the bottom
+    -- Keep these options at the bottom
     if hasSubMenu then
+        subMenu:removeOptionByName("Spec Slot Editor");
         subMenu:removeOptionByName("Export Data");
     end
 
@@ -148,6 +150,7 @@ function TetrisDevTool.insertDebugOptions(context, item, container, containerUi)
         pocketMenu:addOption("Reset Pocket Data", item, TetrisDevTool.recalculatePocketData);
     end
 
+    subMenu:addOption("Spec Slot Editor", nil, TetrisDevTool.openSpecSlotEditor);
     subMenu:addOption("Export Data", nil, TetrisDevTool._exportDataPack);
 end
 
@@ -1295,6 +1298,25 @@ function TetrisDevTool.resetGridData(containerGrid)
     getPlayerInventory(playerNum).inventoryPane:refreshItemGrids(true)
     getPlayerLoot(playerNum).inventoryPane:refreshItemGrids(true)
 end
+
+
+TetrisDevTool._specSlotData = {}
+
+function TetrisDevTool.openSpecSlotEditor()
+    local editor = SpecSlotEditor:new(500, 500, TetrisDevTool._specSlotData)
+    editor:addToUIManager()
+end
+
+
+
+
+
+
+
+
+
+
+
 
 -- Avoid double patching when reloading
 if not TetrisDevTool_og_createMenu then
