@@ -293,9 +293,15 @@ function ItemGridUI:handleDragAndDrop_single(vanillaStack, mouseX, mouseY)
     end
 end
 
+---@param vanillaStack VanillaStack
+---@param gridX number
+---@param gridY number
+---@param hoveredStack ItemStack
 function ItemGridUI:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hoveredStack)
     local dragItem = vanillaStack.items[1]
     local dragInventory = dragItem:getContainer()
+    if not dragInventory then return end -- Not sure how this would happen, but it's been reported once or twice
+
     local dragContainerGrid = ItemContainerGrid.GetOrCreate(dragInventory, self.playerNum)
     local gridStack, otherGrid = dragContainerGrid:findGridStackByVanillaStack(vanillaStack)
 
@@ -471,8 +477,9 @@ end
 
 function ItemGridUI:openSplitStack(vanillaStack, targetX, targetY)
     if not vanillaStack or vanillaStack.count-1 < 2 then return end
-
     local dragInventory = vanillaStack.items[1]:getContainer()
+    if not dragInventory then return end
+
     local isSameInventory = self.grid.inventory == dragInventory
     if isSameInventory then
         local gridStack = self.grid:findStackByItem(vanillaStack.items[1])
@@ -677,8 +684,11 @@ function ItemGridUI:contextualAction(gridStack)
         return
     end
 
-    local vanillaStack = ItemStack.convertStackToVanillaStackList(gridStack, item:getContainer(), self.inventoryPane)[1]
-    if GenericSingleItemRecipeHandler.call(nil, vanillaStack, item:getContainer(), self.playerNum) then
+    local container = item:getContainer()
+    if not container then return end
+
+    local vanillaStack = ItemStack.convertStackToVanillaStackList(gridStack, container, self.inventoryPane)[1]
+    if GenericSingleItemRecipeHandler.call(nil, vanillaStack, container, self.playerNum) then
         return
     end
 end
