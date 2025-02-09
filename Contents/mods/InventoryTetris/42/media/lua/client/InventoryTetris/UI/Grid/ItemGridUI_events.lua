@@ -59,7 +59,7 @@ local function isMultiSelectDown()
     return action == "multi"
 end
 
-function ItemGridUI:onMouseDown(x, y, selectedStacks)
+function ItemGridUI:onMouseDown(x, y, targetStack)
 	if self.playerNum ~= 0 then return end
 	getSpecificPlayer(self.playerNum):nullifyAiming();
 
@@ -69,7 +69,9 @@ function ItemGridUI:onMouseDown(x, y, selectedStacks)
         return true
     end
 
-    selectedStacks = selectedStacks and {selectedStacks} or self:getSelectedStacks(x, y)
+    targetStack = targetStack or self:findGridStackUnderMouse(x, y)
+
+    local selectedStacks = self:isStackSelected(targetStack) and self:getSelectedStacks(targetStack) or {targetStack}
     if selectedStacks then
         local vanillaStacks = ItemStack.convertStacksToVanillaStackList(selectedStacks, self.grid.inventory, self.inventoryPane)
         DragAndDrop.prepareDrag(self, vanillaStacks, x, y)
@@ -110,7 +112,7 @@ function ItemGridUI:onMouseUpOutside(x, y)
         return true
     end
     self.readyToMultiDrag = false
-    self.selectedStacks = {}
+    self:clearSelectedStacks()
 
     if DragAndDrop.isDragging() then
         self:clearSelectedStacks()
@@ -148,15 +150,19 @@ function ItemGridUI:onRightMouseUp(x, y, gridStack)
     if self.playerNum ~= 0 then return end
 
     gridStack = gridStack or self:findGridStackUnderMouse(x, y)
-    if not gridStack then 
+    if not gridStack then
         return
     end
-    
-	if self.inventoryPane and self.inventoryPane.toolRender then
-		self.inventoryPane.toolRender:setVisible(false)
-	end
-    
-    local menu = ItemGridUI.openStackContextMenu(self, x, y, gridStack, self.grid.inventory, self.inventoryPane, self.playerNum)
+
+    if self.inventoryPane and self.inventoryPane.toolRender then
+        self.inventoryPane.toolRender:setVisible(false)
+    end
+
+    if self:isStackSelected(gridStack) then
+        ItemGridUI.openContextMenuForVanillaStacks(self, x, y, self:createVanillaStackListFromSelection(), self.grid.inventory, self.inventoryPane, self.playerNum)
+    else
+        ItemGridUI.openStackContextMenu(self, x, y, gridStack, self.grid.inventory, self.inventoryPane, self.playerNum)
+    end
     return true;
 end
 
@@ -201,24 +207,6 @@ function ItemGridUI:gridPositionToScreenPosition(gridX, gridY)
     local effectiveCellSize = OPT.CELL_SIZE - 1
     local lX, lY = gridX * effectiveCellSize, gridY * effectiveCellSize
     return lX + self:getAbsoluteX(), lY + self:getAbsoluteY()
-end
-
-function ItemGridUI:getSelectedStacks(x, y)
-    local stackUnderMouse = self:findGridStackUnderMouse(x, y)
-    if not stackUnderMouse then return end
-
-    local multiSelectedStacks = self.selectedStacks or {}
-    if not multiSelectedStacks[stackUnderMouse] then
-        return {stackUnderMouse}
-    end
-
-    local selectedStacks = {stackUnderMouse}
-    for stack, _ in pairs(multiSelectedStacks) do
-        if stack ~= stackUnderMouse then
-            table.insert(selectedStacks, stack)
-        end
-    end
-    return selectedStacks
 end
 
 function ItemGridUI:handleDragAndDrop(mouseX, mouseY)
@@ -739,6 +727,27 @@ function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, 
     return menu
 end
 
+function ItemGridUI.openContextMenuForVanillaStacks(uiContext, x, y, vanillaStacks, inventory, inventoryPane, playerNum)
+    if not vanillaStacks then return end
+    local item;
+
+    if vanillaStacks[1] and vanillaStacks[1].items then
+        item = vanillaStacks[1].items[1]
+    elseif vanillaStacks.items then
+        item = vanillaStacks.items[1]
+    end
+    if not item then return end
+
+    local container = item:getContainer()
+    local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
+    local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, vanillaStacks, uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
+
+    if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
+        NotlocControllerNode:focusContextMenu(playerNum, menu)
+    end
+    return menu
+end
+
 function ItemGridUI:getControllerSelectedItem()
     local stack = self.grid:getStack(self.selectedX, self.selectedY, self.playerNum)
     if stack then
@@ -960,9 +969,9 @@ function ItemGridUI:endMultiDrag(mouseX, mouseY)
     self:updateMultiDrag(mouseX, mouseY)
 
     -- Commit the multi drag selection
-    self.selectedStacks = self.selectedStacks or {}
+    self._selectedStacks = self._selectedStacks or {}
     for stack, _ in pairs(self.activeMultiDragStacks) do
-        self.selectedStacks[stack] = true
+        self._selectedStacks[stack] = true
     end
     self.activeMultiDragStacks = {}
 
@@ -970,17 +979,49 @@ function ItemGridUI:endMultiDrag(mouseX, mouseY)
     self.readyToMultiDrag = false
 end
 
+function ItemGridUI:isStackSelected(stack)
+    return self._selectedStacks and self._selectedStacks[stack]
+end
+
 function ItemGridUI:toggleStackSelection(mouseX, mouseY)
     local gridX, gridY = self.mousePositionToGridPosition(mouseX, mouseY)
     local stack = self.grid:getStack(gridX, gridY, self.playerNum)
     if stack then
-        self.selectedStacks = self.selectedStacks or {}
-        self.selectedStacks[stack] = not self.selectedStacks[stack]
+        self._selectedStacks = self._selectedStacks or {}
+        self._selectedStacks[stack] = not self._selectedStacks[stack]
     end
 end
 
+function ItemGridUI:_cleanSelectedStacks()
+    if not self._selectedStacks then return end
+
+    for stack, _ in pairs(self._selectedStacks) do
+        if not self.grid:containsStack(stack) then
+            self._selectedStacks[stack] = nil
+        end
+    end
+end
+
+function ItemGridUI:getSelectedStacks(frontStack)
+    self:_cleanSelectedStacks()
+
+    local multiSelectedStacks = self._selectedStacks or {}
+    local selectedStacks = frontStack and { frontStack } or {}
+    for stack, _ in pairs(multiSelectedStacks) do
+        if stack ~= frontStack then
+            table.insert(selectedStacks, stack)
+        end
+    end
+    return selectedStacks
+end
+
 function ItemGridUI:clearSelectedStacks()
-    self.selectedStacks = {}
+    self._selectedStacks = {}
+end
+
+function ItemGridUI:createVanillaStackListFromSelection()
+    local stacks = self:getSelectedStacks()
+    return ItemStack.convertStacksToVanillaStackList(stacks, self.grid.inventory, self.inventoryPane)
 end
 
 return ItemGridUI

@@ -124,6 +124,15 @@ function ItemGrid:findStackByItem(item)
     return nil
 end
 
+function ItemGrid:containsStack(stack)
+    for _, s in ipairs(self.persistentData.stacks) do
+        if s == stack then
+            return true
+        end
+    end
+    return false
+end
+
 ---@param item InventoryItem
 function ItemGrid:insertItem(item, xPos, yPos, isRotated)
     if item:getContainer() ~= self.inventory then

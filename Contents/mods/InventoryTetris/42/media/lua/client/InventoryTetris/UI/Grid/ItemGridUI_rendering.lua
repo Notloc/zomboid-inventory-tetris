@@ -355,7 +355,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local itemData = TetrisItemData._itemData
     local devItemData = TetrisItemData._devItemData
 
-    local selectedStacks = self.selectedStacks or {}
+    local selectedStacks = self._selectedStacks or {}
     local pendingSelection = self.activeMultiDragStacks or {}
 
     local instructionCount = 0
