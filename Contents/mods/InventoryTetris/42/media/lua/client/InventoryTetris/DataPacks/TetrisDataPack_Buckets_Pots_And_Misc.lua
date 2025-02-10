@@ -242,15 +242,35 @@ local itemPack = {
 		["height"] = 1,
 		["width"] = 1,
 	},
+	["Base.BeerImported"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 1,
+	},
 	["Base.Pillow"] = {
 		["maxStackSize"] = 1,
 		["height"] = 2,
 		["width"] = 3,
 	},
-	["Base.BeerImported"] = {
+	["Base.Pillow_Happyface"] = {
 		["maxStackSize"] = 1,
 		["height"] = 2,
-		["width"] = 1,
+		["width"] = 2,
+	},
+	["Base.Pillow_Heart"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Pillow_Star"] = {
+		["maxStackSize"] = 1,
+		["height"] = 2,
+		["width"] = 2,
+	},
+	["Base.Pillow_Crafted"] = {
+		["width"] = 3,
+		["height"] = 2,
+		["maxStackSize"] = 1,
 	},
 }
 

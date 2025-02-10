@@ -42,7 +42,8 @@ function ItemContainerGrid.getUnpositionedItemSetByPlayerNum(playerNum)
     return set
 end
 
----comment
+--- TODO: Remove playerNum, grids must become indifferent to who is viewing them, interactions can instead take the player as a parameter as needed
+--- TODO: Remove playerNum from the cache
 ---@param inventory ItemContainer
 ---@param playerNum number
 ---@param definitionOverride any
