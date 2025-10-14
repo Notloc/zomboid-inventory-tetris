@@ -6,6 +6,9 @@ local TetrisModCompatibility = {}
 ---@param container ItemContainer
 function TetrisModCompatibility.getModContainerKey(container)
     -- Handles KnoxEventExpanded
+	if not container then
+        return nil
+    end
     if instanceof(container:getParent(), "IsoNpcPlayer") then
         return "npcKEE"
     end
