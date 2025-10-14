@@ -2,6 +2,7 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
 -- This patch disables the carry weight capacity check for all containers except for the player's main inventory.
 -- This implementation avoids lasting changes to the container's capacity by temporarily setting it to a very high value during the check.
+-- Includes KeyringFix for proper keyring and moveable item handling.
 ---@diagnostic disable: duplicate-set-field
 
 local function isPlayerInv(container)
@@ -28,7 +29,7 @@ local function disableCarryWeightOnContainer(container, callback, ...)
     local originalType = container:getType()
 
     -- Skip player's main inventory or fragile containers or if the option is disabled
-    if not container or originalType == "floor" or SandboxVars.InventoryTetris.EnforceCarryWeight --[[or isPlayerInv(container)]] then -- Disabling capacity for the player inv due to vanilla fluid bugs
+    if not container or originalType == "floor" or SandboxVars.InventoryTetris.EnforceCarryWeight then
         return callback(...)
     end
 
@@ -83,8 +84,51 @@ Events.OnGameStart.Add(function()
     require("TimedActions/ISInventoryTransferAction")
     local og_isValid = ISInventoryTransferAction.isValid
     function ISInventoryTransferAction:isValid()
-        local container = self.destContainer
-        return disableCarryWeightOnContainer(container, og_isValid, self)
+        -- Validate required fields
+        if not self or not self.destContainer or not self.item or not self.character then
+            return false
+        end
+
+        -- Check if destination is a keyring
+        local destContainerItem = self.destContainer:getContainingItem()
+        local isKeyRing = destContainerItem and 
+                         type(destContainerItem.hasTag) == "function" and 
+                         destContainerItem:hasTag("KeyRing")
+        
+        -- Keyrings bypass all restrictions (they don't use grids)
+        if isKeyRing then
+            return true
+        end
+
+        -- Check if item is a Moveable
+        local isMoveable = instanceof(self.item, "Moveable")
+        local destDef = TetrisContainerData.getContainerDefinition(self.destContainer)
+        
+        -- Non-floor containers with moveables need special handling
+        if destDef and destDef.trueType ~= "floor" and isMoveable then
+            -- Temporarily exclude Moveable from instanceof checks
+            local valid
+            _G.ModScope.withInstanceofExclusion(function()
+                valid = disableCarryWeightOnContainer(self.destContainer, og_isValid, self)
+            end, "Moveable")
+            
+            if not valid then
+                return false
+            end
+        else
+            -- Standard validation with carry weight disabled
+            if not disableCarryWeightOnContainer(self.destContainer, og_isValid, self) then
+                return false
+            end
+        end
+        
+        -- Skip Tetris validation if not enforced
+        if not self.enforceTetrisRules then
+            return true
+        end
+
+        -- Additional Tetris-specific validation
+        return self:validateTetrisRules()
     end
 
     require("ISUI/ISInventoryPaneContextMenu")
@@ -96,7 +140,7 @@ Events.OnGameStart.Add(function()
     require("Foraging/ISBaseIcon")
     local og_doContextMenu = ISBaseIcon.doContextMenu
     function ISBaseIcon:doContextMenu(_context)
-        local plInventory = self.character:getInventory();
+        local plInventory = self.character:getInventory()
         return disableCarryWeightOnContainer(plInventory, og_doContextMenu, self, _context)
     end
 
