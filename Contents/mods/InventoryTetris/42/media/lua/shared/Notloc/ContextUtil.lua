@@ -2,6 +2,7 @@ local ContextUtil = {}
 
 ---@param context ISContextMenu
 ---@param subMenuName string
+---@return ISContextMenu|nil
 function ContextUtil.getSubMenu(context, subMenuName)
     local subMenuOption = nil;
     for _, option in ipairs(context.options) do
@@ -27,6 +28,9 @@ function ContextUtil.getOrCreateSubMenu(context, subMenuName, targets)
     return subMenu
 end
 
+---@param context ISContextMenu
+---@param optionName string
+---@return table|nil
 function ContextUtil.getOptionByName(context, optionName)
     for _, option in ipairs(context.options) do
         if option.name == optionName then

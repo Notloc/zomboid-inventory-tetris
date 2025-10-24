@@ -27,6 +27,32 @@ function DragAndDrop.prepareDrag(owner, vanillaStacks, x, y)
     ISMouseDrag.rotateDrag = vanillaStacks[1] and vanillaStacks[1].isRotated or vanillaStacks.isRotated
 end
 
+-- Cleans out invalid entries
+local function cleanDraggedStacks()
+    if not ISMouseDrag.dragging then
+        return
+    end
+
+    -- Clean single stack
+    if ISMouseDrag.dragging.items then
+        if not ISMouseDrag.dragging.items[1] then
+            ISMouseDrag.dragging = nil
+        end
+        return
+    end
+
+    -- Clean multiple stacks
+    for i = #ISMouseDrag.dragging, 1, -1 do
+        if #ISMouseDrag.dragging[i].items == 0 then
+            table.remove(ISMouseDrag.dragging, i)
+        end
+    end
+
+    if #ISMouseDrag.dragging == 0 then
+        ISMouseDrag.dragging = nil
+    end
+end
+
 function DragAndDrop.getDraggedStack()
     if not ISMouseDrag.dragging then
         return nil
@@ -36,10 +62,12 @@ function DragAndDrop.getDraggedStack()
         return ISMouseDrag.dragging[1]
     end
 
+    cleanDraggedStacks()
     return ISMouseDrag.dragging
 end
 
 function DragAndDrop.getDraggedStacks()
+    cleanDraggedStacks()
     return ISMouseDrag.dragging
 end
 

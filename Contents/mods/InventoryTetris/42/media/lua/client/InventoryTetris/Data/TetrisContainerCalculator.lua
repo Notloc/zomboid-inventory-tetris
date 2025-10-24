@@ -5,6 +5,22 @@ TetrisContainerCalculator._vehicleStorageNames = {}
 local MAX_CONTAINER_WIDTH = 12
 local MAX_CONTAINER_HEIGHT = 50
 
+local KEYRING_CONTAINER_DEFINITION = {
+    gridDefinitions = {{
+        size = {width=6, height=6},
+        position = {x=0, y=0},
+    }},
+    isRigid = true
+}
+
+local KEYRING_LARGE_CONTAINER_DEFINITION = {
+    gridDefinitions = {{
+        size = {width=8, height=8},
+        position = {x=0, y=0},
+    }},
+    isRigid = true
+}
+
 function TetrisContainerCalculator.calculateContainerDefinition(container)
     local definition = nil
     local type = container:getType()
@@ -28,6 +44,15 @@ end
 ---@param item InventoryContainer
 function TetrisContainerCalculator._calculateItemContainerDefinition(container, item)
     local capacity = container:getCapacity()
+
+    if item:hasTag("KeyRing") then
+        if capacity <= 1.0 then
+            return KEYRING_CONTAINER_DEFINITION
+        else
+            return KEYRING_LARGE_CONTAINER_DEFINITION
+        end
+    end
+
     local weightReduction = item:getWeightReduction()
     local bonus = math.ceil(weightReduction / 10)
     if bonus < 0 then
@@ -41,9 +66,6 @@ function TetrisContainerCalculator._calculateItemContainerDefinition(container, 
     end
 
     local slotCount = math.ceil(capacity) * 2 + bonus
-
-    local isInvCon = item:IsInventoryContainer()
-    local maxItemSize = isInvCon and item:getMaxItemSize() or -1
 
     -- Special case for slotted containers to build a pocketed grid
     if item:IsInventoryContainer() and item:getMaxItemSize() > 1 and item:getBodyLocation() ~= "" then
@@ -76,7 +98,7 @@ end
 function TetrisContainerCalculator._calculateVehicleTrunkContainerDefinition(container)
     local capacity = container:getCapacity()
 
-    local size = 50 + capacity * 2.5
+    local size = 50 + capacity * 2.5 -- TODO: nerf base size once spec slots are added
     local x, y = TetrisContainerCalculator._calculateContainerDimensions(size, 1)
     return {
         gridDefinitions = {{

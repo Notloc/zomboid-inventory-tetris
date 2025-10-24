@@ -143,6 +143,11 @@ Events.OnGameBoot.Add(function()
             if not doesFit then
                 return false
             end
+        elseif self.gridIndex then
+            local doesFit = containerGrid:doesItemFitSpecificGrid(self.item, self.gridIndex, self.tetrisSecondary)
+            if not doesFit then
+                return false
+            end
         end
 
         if containerGrid.isFloor then
@@ -211,7 +216,8 @@ Events.OnGameBoot.Add(function()
 
         og_transferItem(self, item)
 
-        -- The Item made it to the destination container
+        -- The Item has made it to the destination container, now we need to set its position in the grid
+        -- If we fail to insert the item that is ok, the item will be shown in the overflowRenderer
         if not wasAlreadyTransferred and self:isAlreadyTransferred(item) then
             -- Only need to remove the item from the source grid if it's actively displayed in the UI
             local oldContainerGrid = ItemContainerGrid.FindInstance(self.srcContainer, self.character:getPlayerNum())
@@ -222,6 +228,12 @@ Events.OnGameBoot.Add(function()
             local destContainerGrid = ItemContainerGrid.GetOrCreate(self.destContainer, self.character:getPlayerNum())
             if self.gridX and self.gridY and self.gridIndex then
                 destContainerGrid:insertItem(item, self.gridX, self.gridY, self.gridIndex, self.isRotated, self.tetrisSecondary)
+            elseif self.gridIndex then
+                local grid = destContainerGrid:getSpecificGrid(self.gridIndex, self.tetrisSecondary)
+                if grid then
+                    local disorganized = self.character:HasTrait("Disorganized")
+                    grid:_attemptToInsertItem(item, self.isRotated, disorganized)
+                end
             else
                 local disorganized = self.character:HasTrait("Disorganized")
                 destContainerGrid:attemptToInsertItem(item, self.isRotated, disorganized)

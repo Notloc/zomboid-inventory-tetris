@@ -393,4 +393,20 @@ Events.OnGameBoot.Add(function()
         return nil
     end
 
+    Events.OnClothingUpdated.Add(function(playerObj)
+        if not instanceof(playerObj, "IsoPlayer") then
+            return
+        end
+
+        ---@cast playerObj IsoPlayer
+        local playerNum = playerObj:getPlayerNum()
+        local inventoryPage = getPlayerInventory(playerNum)
+
+        if inventoryPage then
+            local containerUis = inventoryPage.inventoryPane.gridContainerUis or {}
+            for _, containerUi in ipairs(containerUis) do
+                containerUi:onClothingUpdated(playerObj)
+            end
+        end
+    end)
 end)

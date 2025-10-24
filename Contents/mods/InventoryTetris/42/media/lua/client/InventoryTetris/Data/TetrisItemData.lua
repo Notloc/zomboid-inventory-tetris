@@ -15,6 +15,7 @@ TetrisItemData._squishedIdCache = {}
 -- TODO: Move into dev tool and datapacks
 -- Intentionally overriding TetrisItemCalculator._dynamicSizeItems
 TetrisItemCalculator._dynamicSizeItems = {
+    ["Moveables.Moveable"] = true,
     ["Base.CorpseAnimal"] = true,
 
     -- Fish
@@ -33,6 +34,9 @@ TetrisItemCalculator._dynamicSizeItems = {
     ["Base.Walleye"] = true,
     ["Base.WhiteBass"] = true,
     ["Base.WhiteCrappie"] = true,
+
+    -- Meat Cuts
+    ["FishFillet"] = true,
 }
 
 ---@param item InventoryItem
