@@ -103,15 +103,17 @@ Events.OnGameBoot.Add(function()
 		local sisterPage = self:tetrisGetSisterPage()
         local needsSearch = self.needSearch or (sisterPage and sisterPage.needSearch)
         if self.onCharacter then
-			self.transferAll:setVisible(not needsSearch)
-            self.tetrisSearchButton:setX(self.transferAll:getX())
+			--transferAll button is currently disabled in base game
+			--self.transferAll:setVisible(not needsSearch)
+            --self.tetrisSearchButton:setX(self.transferAll:getX())
 
             -- Support for "Easy Drop n' Loot"
 			if self.EDNLDropItems then
 				self.EDNLDropItems:setVisible(not needsSearch)
 			end
 		else
-			self.lootAll:setVisible(not needsSearch)
+			--removeAll button is currently disabled in base game
+			--self.lootAll:setVisible(not needsSearch)
 			self.removeAll:setVisible(not needsSearch and self:isRemoveButtonVisible())
 
 			-- Support for "Easy Drop n' Loot"

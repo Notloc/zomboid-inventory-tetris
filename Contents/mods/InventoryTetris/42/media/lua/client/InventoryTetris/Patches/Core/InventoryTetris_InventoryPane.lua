@@ -22,6 +22,10 @@ Events.OnGameBoot.Add(function()
     function ISInventoryPane:new(x, y, width, height, inventory, zoom)
         local o = og_new(self, x, y, width, height, inventory, zoom)
         o.gridContainerUis = {}
+        o.anchorLeft = true
+        o.anchorRight = true
+        o.anchorTop = true
+        o.anchorBottom = true
         return o
     end
 
@@ -32,7 +36,7 @@ Events.OnGameBoot.Add(function()
         self.tetrisWindowManager = TetrisWindowManager:new(self, self.player)
 
         ---@diagnostic disable-next-line: undefined-global
-        self.scrollView = NotlocScrollView:new(0,0, self.width, self.height) -- From EquipmentUI mod
+        self.scrollView = NotlocScrollView:new(0, 0, self.width, self.height) -- From EquipmentUI mod
         self.scrollView.addHorizontalScrollbar = true
 
         self.scrollView:initialise()
@@ -43,6 +47,7 @@ Events.OnGameBoot.Add(function()
         self.scrollView:setAnchorBottom(true)
         self.scrollView.scrollSensitivity = 40
 
+        -- Store the callback references
         self.onApplyGridScaleCallback = function(scale)
             self:onApplyGridScale(scale)
         end
@@ -52,6 +57,72 @@ Events.OnGameBoot.Add(function()
             self:onApplyContainerInfoScale(scale)
         end
         OPT.OnValueChanged.CONTAINER_INFO_SCALE:add(self.onApplyContainerInfoScaleCallback)
+    end
+
+    local og_close = ISInventoryPane.close
+    function ISInventoryPane:close()
+        if self.onApplyGridScaleCallback then
+            OPT.OnValueChanged.SCALE:remove(self.onApplyGridScaleCallback)
+            self.onApplyGridScaleCallback = nil
+        end
+        
+        if self.onApplyContainerInfoScaleCallback then
+            OPT.OnValueChanged.CONTAINER_INFO_SCALE:remove(self.onApplyContainerInfoScaleCallback)
+            self.onApplyContainerInfoScaleCallback = nil
+        end
+        
+        if self.gridContainerUis then
+            for _, gridContainerUi in ipairs(self.gridContainerUis) do
+                if gridContainerUi.unregisterEvents then
+                    gridContainerUi:unregisterEvents()
+                end
+            end
+        end
+        
+        if og_close then
+            og_close(self)
+        end
+    end
+
+    -- Store original setWidth and setHeight methods
+    if not ISInventoryPane._originalSetWidth then
+        ISInventoryPane._originalSetWidth = ISInventoryPane.setWidth
+    end
+    
+    if not ISInventoryPane._originalSetHeight then
+        ISInventoryPane._originalSetHeight = ISInventoryPane.setHeight
+    end
+    
+    function ISInventoryPane:setWidth(width)
+        ISInventoryPane._originalSetWidth(self, width)
+        
+        if self.scrollView then
+            self.scrollView:setWidth(width)
+        end
+        
+        if self.vscroll then
+            self.vscroll:setX(width - 17)
+        end
+        
+        if self.hscroll then
+            self.hscroll:setWidth(width)
+        end
+    end
+    
+    function ISInventoryPane:setHeight(height)
+        ISInventoryPane._originalSetHeight(self, height)
+        
+        if self.scrollView then
+            self.scrollView:setHeight(height)
+        end
+        
+        if self.vscroll then
+            self.vscroll:setHeight(height)
+        end
+        
+        if self.hscroll then
+            self.hscroll:setY(height - 17)
+        end
     end
 
     function ISInventoryPane:onApplyGridScale(scale)
@@ -176,7 +247,7 @@ Events.OnGameBoot.Add(function()
 
     local og_prerender = ISInventoryPane.prerender
     function ISInventoryPane:prerender()
-        og_prerender(self);
+        og_prerender(self)
         self.nameHeader:setVisible(false)
         self.typeHeader:setVisible(false)
         
@@ -184,6 +255,50 @@ Events.OnGameBoot.Add(function()
         if self.parent.onCharacter then
             local version = "Inventory Tetris - " .. Version.format(InventoryTetris.version)
             self:drawText(version, 8, self.height - 18, 0.3, 0.3, 0.3, 0.82, UIFont.Small)
+        end
+        
+        -- Keep vscroll on top
+        if self.vscroll then
+            self.vscroll:bringToTop()
+            
+            local paneHeight = self.height
+            local vscrollHeight = self.vscroll.height
+            
+            if math.abs(vscrollHeight - paneHeight) > 0.1 then
+                self.vscroll:setHeight(paneHeight)
+            end
+        end
+        
+        if self.scrollView then
+            if self.scrollView.vscroll then
+                self.scrollView.vscroll:bringToTop()
+                
+                local expectedHeight = self.scrollView.height
+                if math.abs(self.scrollView.vscroll.height - expectedHeight) > 0.1 then
+                    self.scrollView.vscroll:setHeight(expectedHeight)
+                end
+                
+                local expectedX = self.scrollView.width - 17
+                if math.abs(self.scrollView.vscroll.x - expectedX) > 0.1 then
+                    self.scrollView.vscroll:setX(expectedX)
+                end
+            end
+            
+            if self.scrollView.hscroll then
+                self.scrollView.hscroll:bringToTop()
+                
+                -- Force correct position and dimensions
+                local expectedY = self.scrollView.height - 17
+                local expectedWidth = self.scrollView.width - (self.scrollView.vscroll and 17 or 0)
+                
+                if math.abs(self.scrollView.hscroll.y - expectedY) > 0.1 then
+                    self.scrollView.hscroll:setY(expectedY)
+                end
+                
+                if math.abs(self.scrollView.hscroll.width - expectedWidth) > 0.1 then
+                    self.scrollView.hscroll:setWidth(expectedWidth)
+                end
+            end
         end
     end
 
@@ -294,7 +409,7 @@ Events.OnGameBoot.Add(function()
         if self.mode ~= "grid" then
             return og_onMouseDown(self, x, y)
         end
-        return true;
+        return true
     end
 
     local og_mouseUp = ISInventoryPane.onMouseUp
@@ -302,7 +417,7 @@ Events.OnGameBoot.Add(function()
         if self.mode ~= "grid" then
             return og_mouseUp(self, x, y)
         end
-        return true;
+        return true
     end
 
     local og_onRightMouseUp = ISInventoryPane.onRightMouseUp
@@ -310,7 +425,7 @@ Events.OnGameBoot.Add(function()
         if self.mode ~= "grid" then
             return og_onRightMouseUp(self, x, y)
         end
-        return false;
+        return false
     end
 
     local og_onMouseDoubleClick = ISInventoryPane.onMouseDoubleClick
@@ -332,8 +447,8 @@ Events.OnGameBoot.Add(function()
         return false -- Disabled scrolling to rotate items because of scrollviews
 
         --if DragAndDrop.isDragging() then
-        --   DragAndDrop.rotateDraggedItem()
-        --  return true;
+        --    DragAndDrop.rotateDraggedItem()
+        --    return true
         --end
         --return og_onMouseWheel(self, del)
     end
@@ -351,8 +466,6 @@ Events.OnGameBoot.Add(function()
         end
         return {}
     end
-
-
 
     local og_canPutIn = ISInventoryPane.canPutIn
     function ISInventoryPane:canPutIn()
