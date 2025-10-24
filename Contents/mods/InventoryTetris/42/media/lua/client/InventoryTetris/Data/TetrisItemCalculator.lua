@@ -37,13 +37,18 @@ function TetrisItemCalculator.calculateItemInfoSquished(unsquishedData)
     return data
 end
 
+---@param item InventoryItem
+---@param category string
+---@return number
+---@return number
 function TetrisItemCalculator._calculateItemSize(item, category)
     if item:getFluidContainer() then
-        return TetrisItemCalculator._calculateFluidContainerSize(item)
+        return TetrisItemCalculator._calculateFluidContainerSize(item, category)
     end
 
     local calculation = TetrisItemCalculator._itemClassToSizeCalculation[category]
     if type(calculation) == "function" then
+        ---@cast calculation fun(item: InventoryItem): number, number
         return calculation(item)
     else
         return calculation.x, calculation.y
@@ -167,6 +172,10 @@ end
 ---comment
 ---@param item InventoryContainer
 function TetrisItemCalculator._calculateItemSizeContainer(item)
+    if item:hasTag("KeyRing") then
+        return 1, 1
+    end
+
     local containerDefinition = TetrisContainerData.getContainerDefinition(item:getItemContainer())
     if #containerDefinition.gridDefinitions == 1 then
         local gridDef = containerDefinition.gridDefinitions[1]
@@ -212,11 +221,11 @@ function TetrisItemCalculator._calculateMiscSize(item)
     return TetrisItemCalculator._calculateItemSizeWeightBased(item)
 end
 
-function TetrisItemCalculator._calculateItemSizeWeightBased(item)
+function TetrisItemCalculator._calculateItemSizeWeightBased(item, weight)
     local width = 1
     local height = 1
 
-    local weight = item:getActualWeight()
+    local weight = weight or item:getActualWeight()
 
     if weight < 1 then
         width = 1
@@ -241,7 +250,9 @@ function TetrisItemCalculator._calculateItemSizeWeightBased(item)
 end
 
 function TetrisItemCalculator._calculateFoodSize(item)
-    local x, y = TetrisItemCalculator._calculateItemSizeWeightBasedTall(item)
+    -- Read weight from the script item to ignore half eaten weight and the like
+    local weight = item:getScriptItem():getActualWeight()
+    local x, y = TetrisItemCalculator._calculateItemSizeWeightBasedTall(item, weight)
 
     -- Cap the size of food items
     -- Handles these stupid fish
@@ -253,7 +264,7 @@ function TetrisItemCalculator._calculateFoodSize(item)
     return x, y
 end
 
-function TetrisItemCalculator._calculateFluidContainerSize(item)
+function TetrisItemCalculator._calculateFluidContainerSize(item, category)
     local fluidContainer = item:getFluidContainer()
 
     -- Small containers are 1x1
@@ -266,38 +277,36 @@ function TetrisItemCalculator._calculateFluidContainerSize(item)
     local x, y = TetrisItemCalculator._calculateItemDimensions(slots, 2)
 
     if x > y then
-        return y, x
+        local temp = x
+        x = y
+        y = temp
     end
+
+    -- If the fluid container is a moveable item, use the moveable size calculation if it's larger
+    if category == TetrisItemCategory.MOVEABLE then
+        local mX, mY = TetrisItemCalculator._calculateMoveableSize(item)
+        if mX * mY > x * y then
+            return mX, mY
+        end
+    end
+
     return x, y
 end
 
-function TetrisItemCalculator._calculateItemSizeWeightBasedTall(item)
-    local width, height = TetrisItemCalculator._calculateItemSizeWeightBased(item)
+function TetrisItemCalculator._calculateItemSizeWeightBasedTall(item, weight)
+    local width, height = TetrisItemCalculator._calculateItemSizeWeightBased(item, weight)
     return height, width
 end
 
 function TetrisItemCalculator._calculateEntertainmentSize(item)
     local width = 1
     local height = 1
-
-    local mediaData = item:getMediaData()
-    if mediaData then
-        local category = mediaData:getCategory()
-        if category == "CDs" then
-            width = 1
-            height = 1
-        end
-    end
-
     return width, height
 end
 
 function TetrisItemCalculator._calculateMoveableSize(item)
-    local width = 1
-    local height = 1
-
-    local weight = item:getActualWeight()
-    return TetrisItemCalculator._calculateItemDimensions(weight * 2, 2)
+    local weight = item:getWeight() -- Ignores the weight of fluidContainers
+    return TetrisItemCalculator._calculateItemDimensions(weight * 2 + 2, 2)
 end
 
 function TetrisItemCalculator._calculateAnimalCorpseSize(item)
@@ -310,10 +319,18 @@ function TetrisItemCalculator._calculateAnimalCorpseSize(item)
     return TetrisItemCalculator._calculateItemDimensions(slots, 3)
 end
 
+function TetrisItemCalculator._calculateBookSize(item)
+    local weight = item:getActualWeight()
+    if weight < 0.2 then
+        return 1, 1
+    end
+    return 1, 2
+end
+
 TetrisItemCalculator._itemClassToSizeCalculation = {
     [TetrisItemCategory.AMMO] = {x = 1, y = 1},
     [TetrisItemCategory.CORPSEANIMAL] = TetrisItemCalculator._calculateAnimalCorpseSize,
-    [TetrisItemCategory.BOOK] = {x = 1, y = 2},
+    [TetrisItemCategory.BOOK] = TetrisItemCalculator._calculateBookSize,
     [TetrisItemCategory.CLOTHING] = TetrisItemCalculator._calculateItemSizeClothing,
     [TetrisItemCategory.CONTAINER] = TetrisItemCalculator._calculateItemSizeContainer,
     [TetrisItemCategory.ENTERTAINMENT] = TetrisItemCalculator._calculateEntertainmentSize,
@@ -363,8 +380,13 @@ end
 
 -- Item Stackability
 
+local function roundStackability(stackability)
+    return math.max(1, math.floor(stackability + 0.5))
+end
+
+---@param item InventoryItem
 function TetrisItemCalculator._simpleWeightStackability(item)
-    local weight = item:getActualWeight()
+    local weight = item:getScriptItem():getActualWeight() -- Avoid wetness effecting weight
     return math.ceil(0.75 / weight)
 end
 
@@ -426,28 +448,18 @@ function TetrisItemCalculator._calculateSeedStackability(item)
 end
 
 function TetrisItemCalculator._calculateMoveableStackability(item)
-    local name = tostring(item:getDisplayName()) or ""
-
-    local a = string.find(name, "%(")
-    local b = string.find(name, "/")
-    local c = string.find(name, "%)")
-
-    local isPackaged = a and b and c and a < b and b < c
-    if isPackaged then
-        return 2
-    end
-
     return 1
 end
 
+---@param item InventoryItem
 function TetrisItemCalculator._calculateFoodStackability(item)
-    local weight = item:getActualWeight()
-    return math.max(1, math.floor(1 / weight))
+    local weight = item:getScriptItem():getActualWeight() -- Use the script item to avoid partially eaten food weight
+    return roundStackability(1 / weight)
 end
 
 function TetrisItemCalculator._weaponStackability(item)
     local weight = item:getActualWeight() * 2
-    return math.max(1, math.floor((1 / weight)+FLOAT_CORRECTION))
+    return roundStackability(1 / weight)
 end
 
 TetrisItemCalculator._itemClassToStackabilityCalculation = {

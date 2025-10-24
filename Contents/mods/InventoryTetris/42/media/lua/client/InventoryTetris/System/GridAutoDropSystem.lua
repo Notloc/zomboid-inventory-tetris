@@ -9,6 +9,8 @@ GridAutoDropSystem._dropQueues = {}
 
 function GridAutoDropSystem._processItems(playerNum, items)
     local playerObj = getSpecificPlayer(playerNum)
+    if not playerObj or playerObj:isDead() then return end
+
     local isDisorganized = playerObj:HasTrait("Disorganized")
     local containers = ItemUtil.getAllEquippedContainers(playerObj)
     local mainInv = playerObj:getInventory()
@@ -123,7 +125,7 @@ function GridAutoDropSystem._attemptToForceEquipItem(item, playerObj, playerNum)
     return false
 end
 
-
+-- TODO: Clean this up a bit. Just slammed 2 functions together when refactoring.
 function GridAutoDropSystem._processQueues()
     for playerNum, itemSet in pairs(ItemContainerGrid._unpositionedItemSetsByPlayer) do
         local playerObj = getSpecificPlayer(playerNum)

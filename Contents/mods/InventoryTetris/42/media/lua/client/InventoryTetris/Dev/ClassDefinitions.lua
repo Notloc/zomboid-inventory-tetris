@@ -25,6 +25,11 @@
 ---@field PreventTardisStacking boolean
 ---@field SearchBodies number
 
+
+---@class VanillaStack
+---@field items InventoryItem[]
+
+
 -- Declare some built-in functions that do exist, but normally don't in lua 5.1
 ---@class string
 ---@field split fun(self:string, separator:string):string[]

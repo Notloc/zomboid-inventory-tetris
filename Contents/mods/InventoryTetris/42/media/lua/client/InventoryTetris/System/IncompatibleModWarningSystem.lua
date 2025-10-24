@@ -32,7 +32,7 @@ function InventoryTetrisIncompatibleModWarningSystem.showCompatibilityIssues()
     InventoryTetrisIncompatibleModWarningSystem.handleItemCategoryMods(incompatibilityPopup)
 
     -- Not really an incompatibility, but I'm very tired of people blaming Tetris for this one
-    if isModActive("PLLootF") and not InventoryTetris.hasPawLowLootFantasyPatch() then
+    if isModActive("PLLootF") and not InventoryTetrisIncompatibleModWarningSystem.hasPawLowLootFantasyPatch() then
         incompatibilityPopup:addModIncompatibility("Paw Low Loot - Fantasy Pack", "PLLootF", "MAJOR BUG:\nCauses items dropped to the floor to be deleted.\nDo not use without a community patch, i.e. Yet Another Paw Low Patch ( PLLootF_Patch )")
     end
 

@@ -5,6 +5,7 @@ local OPT = require("InventoryTetris/Settings")
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 
+---@class DragItemRenderer : ISUIElement
 local DragItemRenderer = ISUIElement:derive("DragItemRenderer")
 
 function DragItemRenderer:new(equipmentUi, playerNum)
@@ -21,7 +22,7 @@ function DragItemRenderer:prerender()
     self:bringToTop()
 end
 
-function DragItemRenderer:render() 
+function DragItemRenderer:render()
     local stacks = DragAndDrop.getDraggedStacks()
     local item = DragAndDrop.getDraggedItem()
     if not item then
@@ -54,15 +55,16 @@ function DragItemRenderer:render()
     stack.count = stack.count - 1
 
     self:suspendStencil()
-        local shadowOffset = math.floor(OPT.SCALE + 0.5)
 
-        local instructions = {{stack, item, xPos, yPos, itemW, itemH, 1, DragAndDrop.isDraggedItemRotated(), false, true}}
-        ItemGridUI._bulkRenderGridStacks(self, instructions, 1, playerObj)
-        if stacks and #stacks > 1 then
-            local text = "+"..tostring(#stacks - 1)
-            self:drawText(text, xPos + itemW * OPT.CELL_SIZE + shadowOffset, yPos + shadowOffset, 1, 1, 1, 1, UIFont.Small, true)
-            self:drawText(text, xPos + itemW * OPT.CELL_SIZE, yPos, 1, 1, 1, 1, UIFont.Small, true)
-        end
+    local shadowOffset = math.floor(OPT.SCALE + 0.5)
+
+    local instructions = {{stack, item, xPos, yPos, itemW, itemH, 1, DragAndDrop.isDraggedItemRotated(), false, true}}
+    ItemGridUI._bulkRenderGridStacks(self, instructions, 1, playerObj)
+    if stacks and #stacks > 1 then
+        local text = "+"..tostring(#stacks - 1)
+        self:drawText(text, xPos + itemW * OPT.CELL_SIZE + shadowOffset, yPos + shadowOffset, 0, 0, 0, 1, UIFont.Small)
+        self:drawText(text, xPos + itemW * OPT.CELL_SIZE, yPos, 1, 1, 1, 1, UIFont.Small)
+    end
 
     self:resumeStencil()
 end
