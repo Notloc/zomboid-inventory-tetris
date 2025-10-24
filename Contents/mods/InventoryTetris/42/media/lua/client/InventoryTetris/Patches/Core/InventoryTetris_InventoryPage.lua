@@ -114,7 +114,7 @@ Events.OnGameBoot.Add(function()
 		else
 			--removeAll button is currently disabled in base game
 			--self.lootAll:setVisible(not needsSearch)
-			self.removeAll:setVisible(not needsSearch and self:isRemoveButtonVisible())
+			--self.removeAll:setVisible(not needsSearch and self:isRemoveButtonVisible())
 
 			-- Support for "Easy Drop n' Loot"
 			if self.EDNLLootItems then
