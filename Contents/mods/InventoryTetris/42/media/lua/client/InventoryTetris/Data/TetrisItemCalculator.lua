@@ -172,7 +172,7 @@ end
 ---comment
 ---@param item InventoryContainer
 function TetrisItemCalculator._calculateItemSizeContainer(item)
-    if item:hasTag("KeyRing") then
+    if item:getType() == "KeyRing" then
         return 1, 1
     end
 

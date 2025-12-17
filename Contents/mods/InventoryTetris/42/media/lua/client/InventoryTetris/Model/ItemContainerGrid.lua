@@ -306,8 +306,8 @@ function ItemContainerGrid:doesItemFitAnywhere(item, w, h, ignoreItems)
 end
 
 function ItemContainerGrid:_getCapacity(player)
-    local hasOrganizedTrait = player:HasTrait("Organized")
-    local hasDisorganizedTrait = player:HasTrait("Disorganized")
+    local hasOrganizedTrait = player and player:hasTrait(CharacterTrait.ORGANIZED)
+    local hasDisorganizedTrait = player and player:hasTrait(CharacterTrait.DISORGANIZED)
 
     local capacity = self.inventory:getCapacity()
     if hasOrganizedTrait then
@@ -529,7 +529,7 @@ function ItemContainerGrid:_updateGridPositions()
     local isDisorganized = false
     if self.isOnPlayer then
         local player = getSpecificPlayer(self.playerNum)
-        isDisorganized = player:HasTrait("Disorganized")
+        isDisorganized = player and player:hasTrait(CharacterTrait.DISORGANIZED)
     end
 
     -- Sort the unpositioned items by size, so we can place the biggest ones first

@@ -768,10 +768,15 @@ function ItemGrid:updateSearch(player, playerNum)
     end
 
     local searchTime = SandboxVars.InventoryTetris.SearchTime
-    if player:HasTrait("AllThumbs") then
-        searchTime = searchTime * 1.5
-    elseif player:HasTrait("Dextrous") then
-        searchTime = searchTime * 0.66
+    if player then
+        local traits = player:getTraits()
+        if traits then
+            if traits:contains("AllThumbs") then
+                searchTime = searchTime * 1.5
+            elseif traits:contains("Dextrous") then
+                searchTime = searchTime * 0.66
+            end
+        end
     end
 
     local lastTime = session.lastUpdateTime or getTimestampMs()

@@ -122,7 +122,7 @@ Events.OnGameBoot.Add(function()
 			end
 		end
 
-		self.tetrisSearchButton:setVisible(needsSearch and self.needSearch)
+		self.tetrisSearchButton:setVisible((needsSearch and self.needSearch) == true)
 	end
 
 	local og_prerender = ISInventoryPage.prerender
@@ -163,7 +163,7 @@ Events.OnGameBoot.Add(function()
 		local button = og_addContainerButton(self, container, texture, name, tooltip)
 
 		local containingItem = container:getContainingItem()
-        local isKeyRing = containingItem and containingItem:hasTag("KeyRing")
+        local isKeyRing = container:getType() == "KeyRing"
 		if (isKeyRing) then
 			self:removeChild(button)
 			self.backpacks[#self.backpacks] = nil

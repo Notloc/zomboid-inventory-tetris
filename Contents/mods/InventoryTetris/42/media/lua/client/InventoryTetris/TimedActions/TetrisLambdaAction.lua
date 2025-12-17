@@ -8,8 +8,15 @@ function TetrisLambdaAction:new (character, callback, delayMs)
 	o.delayMs = delayMs;
 	o.stopOnWalk = false;
     o.stopOnRun = false;
-    o.maxTime = -1;
+    o.maxTime = o:getDuration();
 	return o
+end
+
+function TetrisLambdaAction:getDuration()
+	if self.character:isTimedActionInstant() then
+		return 1;
+	end
+	return -1;
 end
 
 function TetrisLambdaAction:waitToStart()

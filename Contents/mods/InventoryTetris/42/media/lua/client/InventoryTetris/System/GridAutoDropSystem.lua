@@ -11,7 +11,7 @@ function GridAutoDropSystem._processItems(playerNum, items)
     local playerObj = getSpecificPlayer(playerNum)
     if not playerObj or playerObj:isDead() then return end
 
-    local isDisorganized = playerObj:HasTrait("Disorganized")
+    local isDisorganized = playerObj and playerObj:hasTrait(CharacterTrait.DISORGANIZED)
     local containers = ItemUtil.getAllEquippedContainers(playerObj)
     local mainInv = playerObj:getInventory()
 

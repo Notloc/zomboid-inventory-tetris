@@ -45,7 +45,7 @@ end
 function TetrisContainerCalculator._calculateItemContainerDefinition(container, item)
     local capacity = container:getCapacity()
 
-    if item:hasTag("KeyRing") then
+    if container:getType() == "KeyRing" then
         if capacity <= 1.0 then
             return KEYRING_CONTAINER_DEFINITION
         else
