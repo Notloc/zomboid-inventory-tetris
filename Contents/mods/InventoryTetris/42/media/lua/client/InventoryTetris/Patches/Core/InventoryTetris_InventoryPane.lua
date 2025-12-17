@@ -14,6 +14,7 @@ local OPT = require("InventoryTetris/Settings")
 local Version = require("Notloc/Versioning/Version")
 local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
 local TetrisWindowManager = require("InventoryTetris/UI/Windows/TetrisWindowManager")
+local StencilBuilder = require("InventoryTetris/UI/Shared/StencilBuilder")
 
 -- I use on game boot because I want to make sure other mods have loaded before I patch this in
 Events.OnGameBoot.Add(function()
@@ -31,17 +32,15 @@ Events.OnGameBoot.Add(function()
 
         self.tetrisWindowManager = TetrisWindowManager:new(self, self.player)
 
-        ---@diagnostic disable-next-line: undefined-global
-        self.scrollView = NotlocScrollView:new(0,0, self.width, self.height) -- From EquipmentUI mod
-        self.scrollView.addHorizontalScrollbar = true
+        self.hscroll = ISScrollBar:new(self, false)
+        self.hscroll:initialise()
+        self:addChild(self.hscroll)
 
-        self.scrollView:initialise()
-        self:addChild(self.scrollView)
-        self.scrollView:setAnchorLeft(true)
-        self.scrollView:setAnchorRight(true)
-        self.scrollView:setAnchorTop(true)
-        self.scrollView:setAnchorBottom(true)
-        self.scrollView.scrollSensitivity = 40
+        self.tetrisContentPane = ISUIElement:new(0, 0, self.width, self.height)
+        self.tetrisContentPane:initialise()
+        self:addChild(self.tetrisContentPane)
+
+        self.tetrisStencilBuilder = StencilBuilder:new(self.width, self.height)
 
         self.onApplyGridScaleCallback = function(scale)
             self:onApplyGridScale(scale)
@@ -96,9 +95,13 @@ Events.OnGameBoot.Add(function()
     function ISInventoryPane:refreshItemGrids(forceFullRefresh)
         local oldGridContainerUis = {}
         for _, gridContainerUi in ipairs(self.gridContainerUis) do
-            self.scrollView:removeScrollChild(gridContainerUi)
+            --self.scrollView:removeScrollChild(gridContainerUi)
+            self.tetrisContentPane:removeChild(gridContainerUi)
             oldGridContainerUis[gridContainerUi.inventory] = gridContainerUi
         end
+
+        self:removeChild(self.tetrisStencilBuilder.setupElement)
+        self:removeChild(self.tetrisStencilBuilder.tearDownElement)
 
         self.gridContainerUis = {}
 
@@ -129,6 +132,8 @@ Events.OnGameBoot.Add(function()
             inventories[1] = self.inventory
         end
 
+        self.tetrisContentPane:addChild(self.tetrisStencilBuilder.setupElement)
+
         local x = 10
         local y = 10
         for _, inventory in ipairs(inventories) do
@@ -145,7 +150,8 @@ Events.OnGameBoot.Add(function()
 
             itemGridContainerUi:setY(y)
             itemGridContainerUi:setX(10)
-            self.scrollView:addScrollChild(itemGridContainerUi)
+            --self.scrollView:addScrollChild(itemGridContainerUi)
+            self.tetrisContentPane:addChild(itemGridContainerUi)
 
             x = math.max(x, itemGridContainerUi:getX() + itemGridContainerUi:getWidth() + 8)
             y = y + itemGridContainerUi:getHeight() + 8
@@ -153,8 +159,37 @@ Events.OnGameBoot.Add(function()
             table.insert(self.gridContainerUis, itemGridContainerUi)
         end
 
-        self.scrollView:setScrollWidth(x)
-        self.scrollView:setScrollHeight(y)
+        self.tetrisContentPane:addChild(self.tetrisStencilBuilder.tearDownElement)
+
+        self.tetrisLastScrollX = 0
+        self.tetrisLastScrollY = 0
+
+        self:setScrollWidth(x)
+        self:setScrollHeight(y)
+
+        self:updateTetrisContentPanel()
+    end
+
+    function ISInventoryPane:updateTetrisContentPanel()
+        local lastX = self.tetrisLastScrollX or 0
+        local lastY = self.tetrisLastScrollY or 0
+
+        local xScroll = self:getXScroll()
+        local yScroll = self:getYScroll()
+
+        -- If the x scroll is larger than the actual scroll width, clamp it
+        if -xScroll + self.tetrisContentPane:getWidth() > self:getScrollWidth() then
+            xScroll = -math.max(0, self:getScrollWidth() - self.tetrisContentPane:getWidth())
+            self:setXScroll(xScroll)
+        end
+
+        for _, gridContainerUi in ipairs(self.gridContainerUis) do
+            gridContainerUi:setX(gridContainerUi:getX() - lastX + xScroll)
+            gridContainerUi:setY(gridContainerUi:getY() - lastY + yScroll)
+        end
+
+        self.tetrisLastScrollX = xScroll
+        self.tetrisLastScrollY = yScroll
     end
 
     function ISInventoryPane:findContainerGridUiUnderMouse()
@@ -177,12 +212,29 @@ Events.OnGameBoot.Add(function()
     local og_prerender = ISInventoryPane.prerender
     function ISInventoryPane:prerender()
         og_prerender(self);
+
         self.nameHeader:setVisible(false)
         self.typeHeader:setVisible(false)
+
+        local isVScrollBarVisible = self:isVScrollBarVisible()
+        local isHScrollBarVisible = self.hscroll and (self.hscroll:getWidth() < self:getScrollWidth())
+        local xOffset = isVScrollBarVisible and 13 or 0
+        local yOffset = isHScrollBarVisible and 13 or 0
         
+        self.tetrisContentPane:setWidth(self.width - xOffset)
+        self.tetrisContentPane:setHeight(self.height - yOffset)
+
+        self.hscroll:setWidth(self.width - xOffset)
+        self.hscroll:setY(self.height - 15)
+
+        self.tetrisStencilBuilder.stencilWidth = self.width - xOffset
+        self.tetrisStencilBuilder.stencilHeight = self.height - yOffset
+
+        self:updateTetrisContentPanel()
+
         -- Draw the version at the bottom left
         if self.parent.onCharacter then
-            local version = "Inventory Tetris - " .. Version.format(InventoryTetris.version)
+            local version = Version.format(InventoryTetris.version)
             self:drawText(version, 8, self.height - 18, 0.3, 0.3, 0.3, 0.82, UIFont.Small)
         end
     end
@@ -190,7 +242,10 @@ Events.OnGameBoot.Add(function()
     local og_render = ISInventoryPane.render
     function ISInventoryPane:render()
         og_render(self)
-        self.mode = "grid" -- Let a single frame pass before we start rendering the grid
+        if self.mode ~= "grid" then
+            self.mode = "grid" -- Let a single frame pass before we start rendering the grid
+            self:refreshItemGrids() -- Updates the scroll size
+        end
     end
 
     local og_doButtons = ISInventoryPane.doButtons
@@ -329,13 +384,25 @@ Events.OnGameBoot.Add(function()
 
     local og_onMouseWheel = ISInventoryPane.onMouseWheel
     function ISInventoryPane:onMouseWheel(del)
-        return false -- Disabled scrolling to rotate items because of scrollviews
+        if self.inventoryPage.isCollapsed then return false; end
+        if self.inventoryPage:isCycleContainerKeyDown() then return false; end
 
-        --if DragAndDrop.isDragging() then
-        --   DragAndDrop.rotateDraggedItem()
-        --  return true;
-        --end
-        --return og_onMouseWheel(self, del)
+        local sideScrollKeyDown = false
+
+        -- TODO: Make this a customizable key
+        local keyName = getCore():getOptionCycleContainerKey()
+        if keyName == "control" then
+            sideScrollKeyDown = isKeyDown(Keyboard.KEY_LSHIFT) or isKeyDown(Keyboard.KEY_RSHIFT)
+        else
+            sideScrollKeyDown = isKeyDown(Keyboard.KEY_LCONTROL) or isKeyDown(Keyboard.KEY_RCONTROL)
+        end
+
+        if sideScrollKeyDown then
+            self:setXScroll(self:getXScroll() - (del*25));
+        else
+            self:setYScroll(self:getYScroll() - (del*25));
+        end
+        return true
     end
 
     local og_transferItemsByWeight = ISInventoryPane.transferItemsByWeight
@@ -376,7 +443,7 @@ Events.OnGameBoot.Add(function()
     function ISInventoryPane:scrollToContainer(inventory)
         for _, gridContainerUi in ipairs(self.gridContainerUis) do
             if gridContainerUi.inventory == inventory then
-                self.scrollView:scrollToPositionY(gridContainerUi:getAbsoluteY(), 2)
+                --self.scrollView:scrollToPositionY(gridContainerUi:getAbsoluteY(), 2)
                 return
             end
         end

@@ -345,9 +345,9 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 
     local isNotPopup = not self.containerUi.isPopup
     if isNotPopup then
-        yCorrection = self:getY() + self.parent:getY() + self.parent.parent:getY() + self.parent.parent.parent:getY() - self.inventoryPane.scrollView:getYScroll()
-        yCullBottom = -self.inventoryPane.scrollView:getYScroll() - yCorrection
-        yCullTop = yCullBottom + self.inventoryPane.scrollView:getHeight()
+        yCorrection = self:getY() + self.parent:getY() + self.parent.parent:getY() + self.parent.parent.parent:getY() - self.inventoryPane:getYScroll()
+        yCullBottom = -self.inventoryPane:getYScroll() - yCorrection
+        yCullTop = yCullBottom + self.inventoryPane:getHeight()
     end
 
     local bgTex = ITEM_BG_TEXTURE[OPT.SCALE] or SEAMLESS_ITEM_BG_TEX
