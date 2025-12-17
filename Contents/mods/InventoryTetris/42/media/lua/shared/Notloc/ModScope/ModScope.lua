@@ -5,6 +5,7 @@ local NoTransferNeededOnSelfScope = require("Notloc/ModScope/NoTransferNeededOnS
 local LuaUtilsKeepActionScope = require("Notloc/ModScope/LuaUtilsKeepActionScope")
 local NoActionQueueClearScope = require("Notloc/ModScope/NoActionQueueClearScope")
 local InstanceofExclusionsScope = require("Notloc/ModScope/InstanceofExclusionsScope")
+local ContainerAvailableScope = require("Notloc/ModScope/ContainerAvailableScope")
 
 -- An experiment with calling functions inside of behavior modified scopes
 -- The goal is to piggyback off of as much vanilla code as possible while still achieving desired behaviors
@@ -16,6 +17,7 @@ local InstanceofExclusionsScope = require("Notloc/ModScope/InstanceofExclusionsS
 ---@field withKeepActions fun(callback: function)
 ---@field withNoActionQueueClear fun(callback: function)
 ---@field withInstanceofExclusion fun(callback: function, exclusion: string)
+---@field withContainersAvailable fun(callback: function, containers: table<InventoryContainer>)
 local ModScope = {};
 
 ---Reverse item transfers will be created after the callback for all items in the returnableItems table
@@ -51,5 +53,9 @@ function ModScope.withInstanceofExclusion(callback, exclusion)
     return InstanceofExclusionsScope:execute(callback, exclusion)
 end
 
+---Ensures the given containers are considered available to the player during the callback
+function ModScope.withContainersAvailable(callback, containers)
+    return ContainerAvailableScope:execute(callback, containers)
+end
 
 return ModScope

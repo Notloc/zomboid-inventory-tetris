@@ -158,24 +158,6 @@ Events.OnGameBoot.Add(function()
 		end
 	end
 
-	local og_addContainerButton = ISInventoryPage.addContainerButton
-	function ISInventoryPage:addContainerButton(container, texture, name, tooltip)
-		local button = og_addContainerButton(self, container, texture, name, tooltip)
-
-		local containingItem = container:getContainingItem()
-        local isKeyRing = containingItem and containingItem:hasTag("KeyRing")
-		if (isKeyRing) then
-			self:removeChild(button)
-			self.backpacks[#self.backpacks] = nil
-			-- Prepend the button to buttonPool.
-			--   There is an awkward bug where the selected backpack is double refreshed and
-			--   if the button objects are not in the exact same order between refreshes a different backpack will be opened.
-			table.insert(self.buttonPool, 1, button)
-		end
-
-		return button;
-	end
-
 	local og_bringToTop = ISInventoryPage.bringToTop
 	function ISInventoryPage:bringToTop()
 		og_bringToTop(self)

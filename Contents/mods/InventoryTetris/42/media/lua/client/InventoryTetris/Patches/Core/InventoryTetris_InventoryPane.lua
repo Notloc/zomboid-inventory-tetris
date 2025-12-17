@@ -111,21 +111,18 @@ Events.OnGameBoot.Add(function()
                 self.parent:applyBackpackOrder()
             end
 
+            -- Gather and sort the backpack buttons by their Y position
             local buttonsAndY = {}
             for _, button in ipairs(self.parent.backpacks) do
                 table.insert(buttonsAndY, {button = button, y = button:getY()})
             end
             table.sort(buttonsAndY, function(a, b) return a.y < b.y end)
 
+            -- Rebuild the inventories list in Y order
             for _, buttonAndY in ipairs(buttonsAndY) do
                 local button = buttonAndY.button
                 local inventory = button.inventory
-
-                local containingItem = inventory:getContainingItem()
-                local isKeyRing = containingItem and containingItem:hasTag("KeyRing")
-                if not isKeyRing then
-                    table.insert(inventories, inventory)
-                end
+                table.insert(inventories, inventory)
             end
         else
             inventories[1] = self.inventory

@@ -107,14 +107,21 @@ Events.OnGameBoot.Add(function()
         end
 
         local valid;
-        -- If we are moving a Moveable to anywhere but the floor, ensure it does NOT appear to be a Moveable
-        if destType ~= "floor" and instanceof(self.item, "Moveable") then
-            ModScope.withInstanceofExclusion(function ()
-                valid = og_isValid(self)
-            end, "Moveable")
-        else
-            valid = og_isValid(self)
-        end
+        
+        -- Spoof container availability for whatever we are transferring to/from
+        -- Might introduce some edge cases, but I'd rather whack-a-mole them than vice versa
+        ModScope.withContainersAvailable(function ()
+                -- If we are moving a Moveable to anywhere but the floor, ensure it does NOT appear to be a Moveable
+                if destType ~= "floor" and instanceof(self.item, "Moveable") then
+                    ModScope.withInstanceofExclusion(function ()
+                        valid = og_isValid(self)
+                    end, "Moveable")
+                else
+                    valid = og_isValid(self)
+                end
+            end,
+            {self.destContainer, self.srcContainer}
+        );
 
         if not valid or not self.enforceTetrisRules then
             return valid
