@@ -130,7 +130,7 @@ function ItemGridContainerUI.getWorldTexture(inventory)
         return nil;
     end
 
-    local isMoveable = sprite:getName() and props:Is("IsMoveAble") or false;
+    local isMoveable = sprite:getName() and props:has("IsMoveAble") or false;
     if not isMoveable then
         return nil;
     end

@@ -120,7 +120,7 @@ Events.OnGameBoot.Add(function()
                 local inventory = button.inventory
 
                 local containingItem = inventory:getContainingItem()
-                local isKeyRing = containingItem and containingItem:hasTag("KeyRing")
+                local isKeyRing = inventory:getType() == "KeyRing"
                 if not isKeyRing then
                     table.insert(inventories, inventory)
                 end

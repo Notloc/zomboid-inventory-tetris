@@ -86,8 +86,8 @@ function InventoryTetrisIncompatibleModWarningSystem.spotCheckItemCategories()
 
     local failCount = 0
     for _, pair in ipairs(expectedItemCategoryPairs) do
-        local item = instanceItem(pair[1])
-        if item then
+        local success, item = pcall(instanceItem, pair[1])
+        if success and item then
             local category = TetrisItemCategory.getCategory(item)
             if category ~= pair[2] then
                 failCount = failCount + 1

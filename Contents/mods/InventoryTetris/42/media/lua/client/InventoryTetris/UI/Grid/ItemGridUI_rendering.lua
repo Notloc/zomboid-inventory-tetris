@@ -532,7 +532,7 @@ function ItemGridUI.getItemColor(item, limit)
     return r,g,b
 end
 
-ItemGridUI.doLiteratureCheckmark = true
+ItemGridUI.doLiteratureCheckmark = false 
 
 function ItemGridUI._showLiteratureCheckmark(player, item)
     return
@@ -686,7 +686,7 @@ local function getItemInstanceData(item, itemTypeData)
     end
 
     local fluidMask = item:getTextureFluidMask()
-    local showPoison = item:hasTag("ShowPoison")
+    local showPoison = item:hasTag(ItemTag.SHOW_POISON)
 
     local data = {
         r = r,

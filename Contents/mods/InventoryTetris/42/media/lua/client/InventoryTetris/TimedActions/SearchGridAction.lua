@@ -7,8 +7,15 @@ function SearchGridAction:new (character, grid)
 	o.grid = grid;
 	o.stopOnWalk = true;
     o.stopOnRun = true;
-    o.maxTime = -1;
+    o.maxTime = o:getDuration();
 	return o
+end
+
+function SearchGridAction:getDuration()
+	if self.character:isTimedActionInstant() then
+		return 1;
+	end
+	return -1;
 end
 
 function SearchGridAction:isValid()
