@@ -95,7 +95,6 @@ Events.OnGameBoot.Add(function()
     function ISInventoryPane:refreshItemGrids(forceFullRefresh)
         local oldGridContainerUis = {}
         for _, gridContainerUi in ipairs(self.gridContainerUis) do
-            --self.scrollView:removeScrollChild(gridContainerUi)
             self.tetrisContentPane:removeChild(gridContainerUi)
             oldGridContainerUis[gridContainerUi.inventory] = gridContainerUi
         end
@@ -150,7 +149,6 @@ Events.OnGameBoot.Add(function()
 
             itemGridContainerUi:setY(y)
             itemGridContainerUi:setX(10)
-            --self.scrollView:addScrollChild(itemGridContainerUi)
             self.tetrisContentPane:addChild(itemGridContainerUi)
 
             x = math.max(x, itemGridContainerUi:getX() + itemGridContainerUi:getWidth() + 8)
@@ -178,6 +176,7 @@ Events.OnGameBoot.Add(function()
         local yScroll = self:getYScroll()
 
         -- If the x scroll is larger than the actual scroll width, clamp it
+        -- Makes the content slide back into view on the x axis as the window becomes wider
         if -xScroll + self.tetrisContentPane:getWidth() > self:getScrollWidth() then
             xScroll = -math.max(0, self:getScrollWidth() - self.tetrisContentPane:getWidth())
             self:setXScroll(xScroll)
@@ -440,15 +439,38 @@ Events.OnGameBoot.Add(function()
         return og_getActualItems(items)
     end
 
+    function ISInventoryPane:scrollToPositionX(screenXPos)
+        local xPos = screenXPos - self:getAbsoluteX()
+
+        local scrollX = self:getXScroll()
+        local newScroll = scrollX - xPos
+        if newScroll > 0 then
+            newScroll = 0
+        end
+        self:setXScroll(newScroll)
+    end
+
+    function ISInventoryPane:scrollToPositionY(screenYPos)
+        local yPos = screenYPos - self:getAbsoluteY()
+
+        local scrollY = self:getYScroll()
+        local newScroll = scrollY - yPos
+        if newScroll > 0 then
+            newScroll = 0
+        end
+        self:setYScroll(newScroll)
+    end
+
     function ISInventoryPane:scrollToContainer(inventory)
         for _, gridContainerUi in ipairs(self.gridContainerUis) do
             if gridContainerUi.inventory == inventory then
-                --self.scrollView:scrollToPositionY(gridContainerUi:getAbsoluteY(), 2)
+                self:scrollToPositionY(gridContainerUi:getAbsoluteY())
                 return
             end
         end
     end
-    
+
+
     function ISInventoryPane:findSelectedControllerItem()
         local inv = self.parent
         if not inv.joyfocus then return nil end
