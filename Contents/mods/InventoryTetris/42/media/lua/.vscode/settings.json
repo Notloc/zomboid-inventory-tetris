@@ -1,0 +1,23 @@
+{
+    "Lua.runtime.version": "Lua 5.1",
+    "Lua.runtime.path": [
+        "?.lua",
+        "?/init.lua",
+        "server/?.lua",
+        "client/?.lua"
+    ],
+    "Lua.completion.requireSeparator": "/",
+    "Lua.workspace.preloadFileSize": 800,
+    "Lua.runtime.builtin": {
+        "debug": "disable",
+        "io": "disable",
+        "package": "disable"
+    },
+    "Lua.workspace.checkThirdParty": false,
+    "Lua.diagnostics.globals": [],
+    "Lua.workspace.library": [
+        "c:\\Users\\Colto\\.vscode\\extensions\\ilka.umbrella-vscode-1.1.19\\plugin\\library\\runtime",
+        "c:\\Users\\Colto\\.vscode\\extensions\\ilka.umbrella-vscode-1.1.19\\plugin\\library\\natives\\umbrella",
+        "${addons}/umbrella-unstable/module/library"
+    ]
+}

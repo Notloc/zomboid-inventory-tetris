@@ -1,0 +1,498 @@
+-- Injects the new rendering elements into the InventoryPane and disables the original system.
+---@diagnostic disable: duplicate-set-field
+
+require("ISUI/ISPanel")
+require("ISUI/ISButton")
+require("ISUI/ISMouseDrag")
+require("TimedActions/ISTimedActionQueue")
+require("TimedActions/ISEatFoodAction")
+require("ISUI/ISInventoryPane")
+local ItemStack = require("InventoryTetris/Model/ItemStack")
+local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
+local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
+local OPT = require("InventoryTetris/Settings")
+local Version = require("Notloc/Versioning/Version")
+local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
+local TetrisWindowManager = require("InventoryTetris/UI/Windows/TetrisWindowManager")
+local StencilBuilder = require("InventoryTetris/UI/Shared/StencilBuilder")
+
+-- I use on game boot because I want to make sure other mods have loaded before I patch this in
+Events.OnGameBoot.Add(function()
+
+    local og_new = ISInventoryPane.new
+    function ISInventoryPane:new(x, y, width, height, inventory, zoom)
+        local o = og_new(self, x, y, width, height, inventory, zoom)
+        o.gridContainerUis = {}
+        return o
+    end
+
+    local og_createChildren = ISInventoryPane.createChildren
+    function ISInventoryPane:createChildren()
+        og_createChildren(self)
+
+        self.tetrisWindowManager = TetrisWindowManager:new(self, self.player)
+
+        self.hscroll = ISScrollBar:new(self, false)
+        self.hscroll:initialise()
+        self:addChild(self.hscroll)
+
+        self.tetrisContentPane = ISUIElement:new(0, 0, self.width, self.height)
+        self.tetrisContentPane:initialise()
+        self:addChild(self.tetrisContentPane)
+
+        self.tetrisStencilBuilder = StencilBuilder:new(self.width, self.height)
+
+        self.onApplyGridScaleCallback = function(scale)
+            self:onApplyGridScale(scale)
+        end
+        OPT.OnValueChanged.SCALE:add(self.onApplyGridScaleCallback)
+
+        self.onApplyContainerInfoScaleCallback = function(scale)
+            self:onApplyContainerInfoScale(scale)
+        end
+        OPT.OnValueChanged.CONTAINER_INFO_SCALE:add(self.onApplyContainerInfoScaleCallback)
+    end
+
+    function ISInventoryPane:onApplyGridScale(scale)
+        for _, gridContainerUi in ipairs(self.gridContainerUis) do
+            gridContainerUi:onApplyGridScale(scale)
+        end
+
+        local windows = self:getChildWindows()
+        for _, window in ipairs(windows) do
+            window:onApplyGridScale(scale)
+        end
+
+        self:refreshContainer()
+    end
+
+    function ISInventoryPane:onApplyContainerInfoScale(scale)
+        for _, gridContainerUi in ipairs(self.gridContainerUis) do
+            gridContainerUi:onApplyContainerInfoScale(scale)
+        end
+
+        local windows = self:getChildWindows()
+        for _, window in ipairs(windows) do
+            window:onApplyContainerInfoScale(scale)
+        end
+
+        self:refreshContainer()
+    end
+
+    local og_refreshContainer = ISInventoryPane.refreshContainer
+    function ISInventoryPane:refreshContainer()
+        -- Do this for mod compatibility only, tetris has no use for this
+        og_refreshContainer(self)
+        -- Hide these buttons because they are updated every refresh
+        self.expandAll:setVisible(false)
+        self.collapseAll:setVisible(false)
+        self.filterMenu:setVisible(false)
+
+        self:refreshItemGrids()
+        self.parent:checkTetrisSearch()
+    end
+
+    function ISInventoryPane:refreshItemGrids(forceFullRefresh)
+        local oldGridContainerUis = {}
+        for _, gridContainerUi in ipairs(self.gridContainerUis) do
+            self.tetrisContentPane:removeChild(gridContainerUi)
+            oldGridContainerUis[gridContainerUi.inventory] = gridContainerUi
+        end
+
+        self:removeChild(self.tetrisStencilBuilder.setupElement)
+        self:removeChild(self.tetrisStencilBuilder.tearDownElement)
+
+        self.gridContainerUis = {}
+
+        local inventories = {}
+
+        if self.parent.onCharacter then
+            if ISInventoryPage.applyBackpackOrder then
+                self.parent:applyBackpackOrder()
+            end
+
+            -- Gather and sort the backpack buttons by their Y position
+            local buttonsAndY = {}
+            for _, button in ipairs(self.parent.backpacks) do
+                table.insert(buttonsAndY, {button = button, y = button:getY()})
+            end
+            table.sort(buttonsAndY, function(a, b) return a.y < b.y end)
+
+            -- Rebuild the inventories list in Y order
+            for _, buttonAndY in ipairs(buttonsAndY) do
+                local button = buttonAndY.button
+                local inventory = button.inventory
+                table.insert(inventories, inventory)
+            end
+        else
+            inventories[1] = self.inventory
+        end
+
+        self.tetrisContentPane:addChild(self.tetrisStencilBuilder.setupElement)
+
+        local x = 10
+        local y = 10
+        for _, inventory in ipairs(inventories) do
+            local itemGridContainerUi = oldGridContainerUis[inventory]
+            if itemGridContainerUi and forceFullRefresh then
+                itemGridContainerUi:unregisterEvents()
+                itemGridContainerUi = nil
+            end
+
+            if not itemGridContainerUi then
+                itemGridContainerUi = ItemGridContainerUI:new(inventory, self, self.player)
+                itemGridContainerUi:initialise()
+            end
+
+            itemGridContainerUi:setY(y)
+            itemGridContainerUi:setX(10)
+            self.tetrisContentPane:addChild(itemGridContainerUi)
+
+            x = math.max(x, itemGridContainerUi:getX() + itemGridContainerUi:getWidth() + 8)
+            y = y + itemGridContainerUi:getHeight() + 8
+
+            table.insert(self.gridContainerUis, itemGridContainerUi)
+        end
+
+        self.tetrisContentPane:addChild(self.tetrisStencilBuilder.tearDownElement)
+
+        self.tetrisLastScrollX = 0
+        self.tetrisLastScrollY = 0
+
+        self:setScrollWidth(x)
+        self:setScrollHeight(y)
+
+        self:updateTetrisContentPanel()
+    end
+
+    function ISInventoryPane:updateTetrisContentPanel()
+        local lastX = self.tetrisLastScrollX or 0
+        local lastY = self.tetrisLastScrollY or 0
+
+        local xScroll = self:getXScroll()
+        local yScroll = self:getYScroll()
+
+        -- If the x scroll is larger than the actual scroll width, clamp it
+        -- Makes the content slide back into view on the x axis as the window becomes wider
+        if -xScroll + self.tetrisContentPane:getWidth() > self:getScrollWidth() then
+            xScroll = -math.max(0, self:getScrollWidth() - self.tetrisContentPane:getWidth())
+            self:setXScroll(xScroll)
+        end
+
+        for _, gridContainerUi in ipairs(self.gridContainerUis) do
+            gridContainerUi:setX(gridContainerUi:getX() - lastX + xScroll)
+            gridContainerUi:setY(gridContainerUi:getY() - lastY + yScroll)
+        end
+
+        self.tetrisLastScrollX = xScroll
+        self.tetrisLastScrollY = yScroll
+    end
+
+    function ISInventoryPane:findContainerGridUiUnderMouse()
+        if not self.gridContainerUis then return nil end
+        for _, containerUi in ipairs(self.gridContainerUis) do
+            if containerUi:isMouseOver() then
+                return containerUi
+            end
+        end
+
+        for _, window in ipairs(self:getChildWindows()) do
+            if window:isMouseOver() then
+                return window.gridContainerUi
+            end
+        end
+
+        return nil
+    end
+
+    local og_prerender = ISInventoryPane.prerender
+    function ISInventoryPane:prerender()
+        og_prerender(self);
+
+        self.nameHeader:setVisible(false)
+        self.typeHeader:setVisible(false)
+
+        local isVScrollBarVisible = self:isVScrollBarVisible()
+        local isHScrollBarVisible = self.hscroll and (self.hscroll:getWidth() < self:getScrollWidth())
+        local xOffset = isVScrollBarVisible and 13 or 0
+        local yOffset = isHScrollBarVisible and 13 or 0
+        
+        self.tetrisContentPane:setWidth(self.width - xOffset)
+        self.tetrisContentPane:setHeight(self.height - yOffset)
+
+        self.hscroll:setWidth(self.width - xOffset)
+        self.hscroll:setY(self.height - 15)
+
+        self.tetrisStencilBuilder.stencilWidth = self.width - xOffset
+        self.tetrisStencilBuilder.stencilHeight = self.height - yOffset
+
+        self:updateTetrisContentPanel()
+
+        -- Draw the version at the bottom left
+        if self.parent.onCharacter then
+            local version = Version.format(InventoryTetris.version)
+            self:drawText(version, 8 - self:getXScroll(), self.height - 18 - self:getYScroll() - yOffset, 0.3, 0.3, 0.3, 0.82, UIFont.Small)
+        end
+    end
+
+    local og_render = ISInventoryPane.render
+    function ISInventoryPane:render()
+        og_render(self)
+        if self.mode ~= "grid" then
+            self.mode = "grid" -- Let a single frame pass before we start rendering the grid
+            self:refreshItemGrids() -- Updates the scroll size
+        end
+    end
+
+    local og_doButtons = ISInventoryPane.doButtons
+    function ISInventoryPane:doButtons()
+    end
+
+    local og_updateTooltip = ISInventoryPane.updateTooltip
+    function ISInventoryPane:updateTooltip()
+        if self.mode ~= "grid" or not self.gridContainerUis then
+            return og_updateTooltip(self)
+        end
+
+        if not self:isReallyVisible() then
+            return -- in the main menu
+        end
+
+        local isController = JoypadState.players[self.player+1] ~= nil
+
+        if not isController and self.parent:isMouseOverEquipmentUi() then
+            return self.parent.equipmentUi:updateTooltip()
+        else
+            if isController then
+                local item = self:findSelectedControllerItem()
+                self:doTooltipForItem(item)
+            else
+                local item = nil
+
+                if not self.doController and not self.dragging and not self.draggingMarquis then
+                    local containerGridUi = self:findContainerGridUiUnderMouse()
+                    if containerGridUi then
+                        local stack = containerGridUi:findGridStackUnderMouse()
+                        item = stack and ItemStack.getFrontItem(stack, containerGridUi.inventory) or nil
+                    end
+                end
+
+                self:doTooltipForItem(item)
+            end
+        end
+    end
+
+    function ISInventoryPane:doTooltipForItem(item)
+        local weightOfStack = 0.0
+        if item and not instanceof(item, "InventoryItem") then
+            if #item.items > 2 then
+                weightOfStack = item.weight
+            end
+            item = item.items[1]
+        end
+
+        if getPlayerContextMenu(self.player):isAnyVisible() then
+            item = nil
+        end
+
+        if item and self.toolRender and (item == self.toolRender.item) and
+                (weightOfStack == self.toolRender.tooltip:getWeightOfStack()) and
+                self.toolRender:isVisible() then
+            return
+        end
+
+        if item and not DragAndDrop.getDraggedStack() then
+            if self.toolRender then
+                self.toolRender:setItem(item)
+                self.toolRender:setVisible(true)
+                self.toolRender:addToUIManager()
+                self.toolRender:bringToTop()
+            else
+                self.toolRender = ISToolTipInv:new(item)
+                self.toolRender:initialise()
+                self.toolRender:addToUIManager()
+                self.toolRender:setVisible(true)
+                self.toolRender:setOwner(self)
+                self.toolRender:setCharacter(getSpecificPlayer(self.player))
+                self.toolRender.anchorBottomLeft = { x = self:getAbsoluteX() + self.column2, y = self:getParent():getAbsoluteY() }
+            end
+            self.toolRender.followMouse = not self.doController
+            self.toolRender.tooltip:setWeightOfStack(weightOfStack)
+        elseif self.toolRender then
+            self.toolRender:removeFromUIManager()
+            self.toolRender:setVisible(false)
+        end
+
+        -- Hack for highlighting doors when a Key tooltip is displayed.
+        if self.parent.onCharacter then
+            if not self.toolRender or not self.toolRender:getIsVisible() then
+                item = nil
+            end
+            Key.setHighlightDoors(self.player, item)
+        end
+
+        local inventoryPage = getPlayerInventory(self.player)
+        local inventoryTooltip = inventoryPage and inventoryPage.inventoryPane.toolRender
+        local lootPage = getPlayerLoot(self.player)
+        local lootTooltip = lootPage and lootPage.inventoryPane.toolRender
+        UIManager.setPlayerInventoryTooltip(self.player,
+            inventoryTooltip and inventoryTooltip.javaObject,
+            lootTooltip and lootTooltip.javaObject)
+    end
+
+    local og_onMouseDown = ISInventoryPane.onMouseDown
+    function ISInventoryPane:onMouseDown(x, y)
+        if self.mode ~= "grid" then
+            return og_onMouseDown(self, x, y)
+        end
+        return true;
+    end
+
+    local og_mouseUp = ISInventoryPane.onMouseUp
+    function ISInventoryPane:onMouseUp(x, y)
+        if self.mode ~= "grid" then
+            return og_mouseUp(self, x, y)
+        end
+        return true;
+    end
+
+    local og_onRightMouseUp = ISInventoryPane.onRightMouseUp
+    function ISInventoryPane:onRightMouseUp(x, y)
+        if self.mode ~= "grid" then
+            return og_onRightMouseUp(self, x, y)
+        end
+        return false;
+    end
+
+    local og_onMouseDoubleClick = ISInventoryPane.onMouseDoubleClick
+    function ISInventoryPane:onMouseDoubleClick(x, y)
+        if self.mode ~= "grid" then
+            return og_onMouseDoubleClick(self, x, y)
+        end
+
+        for _, gridContainerUi in ipairs(self.gridContainerUis) do
+            local containerUi = self:findContainerGridUiUnderMouse()
+            if containerUi then
+                return containerUi:onMouseDoubleClick(containerUi:getMouseX(), containerUi:getMouseY())
+            end
+        end
+    end
+
+    local og_onMouseWheel = ISInventoryPane.onMouseWheel
+    function ISInventoryPane:onMouseWheel(del)
+        if self.inventoryPage.isCollapsed then return false; end
+        if self.inventoryPage:isCycleContainerKeyDown() then return false; end
+
+        local sideScrollKeyDown = false
+
+        -- TODO: Make this a customizable key
+        local keyName = getCore():getOptionCycleContainerKey()
+        if keyName == "control" then
+            sideScrollKeyDown = isKeyDown(Keyboard.KEY_LSHIFT) or isKeyDown(Keyboard.KEY_RSHIFT)
+        else
+            sideScrollKeyDown = isKeyDown(Keyboard.KEY_LCONTROL) or isKeyDown(Keyboard.KEY_RCONTROL)
+        end
+
+        if sideScrollKeyDown then
+            self:setXScroll(self:getXScroll() - (del*25));
+        else
+            self:setYScroll(self:getYScroll() - (del*25));
+        end
+        return true
+    end
+
+    local og_transferItemsByWeight = ISInventoryPane.transferItemsByWeight
+    function ISInventoryPane:transferItemsByWeight(items, container)
+        ISInventoryTransferAction.globalTetrisRules = true
+        og_transferItemsByWeight(self, items, container)
+        ISInventoryTransferAction.globalTetrisRules = false
+    end
+
+    function ISInventoryPane:getChildWindows()
+        if self.tetrisWindowManager then
+            return self.tetrisWindowManager.childWindows
+        end
+        return {}
+    end
+
+
+
+    local og_canPutIn = ISInventoryPane.canPutIn
+    function ISInventoryPane:canPutIn()
+        ControllerDragAndDrop.currentPlayer = self.player
+        local retVal = og_canPutIn(self)
+        ControllerDragAndDrop.currentPlayer = nil
+        return retVal
+    end
+
+    local og_getActualItems = ISInventoryPane.getActualItems
+    function ISInventoryPane.getActualItems(items)
+        if not items then
+            items = ControllerDragAndDrop.getDraggedStack(ControllerDragAndDrop.currentPlayer)
+        end
+        if items.items then
+            return og_getActualItems(items.items)
+        end
+        return og_getActualItems(items)
+    end
+
+    function ISInventoryPane:scrollToPositionX(screenXPos)
+        local xPos = screenXPos - self:getAbsoluteX()
+
+        local scrollX = self:getXScroll()
+        local newScroll = scrollX - xPos
+        if newScroll > 0 then
+            newScroll = 0
+        end
+        self:setXScroll(newScroll)
+    end
+
+    function ISInventoryPane:scrollToPositionY(screenYPos)
+        local yPos = screenYPos - self:getAbsoluteY()
+
+        local scrollY = self:getYScroll()
+        local newScroll = scrollY - yPos
+        if newScroll > 0 then
+            newScroll = 0
+        end
+        self:setYScroll(newScroll)
+    end
+
+    function ISInventoryPane:scrollToContainer(inventory)
+        for _, gridContainerUi in ipairs(self.gridContainerUis) do
+            if gridContainerUi.inventory == inventory then
+                self:scrollToPositionY(gridContainerUi:getAbsoluteY())
+                return
+            end
+        end
+    end
+
+
+    function ISInventoryPane:findSelectedControllerItem()
+        local inv = self.parent
+        if not inv.joyfocus then return nil end
+
+        local selection = inv.controllerNode:getLeafChild()
+        if selection and selection.uiElement.Type == "ItemGridUI" then
+            return selection.uiElement:getControllerSelectedItem() 
+        end
+        return nil
+    end
+
+    Events.OnClothingUpdated.Add(function(playerObj)
+        if not instanceof(playerObj, "IsoPlayer") then
+            return
+        end
+
+        ---@cast playerObj IsoPlayer
+        local playerNum = playerObj:getPlayerNum()
+        local inventoryPage = getPlayerInventory(playerNum)
+
+        if inventoryPage then
+            local containerUis = inventoryPage.inventoryPane.gridContainerUis or {}
+            for _, containerUi in ipairs(containerUis) do
+                containerUi:onClothingUpdated(playerObj)
+            end
+        end
+    end)
+end)
