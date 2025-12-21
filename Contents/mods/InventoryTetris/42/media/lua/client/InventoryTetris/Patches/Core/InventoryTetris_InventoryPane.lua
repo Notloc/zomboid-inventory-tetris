@@ -14,7 +14,6 @@ local OPT = require("InventoryTetris/Settings")
 local Version = require("Notloc/Versioning/Version")
 local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
 local TetrisWindowManager = require("InventoryTetris/UI/Windows/TetrisWindowManager")
-local StencilBuilder = require("InventoryTetris/UI/Shared/StencilBuilder")
 
 -- I use on game boot because I want to make sure other mods have loaded before I patch this in
 Events.OnGameBoot.Add(function()
@@ -38,9 +37,14 @@ Events.OnGameBoot.Add(function()
 
         self.tetrisContentPane = ISUIElement:new(0, 0, self.width, self.height)
         self.tetrisContentPane:initialise()
-        self:addChild(self.tetrisContentPane)
+        self.tetrisContentPane.prerender = function() 
+            self.tetrisContentPane:setStencilRect(0, 0, self.tetrisContentPane.width, self.tetrisContentPane.height)
+        end
+        self.tetrisContentPane.render = function() 
+            self.tetrisContentPane:clearStencilRect()
+        end
 
-        self.tetrisStencilBuilder = StencilBuilder:new(self.width, self.height)
+        self:addChild(self.tetrisContentPane)
 
         self.onApplyGridScaleCallback = function(scale)
             self:onApplyGridScale(scale)
@@ -99,9 +103,6 @@ Events.OnGameBoot.Add(function()
             oldGridContainerUis[gridContainerUi.inventory] = gridContainerUi
         end
 
-        self:removeChild(self.tetrisStencilBuilder.setupElement)
-        self:removeChild(self.tetrisStencilBuilder.tearDownElement)
-
         self.gridContainerUis = {}
 
         local inventories = {}
@@ -128,8 +129,6 @@ Events.OnGameBoot.Add(function()
             inventories[1] = self.inventory
         end
 
-        self.tetrisContentPane:addChild(self.tetrisStencilBuilder.setupElement)
-
         local x = 10
         local y = 10
         for _, inventory in ipairs(inventories) do
@@ -153,8 +152,6 @@ Events.OnGameBoot.Add(function()
 
             table.insert(self.gridContainerUis, itemGridContainerUi)
         end
-
-        self.tetrisContentPane:addChild(self.tetrisStencilBuilder.tearDownElement)
 
         self.tetrisLastScrollX = 0
         self.tetrisLastScrollY = 0
@@ -222,9 +219,6 @@ Events.OnGameBoot.Add(function()
 
         self.hscroll:setWidth(self.width - xOffset)
         self.hscroll:setY(self.height - 15)
-
-        self.tetrisStencilBuilder.stencilWidth = self.width - xOffset
-        self.tetrisStencilBuilder.stencilHeight = self.height - yOffset
 
         self:updateTetrisContentPanel()
 
