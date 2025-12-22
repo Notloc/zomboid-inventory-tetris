@@ -81,10 +81,10 @@ end)
 ---
 --- For an example of how to use this event, see /client/InventoryTetris/EventHandlers/KnownAndCollectedRenderHandler.lua
 ---
----@param drawingContext ISUIElement - The UI element that is rendering. Not guaranteed to be an ItemGridUI.
----@param renderInstructions TetrisRenderInstruction[] - An array of render instructions that were used to render the grid. This is a buffer, do not modify it.
----@param instructionCount number - The number of valid instructions in the renderInstructions buffer. Going beyond this number may contain old data.
----@param playerObj IsoPlayer - The player that the grid is being rendered for.
+---@param drawingContext ISUIElement The UI element that is rendering. Not guaranteed to be an ItemGridUI.
+---@param renderInstructions TetrisRenderInstruction[] An array of render instructions that were used to render the grid. This is a buffer, do not modify it.
+---@param instructionCount number The number of valid instructions in the renderInstructions buffer. Going beyond this number may contain old data.
+---@param playerObj IsoPlayer The player that the grid is being rendered for.
 TetrisEvents.OnPostRenderGrid = TetrisEvents.createEvent("OnPostRenderGrid", function(self, drawingContext, renderInstructions, instructionCount, playerObj)
     TetrisEvents._genericTrigger(self, drawingContext, renderInstructions, instructionCount, playerObj)
 end)

@@ -6,14 +6,20 @@ local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 
 ---@class DragItemRenderer : ISUIElement
+---@field equipmentUiPanel ISUIElement
+---@field playerNum integer
 local DragItemRenderer = ISUIElement:derive("DragItemRenderer")
 
-function DragItemRenderer:new(equipmentUi, playerNum)
+---@param equipmentUiPanel ISUIElement
+---@param playerNum integer
+---@return DragItemRenderer
+function DragItemRenderer:new(equipmentUiPanel, playerNum)
+    ---@type DragItemRenderer
     local o = ISUIElement:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
 
-    o.equipmentUi = equipmentUi
+    o.equipmentUiPanel = equipmentUiPanel
     o.playerNum = playerNum
     return o
 end
@@ -34,7 +40,7 @@ function DragItemRenderer:render()
 
     local itemW, itemH = 1, 1
 
-    local force1x1 = self.equipmentUi:isMouseOver()
+    local force1x1 = self.equipmentUiPanel:isMouseOver()
     if not force1x1 then
         itemW, itemH = TetrisItemData.getItemSize(item, DragAndDrop.isDraggedItemRotated())
     end

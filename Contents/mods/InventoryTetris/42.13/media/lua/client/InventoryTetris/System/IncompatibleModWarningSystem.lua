@@ -3,7 +3,7 @@ local CompatibilityPopupWindow = require("InventoryTetris/UI/Windows/Compatibili
 local Version = require("Notloc/Versioning/Version")
 
 ---@diagnostic disable-next-line: undefined-global
-local EquipmentUI = require("EquipmentUI/UI/EquipmentUI") or EquipmentUI -- Temporary until EquipmentUI removes its globals
+local EquipmentUI = require("EquipmentUI/EquipmentUI")
 
 local TETRIS_IMG = getTexture("media/textures/Compatibility/tetris.png")
 local EQUIPMENT_IMG = getTexture("media/textures/Compatibility/equipment_ui.png")
@@ -16,7 +16,7 @@ local function isModActive(modID)
 end
 
 function InventoryTetrisIncompatibleModWarningSystem.showCompatibilityIssues()
-    if not EquipmentUI or Version.isBelow(EquipmentUI.version, 2, 1) then
+    if not EquipmentUI or Version.isBelow(EquipmentUI.version, 2, 3) then
         local cpw = CompatibilityPopupWindow:new(100, 100, TETRIS_IMG, InventoryTetris.version, EQUIPMENT_IMG, EquipmentUI and EquipmentUI.version, Version:new(2,1,0))
         cpw:initialise()
         cpw:addToUIManager()

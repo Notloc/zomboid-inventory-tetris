@@ -5,7 +5,7 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisPocketData = require("InventoryTetris/Data/TetrisPocketData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
-local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ControllerNode = require("InventoryTetris/UI/ControllerNode")
 local GridContainerInfo = require("InventoryTetris/UI/Container/GridContainerInfo")
 local GridOverflowRenderer = require("InventoryTetris/UI/Container/GridOverflowRenderer")
 local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
@@ -107,6 +107,8 @@ function ItemGridContainerUI:unregisterEvents()
 end
 
 ItemGridContainerUI.movableItemCache = {}
+
+---@param inventory ItemContainer
 function ItemGridContainerUI.getWorldTexture(inventory)
     local parent = inventory:getParent()
     if not parent then
@@ -130,7 +132,7 @@ function ItemGridContainerUI.getWorldTexture(inventory)
         return nil;
     end
 
-    local isMoveable = sprite:getName() and props:Is("IsMoveAble") or false;
+    local isMoveable = sprite:getName() and props:has("IsMoveAble") or false;
     if not isMoveable then
         return nil;
     end
@@ -184,7 +186,7 @@ function ItemGridContainerUI:initialise()
     self.containerGrid:refreshSecondaryGrids(true)
     self.isInitialized = true
 
-    NotlocControllerNode
+    ControllerNode
         :injectControllerNode(self)
         :setChildrenNodeProvider(function()
             local children = {}
@@ -542,7 +544,7 @@ function ItemGridContainerUI:renderTitle(text, xOffset, yOffset, paddingX, paddi
     local textW = getTextManager():MeasureStringX(UIFont.Small, text);
     local textH = FONT_HEIGHT_SMALL;
 
-    local color = (self.isGridCollapsed and self.controllerNode.isFocused) and NotlocControllerNode.FOCUS_COLOR or BLACK
+    local color = (self.isGridCollapsed and self.controllerNode.isFocused) and ControllerNode.FOCUS_COLOR or BLACK
 
     self:drawRect(xOffset, yOffset, textW+paddingX*2, textH+paddingY*2, color.a, color.r, color.g, color.b)
     self:drawRectBorder(xOffset, yOffset, textW+paddingX*2, textH+paddingY*2, 0.5,1,1,1)

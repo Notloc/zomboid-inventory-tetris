@@ -11,7 +11,7 @@ local GenericSingleItemRecipeHandler = require("InventoryTetris/EventHandlers/Ge
 local OPT = require("InventoryTetris/Settings")
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
-local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ControllerNode = require("InventoryTetris/UI/ControllerNode")
 local ItemGridStackSplitWindow = require("InventoryTetris/UI/Grid/ItemGridStackSplitWindow")
 
 local CONTROLLER_DOUBLE_PRESS_TIME = 200
@@ -24,7 +24,7 @@ function ItemGridUI:initialise()
 
     self.selectedX = 0
     self.selectedY = 0
-    NotlocControllerNode
+    ControllerNode
         :injectControllerNode(self)
         :doSimpleFocusHighlight()
         :setJoypadDirHandler(self.controllerNodeOnJoypadDir)
@@ -707,7 +707,7 @@ function ItemGridUI.openItemContextMenu(uiContext, x, y, item, inventoryPane, pl
     local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStackListFromItem(item, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
 
     if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
-        NotlocControllerNode:focusContextMenu(playerNum, menu)
+        ControllerNode:focusContextMenu(playerNum, menu)
     end
     return menu
 end
@@ -722,7 +722,7 @@ function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, 
     local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, ItemStack.createVanillaStackListFromItems(items, inventoryPane), uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
 
     if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
-        NotlocControllerNode:focusContextMenu(playerNum, menu)
+        ControllerNode:focusContextMenu(playerNum, menu)
     end
     return menu
 end
@@ -743,7 +743,7 @@ function ItemGridUI.openContextMenuForVanillaStacks(uiContext, x, y, vanillaStac
     local menu = ISInventoryPaneContextMenu.createMenu(playerNum, isInInv, vanillaStacks, uiContext:getAbsoluteX()+x, uiContext:getAbsoluteY()+y)
 
     if menu and menu.numOptions > 1 and JoypadState.players[playerNum+1] then
-        NotlocControllerNode:focusContextMenu(playerNum, menu)
+        ControllerNode:focusContextMenu(playerNum, menu)
     end
     return menu
 end
@@ -803,7 +803,7 @@ function ItemGridUI:controllerNodeOnJoypadDir(dx, dy, joypadData)
     self.selectedY = ySelected
 
     local screenX, screenY = self:gridPositionToScreenPosition(xSelected, ySelected)
-    NotlocControllerNode.ensureVisibleXY(self, screenX, screenY)
+    ControllerNode.ensureVisibleXY(self, screenX, screenY)
 
     return true
 end

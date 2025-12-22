@@ -2,12 +2,13 @@ require("ISUI/ISUIElement")
 local OPT = require("InventoryTetris/Settings")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
 local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
-local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ControllerNode = require("InventoryTetris/UI/ControllerNode")
 local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 
 local OVERFLOW_MARGIN = 3
 local OVERFLOW_RENDERER_SPACING = 8
 
+---@class GridOverflowRenderer : ISUIElement
 local GridOverflowRenderer = ISUIElement:derive("GridOverflowRenderer")
 
 function GridOverflowRenderer:new(x,y, containerGridUi, gridUi, inventory, inventoryPane, playerNum)
@@ -26,7 +27,7 @@ end
 
 function GridOverflowRenderer:initialise()
     ISUIElement.initialise(self)
-    NotlocControllerNode
+    ControllerNode
         :injectControllerNode(self)
         :setJoypadDirHandler(self.controllerNodeOnJoypadDir)
         :setJoypadDownHandler(self.controllerNodeOnJoypadDown)
@@ -123,7 +124,7 @@ function GridOverflowRenderer:render()
     ItemGridUI._bulkRenderGridStacks(self, renderInstructions, instructionCount, playerObj)
 
     if controllerSelectionFound then
-        self:drawRectBorder(controllerX, controllerY, OPT.CELL_SIZE, OPT.CELL_SIZE, 0.3, NotlocControllerNode.FOCUS_COLOR.r, NotlocControllerNode.FOCUS_COLOR.g, NotlocControllerNode.FOCUS_COLOR.b)
+        self:drawRectBorder(controllerX, controllerY, OPT.CELL_SIZE, OPT.CELL_SIZE, 0.3, ControllerNode.FOCUS_COLOR.r, ControllerNode.FOCUS_COLOR.g, ControllerNode.FOCUS_COLOR.b)
     end
 end
 

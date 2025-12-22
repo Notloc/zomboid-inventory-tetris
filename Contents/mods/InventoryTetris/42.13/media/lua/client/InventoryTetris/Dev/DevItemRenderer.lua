@@ -1,8 +1,20 @@
 local OPT = require("InventoryTetris/Settings")
 
+---@class DevItemRenderer : ISPanel
+---@field item InventoryItem
+---@field playerNum integer
+---@field w integer
+---@field h integer
 local DevItemRenderer = ISPanel:derive("DevItemRenderer");
 
+---@param x integer
+---@param y integer
+---@param item InventoryItem
+---@param w integer
+---@param h integer
+---@return DevItemRenderer
 function DevItemRenderer:new(x, y, item, w, h)
+    ---@type DevItemRenderer
     local o = ISPanel:new(x, y, 1, 1);
     setmetatable(o, self);
     self.__index = self;

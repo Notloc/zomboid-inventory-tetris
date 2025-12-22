@@ -6,9 +6,10 @@ require("ISUI/ISMouseDrag")
 require("ISUI/ISLayoutManager")
 require("defines")
 
-local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ControllerNode = require("InventoryTetris/UI/ControllerNode")
 local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
 
+---@class ItemGridWindow : ISPanel
 local ItemGridWindow = ISPanel:derive("ItemGridWindow");
 
 ItemGridWindow._globalInstances = {};
@@ -172,7 +173,7 @@ function ItemGridWindow:createChildren()
     end
 
 
-    NotlocControllerNode
+    ControllerNode
         :injectControllerNode(self, true)
         :setChildrenNodeProvider(function()
             return {self.gridContainerUi.controllerNode}

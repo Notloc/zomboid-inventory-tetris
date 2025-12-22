@@ -255,7 +255,7 @@ Events.OnGameBoot.Add(function()
         local isController = JoypadState.players[self.player+1] ~= nil
 
         if not isController and self.parent:isMouseOverEquipmentUi() then
-            return self.parent.equipmentUi:updateTooltip()
+            return GetPlayerEquipmentUi(self.player):updateTooltip()
         else
             if isController then
                 local item = self:findSelectedControllerItem()

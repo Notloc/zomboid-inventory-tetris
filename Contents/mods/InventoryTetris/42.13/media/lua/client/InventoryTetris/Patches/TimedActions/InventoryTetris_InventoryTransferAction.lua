@@ -238,11 +238,11 @@ Events.OnGameBoot.Add(function()
             elseif self.gridIndex then
                 local grid = destContainerGrid:getSpecificGrid(self.gridIndex, self.tetrisSecondary)
                 if grid then
-                    local disorganized = self.character:HasTrait("Disorganized")
+                    local disorganized = self.character:hasTrait(CharacterTrait.DISORGANIZED)
                     grid:_attemptToInsertItem(item, self.isRotated, disorganized)
                 end
             else
-                local disorganized = self.character:HasTrait("Disorganized")
+                local disorganized = self.character:hasTrait(CharacterTrait.DISORGANIZED)
                 destContainerGrid:attemptToInsertItem(item, self.isRotated, disorganized)
             end
 

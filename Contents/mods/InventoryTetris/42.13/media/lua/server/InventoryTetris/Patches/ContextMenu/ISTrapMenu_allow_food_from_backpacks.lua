@@ -11,9 +11,12 @@ Events.OnGameStart.Add(function()
         og_doTrapMenu(player, context, worldobjects, test);
         local playerObj = getSpecificPlayer(player);
 
+        local cTrapInstance = CTrapSystem.instance;
+        if not cTrapInstance then return end
+
         local placedTrap = nil;
         for _,v in ipairs(worldobjects) do
-            placedTrap = CTrapSystem.instance:getLuaObjectAt(v:getX(), v:getY(), v:getZ());
+            placedTrap = cTrapInstance:getLuaObjectAt(v:getX(), v:getY(), v:getZ());
             if placedTrap then break end
         end
 

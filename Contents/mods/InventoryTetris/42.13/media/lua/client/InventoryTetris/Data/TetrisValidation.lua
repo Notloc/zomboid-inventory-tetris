@@ -77,7 +77,7 @@ end
 ---@param container ItemContainer
 function TetrisValidation.isTardis(container)
     local containingItem = container:getContainingItem()
-    local isKeyRing = containingItem and containingItem:hasTag("KeyRing")
+    local isKeyRing = containingItem and containingItem:hasTag(ItemTag.KEY_RING)
 
     if isKeyRing or container:getType() == "none" then
         return false

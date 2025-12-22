@@ -20,7 +20,7 @@ Events.OnGameBoot.Add(function()
         local button = og_addContainerButton(self, container, texture, name, tooltip)
 
         local containingItem = container:getContainingItem()
-        local isKeyRing = containingItem and containingItem:hasTag("KeyRing")
+        local isKeyRing = containingItem and containingItem:hasTag(ItemTag.KEY_RING)
         if (isKeyRing) then
             self:removeChild(button)
             self.backpacks[#self.backpacks] = nil

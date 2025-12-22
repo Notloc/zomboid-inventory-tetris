@@ -11,7 +11,7 @@ function GridAutoDropSystem._processItems(playerNum, items)
     local playerObj = getSpecificPlayer(playerNum)
     if not playerObj or playerObj:isDead() then return end
 
-    local isDisorganized = playerObj:HasTrait("Disorganized")
+    local isDisorganized = playerObj:hasTrait(CharacterTrait.DISORGANIZED)
     local containers = ItemUtil.getAllEquippedContainers(playerObj)
     local mainInv = playerObj:getInventory()
 
@@ -40,7 +40,7 @@ function GridAutoDropSystem._processItems(playerNum, items)
                 end
 
                 if TetrisItemCategory.getCategory(item) == TetrisItemCategory.KEY then
-                    local keyRings = mainInv:getAllTag("KeyRing", ArrayList.new())
+                    local keyRings = mainInv:getAllTag(ItemTag.KEY_RING, ArrayList.new())
                     for i = 0, keyRings:size()-1 do
                         local keyRing = keyRings:get(i)
                         local container = keyRing:getItemContainer()
@@ -107,6 +107,9 @@ function GridAutoDropSystem._attemptToForcePositionItem(item, playerObj, playerN
     end
 end
 
+---@param item InventoryItem
+---@param playerObj IsoPlayer
+---@param playerNum integer
 function GridAutoDropSystem._attemptToForceEquipItem(item, playerObj, playerNum)
     local primHand = playerObj:getPrimaryHandItem()
     local secHand = playerObj:getSecondaryHandItem()

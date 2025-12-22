@@ -534,6 +534,9 @@ end
 
 ItemGridUI.doLiteratureCheckmark = true
 
+---@param player IsoPlayer
+---@param item Literature
+---@return boolean
 function ItemGridUI._showLiteratureCheckmark(player, item)
     return
         ItemGridUI.doLiteratureCheckmark and
@@ -541,7 +544,7 @@ function ItemGridUI._showLiteratureCheckmark(player, item)
             (player:isLiteratureRead(item:getModData().literatureTitle)) or
             (SkillBook[item:getSkillTrained()] ~= nil and item:getMaxLevelTrained() < player:getPerkLevel(SkillBook[item:getSkillTrained()].perk) + 1) or
             (item:getNumberOfPages() > 0 and player:getAlreadyReadPages(item:getFullType()) == item:getNumberOfPages()) or
-            (item:getTeachedRecipes() ~= nil and player:getKnownRecipes():containsAll(item:getTeachedRecipes())) or
+            (item:getLearnedRecipes() ~= nil and player:getKnownRecipes():containsAll(item:getLearnedRecipes())) or
             (item:getModData().teachedRecipe ~= nil and player:getKnownRecipes():contains(item:getModData().teachedRecipe))
         )
 end
@@ -686,7 +689,7 @@ local function getItemInstanceData(item, itemTypeData)
     end
 
     local fluidMask = item:getTextureFluidMask()
-    local showPoison = item:hasTag("ShowPoison")
+    local showPoison = item:hasTag(ItemTag.SHOW_POISON)
 
     local data = {
         r = r,

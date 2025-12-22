@@ -3,7 +3,7 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local OPT = require("InventoryTetris/Settings")
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
-local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ControllerNode = require("InventoryTetris/UI/ControllerNode")
 local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI")
 local TetrisDevTool = require("InventoryTetris/Dev/TetrisDevTool")
 
@@ -18,9 +18,14 @@ local UNKNOWN_WEIGHT = "?"
 local textManager = getTextManager()
 local mediumFont = UIFont.Medium
 
+---@class GridContainerInfo : ISUIElement
+---@field containerUi ItemGridContainerUI
 local GridContainerInfo = ISUIElement:derive("GridContainerInfo")
 
+---@param containerUi ItemGridContainerUI
+---@return GridContainerInfo
 function GridContainerInfo:new(containerUi)
+    ---@type GridContainerInfo
     local o = ISUIElement:new(0,0, 500, 500)
     setmetatable(o, self)
     self.__index = self
@@ -30,7 +35,7 @@ function GridContainerInfo:new(containerUi)
 end
 
 function GridContainerInfo:createChildren()
-    NotlocControllerNode
+    ControllerNode
         :injectControllerNode(self)
         :doSimpleFocusHighlight()
         :setJoypadDownHandler(self.controllerNodeOnJoypadDown)

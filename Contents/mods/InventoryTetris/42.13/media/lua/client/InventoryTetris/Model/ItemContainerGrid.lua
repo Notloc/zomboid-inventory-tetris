@@ -14,7 +14,7 @@ local PHYSICS_DELAY = 600
 -- Also statically caches grids for performance reasons (Grids get rebuilt entirely every few frames because we have no trusted events to know when the inventory changes)
 ---@class ItemContainerGrid
 ---@field inventory ItemContainer
----@field playerNum number
+---@field playerNum integer
 ---@field player IsoPlayer
 ---@field containerDefinition ContainerGridDefinition
 ---@field isPlayerInventory boolean
@@ -305,9 +305,10 @@ function ItemContainerGrid:doesItemFitAnywhere(item, w, h, ignoreItems)
     return false
 end
 
+---@param player IsoPlayer
 function ItemContainerGrid:_getCapacity(player)
-    local hasOrganizedTrait = player:HasTrait("Organized")
-    local hasDisorganizedTrait = player:HasTrait("Disorganized")
+    local hasOrganizedTrait = player:hasTrait(CharacterTrait.ORGANIZED)
+    local hasDisorganizedTrait = player:hasTrait(CharacterTrait.DISORGANIZED)
 
     local capacity = self.inventory:getCapacity()
     if hasOrganizedTrait then
@@ -529,7 +530,7 @@ function ItemContainerGrid:_updateGridPositions()
     local isDisorganized = false
     if self.isOnPlayer then
         local player = getSpecificPlayer(self.playerNum)
-        isDisorganized = player:HasTrait("Disorganized")
+        isDisorganized = player:hasTrait(CharacterTrait.DISORGANIZED)
     end
 
     -- Sort the unpositioned items by size, so we can place the biggest ones first

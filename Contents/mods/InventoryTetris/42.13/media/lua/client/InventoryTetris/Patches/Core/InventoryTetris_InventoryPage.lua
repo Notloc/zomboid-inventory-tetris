@@ -1,6 +1,6 @@
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 local DragItemRenderer = require("InventoryTetris/UI/TetrisDragItemRenderer")
-local NotlocControllerNode = require("InventoryTetris/UI/NotlocControllerNode")
+local ControllerNode = require("InventoryTetris/UI/ControllerNode")
 
 -- Injects the new control scheme into the InventoryPage class.
 ---@diagnostic disable: duplicate-set-field
@@ -29,12 +29,12 @@ Events.OnGameBoot.Add(function()
 		self:addChild(self.tetrisSearchButton)
 
 		if self.onCharacter then
-            self.dragItemRenderer = DragItemRenderer:new(self.equipmentUi, self.player);
+            self.dragItemRenderer = DragItemRenderer:new(self.equipmentUiPanel, self.player);
 			self.dragItemRenderer:initialise();
 			self.dragItemRenderer:addToUIManager();
 		end
 
-		NotlocControllerNode
+		ControllerNode
 			:injectControllerNode(self, true)
 			:setChildrenNodeProvider(function()
 				local children = {}
