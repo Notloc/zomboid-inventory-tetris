@@ -16,7 +16,7 @@ local function isModActive(modID)
 end
 
 function InventoryTetrisIncompatibleModWarningSystem.showCompatibilityIssues()
-    if not EquipmentUI or Version.isBelow(EquipmentUI.version, 2, 3) then
+    if not EquipmentUI or Version.isBelow(EquipmentUI.version, 2, 3, 1) then
         local cpw = CompatibilityPopupWindow:new(100, 100, TETRIS_IMG, InventoryTetris.version, EQUIPMENT_IMG, EquipmentUI and EquipmentUI.version, Version:new(2,1,0))
         cpw:initialise()
         cpw:addToUIManager()

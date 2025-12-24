@@ -1299,7 +1299,13 @@ end
 -- Avoid double patching when reloading
 if not TetrisDevTool_og_createMenu then
     TetrisDevTool_og_createMenu = ISInventoryPaneContextMenu.createMenu
-    ---@diagnostic disable-next-line: duplicate-set-field
+
+    ---@param player integer
+    ---@param isInPlayerInventory boolean
+    ---@param items InventoryItem|umbrella.ISInventoryPane.ItemRecord[]
+    ---@param x number
+    ---@param y number
+    ---@param origin any
     ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
         local menu = TetrisDevTool_og_createMenu(player, isInPlayerInventory, items, x, y, origin)
         if not menu or not TetrisDevTool.isDebugEnabled() then return menu end
@@ -1311,6 +1317,8 @@ if not TetrisDevTool_og_createMenu then
             item = items[1].items[1]
         end
         if not item then return menu end
+
+        ---@cast item InventoryItem
 
         if isDebugEnabled() then
             pcall(function ()
@@ -1347,10 +1355,6 @@ if not TetrisDevTool_og_createMenu then
                 if tex then
                     print("Texture Width: " .. tostring(tex:getWidth()))
                     print("Texture Height: " .. tostring(tex:getHeight()))
-                end
-
-                if item:IsClothing() then
-                    print("Bodyslot: " .. item:getBodyLocation())
                 end
             end)
         end
