@@ -5,6 +5,8 @@ local Version = require("Notloc/Versioning/Version")
 ---@diagnostic disable-next-line: undefined-global
 local EquipmentUI = require("EquipmentUI/EquipmentUI")
 
+local REQUIRED_EQUIPMENT_UI_VERSION = Version:new(2,3,1)
+
 local TETRIS_IMG = getTexture("media/textures/Compatibility/tetris.png")
 local EQUIPMENT_IMG = getTexture("media/textures/Compatibility/equipment_ui.png")
 
@@ -16,8 +18,8 @@ local function isModActive(modID)
 end
 
 function InventoryTetrisIncompatibleModWarningSystem.showCompatibilityIssues()
-    if not EquipmentUI or Version.isBelow(EquipmentUI.version, 2, 3, 1) then
-        local cpw = CompatibilityPopupWindow:new(100, 100, TETRIS_IMG, InventoryTetris.version, EQUIPMENT_IMG, EquipmentUI and EquipmentUI.version, Version:new(2,1,0))
+    if not EquipmentUI or Version.isBelow(EquipmentUI.version, REQUIRED_EQUIPMENT_UI_VERSION.major, REQUIRED_EQUIPMENT_UI_VERSION.minor, REQUIRED_EQUIPMENT_UI_VERSION.patch) then
+        local cpw = CompatibilityPopupWindow:new(100, 100, TETRIS_IMG, InventoryTetris.version, EQUIPMENT_IMG, EquipmentUI and EquipmentUI.version, REQUIRED_EQUIPMENT_UI_VERSION)
         cpw:initialise()
         cpw:addToUIManager()
     end

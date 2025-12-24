@@ -38,9 +38,11 @@ function Version.isBelow(version, major, minor, patch)
         return false
     end
 
-    if version.patch < patch then
+    local vPatch = version.patch or version.revision or 0
+
+    if vPatch < patch then
         return true
-    elseif version.patch > patch then
+    elseif vPatch > patch then
         return false
     end
 
