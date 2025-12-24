@@ -36,6 +36,10 @@ function InventoryTetrisIncompatibleModWarningSystem.showCompatibilityIssues()
         incompatibilityPopup:addModIncompatibility("Paw Low Loot - Fantasy Pack", "PLLootF", "MAJOR BUG:\nCauses items dropped to the floor to be deleted.\nDo not use without a community patch, i.e. Yet Another Paw Low Patch ( PLLootF_Patch )")
     end
 
+    if isClient() then
+        incompatibilityPopup:addModIncompatibility("Multiplayer", "INVENTORY_TETRIS", "Multiplayer is currently unsupported in b42.13. Expected bugs and inventory desync to occur.")
+    end
+
     if #incompatibilityPopup.incompatibleMods > 0 then
         incompatibilityPopup:addToUIManager()
     end
