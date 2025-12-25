@@ -224,7 +224,7 @@ Events.OnGameBoot.Add(function()
 
         -- Draw the version at the bottom left
         if self.parent.onCharacter then
-            local version = Version.format(InventoryTetris.version)
+            local version = "v"..Version.format(InventoryTetris.version)
             self:drawText(version, 8 - self:getXScroll(), self.height - 18 - self:getYScroll() - yOffset, 0.3, 0.3, 0.3, 0.82, UIFont.Small)
         end
     end
