@@ -498,6 +498,7 @@ function ItemGridContainerUI:prerender()
 
     if self.containerGrid:shouldRefresh() or inv:isDrawDirty() then
         self.containerGrid:refresh()
+        self.containerGrid:onClothingUpdated()
         inv:setDrawDirty(false)
     end
 
@@ -747,10 +748,6 @@ function ItemGridContainerUI:_onSecondaryGridsRemoved(target)
     if self.isInitialized then
         self.inventoryPane:refreshItemGrids()
     end
-end
-
-function ItemGridContainerUI:onClothingUpdated(playerObj)
-    self.containerGrid:onClothingUpdated(playerObj)
 end
 
 return ItemGridContainerUI

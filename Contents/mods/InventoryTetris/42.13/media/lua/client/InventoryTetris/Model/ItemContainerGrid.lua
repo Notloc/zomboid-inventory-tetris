@@ -774,8 +774,8 @@ function ItemContainerGrid:removeSecondaryGrid(secondaryTarget)
     return stacks
 end
 
-function ItemContainerGrid:onClothingUpdated(player)
-    if self.player ~= player or self.player:isDead() then
+function ItemContainerGrid:onClothingUpdated()
+    if self.player:isDead() then
         return
     end
     self:refreshSecondaryGrids()

@@ -1356,6 +1356,11 @@ if not TetrisDevTool_og_createMenu then
                     print("Texture Width: " .. tostring(tex:getWidth()))
                     print("Texture Height: " .. tostring(tex:getHeight()))
                 end
+
+                local bodyLocation = item:getBodyLocation()
+                if bodyLocation then
+                    print("body location: " .. tostring(bodyLocation))
+                end
             end)
         end
 

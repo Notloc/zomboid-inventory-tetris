@@ -107,14 +107,16 @@ Events.OnGameBoot.Add(function()
 
         local inventories = {}
 
-        if self.parent.onCharacter then
+        ---@type ISInventoryPage?
+        local inventoryPage = self.parent
+        if inventoryPage and inventoryPage.onCharacter then
             if ISInventoryPage.applyBackpackOrder then
-                self.parent:applyBackpackOrder()
+                inventoryPage:applyBackpackOrder()
             end
 
             -- Gather and sort the backpack buttons by their Y position
             local buttonsAndY = {}
-            for _, button in ipairs(self.parent.backpacks) do
+            for _, button in ipairs(inventoryPage.backpacks) do
                 table.insert(buttonsAndY, {button = button, y = button:getY()})
             end
             table.sort(buttonsAndY, function(a, b) return a.y < b.y end)
@@ -472,21 +474,4 @@ Events.OnGameBoot.Add(function()
         end
         return nil
     end
-
-    Events.OnClothingUpdated.Add(function(playerObj)
-        if not instanceof(playerObj, "IsoPlayer") then
-            return
-        end
-
-        ---@cast playerObj IsoPlayer
-        local playerNum = playerObj:getPlayerNum()
-        local inventoryPage = getPlayerInventory(playerNum)
-
-        if inventoryPage then
-            local containerUis = inventoryPage.inventoryPane.gridContainerUis or {}
-            for _, containerUi in ipairs(containerUis) do
-                containerUi:onClothingUpdated(playerObj)
-            end
-        end
-    end)
 end)

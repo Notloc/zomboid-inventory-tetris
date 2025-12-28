@@ -213,6 +213,7 @@ TetrisPocketData.defaultPocketDefinitionsBySlot = {
     [ItemBodyLocation.JACKET_BULKY] = two_big_two_small_pockets,
     [ItemBodyLocation.JACKET_DOWN] = two_big_two_small_pockets,
     [ItemBodyLocation.PANTS] = four_pockets,
+    [ItemBodyLocation.PANTS_SKINNY] = four_pockets,
     [ItemBodyLocation.PANTS_EXTRA] = six_pockets,
     [ItemBodyLocation.SHORT_PANTS] = four_pockets,
     [ItemBodyLocation.SHORTS_SHORT] = four_pockets,
