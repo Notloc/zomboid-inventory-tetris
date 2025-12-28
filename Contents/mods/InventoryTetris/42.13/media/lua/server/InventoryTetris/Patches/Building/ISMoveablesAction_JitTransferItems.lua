@@ -15,7 +15,7 @@ local function doesItemMatch(moveProps, item, validNameMap)
     return false
 end
 
-local function jitTransferItems(playerObj, moveProps, _origSpriteName)
+function ISMoveableCursor.tetris_jitTransferItems(playerObj, moveProps, _origSpriteName)
     local playerNum = playerObj:getPlayerNum()
     if not ISMoveableCursor.mode[playerNum] == "place" then
         return
@@ -63,15 +63,3 @@ local function jitTransferItems(playerObj, moveProps, _origSpriteName)
         end
     end)
 end
-
-Events.OnGameStart.Add(function ()
-    local og_new = ISMoveablesAction.new
-
-    ---@diagnostic disable-next-line: duplicate-set-field
-    function ISMoveablesAction:new(character, _sq, _mode, _origSpriteName, obj, direction, item, _moveCursor)
-        if _moveCursor then
-            jitTransferItems(character, _moveCursor.currentMoveProps, _origSpriteName)
-        end
-        return og_new(self, character, _sq, _mode, _origSpriteName, obj, direction, item, _moveCursor)
-    end
-end)
