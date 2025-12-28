@@ -26,6 +26,10 @@ Events.OnGameBoot.Add(function()
     function ISInventoryTransferAction:new (character, item, srcContainer, destContainer, time, ...)
         local o = og_new(self, character, item, srcContainer, destContainer, time, ...)
 
+        if not destContainer or not srcContainer then
+            return o
+        end
+
         if not SandboxVars.InventoryTetris.UseItemTransferTime then
             o.maxTime = 0
             o.stopOnRun = false
@@ -94,6 +98,10 @@ Events.OnGameBoot.Add(function()
 
     local og_isValid = ISInventoryTransferAction.isValid
     function ISInventoryTransferAction:isValid()
+        if not self.destContainer or not self.srcContainer then
+            return false
+        end
+
         local destDef = TetrisContainerData.getContainerDefinition(self.destContainer)
         local destType = destDef.trueType
 

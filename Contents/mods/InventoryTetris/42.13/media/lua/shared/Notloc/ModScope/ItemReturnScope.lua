@@ -32,6 +32,10 @@ function ItemReturnScope.createReturnAction(playerObj, action)
         return
     end
 
+    if not action.destContainer or not action.srcContainer then
+        return
+    end
+
     local returnAction = ISInventoryTransferAction:newReturnAction(playerObj, action.item, action.destContainer, action.srcContainer)
     table.insert(instance.returnActions, returnAction)
 end
@@ -40,7 +44,7 @@ Events.OnGameStart.Add(function()
     local og_new = ISInventoryTransferAction.new
     
     ---@diagnostic disable-next-line: duplicate-set-field
-    function ISInventoryTransferAction.new(self, character, ...)
+    function ISInventoryTransferAction:new(character, ...)
         local o = og_new(self, character, ...)
         if ItemReturnScope:isActive() then
             ItemReturnScope.createReturnAction(character, o)

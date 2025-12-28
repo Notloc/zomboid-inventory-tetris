@@ -24,11 +24,15 @@ local function disableCarryWeightOnContainer(container, callback, ...)
         container = container:getInventory()
     end
 
+    if not container then
+        return callback(...)
+    end
+
     local originalCapacity = container:getCapacity()
     local originalType = container:getType()
 
     -- Skip player's main inventory or fragile containers or if the option is disabled
-    if not container or originalType == "floor" or SandboxVars.InventoryTetris.EnforceCarryWeight --[[or isPlayerInv(container)]] then -- Disabling capacity for the player inv due to vanilla fluid bugs
+    if originalType == "floor" or SandboxVars.InventoryTetris.EnforceCarryWeight --[[or isPlayerInv(container)]] then -- Disabling capacity for the player inv due to vanilla fluid bugs
         return callback(...)
     end
 

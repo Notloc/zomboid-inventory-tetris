@@ -30,6 +30,10 @@ function GridTransferQueueData:processAction(action)
         local targetInv = action.destContainer
         local sourceInv = action.srcContainer
 
+        if not targetInv or not sourceInv then
+            return
+        end
+
         if not self.outgoing[sourceInv] then
             self.outgoing[sourceInv] = {}
         end
