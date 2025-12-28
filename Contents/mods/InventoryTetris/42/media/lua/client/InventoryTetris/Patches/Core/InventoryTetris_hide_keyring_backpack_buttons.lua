@@ -22,7 +22,7 @@ Events.OnGameBoot.Add(function()
         local containingItem = container:getContainingItem()
         local isKeyRing = containingItem and containingItem:hasTag("KeyRing")
         if (isKeyRing) then
-            self:removeChild(button)
+            self.containerButtonPanel:removeChild(button)
             self.backpacks[#self.backpacks] = nil
             -- Prepend the button to buttonPool.
             --   There is an awkward bug where the selected backpack is double refreshed and
