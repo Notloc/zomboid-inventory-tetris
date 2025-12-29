@@ -5,17 +5,21 @@ local TetrisModCompatibility = require("InventoryTetris/TetrisModCompatibility")
 ---@class ContainerGridDefinition
 ---@field gridDefinitions GridDefinition[]
 ---@field validCategories table<TetrisItemCategory, boolean>|nil
----@field invalidCategories TetrisItemCategory[] -- Deprecated
+---@field invalidCategories TetrisItemCategory[]|nil -- Deprecated
 ---@field isFragile boolean|nil
 ---@field isRigid boolean|nil
 ---@field trueType string|nil
+---@field _autoCalculated boolean|nil
+---@field corrected boolean|nil
 
 ---@class GridDefinition
----@field size Size2D
----@field position Vector2Lua
+---@field size WidthHeight
+---@field position XY
 
--- Intentional global
-TetrisContainerData = {}
+---@class TetrisContainerData
+---@field _containerDefinitions table<string, ContainerGridDefinition>
+---@field _devContainerDefinitions table<string, ContainerGridDefinition>
+local TetrisContainerData = {}
 
 TetrisContainerData._containerDefinitions = {}
 TetrisContainerData._devContainerDefinitions = {}
@@ -27,22 +31,29 @@ local MUST_BE_FRAGILE = {
     ["clothingdryer"] = true,
 }
 
+---@param container ItemContainer
+---@param containerDef ContainerGridDefinition
 function TetrisContainerData.setContainerDefinition(container, containerDef)
     local containerKey = TetrisContainerData._getContainerKey(container)
     TetrisContainerData._containerDefinitions[containerKey] = containerDef
 end
 
+---@param container ItemContainer
+---@return ContainerGridDefinition
 function TetrisContainerData.getContainerDefinition(container)
     local containerKey = TetrisContainerData._getContainerKey(container)
     return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
 end
 
 ---@param container ItemContainer
+---@return integer
 function TetrisContainerData.calculateInnerSize(container)
     local definition = TetrisContainerData.getContainerDefinition(container)
     return TetrisContainerData._calculateInnerSizeByDefinition(definition)
 end
 
+---@param definition ContainerGridDefinition
+---@return integer
 function TetrisContainerData._calculateInnerSizeByDefinition(definition)
     local innerSize = 0
     for _, gridDefinition in ipairs(definition.gridDefinitions) do
@@ -53,6 +64,8 @@ function TetrisContainerData._calculateInnerSizeByDefinition(definition)
     return innerSize
 end
 
+---@param container ItemContainer
+---@return string
 function TetrisContainerData._getContainerKey(container)
     local modKey = TetrisModCompatibility.getModContainerKey(container)
     if modKey then
@@ -66,6 +79,9 @@ function TetrisContainerData._getContainerKey(container)
     return type .. "_" .. container:getCapacity()
 end
 
+---@param container ItemContainer
+---@param containerKey string
+---@return ContainerGridDefinition
 function TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
     local def = TetrisContainerData._devContainerDefinitions[containerKey] or TetrisContainerData._containerDefinitions[containerKey]
     if not def then
@@ -81,6 +97,8 @@ function TetrisContainerData._getContainerDefinitionByKey(container, containerKe
 end
 
 -- Inject new required fields and enforce certain rules
+---@param container ItemContainer
+---@param containerDef ContainerGridDefinition
 function TetrisContainerData._enforceCorrections(container, containerDef)
     if containerDef.corrected then
         return
@@ -101,6 +119,8 @@ function TetrisContainerData.recalculateContainerData()
     TetrisContainerData._onInitWorld()
 end
 
+---@param containerDef ContainerGridDefinition
+---@return string|nil
 function TetrisContainerData.getSingleValidCategory(containerDef)
     local validCategories = TetrisContainerData._getValidCategories(containerDef)
     if not validCategories then
@@ -118,6 +138,9 @@ function TetrisContainerData.getSingleValidCategory(containerDef)
     return category
 end
 
+---@param containerDef ContainerGridDefinition
+---@param category TetrisItemCategory
+---@return boolean
 function TetrisContainerData.canAcceptCategory(containerDef, category)
     local validCategories = TetrisContainerData._getValidCategories(containerDef)
     return not validCategories or validCategories[category]
@@ -125,6 +148,8 @@ end
 
 -- Valid categories are used now because they are easier to reason.
 -- Invalid parsing remains to support existing datapacks.
+---@param containerDef ContainerGridDefinition
+---@return table<TetrisItemCategory, boolean>|nil
 function TetrisContainerData._getValidCategories(containerDef)
     if containerDef.validCategories then
         return containerDef.validCategories
@@ -150,8 +175,11 @@ function TetrisContainerData._getValidCategories(containerDef)
     return validCategories
 end
 
+---@type table<Item, ItemContainer>
 local itemScriptToContainer = {}
 
+---@param itemScript Item
+---@return ContainerGridDefinition|nil
 function TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
     if not itemScriptToContainer[itemScript] then
         local item = instanceItem(itemScript)
@@ -213,5 +241,8 @@ function TetrisContainerData._onInitWorld()
     TetrisContainerData._initializeContainerPacks()
 end
 Events.OnInitWorld.Add(TetrisContainerData._onInitWorld)
+
+-- For backwards compatibility with existing datapacks
+_G.TetrisContainerData = TetrisContainerData
 
 return TetrisContainerData

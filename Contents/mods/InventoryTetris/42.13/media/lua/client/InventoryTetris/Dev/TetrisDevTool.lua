@@ -47,6 +47,9 @@ local function writeJsonFile(fileName, json)
     local createFile = true
     local appendToFile = false
     local writer = getFileWriter(fileName, createFile, appendToFile);
+    if not writer then
+        return;
+    end
 
     if type(json) ~= "string" then
         json = JSON.stringify(json);
@@ -60,6 +63,9 @@ local function writeText(fileName, text)
     local createFile = true
     local appendToFile = false
     local writer = getFileWriter(fileName, createFile, appendToFile);
+    if not writer then
+        return;
+    end
 
     writer:write(text);
     writer:close();

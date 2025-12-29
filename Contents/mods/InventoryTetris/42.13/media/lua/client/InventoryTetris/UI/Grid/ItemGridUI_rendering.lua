@@ -39,15 +39,16 @@ local COLD_TEX = getTexture("media/textures/InventoryTetris/Cold.png")
 ---@field grid ItemGrid
 ---@field containerGrid ItemContainerGrid
 ---@field inventoryPane ISInventoryPane
----@field playerNum number
+---@field playerNum integer
 local ItemGridUI = ISUIElement:derive("ItemGridUI")
 
 ---@param grid ItemGrid
 ---@param containerGrid ItemContainerGrid
 ---@param inventoryPane ISInventoryPane
----@param playerNum number
+---@param playerNum integer
 ---@return ItemGridUI
 function ItemGridUI:new(grid, containerUi, containerGrid, inventoryPane, playerNum)
+    ---@type ItemGridUI
     local o = ISUIElement:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
@@ -62,7 +63,6 @@ function ItemGridUI:new(grid, containerUi, containerGrid, inventoryPane, playerN
     o:setWidth(o:calculateWidth())
     o:setHeight(o:calculateHeight())
 
-    ---@type ItemGridUI
     return o
 end
 

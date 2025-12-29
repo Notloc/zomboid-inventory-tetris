@@ -1,8 +1,14 @@
 require("TimedActions/ISBaseTimedAction")
 
+---@class SearchGridAction : ISBaseTimedAction
+---@field public grid ItemGrid
 local SearchGridAction = ISBaseTimedAction:derive("SearchGridAction");
 
+---@param character IsoPlayer
+---@param grid ItemGrid
+---@return SearchGridAction
 function SearchGridAction:new (character, grid)
+	---@type SearchGridAction
 	local o = ISBaseTimedAction.new(self, character);
 	o.grid = grid;
 	o.stopOnWalk = true;
@@ -48,27 +54,20 @@ function SearchGridAction:update()
     end
 end
 
-function SearchGridAction:stop()
-	if self.sound then
-		self.character:getEmitter():stopSound(self.sound)
-	end
-    ISBaseTimedAction.stop(self);
-end
-
 function SearchGridAction:perform()
-	if self.sound then
-		self.character:getEmitter():stopSound(self.sound)
-	end
-
 	local playerNum = self.character:getPlayerNum()
 	self.grid:completeSearch(playerNum)
 
 	-- we need to update our needSearch variable when a search is completed
-	---- TODO: Possibly a better way to propagate this?
-	getPlayerInventory(playerNum):checkTetrisSearch()
-	getPlayerLoot(playerNum):checkTetrisSearch()
+	local inv = getPlayerInventory(playerNum)
+	if inv then
+		inv:checkTetrisSearch()
+	end
+	local loot = getPlayerLoot(playerNum)
+	if loot then
+		loot:checkTetrisSearch()
+	end
 
-    -- needed to remove from queue / start next.
 	ISBaseTimedAction.perform(self);
 end
 

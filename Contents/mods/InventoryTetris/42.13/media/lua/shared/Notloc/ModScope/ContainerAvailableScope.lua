@@ -3,7 +3,7 @@ local ContainerAvailableScope = BaseScope:new()
 ContainerAvailableScope.containers = {}
 
 ---@param callback function
----@param containers table<InventoryContainer>
+---@param containers InventoryContainer[]
 function ContainerAvailableScope:execute(callback, containers)
     -- Check which containers need to be added
     local addMap = {}

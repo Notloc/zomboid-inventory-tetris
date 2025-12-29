@@ -257,6 +257,8 @@ Events.OnGameBoot.Add(function()
         local isController = JoypadState.players[self.player+1] ~= nil
 
         if not isController and self.parent:isMouseOverEquipmentUi() then
+            ---@diagnostic disable-next-line: undefined-global
+            -- From EquipmentUI
             return GetPlayerEquipmentUi(self.player):updateTooltip()
         else
             if isController then

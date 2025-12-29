@@ -15,9 +15,9 @@ local ControllerNode = require("InventoryTetris/UI/ControllerNode")
 local ItemGridStackSplitWindow = require("InventoryTetris/UI/Grid/ItemGridStackSplitWindow")
 
 local CONTROLLER_DOUBLE_PRESS_TIME = 200
+local Core = getCore()
 
 local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
-local Core = getCore()
 
 function ItemGridUI:initialise()
     ISPanel.initialise(self)

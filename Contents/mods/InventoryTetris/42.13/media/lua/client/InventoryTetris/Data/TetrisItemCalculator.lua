@@ -6,10 +6,15 @@ local FLOAT_CORRECTION = 0.001
 local MAX_ITEM_WIDTH = 10
 local MAX_ITEM_HEIGHT = 12
 
+---@class TetrisItemCalculator
+---@field public _dynamicSizeItems table<string, boolean>
 local TetrisItemCalculator = {}
 
 TetrisItemCalculator._dynamicSizeItems = {} -- Defined in TetrisItemData instead, directly overwrites this
+-- But why? I'm glad I recongized this needed a comment, but I should've explained why, not how
 
+---@param item InventoryItem
+---@return TetrisItemDefinition
 function TetrisItemCalculator.calculateItemInfo(item)
     local category = TetrisItemCategory.getCategory(item)
 
@@ -24,11 +29,13 @@ function TetrisItemCalculator.calculateItemInfo(item)
     return data
 end
 
-function TetrisItemCalculator.calculateItemInfoSquished(unsquishedData)
+---@param unsquishedDef TetrisItemDefinition
+---@return TetrisItemDefinition
+function TetrisItemCalculator.calculateItemInfoSquished(unsquishedDef)
     local data = {}
-    data.width = unsquishedData.width
-    data.height = unsquishedData.height
-    data.maxStackSize = unsquishedData.maxStackSize
+    data.width = unsquishedDef.width
+    data.height = unsquishedDef.height
+    data.maxStackSize = unsquishedDef.maxStackSize
 
     data.width = math.ceil(data.width / SQUISH_FACTOR)
     data.height = math.ceil(data.height / SQUISH_FACTOR)
@@ -39,8 +46,8 @@ end
 
 ---@param item InventoryItem
 ---@param category string
----@return number
----@return number
+---@return integer
+---@return integer
 function TetrisItemCalculator._calculateItemSize(item, category)
     if item:getFluidContainer() then
         return TetrisItemCalculator._calculateFluidContainerSize(item, category)
@@ -48,13 +55,15 @@ function TetrisItemCalculator._calculateItemSize(item, category)
 
     local calculation = TetrisItemCalculator._itemClassToSizeCalculation[category]
     if type(calculation) == "function" then
-        ---@cast calculation fun(item: InventoryItem): number, number
+        ---@cast calculation fun(item: InventoryItem): integer, integer
         return calculation(item)
     else
         return calculation.x, calculation.y
     end
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateItemSizeMagazine(item)
     local width = 1
     local height = 1
@@ -76,6 +85,8 @@ function TetrisItemCalculator._calculateItemSizeMagazine(item)
     return width, height
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateRangedWeaponSize(item)
     local width = 2
     local height = 1
@@ -107,6 +118,8 @@ function TetrisItemCalculator._calculateRangedWeaponSize(item)
     return width, height
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateMeleeWeaponSize(item)
     local width = 1
     local height = 1
@@ -137,40 +150,41 @@ function TetrisItemCalculator._calculateMeleeWeaponSize(item)
     return width, height
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateItemSizeClothing(item)
     local width = 2
     local height = 2
 
-    -- This shouldn't happen, but just in case a mod does something weird
-    if item:IsClothing() == false then
-        TetrisItemCalculator.itemSizes[item:getFullType()] = {x = width, y = height}
-        return
-    end
+    if item:IsClothing() then
+        ---@type Clothing
+        local clothingItem = item
 
-    local bulletDef = item:getBulletDefense()
-    if bulletDef >= 50 then
-        width = 3
-        height = 3
-    else
-        -- Read weight from the script item to ignore wetness weight and the like
-        local weight = item:getScriptItem():getActualWeight()
-        if weight >= 3.0 then
+        local bulletDef = clothingItem:getBulletDefense()
+        if bulletDef >= 50 then
             width = 3
             height = 3
-        elseif weight <= 0.5 then
-            width = 1
-            height = 1
-        elseif weight <= 1.0 then
-            width = 1
-            height = 2
+        else
+            -- Read weight from the script item to ignore wetness weight and the like
+            local weight = clothingItem:getScriptItem():getActualWeight()
+            if weight >= 3.0 then
+                width = 3
+                height = 3
+            elseif weight <= 0.5 then
+                width = 1
+                height = 1
+            elseif weight <= 1.0 then
+                width = 1
+                height = 2
+            end
         end
     end
 
     return width, height
 end
 
----comment
 ---@param item InventoryContainer
+---@return integer, integer
 function TetrisItemCalculator._calculateItemSizeContainer(item)
     if item:hasTag(ItemTag.KEY_RING) then
         return 1, 1
@@ -192,6 +206,8 @@ end
 
 -- Returns dimensions for a container item based on the number of items it can hold
 -- Always returns a dimension that is >= innerSize
+---@param innerSize integer
+---@return integer, integer
 function TetrisItemCalculator._calculateContainerItemSizeFromInner(innerSize)
     local MAX_ITEM_DIM = 12
     if innerSize > MAX_ITEM_DIM * MAX_ITEM_DIM then
@@ -217,10 +233,14 @@ function TetrisItemCalculator._calculateContainerItemSizeFromInner(innerSize)
     return bestX, bestY
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateMiscSize(item)
     return TetrisItemCalculator._calculateItemSizeWeightBased(item)
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateItemSizeWeightBased(item, weight)
     local width = 1
     local height = 1
@@ -249,6 +269,8 @@ function TetrisItemCalculator._calculateItemSizeWeightBased(item, weight)
     return width, height
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateFoodSize(item)
     -- Read weight from the script item to ignore half eaten weight and the like
     local weight = item:getScriptItem():getActualWeight()
@@ -264,6 +286,9 @@ function TetrisItemCalculator._calculateFoodSize(item)
     return x, y
 end
 
+---@param item InventoryItem
+---@param category string
+---@return integer, integer
 function TetrisItemCalculator._calculateFluidContainerSize(item, category)
     local fluidContainer = item:getFluidContainer()
 
@@ -293,22 +318,30 @@ function TetrisItemCalculator._calculateFluidContainerSize(item, category)
     return x, y
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateItemSizeWeightBasedTall(item, weight)
     local width, height = TetrisItemCalculator._calculateItemSizeWeightBased(item, weight)
     return height, width
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateEntertainmentSize(item)
     local width = 1
     local height = 1
     return width, height
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateMoveableSize(item)
     local weight = item:getWeight() -- Ignores the weight of fluidContainers
     return TetrisItemCalculator._calculateItemDimensions(weight * 2 + 2, 2)
 end
 
+---@param item InventoryItem
+---@return integer, integer
 function TetrisItemCalculator._calculateAnimalCorpseSize(item)
     local weight = item:getActualWeight()
     if weight < 1 then
@@ -327,6 +360,7 @@ function TetrisItemCalculator._calculateBookSize(item)
     return 1, 2
 end
 
+---@type table<string, XY|fun(item: InventoryItem): integer, integer>
 TetrisItemCalculator._itemClassToSizeCalculation = {
     [TetrisItemCategory.AMMO] = {x = 1, y = 1},
     [TetrisItemCategory.CORPSEANIMAL] = TetrisItemCalculator._calculateAnimalCorpseSize,
@@ -347,10 +381,10 @@ TetrisItemCalculator._itemClassToSizeCalculation = {
 }
 
 --- Determine two numbers that multiply *close* to the target slot count
----@param target number -- The target slot count
+---@param target integer -- The target slot count
 ---@param accuracy number -- Reduces the importance of squaring the shape
 function TetrisItemCalculator._calculateItemDimensions(target, accuracy)
-    local best = 99999999
+    local best = 99999999.0
     local bestX = 1
     local bestY = 1
 

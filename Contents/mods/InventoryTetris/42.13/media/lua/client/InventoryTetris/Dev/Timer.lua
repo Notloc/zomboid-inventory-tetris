@@ -1,13 +1,12 @@
 ---@class Timer
 ---@field public prefix string
 ---@field public startTime_ns number
----@field private lastStep_ns number
+---@field private lastStep_ns number|nil
 local Timer = {}
 
 ---@param prefix string
 ---@return Timer
-function Timer:start(prefix)
-    ---@type Timer
+function Timer:new(prefix)
     local o = {}
     setmetatable(o, self);
     self.__index = self;
@@ -18,16 +17,18 @@ function Timer:start(prefix)
 
     o.prefix = prefix
     o.startTime_ns = GameTime.getServerTime()
+
+    ---@cast o Timer
     return o
 end
 
-function Timer:reset()
+function Timer:start()
     self.lastStep_ns = nil
     self.startTime_ns = GameTime.getServerTime()
 end
 
 ---@param message string|nil
-function Timer:endStep(message)
+function Timer:stop(message)
     local compareTime_ns = self.lastStep_ns and self.lastStep_ns or self.startTime_ns
     local now_ns = GameTime.getServerTime()
     local elapsed_ns = now_ns - compareTime_ns

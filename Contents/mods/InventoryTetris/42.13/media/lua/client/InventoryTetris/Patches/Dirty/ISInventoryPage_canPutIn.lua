@@ -1,3 +1,5 @@
+---@diagnostic disable: undefined-field
+
 local og_canPutIn = ISInventoryPage.canPutIn
 
 ---@diagnostic disable-next-line: duplicate-set-field
@@ -12,7 +14,7 @@ function ISInventoryPage:canPutIn()
         return false
     end
     local items = {}
-    local minWeight = 100000
+    local minWeight = 100000.0
     local dragging = ISInventoryPane.getActualItems(ISMouseDrag.dragging)
     for i,item in ipairs(dragging) do
         local itemOK = true

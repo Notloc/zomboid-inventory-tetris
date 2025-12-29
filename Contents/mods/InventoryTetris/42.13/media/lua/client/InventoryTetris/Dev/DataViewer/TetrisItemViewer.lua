@@ -1,6 +1,8 @@
 local TetrisItemsListTable = require("InventoryTetris/Dev/DataViewer/TetrisItemsListTable");
 
 -- Based on ISItemsListViewer
+
+---@class TetrisItemViewer : ISPanel
 local TetrisItemViewer = ISPanel:derive("TetrisItemViewer");
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
@@ -9,10 +11,11 @@ local UI_BORDER_SPACING = 10
 local BUTTON_HGT = FONT_HGT_SMALL + 6
 
 function TetrisItemViewer:new(x, y, width, height)
-    local o = {}
     x = getCore():getScreenWidth() / 2 - (width / 2);
     y = getCore():getScreenHeight() / 2 - (height / 2);
-    o = ISPanel:new(x, y, width, height);
+
+    ---@type TetrisItemViewer
+    local o = ISPanel:new(x, y, width, height);
     setmetatable(o, self)
     self.__index = self
     o.borderColor = {r=0.4, g=0.4, b=0.4, a=1};

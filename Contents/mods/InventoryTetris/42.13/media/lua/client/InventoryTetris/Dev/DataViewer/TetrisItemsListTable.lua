@@ -2,6 +2,15 @@
 require("ISUI/ISPanel")
 local TetrisItemInfo = require("InventoryTetris/Dev/DataViewer/TetrisItemsListInfo")
 
+---@class TetrisItemsListTable : ISPanel
+---@field public listHeaderColor table
+---@field public borderColor table
+---@field public backgroundColor table
+---@field public buttonBorderColor table
+---@field public totalResult number
+---@field public filterWidgets table<number, any>
+---@field public filterWidgetMap table<string, any>
+---@field public viewer any
 local TetrisItemsListTable = ISPanel:derive("TetrisItemsListTable");
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
@@ -46,6 +55,7 @@ function TetrisItemsListTable:render()
 end
 
 function TetrisItemsListTable:new (x, y, width, height, viewer)
+    ---@type TetrisItemsListTable
     local o = ISPanel:new(x, y, width, height);
     setmetatable(o, self);
     o.listHeaderColor = {r=0.4, g=0.4, b=0.4, a=0.3};

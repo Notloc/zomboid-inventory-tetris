@@ -6,6 +6,11 @@ local ItemStack = require("InventoryTetris/Model/ItemStack")
 -- The primary model for the inventory grid.
 -- This class is responsible for managing the grid data, item stacks, and search sessions.
 
+-- TODO: Split into 3 classes
+-- ItemGrid: Just the data
+-- ItemGridService: The logic for manipulating the grid
+-- ItemGridSearchSession: The search session logic
+
 ---@class ItemGrid
 ---@field containerGrid ItemContainerGrid
 ---@field containerDefinition ContainerGridDefinition
@@ -65,6 +70,8 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, 
     end
 
     o:refresh()
+
+    ---@type ItemGrid
     return o
 end
 
@@ -715,6 +722,11 @@ end
 
 function ItemGrid._createAndCacheSession(playerNum, grid)
     local sessions = ItemGrid._searchSessions[playerNum]
+    if not sessions then
+        sessions = {}
+        ItemGrid._searchSessions[playerNum] = sessions
+    end
+
     if not sessions[grid.inventory] then
         sessions[grid.inventory] = {}
     end
@@ -722,6 +734,7 @@ function ItemGrid._createAndCacheSession(playerNum, grid)
     sessions[grid.inventory][grid.gridIndex] = ItemGrid._createSearchSession(grid)
     table.insert(sessions, sessions[grid.inventory][grid.gridIndex])
 
+    -- TODO: This doesn't work. #sessions will not count properly since sessions is a map not a list
     if #sessions > ItemGrid.SESSION_MEMORY_LIMIT then
         local session = sessions[1]
         table.remove(sessions, 1)

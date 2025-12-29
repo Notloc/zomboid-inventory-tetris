@@ -9,9 +9,23 @@ local OVERFLOW_MARGIN = 3
 local OVERFLOW_RENDERER_SPACING = 8
 
 ---@class GridOverflowRenderer : ISUIElement
+---@field public containerGridUi ItemGridContainerUI
+---@field public containerGrid ItemContainerGrid
+---@field public gridUi ItemGridUI
+---@field public inventory ItemContainer
+---@field public inventoryPane ISInventoryPane
+---@field public playerNum integer
 local GridOverflowRenderer = ISUIElement:derive("GridOverflowRenderer")
 
+---@param x number
+---@param y number
+---@param containerGridUi ItemGridContainerUI
+---@param gridUi ItemGridUI
+---@param inventory ItemContainer
+---@param inventoryPane ISInventoryPane
+---@param playerNum integer
 function GridOverflowRenderer:new(x,y, containerGridUi, gridUi, inventory, inventoryPane, playerNum)
+    ---@type GridOverflowRenderer
     local o = ISUIElement:new(x, y, 0, 0)
     setmetatable(o, self)
     self.__index = self

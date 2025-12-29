@@ -1,12 +1,12 @@
 -- This doesn't do anything in-game, its just some info for my IDE to populate intellisense with
 
----@class Vector2Lua
----@field x number
----@field y number
+---@class XY
+---@field x integer
+---@field y integer
 
----@class Size2D
----@field width number
----@field height number
+---@class WidthHeight
+---@field width integer
+---@field height integer
 
 ---@class ISMouseDrag
 ---@field dragging any
@@ -16,19 +16,18 @@
 
 ---@class InventoryTetrisVars
 ---@field EnforceCarryWeight boolean
----@field EnabledSearch boolean
+---@field EnableSearch boolean
 ---@field SearchTime number
 ---@field UseItemTransferTime boolean
 ---@field ItemTransferSpeedMultiplier number
----@field BonusGridSize number
+---@field BonusGridSize integer
 ---@field EnableGravity boolean
 ---@field PreventTardisStacking boolean
 ---@field SearchBodies number
 ---@field EncumbranceSlow boolean
 
+---@alias VanillaStack umbrella.ContextMenuItemStack 
 
----@class VanillaStack
----@field items InventoryItem[]
 
 
 -- Declare some built-in functions that do exist, but normally don't in lua 5.1

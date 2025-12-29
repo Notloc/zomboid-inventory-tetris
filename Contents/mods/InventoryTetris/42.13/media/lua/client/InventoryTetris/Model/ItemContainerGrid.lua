@@ -10,6 +10,8 @@ local SearchGridAction = require("InventoryTetris/TimedActions/SearchGridAction"
 local GRID_REFRESH_DELAY = 600
 local PHYSICS_DELAY = 600
 
+-- TODO: Split into multiple classes, ContainerGrid, GridService, GridCache
+
 -- Represents a collection of many grids that all belong to the same container object
 -- Also statically caches grids for performance reasons (Grids get rebuilt entirely every few frames because we have no trusted events to know when the inventory changes)
 ---@class ItemContainerGrid
@@ -45,8 +47,9 @@ end
 --- TODO: Remove playerNum, grids must become indifferent to who is viewing them, interactions can instead take the player as a parameter as needed
 --- TODO: Remove playerNum from the cache
 ---@param inventory ItemContainer
----@param playerNum number
+---@param playerNum integer
 ---@param definitionOverride any
+---@return ItemContainerGrid
 function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
     local o = {}
     setmetatable(o, self)
@@ -75,6 +78,7 @@ function ItemContainerGrid:new(inventory, playerNum, definitionOverride)
         o:refresh()
     end
 
+    ---@type ItemContainerGrid
     return o
 end
 
@@ -101,7 +105,8 @@ local function searchInventoryPageForContainerGrid(invPage, targetInventory)
     return nil
 end
 
-
+---@param inventory ItemContainer
+---@param playerNum integer
 ---@return ItemContainerGrid
 function ItemContainerGrid.GetOrCreate(inventory, playerNum, containerDefOverride)
     if not containerDefOverride then

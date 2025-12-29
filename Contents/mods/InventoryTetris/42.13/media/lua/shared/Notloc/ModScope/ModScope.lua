@@ -17,7 +17,7 @@ local ContainerAvailableScope = require("Notloc/ModScope/ContainerAvailableScope
 ---@field withKeepActions fun(callback: function)
 ---@field withNoActionQueueClear fun(callback: function)
 ---@field withInstanceofExclusion fun(callback: function, exclusion: string)
----@field withContainersAvailable fun(callback: function, containers: table<InventoryContainer>)
+---@field withContainersAvailable fun(callback: function, containers: InventoryContainer[])
 local ModScope = {};
 
 ---Reverse item transfers will be created after the callback for all items in the returnableItems table

@@ -1,10 +1,7 @@
-local TetrisContainerCalculator = {}
-
-TetrisContainerCalculator._vehicleStorageNames = {}
-
 local MAX_CONTAINER_WIDTH = 12
 local MAX_CONTAINER_HEIGHT = 50
 
+---@type ContainerGridDefinition
 local KEYRING_CONTAINER_DEFINITION = {
     gridDefinitions = {{
         size = {width=6, height=6},
@@ -13,6 +10,7 @@ local KEYRING_CONTAINER_DEFINITION = {
     isRigid = true
 }
 
+---@type ContainerGridDefinition
 local KEYRING_LARGE_CONTAINER_DEFINITION = {
     gridDefinitions = {{
         size = {width=8, height=8},
@@ -21,6 +19,14 @@ local KEYRING_LARGE_CONTAINER_DEFINITION = {
     isRigid = true
 }
 
+---@class TetrisContainerCalculator
+---@field _vehicleStorageNames table<string, boolean>
+local TetrisContainerCalculator = {}
+
+TetrisContainerCalculator._vehicleStorageNames = {}
+
+---@param container ItemContainer
+---@return ContainerGridDefinition
 function TetrisContainerCalculator.calculateContainerDefinition(container)
     local definition = nil
     local type = container:getType()
@@ -40,8 +46,9 @@ function TetrisContainerCalculator.calculateContainerDefinition(container)
     return definition
 end
 
----@param container InventoryContainer
+---@param container ItemContainer
 ---@param item InventoryContainer
+---@return ContainerGridDefinition
 function TetrisContainerCalculator._calculateItemContainerDefinition(container, item)
     local capacity = container:getCapacity()
 
@@ -83,6 +90,8 @@ function TetrisContainerCalculator._calculateItemContainerDefinition(container, 
     }
 end
 
+---@param container ItemContainer
+---@return ContainerGridDefinition
 function TetrisContainerCalculator._calculateWorldContainerDefinition(container)
     local capacity = container:getCapacity()
     local size = 2 * math.ceil(capacity)
@@ -95,6 +104,8 @@ function TetrisContainerCalculator._calculateWorldContainerDefinition(container)
     }
 end
 
+---@param container ItemContainer
+---@return ContainerGridDefinition
 function TetrisContainerCalculator._calculateVehicleTrunkContainerDefinition(container)
     local capacity = container:getCapacity()
 
@@ -111,8 +122,9 @@ end
 --- Determine two numbers that multiply *close* to the target slot count
 ---@param target number -- The target slot count
 ---@param accuracy number -- Reduces the importance of squaring the shape
+---@return integer, integer -- width, height
 function TetrisContainerCalculator._calculateContainerDimensions(target, accuracy)
-    local best = 99999999
+    local best = 99999999.9
     local bestX = 1
     local bestY = 1
 
@@ -142,6 +154,9 @@ function TetrisContainerCalculator._calculateContainerDimensions(target, accurac
     return bestX, bestY
 end
 
+---@param slotCount integer
+---@param maxItemSize number
+---@return ContainerGridDefinition
 function TetrisContainerCalculator._buildGridDefinitionForSlottedContainer(slotCount, maxItemSize)
     local def = { gridDefinitions = {} }
 

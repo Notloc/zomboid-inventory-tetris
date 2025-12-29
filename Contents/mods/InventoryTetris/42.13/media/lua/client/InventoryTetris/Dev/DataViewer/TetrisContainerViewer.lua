@@ -1,6 +1,8 @@
 local TetrisContainersListTable = require("InventoryTetris/Dev/DataViewer/TetrisContainersListTable")
 
 -- Based on ISItemsListViewer
+
+---@class TetrisContainerViewer : ISPanel
 local TetrisContainerViewer = ISPanel:derive("TetrisContainerViewer");
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)

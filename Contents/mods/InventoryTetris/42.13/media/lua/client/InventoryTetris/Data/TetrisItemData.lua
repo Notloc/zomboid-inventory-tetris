@@ -1,16 +1,28 @@
 local TetrisItemCalculator = require("InventoryTetris/Data/TetrisItemCalculator")
 local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
--- Intentional global
-TetrisItemData = {}
-
-TetrisItemData._itemData = {}
-TetrisItemData._devItemData = {}
-TetrisItemData._itemDataPacks = {}
-TetrisItemData._alwaysStackOnSpawnItems = {}
-
 local SQUISHED_SUFFIX = "__squished"
-TetrisItemData._squishedIdCache = {}
+
+---@class TetrisItemPack : table<string, TetrisItemDefinition>[]
+
+---@class TetrisItemDefinition
+---@field public width integer
+---@field public height integer
+---@field public maxStackSize integer
+
+---@class TetrisItemData
+---@field _itemData table<string, TetrisItemDefinition>
+---@field _devItemData table<string, TetrisItemDefinition>
+---@field _itemDataPacks TetrisItemPack[]
+---@field _alwaysStackOnSpawnItems table<string, boolean>
+---@field _squishedIdCache table<string, string>
+local TetrisItemService = {
+    _itemData = {},
+    _devItemData = {},
+    _itemDataPacks = {},
+    _alwaysStackOnSpawnItems = {},
+    _squishedIdCache = {},
+}
 
 -- TODO: Move into dev tool and datapacks
 -- Intentionally overriding TetrisItemCalculator._dynamicSizeItems
@@ -41,10 +53,9 @@ TetrisItemCalculator._dynamicSizeItems = {
 
 ---@param item InventoryItem
 ---@param isRotated boolean
----@return integer
----@return integer
-function TetrisItemData.getItemSize(item, isRotated)
-    local data = TetrisItemData._getItemData(item)
+---@return integer, integer
+function TetrisItemService.getItemSize(item, isRotated)
+    local data = TetrisItemService._getItemData(item)
     if isRotated then
         return data.height, data.width
     else
@@ -52,8 +63,11 @@ function TetrisItemData.getItemSize(item, isRotated)
     end
 end
 
-function TetrisItemData.getItemSizeUnsquished(item, isRotated)
-    local data = TetrisItemData._getItemData(item, true)
+---@param item InventoryItem
+---@param isRotated boolean
+---@return integer, integer
+function TetrisItemService.getItemSizeUnsquished(item, isRotated)
+    local data = TetrisItemService._getItemData(item, true)
     if isRotated then
         return data.height, data.width
     else
@@ -61,120 +75,158 @@ function TetrisItemData.getItemSizeUnsquished(item, isRotated)
     end
 end
 
-function TetrisItemData.getItemData_squishState(item, isSquished)
-    local fType = isSquished and TetrisItemData.getSquishedFullType(item) or item:getFullType()
-    return TetrisItemData._getItemDataByFullType(item, fType, isSquished)
+---@param item InventoryItem
+---@param isSquished boolean
+---@return TetrisItemDefinition
+function TetrisItemService.getItemData_squishState(item, isSquished)
+    local fType = isSquished and TetrisItemService.getSquishedFullType(item) or item:getFullType()
+    return TetrisItemService._getItemDataByFullType(item, fType, isSquished)
 end
 
-function TetrisItemData.getMaxStackSize(item)
-    local data = TetrisItemData._getItemData(item)
+---@param item InventoryItem
+---@return integer
+function TetrisItemService.getMaxStackSize(item)
+    local data = TetrisItemService._getItemData(item)
     return data.maxStackSize or 1
 end
 
-function TetrisItemData.getSquishedFullType(item)
+---@param item InventoryItem
+---@return string
+function TetrisItemService.getSquishedFullType(item)
     return item:getFullType() .. SQUISHED_SUFFIX
 end
 
-function TetrisItemData.getItemDefinitonByItemScript(itemScript, squished)
+-- Only used in debug mode item viewer
+local itemScriptCache = {}
+
+---@param itemScript Item
+---@param squished boolean?
+---@return TetrisItemDefinition
+function TetrisItemService.getItemDefinitonByItemScript(itemScript, squished)
     if squished == nil then
         squished = false
     end
 
-    local fType = itemScript:getFullName()
-    local item = nil
-    if not TetrisItemData._itemData[fType] or (squished and not TetrisItemData._itemData[fType .. SQUISHED_SUFFIX]) then
-        item = instanceItem(fType)
+    local fullType = itemScript:getFullName()
+    local item = itemScriptCache[fullType]
+    if not item then
+        item = instanceItem(fullType)
+        itemScriptCache[fullType] = item
     end
-    return TetrisItemData._getItemDataByFullType(item, fType .. (squished and SQUISHED_SUFFIX or ""), squished)
+    return TetrisItemService._getItemDataByFullType(item, fullType .. (squished and SQUISHED_SUFFIX or ""), squished)
 end
 
-function TetrisItemData._getItemData(item, noSquish)
+---@param item InventoryItem
+---@param noSquish boolean|nil
+---@return TetrisItemDefinition
+function TetrisItemService._getItemData(item, noSquish)
     local fType = item:getFullType()
-    local isSquished = not noSquish and TetrisItemData.isSquished(item)
+    local isSquished = not noSquish and TetrisItemService.isSquished(item)
 
     if isSquished then
-        fType = TetrisItemData._getSquishedId(fType)
+        fType = TetrisItemService._getSquishedId(fType)
     end
 
-    return TetrisItemData._getItemDataByFullType(item, fType, isSquished)
+    return TetrisItemService._getItemDataByFullType(item, fType, isSquished)
 end
 
-function TetrisItemData._getSquishedId(fType)
-    local squishedId = fType .. SQUISHED_SUFFIX
-    TetrisItemData._squishedIdCache[fType] = squishedId
+---@param fullType string
+---@return string
+function TetrisItemService._getSquishedId(fullType)
+    local squishedId = fullType .. SQUISHED_SUFFIX
+    TetrisItemService._squishedIdCache[fullType] = squishedId
     return squishedId
 end
 
-function TetrisItemData._getItemDataByFullType(item, fType, isSquished)
-    if TetrisItemCalculator._dynamicSizeItems[fType] then
-        fType = fType .. tostring(item:getActualWeight())
+---@param item InventoryItem
+---@param fullType string
+---@param isSquished boolean
+---@return TetrisItemDefinition
+function TetrisItemService._getItemDataByFullType(item, fullType, isSquished)
+    if TetrisItemCalculator._dynamicSizeItems[fullType] then
+        fullType = fullType .. tostring(item:getActualWeight())
     end
 
-    local data = TetrisItemData._devItemData[fType] or TetrisItemData._itemData[fType]
+    local data = TetrisItemService._devItemData[fullType] or TetrisItemService._itemData[fullType]
     if not data then
         if isSquished then
-            local unsquishedData = TetrisItemData._getItemDataByFullType(item, item:getFullType(), false)
+            local unsquishedData = TetrisItemService._getItemDataByFullType(item, item:getFullType(), false)
             data = TetrisItemCalculator.calculateItemInfoSquished(unsquishedData)
         else
             data = TetrisItemCalculator.calculateItemInfo(item)
         end
-        TetrisItemData._itemData[fType] = data
+        TetrisItemService._itemData[fullType] = data
     end
     return data
 end
 
-function TetrisItemData.isSquishable(item)
-    return item:IsInventoryContainer() and not TetrisContainerData.getContainerDefinition(item:getItemContainer()).isRigid
+---@param item InventoryItem
+---@return boolean
+function TetrisItemService.isSquishable(item)
+    if not item:IsInventoryContainer() then
+        return false
+    end
+    ---@cast item InventoryContainer
+    return not TetrisContainerData.getContainerDefinition(item:getItemContainer()).isRigid
 end
 
-function TetrisItemData.isSquished(item)
-    return TetrisItemData.isSquishable(item) and item:getItemContainer():isEmpty()
+---@param containerItem InventoryContainer
+---@return boolean
+function TetrisItemService.isSquished(containerItem)
+    return TetrisItemService.isSquishable(containerItem) and containerItem:getItemContainer():isEmpty()
 end
 
-function TetrisItemData.isAlwaysStacks(item)
-    local maxStack = TetrisItemData.getMaxStackSize(item)
-    return TetrisItemData._alwaysStackOnSpawnItems[item:getFullType()] or maxStack >= 10 or false
+---@param item InventoryItem
+---@return boolean
+function TetrisItemService.isAlwaysStacks(item)
+    local maxStack = TetrisItemService.getMaxStackSize(item)
+    return TetrisItemService._alwaysStackOnSpawnItems[item:getFullType()] or maxStack >= 10 or false
 end
 
-function TetrisItemData.isInDataPack(ftype)
-    for _, pack in ipairs(TetrisItemData._itemDataPacks) do
-        if pack[ftype] then
+---@param fullType string
+---@return boolean
+function TetrisItemService.isInDataPack(fullType)
+    for _, pack in ipairs(TetrisItemService._itemDataPacks) do
+        if pack[fullType] then
             return true
         end
     end
     return false
 end
 
-function TetrisItemData.registerItemDefinitions(pack)
-    table.insert(TetrisItemData._itemDataPacks, pack)
-    if TetrisItemData._packsLoaded then
-        TetrisItemData._processItemPack(pack) -- You're late.
+function TetrisItemService.registerItemDefinitions(pack)
+    table.insert(TetrisItemService._itemDataPacks, pack)
+    if TetrisItemService._packsLoaded then
+        TetrisItemService._processItemPack(pack) -- You're late.
     end
 end
 
-function TetrisItemData._initializeTetrisItemData()
-    for _, pack in ipairs(TetrisItemData._itemDataPacks) do
-        TetrisItemData._processItemPack(pack)
+function TetrisItemService._initializeTetrisItemData()
+    for _, pack in ipairs(TetrisItemService._itemDataPacks) do
+        TetrisItemService._processItemPack(pack)
     end
-    TetrisItemData._packsLoaded = true
+    TetrisItemService._packsLoaded = true
 end
 
-function TetrisItemData._processItemPack(itemPack)
+function TetrisItemService._processItemPack(itemPack)
     for k, v in pairs(itemPack) do
-        TetrisItemData._itemData[k] = v
+        TetrisItemService._itemData[k] = v
     end
 end
 
-function TetrisItemData.registerAlwaysStackOnSpawnItems(itemNames)
+function TetrisItemService.registerAlwaysStackOnSpawnItems(itemNames)
     for _, itemName in ipairs(itemNames) do
-        TetrisItemData._alwaysStackOnSpawnItems[itemName] = true
+        TetrisItemService._alwaysStackOnSpawnItems[itemName] = true
     end
 end
 
-function TetrisItemData._onInitWorld()
-    TetrisItemData._initializeTetrisItemData()
+function TetrisItemService._onInitWorld()
+    TetrisItemService._initializeTetrisItemData()
 end
 
-Events.OnInitWorld.Add(TetrisItemData._onInitWorld)
+Events.OnInitWorld.Add(TetrisItemService._onInitWorld)
 
-return TetrisItemData
+-- Export as global for modpack backwards compatibility
+_G.TetrisItemData2 = TetrisItemService
+
+return TetrisItemService

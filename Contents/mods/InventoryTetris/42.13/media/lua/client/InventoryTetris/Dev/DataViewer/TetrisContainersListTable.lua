@@ -9,6 +9,7 @@ local UI_BORDER_SPACING = 10
 local BUTTON_HGT = FONT_HGT_SMALL + 6
 local LABEL_HGT = FONT_HGT_MEDIUM + 6
 
+---@class TetrisContainersListTable : ISPanel
 local TetrisContainersListTable = ISPanel:derive("TetrisContainersListTable");
 
 function TetrisContainersListTable:initialise()

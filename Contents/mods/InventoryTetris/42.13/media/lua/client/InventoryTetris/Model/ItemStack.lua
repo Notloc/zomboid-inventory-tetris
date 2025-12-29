@@ -5,37 +5,42 @@ local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 -- Purely static code as these need to be serialized into modData
 
 ---@class ItemStack
----@field public itemIDs table<number, boolean>
+---@field public itemIDs table<integer, boolean>
 ---@field public count number
 ---@field public x number
 ---@field public y number
 ---@field public isRotated boolean
 ---@field public itemType string
 ---@field public category string
----@field private _frontItem InventoryItem
----@field private _frontItemId number
-local ItemStack = {}
+---@field public _frontItem InventoryItem|nil
+---@field public _frontItemId integer|nil
+
+local ItemStackService = {}
 
 ---@return ItemStack
-function ItemStack.create(x, y, isRotated, itemFullType, category)
-    local stack = {}
-    stack.itemIDs = {}
-    stack.count = 0
-    stack.x = x
-    stack.y = y
-    stack.isRotated = isRotated and true or false
-    stack.itemType = itemFullType
-    stack.category = category
+function ItemStackService.create(x, y, isRotated, itemFullType, category)
+    ---@type ItemStack
+    local stack = {
+        itemIDs = {},
+        count = 0,
+        x = x,
+        y = y,
+        isRotated = isRotated and true or false,
+        itemType = itemFullType,
+        category = category,
+        _frontItem = nil,
+        _frontItemId = nil,
+    }
     return stack
 end
 
-function ItemStack.copyWithoutItems(stack)
-    return ItemStack.create(stack.x, stack.y, stack.isRotated, stack.itemType, stack.category)
+function ItemStackService.copyWithoutItems(stack)
+    return ItemStackService.create(stack.x, stack.y, stack.isRotated, stack.itemType, stack.category)
 end
 
-function ItemStack.createTempStack(item)
-    local stack = ItemStack.create(0, 0, false, item:getFullType(), TetrisItemCategory.getCategory(item))
-    ItemStack.addItem(stack, item)
+function ItemStackService.createTempStack(item)
+    local stack = ItemStackService.create(0, 0, false, item:getFullType(), TetrisItemCategory.getCategory(item))
+    ItemStackService.addItem(stack, item)
     return stack
 end
 
@@ -43,7 +48,7 @@ end
 ---@param stack ItemStack
 ---@param inventory ItemContainer
 ---@return InventoryItem
-function ItemStack.getFrontItem(stack, inventory)
+function ItemStackService.getFrontItem(stack, inventory)
     if stack._frontItem and stack._frontItem:getContainer() == inventory then
         return stack._frontItem
     end
@@ -61,7 +66,7 @@ function ItemStack.getFrontItem(stack, inventory)
     return nil
 end
 
-function ItemStack.addItem(stack, item)
+function ItemStackService.addItem(stack, item)
     if stack.itemIDs[item:getID()] then
         return -- Already in stack
     end
@@ -69,7 +74,7 @@ function ItemStack.addItem(stack, item)
     stack.count = stack.count + 1
 end
 
-function ItemStack.removeItem(stack, item)
+function ItemStackService.removeItem(stack, item)
     local itemId = item:getID()
     if not stack.itemIDs[item:getID()] then
         return -- Not in stack
@@ -83,24 +88,24 @@ function ItemStack.removeItem(stack, item)
     end
 end
 
-function ItemStack.containsItem(stack, item)
+function ItemStackService.containsItem(stack, item)
     return stack.itemIDs[item:getID()] ~= nil
 end
 
-function ItemStack.canAddItem(stack, item)
+function ItemStackService.canAddItem(stack, item)
     if stack.count == 0 then return true end
 
-    if not ItemStack.isSameType(stack, item) then return false end
+    if not ItemStackService.isSameType(stack, item) then return false end
     if stack.count >= TetrisItemData.getMaxStackSize(item) then return false end
 
     return true
 end
 
-function ItemStack.isSameType(stack, item)
+function ItemStackService.isSameType(stack, item)
     return stack.itemType == item:getFullType()
 end
 
-function ItemStack.getAllItems(stack, inventory)
+function ItemStackService.getAllItems(stack, inventory)
     local items = {}
 
     for itemID, _ in pairs(stack.itemIDs) do
@@ -114,55 +119,62 @@ end
 ---@param stack ItemStack
 ---@param inventory ItemContainer
 ---@param inventoryPane ISInventoryPane
-function ItemStack.convertStackToVanillaStackList(stack, inventory, inventoryPane)
-    return ItemStack.convertStacksToVanillaStackList({stack}, inventory, inventoryPane)
+function ItemStackService.convertStackToVanillaStackList(stack, inventory, inventoryPane)
+    return ItemStackService.convertStacksToVanillaStackList({stack}, inventory, inventoryPane)
 end
 
 ---@param stacks ItemStack[]
 ---@param inventory ItemContainer
 ---@param inventoryPane ISInventoryPane
-function ItemStack.convertStacksToVanillaStackList(stacks, inventory, inventoryPane)
+---@return VanillaStack[]
+function ItemStackService.convertStacksToVanillaStackList(stacks, inventory, inventoryPane)
     if #stacks == 0 then return {} end
     local vanillaStacks = {}
     for _, stack in ipairs(stacks) do
-        local items = ItemStack.getAllItems(stack, inventory)
-        local vanillaStack = ItemStack._createVanillaStackFromItems(items, inventoryPane)
+        local items = ItemStackService.getAllItems(stack, inventory)
+        local vanillaStack = ItemStackService._createVanillaStackFromItems(items, inventoryPane)
         vanillaStack.isRotated = stack.isRotated
         table.insert(vanillaStacks, vanillaStack)
     end
     return vanillaStacks
 end
 
-function ItemStack.createVanillaStackListFromItem(item, inventoryPane)
-    return {ItemStack._createVanillaStackFromItems({item}, inventoryPane)}
+function ItemStackService.createVanillaStackListFromItem(item, inventoryPane)
+    return {ItemStackService._createVanillaStackFromItems({item}, inventoryPane)}
 end
 
 -- Assumes all items are the same type
-function ItemStack.createVanillaStackListFromItems(items, inventoryPane)
-    return {ItemStack._createVanillaStackFromItems(items, inventoryPane)}
+function ItemStackService.createVanillaStackListFromItems(items, inventoryPane)
+    return {ItemStackService._createVanillaStackFromItems(items, inventoryPane)}
 end
 
 -- Assumes all items are the same type
-function ItemStack._createVanillaStackFromItems(items, inventoryPane)
-    local vanillaStack = {}
-    vanillaStack.items = {}
-    vanillaStack.invPanel = inventoryPane
+---@param items InventoryItem[]
+---@param inventoryPane ISInventoryPane
+---@return VanillaStack
+function ItemStackService._createVanillaStackFromItems(items, inventoryPane)
+    local referenceItem = items[1]
 
-    if items[1] then
-        vanillaStack.name = items[1]:getName()
-        vanillaStack.cat = items[1]:getDisplayCategory() or items[1]:getCategory();
-    end
-
-    local weight = 0
-    table.insert(vanillaStack.items, items[1])
+    -- Copy the list
+    local weight = 0.0
+    local itemList = {referenceItem} -- The reference item is always in the list twice
     for _, item in ipairs(items) do
-        table.insert(vanillaStack.items, item)
+        table.insert(itemList, item)
         weight = weight + item:getUnequippedWeight()
     end
-    vanillaStack.weight = weight
-    vanillaStack.count = #items + 1 -- Vanilla stacks count as 1 over their actual count
+
+    local vanillaStack = {
+        items = itemList,
+        invPanel = inventoryPane,
+        name = referenceItem and referenceItem:getName() or "",
+        cat = referenceItem and (referenceItem:getDisplayCategory() or referenceItem:getCategory()) or "",
+        weight = weight,
+        count = #items + 1, -- Vanilla stacks count as 1 over their actual
+        equipped = false, -- TODO: Determine if the item is equipped
+        inHotbar = false, -- TODO: Determine if the item is in the hotbar
+    }
 
     return vanillaStack
 end
 
-return ItemStack
+return ItemStackService
