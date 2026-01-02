@@ -11,6 +11,8 @@ local ContextUtil = require("Notloc/ContextUtil")
 local DevItemRenderer = require("InventoryTetris/Dev/DevItemRenderer")
 local ItemGridContainerUI = nil -- Required on demand to avoid circular dependencies
 
+---@param from table
+---@param to table
 local function copyTable(from, to)
     for k,v in pairs(from) do
         if type(v) == "table" then
@@ -22,6 +24,8 @@ local function copyTable(from, to)
     end
 end
 
+---@param fileName string
+---@return any
 local function readJsonFile(fileName)
     local reader = getFileReader(fileName, false);
     if reader then
@@ -43,6 +47,8 @@ local function readJsonFile(fileName)
     return nil;
 end
 
+---@param fileName string
+---@param json any
 local function writeJsonFile(fileName, json)
     local createFile = true
     local appendToFile = false
@@ -59,6 +65,8 @@ local function writeJsonFile(fileName, json)
     writer:close();
 end
 
+---@param fileName string
+---@param text string
 local function writeText(fileName, text)
     local createFile = true
     local appendToFile = false
@@ -71,6 +79,10 @@ local function writeText(fileName, text)
     writer:close();
 end
 
+---@class TetrisDevTool
+---@field itemEdits table<string, TetrisItemDefinition>
+---@field containerEdits table<string, ContainerGridDefinition>
+---@field pocketEdits table<string, TetrisPocketDefinition>
 local TetrisDevTool = {}
 
 local ITEM_FILENAME = "InventoryTetris_ItemData"
@@ -105,6 +117,7 @@ function TetrisDevTool.disableOverrides()
     TetrisPocketData._devPocketDefinitions = {};
 end
 
+---@return boolean
 function TetrisDevTool.isDebugEnabled()
     return isDebugEnabled() or SandboxVars.InventoryTetris.DevMode
 end
@@ -112,6 +125,9 @@ end
 TetrisDevTool.writeText = writeText;
 
 ---@param context ISContextMenu
+---@param item InventoryItem
+---@param container ItemContainer?
+---@param containerUi ItemGridContainerUI?
 function TetrisDevTool.insertDebugOptions(context, item, container, containerUi)
     if not TetrisDevTool.isDebugEnabled() then
         return;
@@ -159,36 +175,29 @@ end
 
 
 
-
+---@param item InventoryItem
 function TetrisDevTool.copyItemData(item)
     local data = TetrisItemData.getItemData_squishState(item, false);
     local dataSquished = TetrisItemData.getItemData_squishState(item, true)
     local containerData = nil
     if item:IsInventoryContainer() then
+        ---@cast item InventoryContainer
         containerData = TetrisContainerData.getContainerDefinition(item:getItemContainer());
     end
 
     -- Only copy data that isn't auto calculated
-    if data and data._autoCalculated then
-        data = nil;
-    end
-    if dataSquished and dataSquished._autoCalculated then
-        dataSquished = nil;
-    end
-    if containerData and containerData._autoCalculated then
-        containerData = nil;
-    end
+    local copyData = (data and not data._autoCalculated) and data or nil;
+    local copyDataSquished = (dataSquished and not dataSquished._autoCalculated) and dataSquished or nil;
+    local copyContainerData = (containerData and not containerData._autoCalculated) and containerData or nil;
 
     TetrisDevTool.clipboard = {
-        itemData=data,
-        itemDataSquished=dataSquished,
-        containerData=containerData
+        itemData=copyData,
+        itemDataSquished=copyDataSquished,
+        containerData=copyContainerData
     };
-
-    local check = TetrisDevTool.clipboard
-    return 5
 end
 
+---@param item InventoryItem
 function TetrisDevTool.pasteItemData(item)
     if not TetrisDevTool.clipboard then
         return;
@@ -217,6 +226,8 @@ function TetrisDevTool.pasteItemData(item)
             local containerData = {}
             copyTable(TetrisDevTool.clipboard.containerData, containerData);
 
+            ---@cast item InventoryContainer
+
             local key = TetrisContainerData._getContainerKey(item:getItemContainer());
             TetrisDevTool.containerEdits[key] = containerData;
             writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
@@ -229,7 +240,9 @@ function TetrisDevTool.pasteItemData(item)
     end
 end
 
+---@param item InventoryItem
 function TetrisDevTool.openEditItem(item)
+    -- TODO: Refactor into its own class
     local editWindow = ISPanel:new(getMouseX(), getMouseY(), 350, 400);
     editWindow:initialise();
     editWindow:addToUIManager();
@@ -281,6 +294,8 @@ function TetrisDevTool.openEditItem(item)
 
 
     if item:IsInventoryContainer() then
+        ---@cast item InventoryContainer
+
         -- Link to open container editor
         local containerButton = ISButton:new(230, 30, 100, 20, "Edit Container", editWindow);
         containerButton:setOnClick(function() TetrisDevTool.openContainerEdit_container(item:getItemContainer()) end);
@@ -397,6 +412,7 @@ function TetrisDevTool.openEditItem(item)
     end
 end
 
+-- TODO: Hmmm
 TetrisDevTool.onEditItem = function(self, button)
     if button.internal == "OK" then
         local x = self.itemRenderer.w
@@ -424,6 +440,11 @@ TetrisDevTool.onEditItem = function(self, button)
     self:removeFromUIManager();
 end
 
+---@param item InventoryItem
+---@param x integer
+---@param y integer
+---@param maxStack integer
+---@param squished boolean
 function TetrisDevTool.applyEdits(item, x, y, maxStack, squished)
     local fType = item:getFullType();
     if squished then
@@ -433,22 +454,22 @@ function TetrisDevTool.applyEdits(item, x, y, maxStack, squished)
     local oldData = TetrisItemData._itemData[fType] or {};
 
     local newData = {}
-    for k,v in pairs(oldData) do
-        newData[k] = v;
-    end
+    copyTable(oldData, newData);
+
     newData.width = x;
     newData.height = y;
     newData.maxStackSize = maxStack
 
     newData._autoCalculated = nil; -- Avoid saving these values
     newData.corrected = nil;
-    newData.trueType = nil;
+    newData.trueType = nil; -- TODO: The heck is dis?
 
     TetrisDevTool.itemEdits[fType] = newData;
 
     writeJsonFile(ITEM_FILENAME..".json", TetrisDevTool.itemEdits);
 end
 
+-- TODO: Refactor to appropriate file
 function TetrisDevTool.getGridXYFromHandle(handle)
     local x = handle:getX() + handle.pixelIncrement / 2;
     local y = handle:getY() + handle.pixelIncrement / 2;
@@ -462,6 +483,7 @@ function TetrisDevTool.getGridXYFromHandle(handle)
     return gridX, gridY
 end
 
+-- TODO: Refactor to appropriate file
 local function createAddGridButton(context)
     local button = ISButton:new(0, 0, 20, 20, "+", context, TetrisDevTool.onAddGridButton);
     button:initialise();
@@ -469,6 +491,7 @@ local function createAddGridButton(context)
     return button;
 end
 
+-- TODO: Refactor to appropriate file
 local function createRemoveGridButton(context)
     local button = ISButton:new(0, 0, 20, 20, "X", context, TetrisDevTool.onRemoveGridButton);
     button:initialise();
@@ -476,6 +499,7 @@ local function createRemoveGridButton(context)
     return button;
 end
 
+-- TODO: Refactor to appropriate file
 local function getQuickButton(context, quickId, factory)
     if not context[quickId.."pool"] then
         context[quickId.."pool"] = {}
@@ -499,6 +523,7 @@ local function getQuickButton(context, quickId, factory)
     return button;
 end
 
+-- TODO: Refactor to appropriate file
 local function clearQuickButtons(context, quickId)
     if not context[quickId] then return end
 
@@ -513,6 +538,7 @@ local function clearQuickButtons(context, quickId)
     context[quickId] = {};
 end
 
+-- TODO: Refactor to appropriate file
 function TetrisDevTool.remakeContainerUi(editWindow, realInv)
     -- Required on demand to avoid circular dependencies
     ItemGridContainerUI = ItemGridContainerUI or require("InventoryTetris/UI/Container/ItemGridContainerUI")
@@ -571,9 +597,15 @@ function TetrisDevTool.remakeContainerUi(editWindow, realInv)
     end
 end
 
+---@param container ItemContainer
 function TetrisDevTool.openContainerEdit_container(container)
+    local playerData = getPlayerData(0);
+    if not playerData then
+        return;
+    end
+
     local inventory = container;
-    local inventoryPane = getPlayerData(0).playerInventory.inventoryPane;
+    local inventoryPane = playerData.playerInventory.inventoryPane;
     local containerDef = TetrisContainerData.getContainerDefinition(inventory);
     local dataKey = TetrisContainerData._getContainerKey(inventory);
     local dataTable = TetrisDevTool.containerEdits;
@@ -581,9 +613,15 @@ function TetrisDevTool.openContainerEdit_container(container)
     TetrisDevTool.openContainerGridEditor(inventory, inventoryPane, containerDef, dataKey, dataTable, "CONTAINER");
 end
 
+---@param item InventoryItem
 function TetrisDevTool.openPocketEdit(item)
+    local playerData = getPlayerData(0);
+    if not playerData then
+        return;
+    end
+
     local inventory = getSpecificPlayer(0):getInventory();
-    local inventoryPane = getPlayerData(0).playerInventory.inventoryPane;
+    local inventoryPane = playerData.playerInventory.inventoryPane;
     local pocketDef = TetrisPocketData.getPocketDefinition(item);
     if not pocketDef then
         pocketDef = {
@@ -616,6 +654,7 @@ function TetrisDevTool.openPocketEdit(item)
     TetrisDevTool.containerEdits[baseKey] = og_override
 end
 
+-- TODO: Refactor to appropriate file
 function TetrisDevTool.openContainerGridEditor(sourceInventory, inventoryPane, containerDef, dataKey, dataTable, type)
     ---@diagnostic disable-next-line: param-type-mismatch
     local inventory = ItemContainer.new("DEV_TOOL", nil, nil)
@@ -1156,18 +1195,15 @@ function TetrisDevTool.createDragHandle(uiElement, pixelIncrement, onReleaseCall
     uiElement.dragHandle = handle;
 
     if col then
-        ---@diagnostic disable-next-line: duplicate-set-field
         handle.prerender = function(self)
             self:drawRect(0, 0, self:getWidth(), self:getHeight(), col.a, col.r, col.g, col.b);
         end
     else
-        ---@diagnostic disable-next-line: duplicate-set-field
         handle.prerender = function(self)
             self:drawRect(0, 0, self:getWidth(), self:getHeight(), 1, 1, 0, 0);
         end
     end
 
-    ---@diagnostic disable-next-line: duplicate-set-field
     handle.render = function(self)
         if self.moving then
             -- Draw a rect from the 0,0 of the parent to the handles bottom right corner
@@ -1186,7 +1222,9 @@ function TetrisDevTool.createDragHandle(uiElement, pixelIncrement, onReleaseCall
     return handle;
 end
 
-
+---@param key string
+---@param newDef ContainerGridDefinition
+---@param container ItemContainer
 function TetrisDevTool.applyContainerEdit(key, newDef, container)
     newDef._autoCalculated = nil; -- Avoid saving this value
     newDef.invalidCategories = nil;
@@ -1205,6 +1243,8 @@ function TetrisDevTool.applyContainerEdit(key, newDef, container)
     TetrisDevTool.forceRefreshAllGrids();
 end
 
+---@param key string
+---@param newDef TetrisPocketDefinition
 function TetrisDevTool.applyPocketEdit(key, newDef)
     newDef._autoCalculated = nil; -- Avoid saving this value
     newDef.invalidCategories = nil;
@@ -1216,8 +1256,16 @@ end
 
 function TetrisDevTool.forceRefreshAllGrids()
     ItemContainerGrid._playerMainGrids = {}
-    getPlayerInventory(0).inventoryPane:refreshItemGrids(true)
-    getPlayerLoot(0).inventoryPane:refreshItemGrids(true)
+
+    local inv = getPlayerInventory(0)
+    if inv then
+        inv.inventoryPane:refreshItemGrids(true)
+    end
+
+    local loot = getPlayerLoot(0)
+    if loot then
+        loot.inventoryPane:refreshItemGrids(true)
+    end
 end
 
 function TetrisDevTool._exportDataPack()
@@ -1238,20 +1286,17 @@ function TetrisDevTool._exportDataPack()
     text = text .. '\t' .. 'TetrisPocketData.registerPocketDefinitions(pocketPack)\r\n'
     text = text .. 'end)\r\n'
 
-    local file = getFileWriter("TetrisDataPack.lua", true, false);
-    file:write(text);
-    file:close();
+    local writer = getFileWriter("TetrisDataPack.lua", true, false);
+    if not writer then
+        print("Failed to open TetrisDataPack.lua for writing");
+        return;
+    end
+    
+    writer:write(text);
+    writer:close();
 end
 
-
-function TetrisDevTool.writeContainerEditsLua()
-    local file = getFileWriter(CONTAINER_FILENAME..".lua", true, false);
-    local text = FormattedLuaWriter.formatLocalVariable("containerPack", TetrisDevTool.containerEdits, 0);
-    file:write(text);
-    file:close();
-end
-
-
+---@param item InventoryItem
 function TetrisDevTool.recalculateItemData(item)
     local fType = item:getFullType();
     TetrisItemData._itemData[fType] = nil;
@@ -1268,18 +1313,27 @@ function TetrisDevTool.recalculateItemData(item)
     -- Recalculation will happen when the item is next rendered
 end
 
+---@param container ItemContainer
 function TetrisDevTool.recalculateContainerData(container)
-    TetrisDevTool.containerEdits[TetrisContainerData._getContainerKey(container)] = nil;
+    local containerKey = TetrisContainerData._getContainerKey(container);
+    TetrisDevTool.containerEdits[containerKey] = nil;
     writeJsonFile(CONTAINER_FILENAME..".json", TetrisDevTool.containerEdits);
 
     TetrisContainerData.recalculateContainerData();
 
     for i=0, getNumActivePlayers()-1 do
-        getPlayerInventory(i).inventoryPane:refreshItemGrids(true)
-        getPlayerLoot(i).inventoryPane:refreshItemGrids(true)
+        local inv = getPlayerInventory(i)
+        if inv then
+            inv.inventoryPane:refreshItemGrids(true)
+        end
+        local loot = getPlayerLoot(i)
+        if loot then
+            loot.inventoryPane:refreshItemGrids(true)
+        end
     end
 end
 
+---@param item InventoryItem
 function TetrisDevTool.recalculatePocketData(item)
     TetrisDevTool.pocketEdits[item:getFullType()] = nil;
     writeJsonFile(POCKET_FILENAME..".json", TetrisDevTool.pocketEdits);
@@ -1287,19 +1341,33 @@ function TetrisDevTool.recalculatePocketData(item)
     --TetrisPocketData.recalculatePocketData();
 
     for i=0, getNumActivePlayers()-1 do
-        getPlayerInventory(i).inventoryPane:refreshItemGrids(true)
-        getPlayerLoot(i).inventoryPane:refreshItemGrids(true)
+        local inv = getPlayerInventory(i)
+        if inv then
+            inv.inventoryPane:refreshItemGrids(true)
+        end
+        local loot = getPlayerLoot(i)
+        if loot then
+            loot.inventoryPane:refreshItemGrids(true)
+        end
     end
 end
 
+---@param containerGrid ItemContainerGrid
 function TetrisDevTool.resetGridData(containerGrid)
     for _, grid in ipairs(containerGrid.grids) do
         grid:resetGridData();
     end
 
     local playerNum = containerGrid.playerNum
-    getPlayerInventory(playerNum).inventoryPane:refreshItemGrids(true)
-    getPlayerLoot(playerNum).inventoryPane:refreshItemGrids(true)
+
+    local inv = getPlayerInventory(playerNum)
+    if inv then
+        inv.inventoryPane:refreshItemGrids(true)
+    end
+    local loot = getPlayerLoot(playerNum)
+    if loot then
+        loot.inventoryPane:refreshItemGrids(true)
+    end
 end
 
 -- Avoid double patching when reloading
@@ -1308,10 +1376,10 @@ if not TetrisDevTool_og_createMenu then
 
     ---@param player integer
     ---@param isInPlayerInventory boolean
-    ---@param items InventoryItem|umbrella.ISInventoryPane.ItemRecord[]
+    ---@param items (InventoryItem|umbrella.ISInventoryPane.ItemRecord)[]
     ---@param x number
     ---@param y number
-    ---@param origin any
+    ---@param origin ISUIElement?
     ISInventoryPaneContextMenu.createMenu = function(player, isInPlayerInventory, items, x, y, origin)
         local menu = TetrisDevTool_og_createMenu(player, isInPlayerInventory, items, x, y, origin)
         if not menu or not TetrisDevTool.isDebugEnabled() then return menu end
@@ -1319,12 +1387,18 @@ if not TetrisDevTool_og_createMenu then
         local item = items[1]
         if not item then return menu end
 
-        if items[1].items then
-            item = items[1].items[1]
+        if item.items then
+            item = item.items[1]
         end
         if not item then return menu end
 
         ---@cast item InventoryItem
+
+        local container = nil
+        if item:IsInventoryContainer() then
+            ---@cast item InventoryContainer
+            container = item:getItemContainer()
+        end
 
         if isDebugEnabled() then
             pcall(function ()
@@ -1338,6 +1412,7 @@ if not TetrisDevTool_og_createMenu then
                 print("item actual weight: " .. item:getActualWeight())
 
                 if item:IsFood() then
+                    ---@cast item Food
                     print("item base hunger: " .. item:getBaseHunger())
                     print("item hunger change: " .. item:getHungerChange())
                 end
@@ -1370,7 +1445,6 @@ if not TetrisDevTool_og_createMenu then
             end)
         end
 
-        local container = item:IsInventoryContainer() and item:getItemContainer() or nil
         TetrisDevTool.insertDebugOptions(menu, item, container)
 
         return menu

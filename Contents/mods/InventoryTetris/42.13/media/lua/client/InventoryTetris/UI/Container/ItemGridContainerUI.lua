@@ -26,15 +26,25 @@ local BLACK = {r=0, g=0, b=0, a=1}
 local FONT_HEIGHT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 
 ---@class ItemGridContainerUI : ISPanel
+---@field item InventoryItem|nil
 ---@field inventory ItemContainer
 ---@field inventoryPane table
----@field playerNum number
+---@field playerNum integer
 ---@field player IsoPlayer
 ---@field gridUis ItemGridUI[][]
 ---@field containerGrid ItemContainerGrid
+---@field invTexture Texture
+---@field isPlayerInventory boolean
+---@field isOnPlayer boolean
+---@field showTitle boolean
 local ItemGridContainerUI = ISPanel:derive("ItemGridContainerUI")
 
+---@param inventory ItemContainer
+---@param inventoryPane table
+---@param playerNum integer
+---@param containerDefOverride ContainerGridDefinition|nil
 function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerDefOverride)
+    ---@type ItemGridContainerUI
     local o = ISPanel:new(0, 0, 0, 0)
     setmetatable(o, self)
     self.__index = self
@@ -54,8 +64,6 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
     o.containerGrid = ItemContainerGrid.GetOrCreate(inventory, playerNum, containerDefOverride)
     o.containerGrid:addOnSecondaryGridsAdded(o, o._onSecondaryGridsAdded)
     o.containerGrid:addOnSecondaryGridsRemoved(o, o._onSecondaryGridsRemoved)
-
-    o.keepOnScreen = false -- Keep on screen is a menace inside scroll panes and these are always inside scroll panes or other panels
 
     o.isOnPlayer = o.isPlayerInventory or (o.item and o.item:isInPlayerInventory())
     o.showTitle = true

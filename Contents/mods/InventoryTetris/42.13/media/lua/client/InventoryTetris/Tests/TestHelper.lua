@@ -125,12 +125,14 @@ function TestHelper.createItem_1x3(inventory)
     return inventory:AddItem(TestHelper.items["1x3"].name)
 end
 
+---@param inventory ItemContainer
 ---@return InventoryItem
 function TestHelper.createItem_1x1_stackable(inventory)
     return inventory:AddItem(TestHelper.items["1x1_s"].name)
 end
 
-
+---@param player IsoPlayer
+---@return boolean
 function TestHelper.isTimedActionQueueEmpty(player)
     local actionQueue = ISTimedActionQueue.getTimedActionQueue(player)
     return #actionQueue.queue == 0 and not actionQueue.current

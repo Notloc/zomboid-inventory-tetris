@@ -14,20 +14,16 @@ local OPT = require("InventoryTetris/Settings")
 local Version = require("Notloc/Versioning/Version")
 local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
 local TetrisWindowManager = require("InventoryTetris/UI/Windows/TetrisWindowManager")
+local InventoryTetris = require("InventoryTetris/InventoryTetris")
 
 -- I use on game boot because I want to make sure other mods have loaded before I patch this in
 Events.OnGameBoot.Add(function()
 
-    local og_new = ISInventoryPane.new
-    function ISInventoryPane:new(x, y, width, height, inventory, zoom)
-        local o = og_new(self, x, y, width, height, inventory, zoom)
-        o.gridContainerUis = {}
-        return o
-    end
-
     local og_createChildren = ISInventoryPane.createChildren
     function ISInventoryPane:createChildren()
         og_createChildren(self)
+
+        self.gridContainerUis = {}
 
         self.tetrisWindowManager = TetrisWindowManager:new(self, self.player)
 
@@ -57,6 +53,7 @@ Events.OnGameBoot.Add(function()
         OPT.OnValueChanged.CONTAINER_INFO_SCALE:add(self.onApplyContainerInfoScaleCallback)
     end
 
+    ---@param scale number
     function ISInventoryPane:onApplyGridScale(scale)
         for _, gridContainerUi in ipairs(self.gridContainerUis) do
             gridContainerUi:onApplyGridScale(scale)

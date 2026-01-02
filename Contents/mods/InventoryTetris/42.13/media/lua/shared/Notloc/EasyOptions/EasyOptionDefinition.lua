@@ -3,7 +3,8 @@ local EasyOptionType = require("Notloc/EasyOptions/EasyOptionType")
 ---@class EasyOptionDefinition
 ---@field type EasyOptionType
 ---@field default any
----@field uiName string?
+---@field luaName string
+---@field uiName string
 ---@field options any[]?
 ---@field nameMap any[]?
 local EasyOptionDefinition = {}

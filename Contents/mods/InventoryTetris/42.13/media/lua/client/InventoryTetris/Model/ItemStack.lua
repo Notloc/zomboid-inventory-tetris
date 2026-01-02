@@ -7,16 +7,21 @@ local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 ---@class ItemStack
 ---@field public itemIDs table<integer, boolean>
 ---@field public count number
----@field public x number
----@field public y number
+---@field public x integer
+---@field public y integer
 ---@field public isRotated boolean
 ---@field public itemType string
----@field public category string
+---@field public category TetrisItemCategory
 ---@field public _frontItem InventoryItem|nil
 ---@field public _frontItemId integer|nil
 
 local ItemStackService = {}
 
+---@param x integer
+---@param y integer
+---@param isRotated boolean
+---@param itemFullType string
+---@param category TetrisItemCategory
 ---@return ItemStack
 function ItemStackService.create(x, y, isRotated, itemFullType, category)
     ---@type ItemStack

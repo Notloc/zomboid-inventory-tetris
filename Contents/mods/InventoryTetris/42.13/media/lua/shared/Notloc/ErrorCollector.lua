@@ -1,13 +1,11 @@
 ---@class ErrorCollector
 ---@field errors string[]
 local ErrorCollector = {}
+ErrorCollector.__index = ErrorCollector
 
 ---@return ErrorCollector
 function ErrorCollector:new()
-    local o = {}
-    setmetatable(o, self)
-    self.__index = self
-
+    local o = setmetatable({}, self)
     o.errors = {}
     return o
 end

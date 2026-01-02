@@ -1,11 +1,20 @@
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 
--- Intentional global
-TetrisPocketData = {}
+---@class TetrisPocketDefinition
+---@field gridDefinitions GridDefinition[] List of grid definitions that make up the pocket
+---@field validCategories table<TetrisItemCategory, boolean>|nil Optional table of valid item categories for this pocket
 
-TetrisPocketData._pocketDefinitions = {}
-TetrisPocketData._devPocketDefinitions = {}
+---@class TetrisPocketPack : table<string, TetrisPocketDefinition> Pocket definitions keyed by item full type
 
+---@class TetrisPocketData
+---@field _pocketDefinitions table<string, TetrisPocketDefinition> 
+---@field _devPocketDefinitions table<string, TetrisPocketDefinition> Development overrides
+local TetrisPocketData = {
+    _pocketDefinitions = {},
+    _devPocketDefinitions = {},
+}
+
+---@type TetrisPocketDefinition
 local two_pockets = {
     gridDefinitions = {
         {
@@ -18,6 +27,8 @@ local two_pockets = {
         }
     }
 }
+
+---@type TetrisPocketDefinition
 local four_pockets = {
     gridDefinitions = {
         {
@@ -38,6 +49,8 @@ local four_pockets = {
         }
     }
 }
+
+---@type TetrisPocketDefinition
 local six_pockets = {
     gridDefinitions = {
         {
@@ -66,6 +79,8 @@ local six_pockets = {
         }
     }
 }
+
+---@type TetrisPocketDefinition
 local two_big_pockets = {
     gridDefinitions = {
         {
@@ -78,6 +93,8 @@ local two_big_pockets = {
         }
     }
 }
+
+---@type TetrisPocketDefinition
 local one_large_pocket = {
     gridDefinitions = {
         {
@@ -86,6 +103,8 @@ local one_large_pocket = {
         }
     }
 }
+
+---@type TetrisPocketDefinition
 local two_big_two_small_pockets = {
     gridDefinitions = {
         {
@@ -106,6 +125,8 @@ local two_big_two_small_pockets = {
         }
     }
 }
+
+---@type TetrisPocketDefinition
 local four_big_four_small_pockets = {
     gridDefinitions = {
         {
@@ -142,6 +163,8 @@ local four_big_four_small_pockets = {
         }
     }
 }
+
+---@type TetrisPocketDefinition
 local boiler_suit = {
     gridDefinitions = {
         {
@@ -178,6 +201,8 @@ local boiler_suit = {
         }
     }
 }
+
+---@type TetrisPocketDefinition
 local ammo_strap = {
     gridDefinitions = {
         {
@@ -224,6 +249,8 @@ TetrisPocketData.defaultPocketDefinitionsBySlot = {
     [ItemBodyLocation.TORSO_EXTRA_VEST] = four_big_four_small_pockets
 }
 
+---@param item InventoryItem
+---@return TetrisPocketDefinition|nil
 function TetrisPocketData.getPocketDefinition(item)
     if not instanceof(item, "InventoryItem") then
         return nil
@@ -232,13 +259,17 @@ function TetrisPocketData.getPocketDefinition(item)
     local key = item:getFullType()
     local def = TetrisPocketData._devPocketDefinitions[key] or TetrisPocketData._pocketDefinitions[key]
     if not def then
-        def = TetrisPocketData.getDefaultPocketDefinition(item)
-        TetrisPocketData._pocketDefinitions[key] = def
+        local defaultDef = TetrisPocketData.getDefaultPocketDefinition(item)
+        if defaultDef then
+            TetrisPocketData._pocketDefinitions[key] = defaultDef
+        end
     end
 
     return def
 end
 
+---@param item InventoryItem
+---@return TetrisPocketDefinition|nil
 function TetrisPocketData.getDefaultPocketDefinition(item)
     local bodySlot = item:getBodyLocation()
     return TetrisPocketData.defaultPocketDefinitionsBySlot[bodySlot]
@@ -248,6 +279,7 @@ end
 -- Register pocket definitions
 TetrisPocketData._pocketDataPacks = {}
 
+---@param pocketPack TetrisPocketPack
 function TetrisPocketData.registerPocketDefinitions(pocketPack)
     table.insert(TetrisPocketData._pocketDataPacks, pocketPack)
     if TetrisPocketData._packsLoaded then
@@ -262,6 +294,7 @@ function TetrisPocketData._initializePocketPacks()
     TetrisPocketData._packsLoaded = true
 end
 
+---@param pocketPack TetrisPocketPack
 function TetrisPocketData._processPocketPack(pocketPack)
     for key, pocketDef in pairs(pocketPack) do
         TetrisPocketData._pocketDefinitions[key] = pocketDef
@@ -271,6 +304,9 @@ end
 function TetrisPocketData._onInitWorld()
     TetrisPocketData._initializePocketPacks()
 end
+
 Events.OnInitWorld.Add(TetrisPocketData._onInitWorld)
+
+_G.TetrisPocketData = TetrisPocketData
 
 return TetrisPocketData

@@ -15,6 +15,7 @@ local OVERFLOW_RENDERER_SPACING = 8
 ---@field public inventory ItemContainer
 ---@field public inventoryPane ISInventoryPane
 ---@field public playerNum integer
+---@field public controllerNode ControllerNode
 local GridOverflowRenderer = ISUIElement:derive("GridOverflowRenderer")
 
 ---@param x number
@@ -47,13 +48,14 @@ function GridOverflowRenderer:initialise()
         :setJoypadDownHandler(self.controllerNodeOnJoypadDown)
 end
 
+---@return number[]
 function GridOverflowRenderer:getYPositionsForOverflow()    
     local height = self.containerGridUi.multiGridRenderer:getHeight()
     if self.lastHeight == height then
         return self.lastYPositions
     end
 
-    local y = 0
+    local y = 0.0
     local yPositions = {}
     while height > (OPT.CELL_SIZE + OVERFLOW_MARGIN * 0.8) do
         table.insert(yPositions, y)
@@ -98,7 +100,8 @@ function GridOverflowRenderer:render()
     local renderInstructions = table.newarray()
 
     local controllerSelectionFound = false
-    local controllerX, controllerY
+    local controllerX = 0.0
+    local controllerY = 0.0
 
     local i = 1
     for _, stack in ipairs(overflow) do

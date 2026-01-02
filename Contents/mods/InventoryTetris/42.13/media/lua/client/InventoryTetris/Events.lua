@@ -1,5 +1,5 @@
--- Intentional global
-TetrisEvents = {}
+---@class TetrisEvents
+local TetrisEvents = {}
 
 function TetrisEvents._genericTrigger(event, ...)
     local data = TetrisEvents.createEventData(event)
@@ -56,23 +56,19 @@ TetrisEvents.OnStackDroppedOnStack = TetrisEvents.createEvent("OnStackDroppedOnS
     TetrisEvents._genericConsumableTrigger(self, dragStack, fromInv, targetStack, targetInv, playerNum)
 end)
 
----@deprecated - Use OnPostRenderGrid instead, this event is no longer called due to performance reasons.
-TetrisEvents.OnPostRenderGridItem = TetrisEvents.createEvent("OnPostRenderGridItem", function(self, drawingContext, item, gridStack, x, y, width, height, playerObj)
-    TetrisEvents._genericTrigger(self, drawingContext, item, gridStack, x, y, width, height, playerObj)
-end)
-
-
 ---@class TetrisRenderInstruction
 ---@field [1] ItemStack stack
 ---@field [2] InventoryItem item
 ---@field [3] number x
 ---@field [4] number y
----@field [5] number w (in grid cells)
----@field [6] number h (in grid cells)
+---@field [5] integer w (in grid cells)
+---@field [6] integer h (in grid cells)
 ---@field [7] number alphaMult
 ---@field [8] boolean isRotated
 ---@field [9] boolean isHidden
 ---@field [10] boolean doBorder
+---@field [11] boolean isSquished
+---@field [12] boolean isSelected
 
 --- This event is called once an entire item grid has finished rendering.<br>
 --- This event is performance CRITICAL! Please write highly efficient code and avoid all unnecessary work.<br>
@@ -88,5 +84,7 @@ end)
 TetrisEvents.OnPostRenderGrid = TetrisEvents.createEvent("OnPostRenderGrid", function(self, drawingContext, renderInstructions, instructionCount, playerObj)
     TetrisEvents._genericTrigger(self, drawingContext, renderInstructions, instructionCount, playerObj)
 end)
+
+_G.TetrisEvents = TetrisEvents
 
 return TetrisEvents

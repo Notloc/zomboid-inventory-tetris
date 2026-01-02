@@ -38,6 +38,9 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Gravity Tests", 
     function Tests.test_stacksFall()
         local containerGrid = TestHelper.createContainerGrid_5x5()
         local grid = containerGrid.grids[1]
+        if not grid then
+            error("No grid found")
+        end
 
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
         TestUtils.assert(containerGrid:insertItem(item, 0, 0, firstGrid, false))
@@ -83,6 +86,9 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Gravity Tests", 
     function Tests.test_stacksBury()
         local containerGrid = TestHelper.createContainerGrid_5x5()
         local grid = containerGrid.grids[1]
+        if not grid then
+            error("No grid found")
+        end
 
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
         TestUtils.assert(containerGrid:insertItem(item, 0, 4, firstGrid, false))
@@ -91,15 +97,25 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Gravity Tests", 
         TestUtils.assert(containerGrid:insertItem(item2, 0, 2, firstGrid, false))
 
         local stack = grid:getStack(0, 4, playerNum)
+        if not stack then
+            error("No stack found at (0,4)")
+        end
+
         TestUtils.assert(not grid:isStackBuried(stack))
 
         containerGrid.lastPhysics = nil -- Force a refresh without waiting for the next tick
         containerGrid:refresh()
 
+        -- Physics should prevent this stack from being accessible
         stack = grid:getStack(0, 4, playerNum)
         TestUtils.assertNil(stack)
 
+        -- But the stack should actually still be there internally
         stack = grid:getStackInternal(0, 4)
+        if not stack then
+            error("No stack found at (0,4)")
+        end
+
         TestUtils.assert(grid:isStackBuried(stack))
 
         grid:removeItem(item2)

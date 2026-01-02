@@ -16,13 +16,13 @@ local TetrisModCompatibility = require("InventoryTetris/TetrisModCompatibility")
 ---@field size WidthHeight
 ---@field position XY
 
----@class TetrisContainerData
+---@class TetrisContainerService
 ---@field _containerDefinitions table<string, ContainerGridDefinition>
 ---@field _devContainerDefinitions table<string, ContainerGridDefinition>
-local TetrisContainerData = {}
+local TetrisContainerService = {}
 
-TetrisContainerData._containerDefinitions = {}
-TetrisContainerData._devContainerDefinitions = {}
+TetrisContainerService._containerDefinitions = {}
+TetrisContainerService._devContainerDefinitions = {}
 
 -- Containers that must never be marked as non-fragile due to java side hardcoding
 -- Without this the disable carry weight feature causes the containers to misbehave
@@ -32,29 +32,29 @@ local MUST_BE_FRAGILE = {
 }
 
 ---@param container ItemContainer
----@param containerDef ContainerGridDefinition
-function TetrisContainerData.setContainerDefinition(container, containerDef)
-    local containerKey = TetrisContainerData._getContainerKey(container)
-    TetrisContainerData._containerDefinitions[containerKey] = containerDef
+---@param containerDef ContainerGridDefinition?
+function TetrisContainerService.setContainerDefinition(container, containerDef)
+    local containerKey = TetrisContainerService._getContainerKey(container)
+    TetrisContainerService._containerDefinitions[containerKey] = containerDef
 end
 
 ---@param container ItemContainer
 ---@return ContainerGridDefinition
-function TetrisContainerData.getContainerDefinition(container)
-    local containerKey = TetrisContainerData._getContainerKey(container)
-    return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
+function TetrisContainerService.getContainerDefinition(container)
+    local containerKey = TetrisContainerService._getContainerKey(container)
+    return TetrisContainerService._getContainerDefinitionByKey(container, containerKey)
 end
 
 ---@param container ItemContainer
 ---@return integer
-function TetrisContainerData.calculateInnerSize(container)
-    local definition = TetrisContainerData.getContainerDefinition(container)
-    return TetrisContainerData._calculateInnerSizeByDefinition(definition)
+function TetrisContainerService.calculateInnerSize(container)
+    local definition = TetrisContainerService.getContainerDefinition(container)
+    return TetrisContainerService._calculateInnerSizeByDefinition(definition)
 end
 
 ---@param definition ContainerGridDefinition
 ---@return integer
-function TetrisContainerData._calculateInnerSizeByDefinition(definition)
+function TetrisContainerService._calculateInnerSizeByDefinition(definition)
     local innerSize = 0
     for _, gridDefinition in ipairs(definition.gridDefinitions) do
         local x = gridDefinition.size.width + SandboxVars.InventoryTetris.BonusGridSize
@@ -66,7 +66,7 @@ end
 
 ---@param container ItemContainer
 ---@return string
-function TetrisContainerData._getContainerKey(container)
+function TetrisContainerService._getContainerKey(container)
     local modKey = TetrisModCompatibility.getModContainerKey(container)
     if modKey then
         return modKey
@@ -82,15 +82,15 @@ end
 ---@param container ItemContainer
 ---@param containerKey string
 ---@return ContainerGridDefinition
-function TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
-    local def = TetrisContainerData._devContainerDefinitions[containerKey] or TetrisContainerData._containerDefinitions[containerKey]
+function TetrisContainerService._getContainerDefinitionByKey(container, containerKey)
+    local def = TetrisContainerService._devContainerDefinitions[containerKey] or TetrisContainerService._containerDefinitions[containerKey]
     if not def then
         def = TetrisContainerCalculator.calculateContainerDefinition(container)
-        TetrisContainerData._containerDefinitions[containerKey] = def
+        TetrisContainerService._containerDefinitions[containerKey] = def
     end
 
     if not def.corrected then
-        TetrisContainerData._enforceCorrections(container, def)
+        TetrisContainerService._enforceCorrections(container, def)
     end
 
     return def
@@ -99,7 +99,7 @@ end
 -- Inject new required fields and enforce certain rules
 ---@param container ItemContainer
 ---@param containerDef ContainerGridDefinition
-function TetrisContainerData._enforceCorrections(container, containerDef)
+function TetrisContainerService._enforceCorrections(container, containerDef)
     if containerDef.corrected then
         return
     end
@@ -114,15 +114,15 @@ function TetrisContainerData._enforceCorrections(container, containerDef)
     containerDef.corrected = true
 end
 
-function TetrisContainerData.recalculateContainerData()
-    TetrisContainerData._containerDefinitions = {}
-    TetrisContainerData._onInitWorld()
+function TetrisContainerService.recalculateContainerData()
+    TetrisContainerService._containerDefinitions = {}
+    TetrisContainerService._onInitWorld()
 end
 
 ---@param containerDef ContainerGridDefinition
 ---@return string|nil
-function TetrisContainerData.getSingleValidCategory(containerDef)
-    local validCategories = TetrisContainerData._getValidCategories(containerDef)
+function TetrisContainerService.getSingleValidCategory(containerDef)
+    local validCategories = TetrisContainerService._getValidCategories(containerDef)
     if not validCategories then
         return nil
     end
@@ -141,8 +141,8 @@ end
 ---@param containerDef ContainerGridDefinition
 ---@param category TetrisItemCategory
 ---@return boolean
-function TetrisContainerData.canAcceptCategory(containerDef, category)
-    local validCategories = TetrisContainerData._getValidCategories(containerDef)
+function TetrisContainerService.canAcceptCategory(containerDef, category)
+    local validCategories = TetrisContainerService._getValidCategories(containerDef)
     return not validCategories or validCategories[category]
 end
 
@@ -150,7 +150,7 @@ end
 -- Invalid parsing remains to support existing datapacks.
 ---@param containerDef ContainerGridDefinition
 ---@return table<TetrisItemCategory, boolean>|nil
-function TetrisContainerData._getValidCategories(containerDef)
+function TetrisContainerService._getValidCategories(containerDef)
     if containerDef.validCategories then
         return containerDef.validCategories
     end
@@ -175,74 +175,81 @@ function TetrisContainerData._getValidCategories(containerDef)
     return validCategories
 end
 
+--- Cache for the debug tool container viewer so we don't instantiate items per frame
 ---@type table<Item, ItemContainer>
-local itemScriptToContainer = {}
+local itemScriptToContainerCache = {}
 
 ---@param itemScript Item
 ---@return ContainerGridDefinition|nil
-function TetrisContainerData.getContainerDefinitionByItemScript(itemScript)
-    if not itemScriptToContainer[itemScript] then
+function TetrisContainerService.getContainerDefinitionByItemScript(itemScript)
+    if not itemScriptToContainerCache[itemScript] then
         local item = instanceItem(itemScript)
         if not item:IsInventoryContainer() then
             return nil
         end
         ---@cast item InventoryContainer
         local container = item:getItemContainer()
-        itemScriptToContainer[itemScript] = container
+        itemScriptToContainerCache[itemScript] = container
     end
 
-    local container = itemScriptToContainer[itemScript]
-    local containerKey = TetrisContainerData._getContainerKey(container)
-    return TetrisContainerData._getContainerDefinitionByKey(container, containerKey)
+    local container = itemScriptToContainerCache[itemScript]
+    local containerKey = TetrisContainerService._getContainerKey(container)
+    return TetrisContainerService._getContainerDefinitionByKey(container, containerKey)
 end
 
 
 -- Vehicle Storage Registration
 
-function TetrisContainerData.registerLargeVehicleStorageContainers(containerTypes)
+--- The container types that are considered large vehicle storage and get much more grid space.
+---@param containerTypes string[]
+function TetrisContainerService.registerLargeVehicleStorageContainers(containerTypes)
     for _, type in ipairs(containerTypes) do
         TetrisContainerCalculator._vehicleStorageNames[type] = true
     end
 end
 
 -- Container Pack Registration
-TetrisContainerData._containerDataPacks = {}
 
-function TetrisContainerData.registerContainerDefinitions(containerPack)
-    table.insert(TetrisContainerData._containerDataPacks, containerPack)
-    if TetrisContainerData._packsLoaded then
-        TetrisContainerData._processContainerPack(containerPack)
+TetrisContainerService._containerDataPacks = {}
+
+---@param containerPack table<string, ContainerGridDefinition>
+function TetrisContainerService.registerContainerDefinitions(containerPack)
+    table.insert(TetrisContainerService._containerDataPacks, containerPack)
+    if TetrisContainerService._packsLoaded then
+        TetrisContainerService._processContainerPack(containerPack)
     end
 end
 
-function TetrisContainerData._initializeContainerPacks()
-    for _, containerPack in ipairs(TetrisContainerData._containerDataPacks) do
-        TetrisContainerData._processContainerPack(containerPack)
+function TetrisContainerService._initializeContainerPacks()
+    for _, containerPack in ipairs(TetrisContainerService._containerDataPacks) do
+        TetrisContainerService._processContainerPack(containerPack)
     end
-    TetrisContainerData._packsLoaded = true
+    TetrisContainerService._packsLoaded = true
 end
 
-function TetrisContainerData._processContainerPack(containerPack)
+---@param containerPack table<string, ContainerGridDefinition>
+function TetrisContainerService._processContainerPack(containerPack)
     for defKey, containerDef in pairs(containerPack) do
         -- Write data into existing definition if it exists.
         -- Allows container packs containing only partial data to be merged. i.e. Old packs before the rigid and squishable flags were added.
-        local existing = TetrisContainerData._containerDefinitions[defKey]
+        local existing = TetrisContainerService._containerDefinitions[defKey]
         if existing then
             for key, val in pairs(containerDef) do
                 existing[key] = val
             end
         else
-            TetrisContainerData._containerDefinitions[defKey] = containerDef
+            TetrisContainerService._containerDefinitions[defKey] = containerDef
         end
     end
 end
 
-function TetrisContainerData._onInitWorld()
-    TetrisContainerData._initializeContainerPacks()
+function TetrisContainerService._onInitWorld()
+    TetrisContainerService._initializeContainerPacks()
 end
-Events.OnInitWorld.Add(TetrisContainerData._onInitWorld)
+
+Events.OnInitWorld.Add(TetrisContainerService._onInitWorld)
 
 -- For backwards compatibility with existing datapacks
-_G.TetrisContainerData = TetrisContainerData
+_G.TetrisContainerData = TetrisContainerService
 
-return TetrisContainerData
+return TetrisContainerService

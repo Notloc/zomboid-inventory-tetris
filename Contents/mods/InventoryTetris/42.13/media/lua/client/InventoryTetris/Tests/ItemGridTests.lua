@@ -8,6 +8,15 @@ local ItemStack = require("InventoryTetris/Model/ItemStack")
 local ItemGrid = require("InventoryTetris/Model/ItemGrid")
 local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 
+---@param stack ItemStack?
+---@return ItemStack
+local function assertStack(stack)
+    if not stack then
+        error("Expected stack, got nil")
+    end
+    return stack
+end
+
 TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function ()
     local Tests = TestUtils.newTestModule("client/InventoryTetris/Tests/ItemGridTests.lua")
 
@@ -42,7 +51,12 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function
         local inserted = containerGrid:insertItem(item, 0, 0, firstGrid, false)
         TestUtils.assert(inserted)
 
-        local stack = containerGrid.grids[1]:getStack(0, 0, playerNum)
+        local grid = containerGrid.grids[1]
+        if not grid then
+            error("No grid found")
+        end
+
+        local stack = grid:getStack(0, 0, playerNum)
         TestUtils.assert(stack and stack.count == 1)
         TestUtils.assert(ItemStack.containsItem(stack, item))
 
@@ -71,14 +85,19 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function
         local inserted = containerGrid:insertItem(item, 0, 0, firstGrid, false)
         TestUtils.assert(inserted)
 
-        local stack = containerGrid.grids[firstGrid]:getStack(0, 0, playerNum)
+        local grid = containerGrid.grids[1]
+        if not grid then
+            error("No grid found")
+        end
+
+        local stack = grid:getStack(0, 0, playerNum)
         TestUtils.assert(stack and stack.count == 1)
         TestUtils.assert(ItemStack.containsItem(stack, item))
 
         local removed = containerGrid:removeItem(item)
         TestUtils.assert(removed)
 
-        stack = containerGrid.grids[firstGrid]:getStack(0, 0, playerNum)
+        stack = grid:getStack(0, 0, playerNum)
         TestUtils.assert(stack == nil)
 
         removed = containerGrid:removeItem(item)
@@ -88,11 +107,18 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function
     function Tests.test_moveStack()
         local containerGrid = TestHelper.createContainerGrid_5x5()
         local grid = containerGrid.grids[firstGrid]
+        if not grid then
+            error("No grid found")
+        end
 
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
         TestUtils.assert(containerGrid:insertItem(item, 0, 0, firstGrid, false))
 
         local stack = grid:getStack(0, 0, playerNum)
+        if not stack then
+            error("No stack found at (0,0)")
+        end
+
         local moved = grid:moveStack(stack, 1, 1, false)
         TestUtils.assert(moved)
 
@@ -109,6 +135,9 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function
     function Tests.test_findStackByItem()
         local containerGrid = TestHelper.createContainerGrid_5x5()
         local grid = containerGrid.grids[firstGrid]
+        if not grid then
+            error("No grid found")
+        end
 
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
 
@@ -178,11 +207,16 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function
     function Tests.test_willStackOverlapSelf()
         local containerGrid = TestHelper.createContainerGrid_5x5()
         local grid = containerGrid.grids[firstGrid]
+        if not grid then
+            error("No grid found")
+        end
 
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
         TestUtils.assert(containerGrid:insertItem(item, 0, 0, firstGrid, false))
 
         local stack = grid:getStack(0, 0, playerNum)
+        stack = assertStack(stack)
+
         local overlaps = grid:willStackOverlapSelf(stack, 0, 0)
         TestUtils.assert(overlaps)
 
@@ -195,6 +229,8 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function
         TestUtils.assert(containerGrid:insertItem(item, 1, 1, firstGrid, false))
 
         stack = grid:getStack(1, 1, playerNum)
+        stack = assertStack(stack)
+
         overlaps = grid:willStackOverlapSelf(stack, 1, 1)
         TestUtils.assert(overlaps)
 
@@ -216,6 +252,7 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function
         TestUtils.assert(containerGrid:insertItem(item, 1, 0, firstGrid, notRotated))
 
         stack = grid:getStack(1, 0, playerNum)
+        stack = assertStack(stack)
 
         overlaps = grid:willStackOverlapSelf(stack, 1, 0, notRotated)
         TestUtils.assert(overlaps)
@@ -245,6 +282,9 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Tests", function
     function Tests.test_isEmpty()
         local containerGrid = TestHelper.createContainerGrid_5x5()
         local grid = containerGrid.grids[firstGrid]
+        if not grid then
+            error("No grid found")
+        end
 
         TestUtils.assert(grid:isEmpty())
 

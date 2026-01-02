@@ -17,6 +17,7 @@ local ItemGridStackSplitWindow = require("InventoryTetris/UI/Grid/ItemGridStackS
 local CONTROLLER_DOUBLE_PRESS_TIME = 200
 local Core = getCore()
 
+---@class(partial) ItemGridUI : ISPanel
 local ItemGridUI = require("InventoryTetris/UI/Grid/ItemGridUI_rendering")
 
 function ItemGridUI:initialise()

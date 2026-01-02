@@ -1,13 +1,22 @@
 local ItemUtil = {}
 
+---@param item InventoryItem
+---@param playerObj IsoPlayer
+---@return boolean
 function ItemUtil.canBeRead(item, playerObj)
+    if not instanceof(item, "Literature") then
+        return false
+    end
+
+    ---@cast item Literature
+
     -- Not a book
-    if not item or item:getCategory() ~= "Literature" or item:canBeWrite() then
+    if item:canBeWrite() then
         return false
     end
     
     -- Character can't read
-    if playerObj:getTraits():isIlliterate() then
+    if playerObj:hasTrait(CharacterTrait.ILLITERATE) then
         return false
     end
 
@@ -17,8 +26,10 @@ function ItemUtil.canBeRead(item, playerObj)
         return true
     end
 
+    local skillTrained = item:getSkillTrained()
+
     -- Skill too low
-    local perk = SkillBook[skillLvlTrained].perk
+    local perk = SkillBook[skillTrained].perk
     if perk and	skillLvlTrained > playerObj:getPerkLevel(perk) + 1 then   
         return false
     end
@@ -26,14 +37,21 @@ function ItemUtil.canBeRead(item, playerObj)
     return true
 end
 
+---@param item InventoryItem
+---@return boolean
 function ItemUtil.canEat(item)
     return item:getCategory() == "Food" and not item:getScriptItem():isCantEat()
 end
 
+---@param item InventoryItem
+---@return boolean
 function ItemUtil.canEquipItem(item)
     return not ItemUtil.canEat(item) and not item:IsClothing() and not item:isBroken()
 end
 
+---@param playerObj IsoPlayer
+---@param callbackFunc fun(item: InventoryItem, container: ItemContainer)
+---@param ignoreMainInventory boolean?
 function ItemUtil.forEachItemOnPlayer(playerObj, callbackFunc, ignoreMainInventory)
     local containers = ItemUtil.getAllEquippedContainers(playerObj, ignoreMainInventory)
     for _, container in ipairs(containers) do
@@ -45,29 +63,52 @@ function ItemUtil.forEachItemOnPlayer(playerObj, callbackFunc, ignoreMainInvento
     end
 end
 
+
+-- TODO: Remove this, there is a vanilla function that does the same thing
+---@param playerObj IsoPlayer
+---@param ignoreMainInventory boolean?
+---@return ItemContainer[]
 function ItemUtil.getAllEquippedContainers(playerObj, ignoreMainInventory)
     local containers = {}
     local mainInv = playerObj:getInventory()
 
     local inventoryPage = getPlayerInventory(playerObj:getPlayerNum())
+    if not inventoryPage then
+        return containers
+    end
+
     local selectedContainer = inventoryPage.inventory
     if not ignoreMainInventory or selectedContainer ~= mainInv then
         table.insert(containers, selectedContainer)
     end
 
     for _, button in ipairs(inventoryPage.backpacks) do
-        if button.inventory ~= selectedContainer and (not ignoreMainInventory or button.inventory ~= mainInv) then
-            table.insert(containers, button.inventory)
+        ---@diagnostic disable-next-line: undefined-field
+        local inv = button.inventory
+
+        if inv ~= selectedContainer and (not ignoreMainInventory or inv ~= mainInv) then
+            table.insert(containers, inv)
         end
     end
     return containers
 end
 
+---@param item InventoryItem
+---@param sourceContainer ItemContainer
+---@param destinationContainer ItemContainer
+---@param playerObj IsoPlayer
+---@return ISInventoryTransferAction, ISInventoryTransferAction
 function ItemUtil.createTransferActionWithReturn(item, sourceContainer, destinationContainer, playerObj)
     local transferActions, returnActions = ItemUtil.createTransferActionsWithReturns({item}, sourceContainer, destinationContainer, playerObj)
+    ---@diagnostic disable-next-line: return-type-mismatch
     return transferActions[1], returnActions[1]
 end
 
+---@param items InventoryItem[]
+---@param sourceContainer ItemContainer
+---@param destinationContainer ItemContainer
+---@param playerObj IsoPlayer
+---@return ISInventoryTransferAction[], ISInventoryTransferAction[]
 function ItemUtil.createTransferActionsWithReturns(items, sourceContainer, destinationContainer, playerObj)
     local transferActions = {}
     local returnActions = {}
@@ -81,6 +122,10 @@ function ItemUtil.createTransferActionsWithReturns(items, sourceContainer, desti
     return transferActions, returnActions
 end
 
+---@param playerNum integer
+---@param itemType string
+---@param count integer
+---@return boolean
 function ItemUtil.canGatherItems(playerNum, itemType, count)
     local playerObj = getSpecificPlayer(playerNum)
     local containers = ItemUtil.getAllEquippedContainers(playerObj)
@@ -116,6 +161,10 @@ function ItemUtil.canGatherItems(playerNum, itemType, count)
     return false
 end
 
+---@param playerNum integer
+---@param itemType string
+---@param count integer
+---@return boolean
 function ItemUtil.gatherItems(playerNum, itemType, count)
     local playerObj = getSpecificPlayer(playerNum)
     local containers = ItemUtil.getAllEquippedContainers(playerObj)

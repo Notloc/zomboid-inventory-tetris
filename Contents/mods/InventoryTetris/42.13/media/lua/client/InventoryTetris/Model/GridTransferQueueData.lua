@@ -1,11 +1,16 @@
 -- Parses the player's action queue into data that summarizes item transfer information for use in renderering.
 -- Allows us to show previews of in-progress and upcoming item transfers.
 
+---@class GridTransferQueueData
+---@field incoming table<ItemContainer, table<string, table<InventoryItem, ISInventoryTransferAction>>>
+---@field outgoing table<ItemContainer, table<InventoryItem, ISInventoryTransferAction>>
 local GridTransferQueueData = {}
+GridTransferQueueData.__index = GridTransferQueueData
 
+---@param playerNum integer
+---@return GridTransferQueueData
 function GridTransferQueueData.build(playerNum)
-    local data = {}
-    setmetatable(data, { __index = GridTransferQueueData })
+    local data = setmetatable({}, GridTransferQueueData)
 
     data.incoming = {}
     data.outgoing = {}
@@ -24,13 +29,15 @@ function GridTransferQueueData.build(playerNum)
     return data
 end
 
+---@param action ISBaseTimedAction
 function GridTransferQueueData:processAction(action)
     if action.Type == "ISInventoryTransferAction" then
+        ---@cast action ISInventoryTransferAction
         local item = action.item
         local targetInv = action.destContainer
         local sourceInv = action.srcContainer
 
-        if not targetInv or not sourceInv then
+        if not item or not targetInv or not sourceInv then
             return
         end
 
@@ -59,6 +66,7 @@ function GridTransferQueueData:processAction(action)
                 for _, item in ipairs(queueData.items) do
                     self.outgoing[sourceInv][item] = action
                     if tetrisAware then
+                        ---@diagnostic disable-next-line: need-check-nil Its not nil
                         self.incoming[targetInv][gridKey][item] = action
                     end
                 end
@@ -67,10 +75,15 @@ function GridTransferQueueData:processAction(action)
     end
 end
 
+---@param container ItemContainer
+---@return table<InventoryItem, ISInventoryTransferAction>
 function GridTransferQueueData:getOutgoingActions(container)
     return self.outgoing[container] and self.outgoing[container] or {}
 end
 
+---@param container ItemContainer
+---@param gridKey string
+---@return table<InventoryItem, ISInventoryTransferAction>
 function GridTransferQueueData:getIncomingActions(container, gridKey)
     return self.incoming[container] and self.incoming[container][gridKey] or {}
 end

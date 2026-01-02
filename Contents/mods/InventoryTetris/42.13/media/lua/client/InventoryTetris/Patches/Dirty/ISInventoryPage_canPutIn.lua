@@ -2,7 +2,6 @@
 
 local og_canPutIn = ISInventoryPage.canPutIn
 
----@diagnostic disable-next-line: duplicate-set-field
 function ISInventoryPage:canPutIn()
     if SandboxVars.InventoryTetris.EnforceCarryWeight then
         return og_canPutIn(self)

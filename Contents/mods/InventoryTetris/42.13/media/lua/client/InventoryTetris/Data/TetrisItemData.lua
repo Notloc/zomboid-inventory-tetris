@@ -3,12 +3,13 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 
 local SQUISHED_SUFFIX = "__squished"
 
----@class TetrisItemPack : table<string, TetrisItemDefinition>[]
+---@class TetrisItemPack : table<string, TetrisItemDefinition>
 
 ---@class TetrisItemDefinition
 ---@field public width integer
 ---@field public height integer
 ---@field public maxStackSize integer
+---@field public _autoCalculated boolean|nil
 
 ---@class TetrisItemData
 ---@field _itemData table<string, TetrisItemDefinition>
@@ -24,8 +25,9 @@ local TetrisItemService = {
     _squishedIdCache = {},
 }
 
--- TODO: Move into dev tool and datapacks
--- Intentionally overriding TetrisItemCalculator._dynamicSizeItems
+-- TODO: Add into dev tool and datapacks
+-- Intentionally overriding TetrisItemCalculator._dynamicSizeItems to avoid circular dependency
+-- TODO: Refactor calls to pass this in instead
 TetrisItemCalculator._dynamicSizeItems = {
     ["Moveables.Moveable"] = true,
     ["Base.CorpseAnimal"] = true,
@@ -52,7 +54,7 @@ TetrisItemCalculator._dynamicSizeItems = {
 }
 
 ---@param item InventoryItem
----@param isRotated boolean
+---@param isRotated boolean?
 ---@return integer, integer
 function TetrisItemService.getItemSize(item, isRotated)
     local data = TetrisItemService._getItemData(item)
@@ -194,10 +196,11 @@ function TetrisItemService.isInDataPack(fullType)
     return false
 end
 
+---@param pack TetrisItemPack
 function TetrisItemService.registerItemDefinitions(pack)
     table.insert(TetrisItemService._itemDataPacks, pack)
     if TetrisItemService._packsLoaded then
-        TetrisItemService._processItemPack(pack) -- You're late.
+        TetrisItemService._processItemPack(pack)
     end
 end
 
@@ -208,12 +211,14 @@ function TetrisItemService._initializeTetrisItemData()
     TetrisItemService._packsLoaded = true
 end
 
+---@param itemPack TetrisItemPack
 function TetrisItemService._processItemPack(itemPack)
     for k, v in pairs(itemPack) do
         TetrisItemService._itemData[k] = v
     end
 end
 
+---@param itemNames string[]
 function TetrisItemService.registerAlwaysStackOnSpawnItems(itemNames)
     for _, itemName in ipairs(itemNames) do
         TetrisItemService._alwaysStackOnSpawnItems[itemName] = true
@@ -227,6 +232,6 @@ end
 Events.OnInitWorld.Add(TetrisItemService._onInitWorld)
 
 -- Export as global for modpack backwards compatibility
-_G.TetrisItemData2 = TetrisItemService
+_G.TetrisItemData = TetrisItemService
 
 return TetrisItemService

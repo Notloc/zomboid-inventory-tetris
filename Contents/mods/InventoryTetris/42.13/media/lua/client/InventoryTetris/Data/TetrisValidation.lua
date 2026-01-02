@@ -2,6 +2,7 @@ local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 
+---@class TetrisValidationService
 local TetrisValidation = {}
 
 ---@param container ItemContainer
@@ -17,9 +18,10 @@ function TetrisValidation.validateInsert(container, containerDef, item)
     if item:IsInventoryContainer() and SandboxVars.InventoryTetris.PreventTardisStacking then
         ---@cast item InventoryContainer
 
-        -- Prevent the player from putting a bag of holding inside a bag of holding and blowing up the universe
+        -- If the receiving container is inside or is a tardis
         local isInsideTardis = TetrisValidation.isTardisRecursive(container)
         if isInsideTardis then
+            -- Ensure the container item being inserted is not and does not contain any tardis
             local leafTardis = {}
             TetrisValidation._findLeafTardis(item:getItemContainer(), leafTardis)
             if #leafTardis > 0 then
@@ -54,7 +56,10 @@ function TetrisValidation.validateInsert(container, containerDef, item)
     return TetrisContainerData.canAcceptCategory(containerDef, itemCategory)
 end
 
+--- TODO: Refactor to not use recursion.
+--- Searches up the container hierarchy to see if any parent container is a tardis.
 ---@param container ItemContainer
+---@return boolean
 function TetrisValidation.isTardisRecursive(container)
     local isTardis = TetrisValidation.isTardis(container)
     if isTardis then
@@ -74,7 +79,9 @@ function TetrisValidation.isTardisRecursive(container)
     return TetrisValidation.isTardisRecursive(container)
 end
 
+--- A "Tardis" is a container that has more internal slot capacity than the size of its containing item.
 ---@param container ItemContainer
+---@return boolean
 function TetrisValidation.isTardis(container)
     local containingItem = container:getContainingItem()
     local isKeyRing = containingItem and containingItem:hasTag(ItemTag.KEY_RING)
@@ -98,7 +105,10 @@ function TetrisValidation.isTardis(container)
     return size < capacity
 end
 
+--- TODO: Refactor to not use recursion.
+--- Searches down the container hierarchy to find any leaf tardis containers.
 ---@param container ItemContainer
+---@param tardisList ItemContainer[]
 function TetrisValidation._findLeafTardis(container, tardisList)
     local isTardis = TetrisValidation.isTardis(container)
     if isTardis then

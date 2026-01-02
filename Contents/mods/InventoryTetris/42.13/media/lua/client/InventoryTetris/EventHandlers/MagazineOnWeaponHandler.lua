@@ -30,11 +30,20 @@ function MagazineWeaponHandler.validate(eventData, droppedStack, fromInventory, 
     return true;
 end
 
+---@param eventData any
+---@param droppedStack VanillaStack
+---@param fromInventory ItemContainer
+---@param targetStack VanillaStack
+---@param targetInventory ItemContainer
+---@param playerNum integer
 function MagazineWeaponHandler.call(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
-    local magazine = droppedStack.items[1]
+    ---@type HandWeapon?
     local weapon = targetStack.items[1]
-    
-    if not weapon:IsWeapon() then return end
+    if not weapon or not weapon:IsWeapon() then return end
+
+    local magazine = droppedStack.items[1]
+    if not magazine then return end
+
     if weapon:getMagazineType() ~= magazine:getFullType() then return end
 
     local playerObj = getSpecificPlayer(playerNum)

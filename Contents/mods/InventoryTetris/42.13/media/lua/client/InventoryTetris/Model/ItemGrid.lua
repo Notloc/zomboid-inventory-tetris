@@ -13,35 +13,34 @@ local ItemStack = require("InventoryTetris/Model/ItemStack")
 
 ---@class ItemGrid
 ---@field containerGrid ItemContainerGrid
----@field containerDefinition ContainerGridDefinition
+---@field containerDefinition ContainerGridDefinition|TetrisPocketDefinition
 ---@field gridDefinition GridDefinition
----@field gridIndex number
+---@field gridIndex integer
 ---@field inventory ItemContainer
 ---@field isPlayerInventory boolean
 ---@field secondaryTarget InventoryItem
 ---@field isOnPlayer boolean
 ---@field isFloor boolean
----@field width number
----@field height number
+---@field width integer
+---@field height integer
 ---@field gridKey string
 ---@field isProxInv boolean
 ---@field isCorpse boolean
 local ItemGrid = {}
+ItemGrid.__index = ItemGrid
 
 local PROX_INV_TYPE = "proxInv"
 
 ---@param containerGrid ItemContainerGrid
 ---@param gridIndex number
 ---@param inventory ItemContainer
----@param containerDefinition ContainerGridDefinition
+---@param containerDefinition ContainerGridDefinition|TetrisPocketDefinition
 ---@param gridDefinition GridDefinition
 ---@param isPlayerInventory boolean
 ---@param secondaryTarget InventoryItem?
 ---@return ItemGrid
 function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, gridDefinition, isPlayerInventory, secondaryTarget)
-    local o = {}
-    setmetatable(o, self)
-    self.__index = self
+    local o = setmetatable({}, self)
 
     o.containerGrid = containerGrid
     o.containerDefinition = containerDefinition
@@ -71,7 +70,6 @@ function ItemGrid:new(containerGrid, gridIndex, inventory, containerDefinition, 
 
     o:refresh()
 
-    ---@type ItemGrid
     return o
 end
 
@@ -98,6 +96,12 @@ function ItemGrid:getStack(x, y, playerNum)
     return stack
 end
 
+---@param x1 number
+---@param y1 number
+---@param x2 number
+---@param y2 number
+---@param playerNum integer
+---@return ItemStack[]
 function ItemGrid:getStacksInArea(x1, y1, x2, y2, playerNum)
     local stacks = {}
     for x=x1,x2 do
@@ -111,6 +115,9 @@ function ItemGrid:getStacksInArea(x1, y1, x2, y2, playerNum)
     return stacks
 end
 
+---@param x number
+---@param y number
+---@return ItemStack?
 function ItemGrid:getStackInternal(x, y)
     if self.stackMap[x] then
         return self.stackMap[x][y]
@@ -118,10 +125,13 @@ function ItemGrid:getStackInternal(x, y)
     return nil
 end
 
+---@return ItemStack[]
 function ItemGrid:getStacks()
     return self.persistentData.stacks
 end
 
+---@param item InventoryItem
+---@return ItemStack?
 function ItemGrid:findStackByItem(item)
     for _, stack in ipairs(self.persistentData.stacks) do
         if ItemStack.containsItem(stack, item) then
@@ -131,6 +141,8 @@ function ItemGrid:findStackByItem(item)
     return nil
 end
 
+---@param stack ItemStack
+---@return boolean
 function ItemGrid:containsStack(stack)
     for _, s in ipairs(self.persistentData.stacks) do
         if s == stack then
@@ -141,6 +153,10 @@ function ItemGrid:containsStack(stack)
 end
 
 ---@param item InventoryItem
+---@param xPos integer
+---@param yPos integer
+---@param isRotated boolean
+---@return boolean
 function ItemGrid:insertItem(item, xPos, yPos, isRotated)
     if item:getContainer() ~= self.inventory then
         return false
@@ -171,6 +187,8 @@ function ItemGrid:insertItem(item, xPos, yPos, isRotated)
     end
 end
 
+---@param item InventoryItem
+---@return boolean
 function ItemGrid:removeItem(item)
     for _, stack in ipairs(self.persistentData.stacks) do
         if ItemStack.containsItem(stack, item) then
@@ -187,6 +205,10 @@ function ItemGrid:removeItem(item)
     return false
 end
 
+---@param stack ItemStack
+---@param x integer
+---@param y integer
+---@param isRotated boolean
 function ItemGrid:moveStack(stack, x, y, isRotated)
     local item = ItemStack.getFrontItem(stack, self.inventory)
 
@@ -202,6 +224,7 @@ function ItemGrid:moveStack(stack, x, y, isRotated)
     return true
 end
 
+---@param stack ItemStack
 function ItemGrid:gatherSameItems(stack)
     if self.isProxInv then return end
 
@@ -240,6 +263,10 @@ function ItemGrid:gatherSameItems(stack)
     self:_sendModData()
 end
 
+---@param xPos integer
+---@param yPos integer
+---@param item InventoryItem
+---@param isRotated boolean
 function ItemGrid:_insertStack(xPos, yPos, item, isRotated)
     local stack = ItemStack.create(xPos, yPos, isRotated, item:getFullType(), TetrisItemCategory.getCategory(item))
     ItemStack.addItem(stack, item)
@@ -258,6 +285,10 @@ function ItemGrid:_insertStack(xPos, yPos, item, isRotated)
     self:_sendModData()
 end
 
+---@param stack ItemStack
+---@param x integer
+---@param y integer
+---@param isRotated boolean
 function ItemGrid:_tryInsertStack_premade(stack, x, y, isRotated)
     local item = ItemStack.getFrontItem(stack, self.inventory)
     local w, h = TetrisItemData.getItemSize(item, isRotated)
@@ -270,6 +301,10 @@ function ItemGrid:_tryInsertStack_premade(stack, x, y, isRotated)
     return true
 end
 
+---@param stack ItemStack
+---@param x integer
+---@param y integer
+---@param isRotated boolean
 function ItemGrid:_insertStack_premade(stack, x, y, isRotated)
     stack.x = x
     stack.y = y
@@ -281,6 +316,7 @@ function ItemGrid:_insertStack_premade(stack, x, y, isRotated)
     self:_sendModData()
 end
 
+---@param stack ItemStack
 function ItemGrid:_removeStack(stack)
     for i, s in ipairs(self.persistentData.stacks) do
         if s == stack then
@@ -292,6 +328,11 @@ function ItemGrid:_removeStack(stack)
     end
 end
 
+---@param xPos integer
+---@param yPos integer
+---@param w integer
+---@param h integer
+---@param ignoreStacks table<ItemStack, boolean>?
 function ItemGrid:_isAreaFree(xPos, yPos, w, h, ignoreStacks)
     if not self:_isInBounds(xPos, yPos) or not self:_isInBounds(xPos+w-1, yPos+h-1) then
         return false
@@ -308,15 +349,24 @@ function ItemGrid:_isAreaFree(xPos, yPos, w, h, ignoreStacks)
     return true
 end
 
+---@param x number
+---@param y number
+---@return boolean
 function ItemGrid:_isInBounds(x, y)
     return x >= 0 and x < self.width and y >= 0 and y < self.height
 end
 
+---@param item InventoryItem
+---@param stack ItemStack
+---@return boolean
 function ItemGrid:_isItemInBounds(item, stack)
     local w, h = TetrisItemData.getItemSize(item, stack.isRotated)
     return self:_isInBounds(stack.x, stack.y) and self:_isInBounds(stack.x+w-1, stack.y+h-1)
 end
 
+---@param item InventoryItem
+---@param isRotated boolean
+---@return boolean
 function ItemGrid:canAddItem(item, isRotated)
     if self.isFloor then
         return true;
@@ -340,6 +390,10 @@ function ItemGrid:canAddItem(item, isRotated)
     return false
 end
 
+---@param item InventoryItem
+---@param x integer
+---@param y integer
+---@param isRotated boolean
 function ItemGrid:canAddItemAt(item, x, y, isRotated)
     local stack = self:getStackInternal(x,y)
     if stack and ItemStack.canAddItem(stack, item) then
@@ -350,6 +404,11 @@ function ItemGrid:canAddItemAt(item, x, y, isRotated)
     return self:_isAreaFree(x, y, w, h)
 end
 
+---@param item InventoryItem
+---@param xPos integer
+---@param yPos integer
+---@param isRotated boolean
+---@return boolean
 function ItemGrid:doesItemFit(item, xPos, yPos, isRotated)
     local ignoreStack = {[self:findStackByItem(item)] = true}
 
@@ -357,6 +416,12 @@ function ItemGrid:doesItemFit(item, xPos, yPos, isRotated)
     return self:_isAreaFree(xPos, yPos, w, h, ignoreStack)
 end
 
+--- TODO: Review uses and either remove item param or include check for stacking
+---@param item InventoryItem
+---@param w integer
+---@param h integer
+---@param ignoreStacks table<ItemStack, boolean>?
+---@return boolean
 function ItemGrid:doesItemFitAnywhere(item, w, h, ignoreStacks)
     for x=0,self.width-w do
         for y=0,self.height-h do
@@ -368,6 +433,10 @@ function ItemGrid:doesItemFitAnywhere(item, w, h, ignoreStacks)
     return false
 end
 
+---@param item InventoryItem
+---@param xPos integer
+---@param yPos integer
+---@return boolean
 function ItemGrid:canItemBeStacked(item, xPos, yPos)
     local stack = self:getStackInternal(xPos, yPos)
     if stack then
@@ -376,6 +445,11 @@ function ItemGrid:canItemBeStacked(item, xPos, yPos)
     return false
 end
 
+---@param stack ItemStack
+---@param newX integer
+---@param newY integer
+---@param isRotated boolean?
+---@return boolean
 function ItemGrid:willStackOverlapSelf(stack, newX, newY, isRotated)
     local w, h = TetrisItemData.getItemSize(ItemStack.getFrontItem(stack, self.inventory), isRotated)
     for x=newX, newX+w-1 do
@@ -388,6 +462,7 @@ function ItemGrid:willStackOverlapSelf(stack, newX, newY, isRotated)
     return false
 end
 
+---@return boolean
 function ItemGrid:hasFreeSlot()
     for x=0,self.width-1 do
         for y=0,self.height-1 do
@@ -399,6 +474,8 @@ function ItemGrid:hasFreeSlot()
     return false
 end
 
+---@param item InventoryItem
+---@return boolean
 function ItemGrid:_attemptToStackItem(item)
     for _, stack in ipairs(self.persistentData.stacks) do
         if ItemStack.canAddItem(stack, item) then
@@ -410,6 +487,10 @@ function ItemGrid:_attemptToStackItem(item)
     return false
 end
 
+---@param item InventoryItem
+---@param preferRotated boolean
+---@param isDisorganized boolean
+---@return boolean
 function ItemGrid:_attemptToInsertItem(item, preferRotated, isDisorganized)
     if not self.isProxInv and not TetrisValidation.validateInsert(self.inventory, self.containerDefinition, item) then
         return false
@@ -442,6 +523,12 @@ function ItemGrid:_attemptToInsertItem(item, preferRotated, isDisorganized)
     return false
 end
 
+---@param item InventoryItem
+---@param w integer
+---@param h integer
+---@param isRotated boolean
+---@param shuffleMode boolean
+---@return boolean
 function ItemGrid:_attemptToInsertItem_outerLoop(item, w, h, isRotated, shuffleMode)
     local startY = shuffleMode and ZombRand(0, self.height-h+1) or (SandboxVars.InventoryTetris.EnableGravity and self.height-h or 0)
     local startX = shuffleMode and ZombRand(0, self.width-w+1) or 0
@@ -473,6 +560,13 @@ function ItemGrid:_attemptToInsertItem_outerLoop(item, w, h, isRotated, shuffleM
     return false
 end
 
+---@param item InventoryItem
+---@param w integer
+---@param h integer
+---@param xPos integer
+---@param yPos integer
+---@param isRotated boolean
+---@return boolean
 function ItemGrid:_attemptToInsertItem_innerLoop(item, w, h, xPos, yPos, isRotated)
     local stack = self:getStackInternal(xPos, yPos)
     if stack and ItemStack.canAddItem(stack, item) then
@@ -486,14 +580,19 @@ function ItemGrid:_attemptToInsertItem_innerLoop(item, w, h, xPos, yPos, isRotat
         self:_sendModData()
         return true
     end
+
+    return false
 end
 
+---@param doPhysics boolean?
 function ItemGrid:refresh(doPhysics)
     self.persistentData = self:_getSavedGridData() -- Reload incase the modData has changed from a mp sync
     self:_validateAndCleanStacks(self.persistentData)
     self:_rebuildStackMap(doPhysics)
 end
 
+-- TODO: improve the type
+---@param persistentGridData table
 function ItemGrid:_validateAndCleanStacks(persistentGridData)
     if not persistentGridData.stacks then
         persistentGridData.stacks = {}
@@ -504,6 +603,9 @@ end
 
 -- Fully rebuilds the stack list
 -- Unfortunate requirement due to lack of inventory events
+---@param stacks ItemStack[]
+---@param skipBounds boolean?
+---@return ItemStack[]
 function ItemGrid:_validateStackList(stacks, skipBounds)
     local seenItemIDs = {}
     local badItemIDs = {}
@@ -548,7 +650,7 @@ function ItemGrid:_validateStackList(stacks, skipBounds)
     return validatedStacks
 end
 
-
+---@param doPhysics boolean?
 function ItemGrid:_rebuildStackMap(doPhysics)
     local stackMap = {}
     for x=0, self.width-1 do
@@ -603,6 +705,9 @@ function ItemGrid:physicsUpdate()
     end
 end
 
+---@param stack ItemStack
+---@param w integer
+---@param h integer
 function ItemGrid:_physicsFallPreValidated(stack, w, h)
     local item = ItemStack.getFrontItem(stack, self.inventory)
     for x=stack.x,stack.x+w-1 do
@@ -620,6 +725,8 @@ function ItemGrid:_physicsFallPreValidated(stack, w, h)
 end
 
 -- Determines if the stack is buried beneath other stacks when using gravity mode
+---@param stack ItemStack
+---@return boolean
 function ItemGrid:isStackBuried(stack)
     local item = ItemStack.getFrontItem(stack, self.inventory)
     if item then
@@ -637,6 +744,9 @@ function ItemGrid:isStackBuried(stack)
 end
 
 -- TODO: Either remove this method or make it batch several items at once with minimal checks
+---@param item InventoryItem
+---@param isDisorganized boolean
+---@return boolean
 function ItemGrid:_acceptUnpositionedItem(item, isDisorganized)
     self._directWriteStackMap = true
     local result = self:_attemptToInsertItem(item, false, isDisorganized)
@@ -644,6 +754,7 @@ function ItemGrid:_acceptUnpositionedItem(item, isDisorganized)
     return result
 end
 
+---@return boolean
 function ItemGrid:isEmpty()
     return #self.persistentData.stacks == 0
 end
@@ -652,9 +763,21 @@ end
 -- Search Session Logic
 -- When using search mode we keep the contents of the grid hidden until the player performs a search
 
+---@class ItemGridSearchSession
+---@field inventory ItemContainer
+---@field gridIndex integer
+---@field isGridRevealed boolean
+---@field searchedStackIDs table<integer, boolean> -- By item ID
+---@field progressTicks number
+---@field lastUpdateTime number?
+
+
 -- Searches are not saved, they are kept in memory
 -- Sessions track the progress of a search and which items have been revealed
 -- Only the completion of a search is saved permanently
+
+--- By playerNum, by ItemContainer, by gridIndex
+---@type table<integer, table<ItemContainer, table<integer, ItemGridSearchSession>>>
 ItemGrid._searchSessions = {}
 
 -- Didn't foresee the community modding in custom containers with so many grids, but I like the enthusiasm (used to be 10)
@@ -664,6 +787,8 @@ local DISABLE_BODY_SEARCH = 1
 local SOME_BODY_SEARCH = 2
 local ENABLE_BODY_SEARCH = 3
 
+---@param playerNum integer
+---@return boolean
 function ItemGrid:isUnsearched(playerNum)
     if not SandboxVars.InventoryTetris.EnableSearch then
         return false
@@ -686,6 +811,9 @@ function ItemGrid:isUnsearched(playerNum)
     return not self.persistentData.searchLog[uuid]
 end
 
+---@param playerNum integer
+---@param grid ItemGrid
+---@return ItemGridSearchSession?
 function ItemGrid._getSearchSession(playerNum, grid)
     if not ItemGrid._searchSessions[playerNum] then
         ItemGrid._searchSessions[playerNum] = {}
@@ -701,6 +829,9 @@ function ItemGrid._getSearchSession(playerNum, grid)
     return ItemGrid._searchSessions[playerNum][grid.inventory][grid.gridIndex]
 end
 
+---@param playerNum integer
+---@param grid ItemGrid
+---@return ItemGridSearchSession
 function ItemGrid._getOrCreateSearchSession(playerNum, grid)
     local existingSession = ItemGrid._getSearchSession(playerNum, grid)
     if existingSession then
@@ -720,6 +851,9 @@ function ItemGrid._findAllEquippedItems(grid, session)
     end
 end
 
+---@param playerNum integer
+---@param grid ItemGrid
+---@return ItemGridSearchSession
 function ItemGrid._createAndCacheSession(playerNum, grid)
     local sessions = ItemGrid._searchSessions[playerNum]
     if not sessions then
@@ -744,6 +878,8 @@ function ItemGrid._createAndCacheSession(playerNum, grid)
     return sessions[grid.inventory][grid.gridIndex]
 end
 
+---@param grid ItemGrid
+---@return ItemGridSearchSession
 function ItemGrid._createSearchSession(grid)
     local session = {}
     session.inventory = grid.inventory
@@ -760,10 +896,13 @@ function ItemGrid._createSearchSession(grid)
     return session
 end
 
+---@param playerNum integer
+---@return ItemGridSearchSession?
 function ItemGrid:getSearchSession(playerNum)
     return ItemGrid._getSearchSession(playerNum, self)
 end
 
+---@param playerNum integer
 function ItemGrid:resetSearchTimer(playerNum)
     local session = ItemGrid._getSearchSession(playerNum, self)
     if session then
@@ -772,6 +911,10 @@ function ItemGrid:resetSearchTimer(playerNum)
 end
 
 local TIME_PER_TICK_MS = 1000 / 60
+
+---@param player IsoPlayer
+---@param playerNum integer
+---@return boolean -- Whether the search is complete
 function ItemGrid:updateSearch(player, playerNum)
     local session = ItemGrid._getOrCreateSearchSession(playerNum, self)
 
@@ -799,7 +942,7 @@ function ItemGrid:updateSearch(player, playerNum)
     progress = math.floor(progress)
 
     local progressTicks = session.progressTicks + progress
-    session.lastUpdateTime = session.lastUpdateTime + (progress * TIME_PER_TICK_MS)
+    session.lastUpdateTime = (session.lastUpdateTime or currentTime) + (progress * TIME_PER_TICK_MS)
 
     if not session.isGridRevealed and progressTicks >= (searchTime * 2) then
         progressTicks = progressTicks - (searchTime * 2)
@@ -811,6 +954,7 @@ function ItemGrid:updateSearch(player, playerNum)
         return false
     end
 
+    -- TODO: This reads weird, consider rewriting for clarity
     local stacks = self:getStacks()
     local i = 1
     while progressTicks >= searchTime do
@@ -822,12 +966,14 @@ function ItemGrid:updateSearch(player, playerNum)
             local stack = stacks[i]
             i = i + 1
             
-            local frontItem = ItemStack.getFrontItem(stack, self.inventory)
-            local frontItemID = frontItem and frontItem:getID() or nil
-            if frontItemID and not session.searchedStackIDs[frontItemID] then
-                session.searchedStackIDs[frontItemID] = true
-                progressTicks = progressTicks - searchTime
-                break
+            if stack then
+                local frontItem = ItemStack.getFrontItem(stack, self.inventory)
+                local frontItemID = frontItem and frontItem:getID() or nil
+                if frontItemID and not session.searchedStackIDs[frontItemID] then
+                    session.searchedStackIDs[frontItemID] = true
+                    progressTicks = progressTicks - searchTime
+                    break
+                end
             end
         end
     end
@@ -848,6 +994,7 @@ function ItemGrid:updateSearch(player, playerNum)
     return allSearched
 end
 
+---@param playerNum integer
 function ItemGrid:completeSearch(playerNum)
     if not self:isUnsearched(playerNum) then
         return
@@ -862,6 +1009,9 @@ function ItemGrid:completeSearch(playerNum)
     self:_sendModData()
 end
 
+---@param stack ItemStack
+---@param playerNum integer
+---@return boolean
 function ItemGrid:_validateStackIsSearched(stack, playerNum)
     if not self:isUnsearched(playerNum) then
         return true
@@ -874,7 +1024,7 @@ function ItemGrid:_validateStackIsSearched(stack, playerNum)
     end
 
     local session = ItemGrid._getSearchSession(playerNum, self)
-    return session and session.searchedStackIDs[frontItemID]
+    return session and session.searchedStackIDs[frontItemID] or false
 end
 
 
@@ -946,6 +1096,9 @@ function ItemGrid:_getParentModData()
 end
 
 local TETRIS_UUID = "TetrisUUID"
+
+---@param playerNum integer
+---@return string
 function ItemGrid._getPlayerUUID(playerNum)
     local player = getSpecificPlayer(playerNum)
 

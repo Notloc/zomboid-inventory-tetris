@@ -16,12 +16,26 @@ require("ISUI/ISLayoutManager")
 require("defines")
 
 ---@class CompatibilityPopupWindow : Window
+---@field sourceImage any
+---@field sourceVersion ModVersion
+---@field targetImage any
+---@field targetVersion ModVersion
+---@field minTargetVersion ModVersion
+---@field modData table
+---@field incompatibleMods table[]
 local CompatibilityPopupWindow = Window:derive("CompatibilityPopupWindow");
 
-
+---@param x any
+---@param y any
+---@param sourceImage any
+---@param sourceVersion ModVersion
+---@param targetImage any?
+---@param targetVersion ModVersion?
+---@param minTargetVersion ModVersion?
+---@return CompatibilityPopupWindow
 function CompatibilityPopupWindow:new (x, y, sourceImage, sourceVersion, targetImage, targetVersion, minTargetVersion)
-    local o = {}
-    o = Window:new(x, y, 450, 250, targetImage and "Version Issue Detected" or "Incompatible Mod Detected");
+    ---@type CompatibilityPopupWindow
+    local o = Window:new(x, y, 450, 250, targetImage and "Version Issue Detected" or "Incompatible Mod Detected");
     setmetatable(o, self);
     self.__index = self
 
@@ -34,7 +48,8 @@ function CompatibilityPopupWindow:new (x, y, sourceImage, sourceVersion, targetI
     o.targetVersion = targetVersion;
     o.minTargetVersion = minTargetVersion;
 
-    o.resizable = false;
+    o.modData = {}
+
     o.incompatibleMods = {};
     return o;
 end

@@ -58,7 +58,7 @@ function EasyOptionsBuilder.defineSeparator()
     return EasyOptionDefinition.separator({})
 end
 
----@param optionDefinitions table<string, EasyOptionDefinition>
+---@param optionDefinitions EasyOptionDefinition[]
 ---@param modId string
 ---@param modUiName string
 ---@return EasyOptions
@@ -109,31 +109,37 @@ function EasyOptionsBuilder._buildOptions(optionsObj, optionDefinitions, keys, m
         end
     end
 
-    vanillaOptions.apply = function (self)
+    function vanillaOptions:apply()
         for _, key in ipairs(keys) do
             local optionInstance = optionsObj._optionInstances[key]
             local definition = optionInstance.definition
 
             if definition.type == EasyOptionType.DROPDOWN then
                 local vOption = self:getOption(key)
-                local valueIdx = vOption.selected
-                local value = definition.options[valueIdx].value
-                optionInstance.parent[key] = value
-                optionInstance.OnValueChanged:trigger(value)
+                if vOption then
+                    ---@cast vOption umbrella.ModOptions.ComboBox
+                    local valueIdx = vOption.selected
+                    local value = definition.options[valueIdx].value
+                    optionInstance.parent[key] = value
+                    optionInstance.OnValueChanged:trigger(value)
+                end
             end
 
             if definition.type == EasyOptionType.CHECKBOX then
                 local vOption = self:getOption(key)
-                local value = vOption:getValue()
-                optionInstance.parent[key] = value
-                optionInstance.OnValueChanged:trigger(value)
+                if vOption then
+                    ---@cast vOption umbrella.ModOptions.TickBox
+                    local value = vOption:getValue()
+                    optionInstance.parent[key] = value
+                    optionInstance.OnValueChanged:trigger(value)
+                end
             end
 
         end
     end
 
     local og_load = PZAPI.ModOptions.load
-    PZAPI.ModOptions.load = function(self)
+    function PZAPI.ModOptions:load()
         og_load(self)
         pcall(function ()
             vanillaOptions:apply()

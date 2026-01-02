@@ -1,15 +1,18 @@
+---@class ModVersion
 local Version = {}
+Version.__index = Version
 
+---@param major number
+---@param minor number
+---@param patch number
+---@param stage string|nil
+---@return ModVersion
 function Version:new(major, minor, patch, stage)
-    local o = {}
-    setmetatable(o, self)
-    self.__index = self
-
+    local o = setmetatable({}, self)
     o.major = major
     o.minor = minor
     o.patch = patch
     o.stage = stage
-
     return o
 end
 

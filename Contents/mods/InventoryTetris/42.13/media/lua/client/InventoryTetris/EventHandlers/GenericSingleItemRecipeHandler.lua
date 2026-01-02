@@ -11,9 +11,13 @@ function GenericSingleItemRecipeHandler.call(eventData, stack, inventory, player
     if item:getType() == "Candle" then return false end -- Requires too much special handling, so we'll just ignore it for now
 
     local containerList = ISInventoryPaneContextMenu.getContainers(playerObj)
+    if not containerList then return false end
+    
     local recipeList = RecipeManager.getUniqueRecipeItems(item, playerObj, containerList);
 
+    ---@type Recipe[]
     local singleItemRecipes = {}
+
     for i=0,recipeList:size()-1 do
         local testRecipe = recipeList:get(i)
         local neededItems = testRecipe:getNumberOfNeededItem()
@@ -30,16 +34,11 @@ function GenericSingleItemRecipeHandler.call(eventData, stack, inventory, player
 
     local numberOfTimes = RecipeManager.getNumberOfTimesRecipeCanBeDone(recipe, playerObj, containerList, item)
     local resultItemType = recipe:getResult():getFullType()
-
     local containerGrid = ItemContainerGrid.GetOrCreate(inventory, playerNum)
 
-    local canBeDoneFromFloor = recipe:isCanBeDoneFromFloor()
-    if containerGrid.isOnPlayer then
-        recipe:setCanBeDoneFromFloor(true)
-    end
-    ISInventoryPaneContextMenu.OnCraft(item, recipe, playerNum, false)
-    recipe:setCanBeDoneFromFloor(canBeDoneFromFloor)
+    -- TODO: Patch to make more recipes succeed?
 
+    ISInventoryPaneContextMenu.OnCraft(item, recipe, playerNum, false)
     return true
 end
 

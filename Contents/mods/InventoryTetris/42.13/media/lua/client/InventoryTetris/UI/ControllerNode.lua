@@ -1,4 +1,5 @@
 ---@class ControllerNode
+---@field isFocused boolean
 ---@field injectControllerNode fun(self: ControllerNode, uiElement: ISUIElement) : ControllerNode
 ---@field doSimpleFocusHighlight fun(self: ControllerNode) : ControllerNode
 ---@field setJoypadDownHandler fun(self: ControllerNode, handler: fun(self: ISUIElement, button: integer): boolean) : ControllerNode

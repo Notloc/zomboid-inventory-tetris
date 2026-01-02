@@ -25,6 +25,7 @@
 ---@field PreventTardisStacking boolean
 ---@field SearchBodies number
 ---@field EncumbranceSlow boolean
+---@field DevMode boolean
 
 ---@alias VanillaStack umbrella.ContextMenuItemStack 
 

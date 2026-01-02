@@ -6,6 +6,10 @@ local ItemUtil = require("Notloc/ItemUtil")
 
 ItemGridUI.registerItemHoverColor(TetrisItemCategory.AMMO, TetrisItemCategory.MAGAZINE, ItemGridUI.GENERIC_ACTION_COLOR)
 
+---@param tbl any[]
+---@param start integer
+---@param stop integer
+---@return any[]
 local function slice(tbl, start, stop)
     local sliced = {}
     for i = start, stop do
@@ -22,6 +26,12 @@ local ammoMagazineHandler = {}
 
 -- In this case, we only validate that bullets are being dropped on a magazine, as we want this handler to "own" this interaction
 -- The specific checks for the magazine and bullets are done in the call function
+---@param eventData any
+---@param droppedStack VanillaStack
+---@param fromInventory ItemContainer
+---@param targetStack VanillaStack
+---@param targetInventory ItemContainer
+---@param playerNum integer
 function ammoMagazineHandler.validate(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
     local dropItem = droppedStack.items[1]
     local targetItem = targetStack.items[1]
@@ -40,11 +50,21 @@ function ammoMagazineHandler.validate(eventData, droppedStack, fromInventory, ta
 end
 
 -- The stacks are vanilla item stacks, not TetrisItemStacks, as drops may be sourced from outside of the Tetris grids
+---@param eventData any
+---@param droppedStack VanillaStack
+---@param fromInventory ItemContainer
+---@param targetStack VanillaStack
+---@param targetInventory ItemContainer
+---@param playerNum integer
 function ammoMagazineHandler.call(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)
     local magazine = targetStack.items[1]
     local bullets = droppedStack.items
+    local protoBullet = bullets[1]
+    
+    if not magazine then return end
+    if not protoBullet then return end
 
-    if magazine:getAmmoType() ~= bullets[1]:getFullType() then return end
+    if magazine:getAmmoType() ~= protoBullet:getFullType() then return end
 
     local missingBullets = magazine:getMaxAmmo() - magazine:getCurrentAmmoCount()
     if missingBullets <= 0 then return end

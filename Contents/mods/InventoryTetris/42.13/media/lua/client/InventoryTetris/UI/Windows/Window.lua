@@ -7,10 +7,27 @@ require("ISUI/ISLayoutManager")
 require("defines")
 
 ---@class Window : ISPanel
+---@field player integer
+---@field titlebarbkg Texture
+---@field infoBtn Texture
+---@field statusbarbkg Texture
+---@field resizeimage Texture
+---@field invbasic Texture
+---@field closebutton Texture
+---@field collapsebutton Texture
+---@field pinbutton Texture
+---@field highlightColors table
+---@field pin boolean
+---@field isCollapsed boolean
+---@field collapseCounter integer
+---@field title string
+---@field titleFont UIFont
+---@field titleFontHgt integer
 local Window =  ISPanel:derive("Window");
 
 function Window:new(x, y, width, height, title, playerNum)
-	local o = ISPanel:new(x, y, width, height);
+	---@type Window
+    local o = ISPanel:new(x, y, width, height);
     setmetatable(o, self)
     self.__index = self
 
@@ -40,7 +57,7 @@ function Window:new(x, y, width, height, title, playerNum)
 	o.title = title
 	o.titleFont = UIFont.Small
 	o.titleFontHgt = getTextManager():getFontHeight(o.titleFont)
-   return o
+    return o
 end
 
 function Window:initialise()

@@ -49,9 +49,9 @@ local optionDefinitions = {
 
 ---@class InventoryTetrisOptions : EasyOptions
 ---@field SCALE number
----@field TEXTURE_SIZE number
----@field TEXTURE_PAD number
----@field CELL_SIZE number
+---@field TEXTURE_SIZE integer
+---@field TEXTURE_PAD integer
+---@field CELL_SIZE integer
 ---@field CONTAINER_INFO_SCALE number
 ---@field DOUBLE_CLICK_ACTION string
 ---@field CTRL_CLICK_ACTION string

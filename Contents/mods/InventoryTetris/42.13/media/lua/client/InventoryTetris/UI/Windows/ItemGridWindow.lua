@@ -10,7 +10,22 @@ local ControllerNode = require("InventoryTetris/UI/ControllerNode")
 local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
 
 ---@class ItemGridWindow : ISPanel
+---@field inventory ItemContainer
+---@field inventoryPane ISInventoryPane
+---@field player integer
+---@field playerNum integer
+---@field windowManager any
+---@field titlebarbkg Texture
+---@field infoBtn Texture
+---@field statusbarbkg Texture
+---@field resizeimage Texture
+---@field invbasic Texture
+---@field closebutton Texture
+---@field collapsebutton Texture
+---@field pinbutton Texture
+---@field conDefault Texture
 local ItemGridWindow = ISPanel:derive("ItemGridWindow");
+ItemGridWindow.__index = ItemGridWindow
 
 ItemGridWindow._globalInstances = {};
 
@@ -18,10 +33,17 @@ function ItemGridWindow.getTopWindow()
     return ItemGridWindow._globalInstances[#ItemGridWindow._globalInstances];
 end
 
+---@param x integer
+---@param y integer
+---@param inventory ItemContainer
+---@param inventoryPane ISInventoryPane
+---@param playerNum integer
+---@param windowManager any
+---@return ItemGridWindow
 function ItemGridWindow:new(x, y, inventory, inventoryPane, playerNum, windowManager)
-	local o = ISPanel:new(x, y, 100, 100);
+	---@type ItemGridWindow
+    local o = ISPanel:new(x, y, 100, 100);
     setmetatable(o, self)
-    self.__index = self
 
 	o.x = x;
 	o.y = y;

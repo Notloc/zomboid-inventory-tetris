@@ -41,12 +41,19 @@ local function createTransfersIfNeeded(playerObj, item, itemInventory, desiredIn
     return transferAction, returnAction
 end
 
+---@param eventData any
+---@param droppedStack VanillaStack
+---@param fromInventory ItemContainer
+---@param targetStack VanillaStack
+---@param targetInventory ItemContainer
+---@param playerNum integer
 function AttachmentWeaponHandler.call(eventData, droppedStack, fromInventory, targetStack, targetInventory, playerNum)    
-    local attachment = droppedStack.items[1]
     local weapon = targetStack.items[1]
-
-    if not weapon:IsWeapon() then return end
-    if not attachment:getMountOn():contains(weapon:getFullType()) then return end
+    if not weapon or not weapon:IsWeapon() then return end
+    
+    ---@type WeaponPart?
+    local attachment = droppedStack.items[1]
+    if not attachment or not attachment:getMountOn():contains(weapon:getFullType()) then return end
 
     local playerObj = getSpecificPlayer(playerNum)
     local playerInv = playerObj:getInventory()
@@ -62,7 +69,7 @@ function AttachmentWeaponHandler.call(eventData, droppedStack, fromInventory, ta
         ISTimedActionQueue.add(transferAttachment)
     end
 
-    ISInventoryPaneContextMenu.onUpgradeWeapon(weapon, attachment, getSpecificPlayer(playerNum))
+    ISInventoryPaneContextMenu.onUpgradeWeapon(weapon, attachment, playerNum)
 
     if returnWeapon then
         ISTimedActionQueue.add(returnWeapon)

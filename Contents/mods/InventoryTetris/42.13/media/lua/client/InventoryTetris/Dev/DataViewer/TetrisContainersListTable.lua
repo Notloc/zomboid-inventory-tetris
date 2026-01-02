@@ -10,7 +10,41 @@ local BUTTON_HGT = FONT_HGT_SMALL + 6
 local LABEL_HGT = FONT_HGT_MEDIUM + 6
 
 ---@class TetrisContainersListTable : ISPanel
+---@field datas ISScrollingListBox
+---@field listHeaderColor table
+---@field borderColor table
+---@field backgroundColor table
+---@field buttonBorderColor table
+---@field totalResult number
+---@field filterWidgets ISLabel[]
+---@field filterWidgetMap table<string, ISLabel>
+---@field needsFilterRefresh boolean
+---@field viewer TetrisContainerViewer
+---@field columns any[]
+---@field font UIFont
 local TetrisContainersListTable = ISPanel:derive("TetrisContainersListTable");
+
+---@param x number
+---@param y number
+---@param width number
+---@param height number
+---@param viewer TetrisContainerViewer
+---@return TetrisContainersListTable
+function TetrisContainersListTable:new (x, y, width, height, viewer)
+    ---@type TetrisContainersListTable
+    local o = ISPanel:new(x, y, width, height);
+    setmetatable(o, self);
+    o.listHeaderColor = {r=0.4, g=0.4, b=0.4, a=0.3};
+    o.borderColor = {r=0.4, g=0.4, b=0.4, a=0};
+    o.backgroundColor = {r=0, g=0, b=0, a=1};
+    o.buttonBorderColor = {r=0.7, g=0.7, b=0.7, a=0.5};
+    o.totalResult = 0;
+    o.filterWidgets = {};
+    o.filterWidgetMap = {}
+    o.viewer = viewer
+    TetrisContainersListTable.instance = o;
+    return o;
+end
 
 function TetrisContainersListTable:initialise()
     ISPanel.initialise(self);
@@ -44,21 +78,6 @@ function TetrisContainersListTable:render()
         self:drawRectBorder(self.datas.x + x, y, 1, BUTTON_HGT, 1, self.borderColor.r, self.borderColor.g, self.borderColor.b);
         x = x + size;
     end
-end
-
-function TetrisContainersListTable:new (x, y, width, height, viewer)
-    local o = ISPanel:new(x, y, width, height);
-    setmetatable(o, self);
-    o.listHeaderColor = {r=0.4, g=0.4, b=0.4, a=0.3};
-    o.borderColor = {r=0.4, g=0.4, b=0.4, a=0};
-    o.backgroundColor = {r=0, g=0, b=0, a=1};
-    o.buttonBorderColor = {r=0.7, g=0.7, b=0.7, a=0.5};
-    o.totalResult = 0;
-    o.filterWidgets = {};
-    o.filterWidgetMap = {}
-    o.viewer = viewer
-    TetrisContainersListTable.instance = o;
-    return o;
 end
 
 function TetrisContainersListTable:createChildren()

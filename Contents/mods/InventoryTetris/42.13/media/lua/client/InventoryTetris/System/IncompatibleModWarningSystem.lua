@@ -1,6 +1,7 @@
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local CompatibilityPopupWindow = require("InventoryTetris/UI/Windows/CompatibilityPopupWindow")
 local Version = require("Notloc/Versioning/Version")
+local InventoryTetris = require("InventoryTetris/InventoryTetris")
 
 ---@diagnostic disable-next-line: undefined-global
 local EquipmentUI = require("EquipmentUI/EquipmentUI")

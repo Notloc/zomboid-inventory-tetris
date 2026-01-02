@@ -4,7 +4,6 @@ local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local TetrisModCompatibility = require("InventoryTetris/TetrisModCompatibility")
 
 -- Adjustments to the InventoryTransferAction to support the new rules for item transfers under the grid system and avoid illegal item placements.
----@diagnostic disable: duplicate-set-field
 
 require("TimedActions/ISInventoryTransferAction")
 

@@ -41,17 +41,29 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Search Tests", f
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
         TestUtils.assert(containerGrid:insertItem(item, 0, 0, firstGrid, false))
 
-        local stack = containerGrid.grids[1]:getStack(0, 0, playerNum)
+        local grid = containerGrid.grids[1]
+        if not grid then
+            error("No grid found")
+        end
+
+        local stack = grid:getStack(0, 0, playerNum)
         TestUtils.assert(stack == nil)
 
-        stack = containerGrid.grids[1]:getStackInternal(0, 0)
-        TestUtils.assert(stack and stack.count == 1)
+        stack = grid:getStackInternal(0, 0)
+        if not stack then
+            error("No stack found at (0,0)")
+        end
+
+        TestUtils.assert(stack.count == 1)
         TestUtils.assert(ItemStack.containsItem(stack, item))
     end
 
     function Tests.test_searching()
         local containerGrid = TestHelper.createContainerGrid_5x5()
         local grid = containerGrid.grids[1]
+        if not grid then
+            error("No grid found")
+        end
 
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
         TestUtils.assert(containerGrid:insertItem(item, 0, 0, firstGrid, false))

@@ -70,7 +70,7 @@ end
 ---@param optionInstance EasyOptionInstance
 ---@return EasyOptionEvent
 function EasyOptionInstance._createEvent(optionInstance)
-    ---@class EasyOptionEvent
+    ---@type EasyOptionEvent
     local event = createSimpleEvent()
     event.addAndApply = function(self, callback)
         self:add(callback)

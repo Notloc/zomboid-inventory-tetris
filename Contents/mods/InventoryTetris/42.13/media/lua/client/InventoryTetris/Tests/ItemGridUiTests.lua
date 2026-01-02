@@ -31,7 +31,12 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
 
     ---@return ItemGridContainerUI
     local function createContainerGridUi(container)
-        local invPage = getPlayerLoot(playerNum).inventoryPane
+        local loot = getPlayerLoot(playerNum)
+        if not loot then
+            error("No loot UI found for player " .. tostring(playerNum))
+        end
+
+        local invPage = loot.inventoryPane
         local containerGridUi = ItemGridContainerUI:new(container, invPage, playerNum)
         containerGridUi:initialise()
         return containerGridUi

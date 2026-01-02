@@ -21,9 +21,9 @@ local KEYRING_LARGE_CONTAINER_DEFINITION = {
 
 ---@class TetrisContainerCalculator
 ---@field _vehicleStorageNames table<string, boolean>
-local TetrisContainerCalculator = {}
-
-TetrisContainerCalculator._vehicleStorageNames = {}
+local TetrisContainerCalculator = {
+    _vehicleStorageNames = {}
+}
 
 ---@param container ItemContainer
 ---@return ContainerGridDefinition

@@ -40,9 +40,11 @@ function GridAutoDropSystem._processItems(playerNum, items)
                 end
 
                 if TetrisItemCategory.getCategory(item) == TetrisItemCategory.KEY then
-                    local keyRings = mainInv:getAllTag(ItemTag.KEY_RING, ArrayList.new())
+                    local keyRings = mainInv:getAllTag(ItemTag.KEY_RING, ArrayList.new()) -- TODO: Keep this buffer
                     for i = 0, keyRings:size()-1 do
                         local keyRing = keyRings:get(i)
+                        ---@cast keyRing InventoryContainer
+                        
                         local container = keyRing:getItemContainer()
                         local containerGrid = ItemContainerGrid.GetOrCreate(container, playerNum)
                         if containerGrid:canAddItem(item) then

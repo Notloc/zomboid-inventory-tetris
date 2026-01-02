@@ -10,8 +10,10 @@ local MAX_ITEM_HEIGHT = 12
 ---@field public _dynamicSizeItems table<string, boolean>
 local TetrisItemCalculator = {}
 
-TetrisItemCalculator._dynamicSizeItems = {} -- Defined in TetrisItemData instead, directly overwrites this
--- But why? I'm glad I recongized this needed a comment, but I should've explained why, not how
+-- Defined in TetrisItemData instead, directly overwrites this
+-- Stored here to avoid circular dependency, but I should probably just pass this data in
+TetrisItemCalculator._dynamicSizeItems = {} 
+
 
 ---@param item InventoryItem
 ---@return TetrisItemDefinition
@@ -45,7 +47,7 @@ function TetrisItemCalculator.calculateItemInfoSquished(unsquishedDef)
 end
 
 ---@param item InventoryItem
----@param category string
+---@param category TetrisItemCategory
 ---@return integer
 ---@return integer
 function TetrisItemCalculator._calculateItemSize(item, category)
@@ -263,7 +265,8 @@ function TetrisItemCalculator._calculateItemSizeWeightBased(item, weight)
         width = 3
         height = 3
     else
-        return TetrisItemCalculator._calculateItemDimensions(weight * 2, 2)
+        local weightInt = math.floor(weight * 2)
+        return TetrisItemCalculator._calculateItemDimensions(weightInt, 2)
     end
 
     return width, height
@@ -287,7 +290,7 @@ function TetrisItemCalculator._calculateFoodSize(item)
 end
 
 ---@param item InventoryItem
----@param category string
+---@param category TetrisItemCategory
 ---@return integer, integer
 function TetrisItemCalculator._calculateFluidContainerSize(item, category)
     local fluidContainer = item:getFluidContainer()
@@ -360,7 +363,7 @@ function TetrisItemCalculator._calculateBookSize(item)
     return 1, 2
 end
 
----@type table<string, XY|fun(item: InventoryItem): integer, integer>
+---@type table<TetrisItemCategory, XY|fun(item: InventoryItem): integer, integer>
 TetrisItemCalculator._itemClassToSizeCalculation = {
     [TetrisItemCategory.AMMO] = {x = 1, y = 1},
     [TetrisItemCategory.CORPSEANIMAL] = TetrisItemCalculator._calculateAnimalCorpseSize,
@@ -381,8 +384,9 @@ TetrisItemCalculator._itemClassToSizeCalculation = {
 }
 
 --- Determine two numbers that multiply *close* to the target slot count
----@param target integer -- The target slot count
----@param accuracy number -- Reduces the importance of squaring the shape
+---@param target number -- The target slot count
+---@param accuracy number? -- Reduces the importance of squaring the shape
+---@return integer, integer
 function TetrisItemCalculator._calculateItemDimensions(target, accuracy)
     local best = 99999999.0
     local bestX = 1
@@ -408,22 +412,24 @@ function TetrisItemCalculator._calculateItemDimensions(target, accuracy)
 end
 
 
-
-
-
-
 -- Item Stackability
 
+---@param stackability number
+---@return integer
 local function roundStackability(stackability)
     return math.max(1, math.floor(stackability + 0.5))
 end
 
 ---@param item InventoryItem
+---@return integer
 function TetrisItemCalculator._simpleWeightStackability(item)
     local weight = item:getScriptItem():getActualWeight() -- Avoid wetness effecting weight
     return math.ceil(0.75 / weight)
 end
 
+---@param item InventoryItem
+---@param itemClass TetrisItemCategory
+---@return integer
 function TetrisItemCalculator._calculateItemStackability(item, itemClass)
     local maxStack = 1
     if item:getFluidContainer() or TetrisItemCalculator._dynamicSizeItems[item:getFullType()] then
@@ -440,6 +446,8 @@ function TetrisItemCalculator._calculateItemStackability(item, itemClass)
     return maxStack
 end
 
+---@param item InventoryItem
+---@return integer
 function TetrisItemCalculator._calculateAmmoStackability(item)
     local maxStack = 30
 
@@ -457,6 +465,8 @@ function TetrisItemCalculator._calculateAmmoStackability(item)
     return maxStack
 end
 
+---@param item InventoryItem
+---@return integer
 function TetrisItemCalculator._calculateEntertainmentStackability(item)
     local maxStack = 1
 
@@ -471,6 +481,8 @@ function TetrisItemCalculator._calculateEntertainmentStackability(item)
     return maxStack
 end
 
+---@param item InventoryItem
+---@return integer
 function TetrisItemCalculator._calculateSeedStackability(item)
     local type = item:getFullType()
 
@@ -481,21 +493,27 @@ function TetrisItemCalculator._calculateSeedStackability(item)
     end
 end
 
-function TetrisItemCalculator._calculateMoveableStackability(item)
+---@param _item InventoryItem
+---@return integer
+function TetrisItemCalculator._calculateMoveableStackability(_item)
     return 1
 end
 
 ---@param item InventoryItem
+---@return integer
 function TetrisItemCalculator._calculateFoodStackability(item)
     local weight = item:getScriptItem():getActualWeight() -- Use the script item to avoid partially eaten food weight
     return roundStackability(1 / weight)
 end
 
+---@param item InventoryItem
+---@return integer
 function TetrisItemCalculator._weaponStackability(item)
     local weight = item:getActualWeight() * 2
     return roundStackability(1 / weight)
 end
 
+---@type table<TetrisItemCategory, integer|fun(item: InventoryItem): integer>
 TetrisItemCalculator._itemClassToStackabilityCalculation = {
     [TetrisItemCategory.AMMO] = TetrisItemCalculator._calculateAmmoStackability,
     [TetrisItemCategory.BOOK] = TetrisItemCalculator._simpleWeightStackability,

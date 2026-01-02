@@ -3,6 +3,8 @@ require("ISUI/ISPanel")
 local TetrisItemInfo = require("InventoryTetris/Dev/DataViewer/TetrisItemsListInfo")
 
 ---@class TetrisItemsListTable : ISPanel
+---@field public datas ISScrollingListBox
+---@field public columns table<number, any>
 ---@field public listHeaderColor table
 ---@field public borderColor table
 ---@field public backgroundColor table
@@ -10,7 +12,8 @@ local TetrisItemInfo = require("InventoryTetris/Dev/DataViewer/TetrisItemsListIn
 ---@field public totalResult number
 ---@field public filterWidgets table<number, any>
 ---@field public filterWidgetMap table<string, any>
----@field public viewer any
+---@field public viewer TetrisItemViewer
+---@field public font UIFont
 local TetrisItemsListTable = ISPanel:derive("TetrisItemsListTable");
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
@@ -18,41 +21,6 @@ local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
 local UI_BORDER_SPACING = 10
 local BUTTON_HGT = FONT_HGT_SMALL + 6
 local LABEL_HGT = FONT_HGT_MEDIUM + 6
-
-function TetrisItemsListTable:initialise()
-    ISPanel.initialise(self);
-end
-
-
-function TetrisItemsListTable:render()
-    ISPanel.render(self);
-    
-    local filterInProgress = self.needsFilterRefresh and "..." or ""
-
-    local y = self.datas.y + self.datas.height + UI_BORDER_SPACING + 3
-    self:drawText(getText("IGUI_DbViewer_TotalResult") .. self.totalResult .. filterInProgress, 0, y, 1,1,1,1,UIFont.Small)
-    self:drawText(getText("IGUI_ItemList_Info"), 0, y + BUTTON_HGT, 1,1,1,1,UIFont.Small)
-    self:drawText(getText("IGUI_ItemList_Info2"), 0, y + BUTTON_HGT*2, 1,1,1,1,UIFont.Small)
-
-    y = self.filters:getBottom()
-    
-    self:drawRectBorder(self.datas.x, y, self.datas:getWidth(), BUTTON_HGT, 1, self.borderColor.r, self.borderColor.g, self.borderColor.b);
-    self:drawRect(self.datas.x, y, self.datas:getWidth(), BUTTON_HGT, self.listHeaderColor.a, self.listHeaderColor.r, self.listHeaderColor.g, self.listHeaderColor.b);
-
-    local x = 0;
-    for i,v in ipairs(self.datas.columns) do
-        local size;
-        if i == #self.datas.columns then
-            size = self.datas.width - x
-        else
-            size = self.datas.columns[i+1].size - self.datas.columns[i].size
-        end
---        print(v.name, x, v.size)
-        self:drawText(v.name, x+UI_BORDER_SPACING+1, y+3, 1,1,1,1,UIFont.Small);
-        self:drawRectBorder(self.datas.x + x, y, 1, BUTTON_HGT, 1, self.borderColor.r, self.borderColor.g, self.borderColor.b);
-        x = x + size;
-    end
-end
 
 function TetrisItemsListTable:new (x, y, width, height, viewer)
     ---@type TetrisItemsListTable
@@ -255,6 +223,36 @@ function TetrisItemsListTable:update()
 
     if self.needsFilterRefresh then
         self:resumeFilterRefresh()
+    end
+end
+
+function TetrisItemsListTable:render()
+    ISPanel.render(self);
+    
+    local filterInProgress = self.needsFilterRefresh and "..." or ""
+
+    local y = self.datas.y + self.datas.height + UI_BORDER_SPACING + 3
+    self:drawText(getText("IGUI_DbViewer_TotalResult") .. self.totalResult .. filterInProgress, 0, y, 1,1,1,1,UIFont.Small)
+    self:drawText(getText("IGUI_ItemList_Info"), 0, y + BUTTON_HGT, 1,1,1,1,UIFont.Small)
+    self:drawText(getText("IGUI_ItemList_Info2"), 0, y + BUTTON_HGT*2, 1,1,1,1,UIFont.Small)
+
+    y = self.filters:getBottom()
+    
+    self:drawRectBorder(self.datas.x, y, self.datas:getWidth(), BUTTON_HGT, 1, self.borderColor.r, self.borderColor.g, self.borderColor.b);
+    self:drawRect(self.datas.x, y, self.datas:getWidth(), BUTTON_HGT, self.listHeaderColor.a, self.listHeaderColor.r, self.listHeaderColor.g, self.listHeaderColor.b);
+
+    local x = 0;
+    for i,v in ipairs(self.datas.columns) do
+        local size;
+        if i == #self.datas.columns then
+            size = self.datas.width - x
+        else
+            size = self.datas.columns[i+1].size - self.datas.columns[i].size
+        end
+--        print(v.name, x, v.size)
+        self:drawText(v.name, x+UI_BORDER_SPACING+1, y+3, 1,1,1,1,UIFont.Small);
+        self:drawRectBorder(self.datas.x + x, y, 1, BUTTON_HGT, 1, self.borderColor.r, self.borderColor.g, self.borderColor.b);
+        x = x + size;
     end
 end
 

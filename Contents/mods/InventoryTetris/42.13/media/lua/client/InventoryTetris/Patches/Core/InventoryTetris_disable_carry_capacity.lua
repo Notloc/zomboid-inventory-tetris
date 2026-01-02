@@ -80,6 +80,7 @@ Events.OnGameStart.Add(function()
     require("ISUI/ISInventoryPage")
     local og_canPutIn_page = ISInventoryPage.canPutIn
     function ISInventoryPage:canPutIn()
+        ---@diagnostic disable-next-line: undefined-field
         local container = self.mouseOverButton and self.mouseOverButton.inventory or nil
         return disableCarryWeightOnContainer(container, og_canPutIn_page, self)
     end

@@ -9,38 +9,30 @@ local GridTransferQueueData = require("InventoryTetris/Model/GridTransferQueueDa
 local DragAndDrop = require("InventoryTetris/System/DragAndDrop")
 local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndDrop")
 
+local ScalableGridTextures = require("InventoryTetris/UI/Grid/ScalableGridTextures")
+
 local getItemSize = TetrisItemData.getItemSize
 
 -- Premade textures for supported scales so that any scale gets pixel perfect grids
-local GridBackgroundTexturesByScale = {
-    [0.5] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX0.5.png"),
-    [0.75] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX0.75.png"),
-    [1] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX1.png"),
-    [1.5] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX1.5.png"),
-    [2] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX2.png"),
-    [3] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX3.png"),
-    [4] = getTexture("media/textures/InventoryTetris/Grid/GridSlotX4.png")
-}
-
-local GridLineTexturesByScale = {
-    [0.5] = getTexture("media/textures/InventoryTetris/Grid/GridLineX0.5.png"),
-    [0.75] = getTexture("media/textures/InventoryTetris/Grid/GridLineX0.75.png"),
-    [1] = getTexture("media/textures/InventoryTetris/Grid/GridLineX1.png"),
-    [1.5] = getTexture("media/textures/InventoryTetris/Grid/GridLineX1.5.png"),
-    [2] = getTexture("media/textures/InventoryTetris/Grid/GridLineX2.png"),
-    [3] = getTexture("media/textures/InventoryTetris/Grid/GridLineX3.png"),
-    [4] = getTexture("media/textures/InventoryTetris/Grid/GridLineX4.png")
-}
+local GridBackgroundTexturesByScale = ScalableGridTextures.GridBackgroundTexturesByScale
+local GridLineTexturesByScale = ScalableGridTextures.GridLineTexturesByScale
+local ITEM_BG_TEXTURE = ScalableGridTextures.ITEM_BG_TEXTURE
+local FAVOURITE_TEXTURE = ScalableGridTextures.FAVOURITE_TEXTURE
+local POISON_TEXTURE = ScalableGridTextures.POISON_TEXTURE
 
 local MEDIA_CHECKMARK_TEX = getTexture("media/ui/Tick_Mark-10.png")
 local COLD_TEX = getTexture("media/textures/InventoryTetris/Cold.png")
 
----@class ItemGridUI : ISPanel
+---@class(partial) ItemGridUI : ISPanel
 ---@field grid ItemGrid
 ---@field containerGrid ItemContainerGrid
+---@field containerUi ItemGridContainerUI
 ---@field inventoryPane ISInventoryPane
+---@field controllerNode ControllerNode
 ---@field playerNum integer
+---@field playerObj IsoPlayer
 local ItemGridUI = ISUIElement:derive("ItemGridUI")
+ItemGridUI.__index = ItemGridUI
 
 ---@param grid ItemGrid
 ---@param containerGrid ItemContainerGrid
@@ -51,7 +43,6 @@ function ItemGridUI:new(grid, containerUi, containerGrid, inventoryPane, playerN
     ---@type ItemGridUI
     local o = ISUIElement:new(0, 0, 0, 0)
     setmetatable(o, self)
-    self.__index = self
 
     o.grid = grid
     o.containerUi = containerUi
@@ -73,6 +64,9 @@ local containerItemHoverColor = {1, 1, 0}
 local invalidItemHoverColor = {1, 0, 0}
 local stackableColor = {0.4, 0.6, 0.6}
 
+-- TODO: Get rid of this
+---@param cols number[]
+---@param brightness number?
 local function unpackColors(cols, brightness)
     if not brightness then
         brightness = 1
@@ -84,39 +78,16 @@ local OPT = require("InventoryTetris/Settings")
 
 local SEAMLESS_ITEM_BG_TEX = getTexture("media/textures/InventoryTetris/ItemBg.png")
 
-local ITEM_BG_TEXTURE = {
-    [0.5] = getTexture("media/textures/InventoryTetris/0.5x/ItemBg.png"),
-    [0.75] = getTexture("media/textures/InventoryTetris/0.75x/ItemBg.png"),
-    [1] = getTexture("media/textures/InventoryTetris/1x/ItemBg.png"),
-    [1.5] = getTexture("media/textures/InventoryTetris/1.5x/ItemBg.png"),
-    [2] = getTexture("media/textures/InventoryTetris/2x/ItemBg.png"),
-    [3] = getTexture("media/textures/InventoryTetris/3x/ItemBg.png"),
-    [4] = getTexture("media/textures/InventoryTetris/4x/ItemBg.png")
-}
-
 local BROKEN_TEXTURE = getTexture("media/textures/InventoryTetris/Broken.png")
 local HIDDEN_ITEM = getTexture("media/textures/InventoryTetris/Hidden.png")
 local SQUISHED_TEXTURE = getTexture("media/textures/InventoryTetris/Squished.png")
-local FAVOURITE_TEXTURE = {
-    [0.5] =   getTexture("media/textures/InventoryTetris/0.5x/Favourite.png"),
-    [0.75] =  getTexture("media/textures/InventoryTetris/0.5x/Favourite.png"),
-    [1] =     getTexture("media/textures/InventoryTetris/1x/Favourite.png"),
-    [1.5] =   getTexture("media/textures/InventoryTetris/1x/Favourite.png"),
-    [2] =     getTexture("media/textures/InventoryTetris/2x/Favourite.png"),
-    [3] =     getTexture("media/textures/InventoryTetris/3x/Favourite.png"),
-    [4] =     getTexture("media/textures/InventoryTetris/4x/Favourite.png")
-}
 
-local POISON_TEXTURE = {
-    [0.5] =   getTexture("media/textures/InventoryTetris/0.5x/Poison.png"),
-    [0.75] =  getTexture("media/textures/InventoryTetris/0.5x/Poison.png"),
-    [1] =     getTexture("media/textures/InventoryTetris/1x/Poison.png"),
-    [1.5] =   getTexture("media/textures/InventoryTetris/1x/Poison.png"),
-    [2] =     getTexture("media/textures/InventoryTetris/2x/Poison.png"),
-    [3] =     getTexture("media/textures/InventoryTetris/3x/Poison.png"),
-    [4] =     getTexture("media/textures/InventoryTetris/4x/Poison.png")
-}
-
+---@param draggedStack ItemStack
+---@param hoveredStack ItemStack
+---@param dragInv ItemContainer
+---@param hoverInv ItemContainer
+---@param playerNum integer
+---@return number, number, number
 local function determineContainerHoverColor(draggedStack, hoveredStack, dragInv, hoverInv, playerNum)
     local draggedItem = ItemStack.getFrontItem(draggedStack, dragInv)
     local containerItem = ItemStack.getFrontItem(hoveredStack, hoverInv)
@@ -133,13 +104,18 @@ local function determineContainerHoverColor(draggedStack, hoveredStack, dragInv,
     return unpack(invalidItemHoverColor)
 end
 
--- Drag category -> hover category -> color
+---@alias ColorProviderFunction fun(draggedStack: ItemStack, hoveredStack: ItemStack, dragInv: ItemContainer, hoverInv: ItemContainer, playerNum: integer): number, number, number
+
+---@type table<TetrisItemCategory|string, table<TetrisItemCategory, number[]|ColorProviderFunction>>
 local StackHoverColorsByCategories = {
     ["any"] = {
         [TetrisItemCategory.CONTAINER] = determineContainerHoverColor
     }
 }
 
+---@param dragCategory TetrisItemCategory
+---@param hoverCategory TetrisItemCategory
+---@param color number[]|ColorProviderFunction
 function ItemGridUI.registerItemHoverColor(dragCategory, hoverCategory, color)
     if not StackHoverColorsByCategories[dragCategory] then
         StackHoverColorsByCategories[dragCategory] = {}
@@ -148,6 +124,11 @@ function ItemGridUI.registerItemHoverColor(dragCategory, hoverCategory, color)
     StackHoverColorsByCategories[dragCategory][hoverCategory] = color
 end
 
+---@param draggedStack ItemStack
+---@param hoveredStack ItemStack
+---@param dragInv ItemContainer
+---@param hoverInv ItemContainer
+---@return number, number, number
 function ItemGridUI:getColorForStackHover(draggedStack, hoveredStack, dragInv, hoverInv)
     local colorProvider = nil
 
@@ -168,25 +149,32 @@ function ItemGridUI:getColorForStackHover(draggedStack, hoveredStack, dragInv, h
     end
 
     if type(colorProvider) == "function" then
+        ---@cast colorProvider ColorProviderFunction
         return colorProvider(draggedStack, hoveredStack, dragInv, hoverInv, self.playerNum)
     else
         return unpackColors(colorProvider)
     end
 end
 
+---@param scale number
 function ItemGridUI:onApplyScale(scale)
     self:setWidth(self:calculateWidth())
     self:setHeight(self:calculateHeight())
 end
 
+---@return integer
 function ItemGridUI:calculateWidth()
     return self.grid.width * OPT.CELL_SIZE - self.grid.width + 1
 end
 
+---@return integer
 function ItemGridUI:calculateHeight()
     return self.grid.height * OPT.CELL_SIZE - self.grid.height + 1
 end
 
+---@param mouseX number
+---@param mouseY number
+---@return ItemStack?
 function ItemGridUI:findGridStackUnderMouse(mouseX, mouseY)
     local effectiveCellSize = OPT.CELL_SIZE - 1
     local gridX = math.floor(mouseX / effectiveCellSize)
@@ -194,6 +182,8 @@ function ItemGridUI:findGridStackUnderMouse(mouseX, mouseY)
     return self.grid:getStack(gridX, gridY, self.playerNum)
 end
 
+---@param stack ItemStack
+---@return ItemContainer?
 function ItemGridUI:getValidContainerFromStack(stack)
     if not stack or stack.count > 1 then
         return nil
@@ -233,7 +223,6 @@ function ItemGridUI:renderUnsearched()
     self:drawTextCentre("?", self:getWidth()/2, self:getHeight()/2 - ItemGridUI.lineHeight, 1, 1, 1, 1, UIFont.Large)
 end
 
--- 2 draw calls
 function ItemGridUI:renderBackGrid()
     local width = self.grid.width
     local height = self.grid.height
@@ -250,6 +239,7 @@ function ItemGridUI:renderBackGrid()
     self.javaObject:DrawTextureTiled(lineTex, 0, 0, totalWidth, totalHeight, gridLines, gridLines, gridLines, 1)
 end
 
+---@return Texture
 function ItemGridUI.getGridBackgroundTexture()
     return GridBackgroundTexturesByScale[OPT.SCALE] or GridBackgroundTexturesByScale[1]
 end
@@ -258,9 +248,8 @@ function ItemGridUI:renderIncomingTransfers()
     local incomingActions = self.itemTransferData:getIncomingActions(self.grid.inventory, self.grid.gridKey)
     local playerObj = self.playerObj
 
-    for _, action in pairs(incomingActions) do
+    for item, action in pairs(incomingActions) do
         local stack = ItemStack.createTempStack(action.item)
-        local item = action.item
         if action.gridX and action.gridY then
             local x = action.gridX * OPT.CELL_SIZE - action.gridX
             local y = action.gridY * OPT.CELL_SIZE - action.gridY
@@ -270,16 +259,7 @@ function ItemGridUI:renderIncomingTransfers()
     end
 end
 
--- The vanilla inventory render is also in charge of aging and drying items, so we need to do that here as well
-function ItemGridUI.updateItem(item)
-    if not item then return end
-
-    item:updateAge()
-    if instanceof(item, 'Clothing') then
-        item:updateWetness()
-    end
-end
-
+---@param searchSession ItemGridSearchSession?
 function ItemGridUI:renderGridItems(searchSession)
     local inventory = self.grid.inventory
     local stacks = self.grid:getStacks()
@@ -330,7 +310,13 @@ function ItemGridUI:renderMultiDrag()
     self:drawRectBorder(x1, y1, x2-x1, y2-y1, 0.5, 0.2, 1, 1)
 end
 
+---@type TetrisRenderInstruction[]
 local instructionBuffer = table.newarray()
+
+---@param inventory ItemContainer
+---@param stacks ItemStack[]
+---@param alphaMult number
+---@param searchSession ItemGridSearchSession?
 function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local CELL_SIZE = OPT.CELL_SIZE
     local isJoypad = JoypadState.players[self.playerNum+1]
@@ -339,13 +325,16 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 
     local outgoingQueueData = self.itemTransferData:getOutgoingActions(inventory)
 
-    local yCorrection = 0
-    local yCullBottom = 0
-    local yCullTop = 9999
+    local yCorrection = 0.0
+    local yCullBottom = 0.0
+    local yCullTop = 9999.9
 
     local isNotPopup = not self.containerUi.isPopup
     if isNotPopup then
+        -- TODO: FIX THIS! This sucks. I hate that I wrote this.
+        ---@diagnostic disable-next-line: need-check-nil
         yCorrection = self:getY() + self.parent:getY() + self.parent.parent:getY() + self.parent.parent.parent:getY() - self.inventoryPane:getYScroll()
+        
         yCullBottom = -self.inventoryPane:getYScroll() - yCorrection
         yCullTop = yCullBottom + self.inventoryPane:getHeight()
     end
@@ -359,8 +348,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
     local pendingSelection = self.activeMultiDragStacks or {}
 
     local instructionCount = 0
-    local count = #stacks
-    for i=1,count do
+    for i=1, #stacks do
         local stack = stacks[i]
         local item = stack._frontItem or ItemStack.getFrontItem(stack, inventory)
         local itemId = stack._frontItemId
@@ -418,6 +406,7 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
                     instruction[11] = isSquished
                     instruction[12] = selectedStacks[stack] or pendingSelection[stack]
 
+                    ---@cast instruction TetrisRenderInstruction
                     instructionBuffer[instructionCount] = instruction
                 end
             end
@@ -443,7 +432,7 @@ function ItemGridUI:renderDragItemPreview()
 
     local draggedStacks = DragAndDrop.getDraggedStacks()
     if draggedStacks and #draggedStacks > 1 then
-        if hoveredItem and hoveredItem:IsInventoryContainer() then
+        if hoveredStack and hoveredItem and hoveredItem:IsInventoryContainer() then
             local x = hoveredStack.x * OPT.CELL_SIZE - hoveredStack.x
             local y = hoveredStack.y * OPT.CELL_SIZE - hoveredStack.y
             local w, h = getItemSize(hoveredItem, hoveredStack.isRotated)
@@ -504,6 +493,7 @@ function ItemGridUI:renderDragItemPreview()
     self:_renderControllerDrag(0.8)
 end
 
+---@param opacity number
 function ItemGridUI:_renderControllerDrag(opacity)
     if ControllerDragAndDrop.isDragging(self.playerNum) then
         local item = ControllerDragAndDrop.getDraggedItem(self.playerNum)
@@ -516,11 +506,19 @@ function ItemGridUI:_renderControllerDrag(opacity)
     end
 end
 
+---@param gridX integer
+---@param gridY integer
+---@param itemW integer
+---@param itemH integer
+---@param r number
+---@param g number
+---@param b number
 function ItemGridUI:_renderPlacementPreview(gridX, gridY, itemW, itemH, r, g, b)
     self:drawRect(gridX * OPT.CELL_SIZE - gridX + 1, gridY * OPT.CELL_SIZE - gridY + 1, itemW * OPT.CELL_SIZE - itemW - 1, itemH * OPT.CELL_SIZE - itemH - 1, 0.55, r, g, b)
 end
 
-function ItemGridUI.getItemColor(item, limit)
+---@param item InventoryItem
+function ItemGridUI.getItemColor(item)
     if not item or item:getTextureColorMask() then
         return 1,1,1
     end
@@ -552,6 +550,8 @@ end
 -- A bit finnicky, the changes are not permanent and reset shortly after.
 -- Seems to work fine during grid rendering in its current state.
 local spriteRenderer = SpriteRenderer.instance
+
+---@param texture Texture
 function ItemGridUI.setTextureAsCrunchy(texture)
     local TEXTURE_2D = 3553
 
@@ -561,6 +561,9 @@ function ItemGridUI.setTextureAsCrunchy(texture)
     local NEAREST = 9728
     spriteRenderer:glBind(texture:getID());
     spriteRenderer:glTexParameteri(TEXTURE_2D, MAG_FILTER, NEAREST);
+
+
+    -- TODO: Benchmark performance impact of these fixes
 
     -- Fixes pixel bleeding on the edge of textures from other mods
     --local TEXTURE_WRAP_S = 10242
@@ -573,9 +576,13 @@ end
 -- Possible colors are limited to 101 total (0-100 int)
 local triLerpColorCache = {}
 
+-- TODO: Make these customizable
 local goodColor = {r=0, g=1,b=1}
 local midColor = {r=1,g=1,b=0}
 local badColor = {r=1,g=0,b=0}
+
+---@param value number
+---@return number[]
 local function triLerpColors(value)
     if value < 0 then value = 0; end
     if value > 100 then value = 100; end
@@ -608,6 +615,7 @@ local cosTheta = math.cos(math.rad(90))
 local floor = math.floor
 local ceil = math.ceil
 
+-- TODO: Make these customizable
 -- Color code the items by category
 local neutral = 0.65
 local colorsByCategory = {
@@ -632,9 +640,22 @@ local colorsByCategory = {
 local stackFont = UIFont.Small
 local postRenderGrid = TetrisEvents.OnPostRenderGrid
 
+---@class MaskRenderData
+---@field [1] boolean isActive - Whether this mask slot should be rendered
+---@field [2] Texture texture - The mask texture to render
+---@field [3] number percentage - Fill percentage (0-1), e.g. fluid level or full for color masks
+---@field [4] number r - Red color component
+---@field [5] number g - Green color component
+---@field [6] number b - Blue color component
+---@field [7] number a - Alpha color component
+
+-- Slot 1: Fluid mask (for bottles/containers showing liquid fill levels)
+-- Slot 2: Color mask (for items with colored overlays, e.g. dyed clothing)
+-- Each slot is populated during item rendering then rendered in a loop.
+---@type MaskRenderData[]
 local maskQueue = table.newarray()
-maskQueue[1] = table.newarray()
-maskQueue[2] = table.newarray()
+maskQueue[1] = table.newarray() -- Fluid mask slot
+maskQueue[2] = table.newarray() -- Color mask slot
 
 ---@type table<string, ItemTypeRenderData>
 local itemTypeDataCache = {}
@@ -644,18 +665,19 @@ local itemTypeDataCache = {}
 ---@field isFluidContainer boolean
 ---@field fluidCapacity number
 ---@field isDrainable boolean
----@field maxUses number
+---@field maxUses integer
 ---@field hasAmmo boolean
 ---@field isLiterature boolean
 
 ---@param item InventoryItem
+---@param itemType string
 ---@return ItemTypeRenderData
 local function getItemTypeData(item, itemType)
     local isFood = item:isFood()
     local isFluidContainer = item:getFluidContainer() ~= nil
-    local fluidCapacity = isFluidContainer and item:getFluidContainer():getCapacity()
+    local fluidCapacity = isFluidContainer and item:getFluidContainer():getCapacity() or -1
     local isDrainable = item:IsDrainable()
-    local maxUses = isDrainable and item:getMaxUses()
+    local maxUses = isDrainable and item:getMaxUses() or -1
     local hasAmmo = item:getMaxAmmo() > 0
     local isLiterature = instanceof(item, "Literature")
 
@@ -672,15 +694,26 @@ local function getItemTypeData(item, itemType)
     return data
 end
 
+---@type table<InventoryItem, ItemInstanceData>
 local itemInstanceDataCache = {}
+
 Events.EveryHours.Add(function()
-    itemInstanceDataCache = {} -- Avoid memory bloat
+    itemInstanceDataCache = {} -- Avoid memory bloat and stale data
 end)
+
+---@class ItemInstanceData
+---@field r number
+---@field g number
+---@field b number
+---@field colorMask Texture|nil
+---@field fluidMask Texture|nil
+---@field showPoison boolean
 
 ---@param item InventoryItem
 ---@param itemTypeData ItemTypeRenderData
+---@return ItemInstanceData
 local function getItemInstanceData(item, itemTypeData)
-    local r,g,b = 1,1,1
+    local r,g,b = 1.0,1.0,1.0
     local colorMask = item:getTextureColorMask()
     if not colorMask then
         r = item:getR()
@@ -703,6 +736,7 @@ local function getItemInstanceData(item, itemTypeData)
     return data
 end
 
+---@type table<Texture, integer>
 local textureIdCache = {}
 
 ---@param texture Texture
@@ -712,9 +746,23 @@ local function getTextureId(texture)
     return id
 end
 
+---@class TextureData
+---@field widthOrig integer
+---@field heightOrig integer
+---@field width integer
+---@field height integer
+---@field offsetX number
+---@field offsetY number
+---@field xStart number
+---@field yStart number
+---@field xEnd number
+---@field yEnd number
+
+---@type table<Texture, TextureData>
 local textureDataCache = {}
 
 ---@param texture Texture
+---@return TextureData
 local function getTextureData(texture)
     local data = {
         widthOrig = texture:getWidthOrig(),
@@ -732,9 +780,17 @@ local function getTextureData(texture)
     return data
 end
 
+---@class FluidColorData
+---@field r number
+---@field g number
+---@field b number
+---@field a number
+
+---@type table<Fluid, FluidColorData>
 local fluidColorCache = {}
 
 ---@param fluid Fluid|nil
+---@return FluidColorData
 local function getFluidColor(fluid)
     if not fluid then return {r=1,g=1,b=1,a=1} end
     local color = {}
@@ -747,26 +803,33 @@ local function getFluidColor(fluid)
     return color
 end
 
+---@type table<number, string>
 local numericStringCache = {}
 
 ---@param number number
+---@return string
 local function getNumericString(number)
     local str = tostring(number)
     numericStringCache[number] = str
     return str
 end
 
-
----@deprecated Use ItemGridUI._bulkRenderGridStacks instead.
-function ItemGridUI._renderGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isRotated, itemBgTex, doBorder)
-    local renderInstructions = table.newarray()
-    renderInstructions[1] = {stack, item, x, y, w, h, alphaMult, isRotated, false, doBorder}
-    ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, 1, playerObj, itemBgTex)
-end
-
+---@param drawingContext ISUIElement
+---@param playerObj IsoPlayer
+---@param stack ItemStack
+---@param item InventoryItem
+---@param x number
+---@param y number
+---@param w integer
+---@param h integer
+---@param alphaMult number
+---@param isRotated boolean
+---@param itemBgTex Texture|nil
+---@param doBorder boolean|nil
 function ItemGridUI._renderSingleGridStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult, isRotated, itemBgTex, doBorder)
+    ---@type TetrisRenderInstruction[]
     local renderInstructions = table.newarray()
-    renderInstructions[1] = {stack, item, x, y, w, h, alphaMult, isRotated, false, doBorder}
+    renderInstructions[1] = {stack, item, x, y, w, h, alphaMult, isRotated, false, doBorder or false, false, false}
     ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, 1, playerObj, itemBgTex)
 end
 
@@ -797,17 +860,28 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
     ---@diagnostic disable-next-line: undefined-field
     local enableTainted = getSandboxOptions():getOptionByName("EnableTaintedWaterText"):getValue()
 
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    ---@type Texture
     local favTex = FAVOURITE_TEXTURE[SCALE]
     local favTexW = favTex:getWidth()
 
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    ---@type Texture
     local poisonTex = POISON_TEXTURE[SCALE]
     local poisonTexH = poisonTex:getHeight()
 
     local doShadow = OPT.DO_STACK_SHADOWS
     local shadowOffset = math.floor(OPT.SCALE + 0.5)
 
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    ---@type Texture
+    local NO_TEX = nil
+
     for r=1,instructionCount do
+        ---@diagnostic disable-next-line: assign-type-mismatch
+        ---@type TetrisRenderInstruction
         local instruction = renderInstructions[r]
+
         local stack = instruction[1]
         local item = instruction[2]
         local x = instruction[3]
@@ -860,11 +934,11 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 local heat = item:getHeat() -- 1 = room, 0.2 = frozen, 3 = max
                 if heat < 1.0 then
                     local coldPercent =  -(heat - 1.0) / 0.8
-                    javaObject:DrawTextureScaledColor(nil, x, y, totalWidth, totalHeight, 0.1, 0.5, 1, alphaMult * coldPercent)
+                    javaObject:DrawTextureScaledColor(NO_TEX, x, y, totalWidth, totalHeight, 0.1, 0.5, 1, alphaMult * coldPercent)
                 elseif heat > 1.0 then
                     local hotPercent = (heat - 1.0) / 1.5
                     if hotPercent > 1 then hotPercent = 1 end
-                    javaObject:DrawTextureScaledColor(nil, x, y, totalWidth, totalHeight, 1, 0.0, 0.0, alphaMult * hotPercent)
+                    javaObject:DrawTextureScaledColor(NO_TEX, x, y, totalWidth, totalHeight, 1, 0.0, 0.0, alphaMult * hotPercent)
                 end
             end
             -- END BACKGROUND EFFECTS
@@ -891,10 +965,10 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 local t = isSelected and 2 or 1
                 local a = isSelected and 1 or 0.5
 
-                javaObject:DrawTextureScaled(nil, x,     y, t, h, a);
-                javaObject:DrawTextureScaled(nil, x+1,   y, w-2, t, a);
-                javaObject:DrawTextureScaled(nil, x+w-t, y, t, h, a);
-                javaObject:DrawTextureScaled(nil, x+t,   y+h-t, w-t-1, t, a);
+                javaObject:DrawTextureScaled(NO_TEX, x,     y, t, h, a);
+                javaObject:DrawTextureScaled(NO_TEX, x+1,   y, w-2, t, a);
+                javaObject:DrawTextureScaled(NO_TEX, x+w-t, y, t, h, a);
+                javaObject:DrawTextureScaled(NO_TEX, x+t,   y+h-t, w-t-1, t, a);
             end
 
             local texture = item:getTex() or HIDDEN_ITEM
@@ -993,25 +1067,23 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 centerY = centerY - absY
             --end
 
-            if fluidContainer and fluidPercent > 0 then
-                local fluidMask = itemInstanceData.fluidMask
-                if fluidMask then
-                    local color = fluidColorCache[fluid] or getFluidColor(fluid)
-                    local maskData = maskQueue[1]
-                    maskData[1] = true
-                    maskData[2] = fluidMask
-                    maskData[3] = fluidPercent
-                    maskData[4] = color.r
-                    maskData[5] = color.g
-                    maskData[6] = color.b
-                    maskData[7] = color.a
-                else
-                    maskQueue[1][1] = false
-                end
+            -- Populate mask slot 1: Fluid mask for containers with liquid
+            local fluidMask = itemInstanceData.fluidMask
+            if fluid and fluidPercent > 0 and fluidMask then                
+                local color = fluidColorCache[fluid] or getFluidColor(fluid)
+                local maskData = maskQueue[1]
+                maskData[1] = true
+                maskData[2] = fluidMask
+                maskData[3] = fluidPercent
+                maskData[4] = color.r
+                maskData[5] = color.g
+                maskData[6] = color.b
+                maskData[7] = color.a
             else
                 maskQueue[1][1] = false
             end
 
+            -- Populate mask slot 2: Color mask for tinted items (e.g. dyed clothing)
             if colorMask then
                 local maskData = maskQueue[2]
                 maskData[1] = true
@@ -1025,7 +1097,8 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 maskQueue[2][1] = false
             end
 
-            for i=1, 2 do
+            -- Render all active mask slots (fluid mask and/or color mask)
+            for i=1, #maskQueue do
                 local maskData = maskQueue[i]
                 if maskData[1] then
                     local texture = maskData[2]
@@ -1105,7 +1178,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                     maskX = maskX + absX
                     maskY = maskY + absY
 
-                    -- No crunchy texture fix here, I'm just gonna assume the people who are making texture masks are the type of people who pack their textures properly
+                    -- No crunchy texture fix here, I'm just gonna assume the modders who are making texture masks are the type of modders who pack their textures properly
                     spriteRenderer:render(texture, maskX, maskY, w * mainTexScale, h, r, g, b, a, tlX, tlY, trX, trY, brX, brY, blX, blY)
                 end
             end
@@ -1136,7 +1209,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                     if colorVal > 100 then colorVal = 100 end
 
                     local col = triLerpColorCache[colorVal] or triLerpColors(colorVal)
-                    javaObject:DrawTextureScaledColor(nil, barX, top + missing, 2, bottom - top - missing, col[1], col[2], col[3], alphaMult)
+                    javaObject:DrawTextureScaledColor(NO_TEX, barX, top + missing, 2, bottom - top - missing, col[1], col[2], col[3], alphaMult)
                 end
 
                 ---@cast item Food
@@ -1159,16 +1232,16 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 if colorVal > 100 then colorVal = 100 end
 
                 local col = triLerpColorCache[colorVal] or triLerpColors(colorVal)
-                javaObject:DrawTextureScaledColor(nil, barX, top + missing, 2, bottom - top - missing, col[1], col[2], col[3], alphaMult)
+                javaObject:DrawTextureScaledColor(NO_TEX, barX, top + missing, 2, bottom - top - missing, col[1], col[2], col[3], alphaMult)
 
-            elseif fluidPercent > 0 then
+            elseif fluid and fluidPercent > 0 then
                 local color = fluidColorCache[fluid] or getFluidColor(fluid)
 
                 local barX = x + totalWidth - 3
                 local top = y + 1
                 local bottom = y + totalHeight - 1
                 local missing = (bottom - top) * (1.0 - fluidPercent)
-                javaObject:DrawTextureScaledColor(nil, barX, top + missing, 2, bottom - top - missing, color.r, color.g, color.b, alphaMult)
+                javaObject:DrawTextureScaledColor(NO_TEX, barX, top + missing, 2, bottom - top - missing, color.r, color.g, color.b, alphaMult)
 
                 ---@diagnostic disable-next-line: need-check-nil
                 if fluid == Bleach or (enableTainted and fluid == TaintedWater and fluidContainer:getPoisonRatio() > 0.1) then
@@ -1208,6 +1281,15 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
     postRenderGrid:trigger(drawingContext, renderInstructions, instructionCount, playerObj)
 end
 
+---@param drawingContext ISUIElement
+---@param playerObj IsoPlayer
+---@param stack ItemStack
+---@param item InventoryItem
+---@param x number
+---@param y number
+---@param w integer
+---@param h integer
+---@param alphaMult number
 function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x, y, w, h, alphaMult)
     local CELL_SIZE = OPT.CELL_SIZE
     local TEXTURE_SIZE = OPT.TEXTURE_SIZE

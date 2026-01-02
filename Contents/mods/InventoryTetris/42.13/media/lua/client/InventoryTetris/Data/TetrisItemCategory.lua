@@ -24,6 +24,7 @@ for _, category in pairs(TetrisItemCategory) do
 end
 TetrisItemCategory.list = list
 
+---@type table<string, TetrisItemCategory>
 TetrisItemCategory._categoryCache = {}
 
 ---@param item InventoryItem
@@ -39,6 +40,7 @@ end
 
 ---@param item InventoryItem
 ---@param type string
+---@return TetrisItemCategory
 function TetrisItemCategory._getCategoryInternal(item, type)
     local displayCategory = item:getDisplayCategory()
     local category = item:getCategory()
@@ -94,6 +96,7 @@ function TetrisItemCategory._getCategoryInternal(item, type)
     return TetrisItemCategory.MISC
 end
 
+---@type table<TetrisItemCategory, Texture>
 TetrisItemCategory.categoryIcons = {
     [TetrisItemCategory.MELEE] = getTexture("media/textures/InventoryTetris/Categories/MELEE.png"),
     [TetrisItemCategory.RANGED] = getTexture("media/textures/InventoryTetris/Categories/RANGED.png"),
@@ -111,6 +114,8 @@ TetrisItemCategory.categoryIcons = {
     [TetrisItemCategory.MOVEABLE] = getTexture("media/textures/InventoryTetris/Categories/MOVEABLE.png"),
 }
 
+---@param category TetrisItemCategory
+---@return Texture?
 function TetrisItemCategory.getCategoryIcon(category)
     return TetrisItemCategory.categoryIcons[category]
 end
