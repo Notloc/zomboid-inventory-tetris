@@ -69,12 +69,15 @@ function GridOverflowRenderer:getYPositionsForOverflow()
     return yPositions
 end
 
+---@param stackCount number
+---@return number
 function GridOverflowRenderer:calculateOverflowColumnWidth(stackCount)
     local yPositions = self:getYPositionsForOverflow()
     local columns = math.ceil(stackCount / #yPositions)
     return columns * OPT.CELL_SIZE + OVERFLOW_MARGIN * columns - OVERFLOW_MARGIN + 4 
 end
 
+---@return boolean
 function GridOverflowRenderer:isEmpty()
     return #self.containerGrid.overflow == 0
 end
@@ -107,7 +110,7 @@ function GridOverflowRenderer:render()
     for _, stack in ipairs(overflow) do
         local item = ItemStack.getFrontItem(stack, inventory)
         if item then
-            local yPos = yPositions[yi]
+            local yPos = yPositions[yi] or 0
 
             local instruction = table.newarray()
             instruction[1] = stack
@@ -145,6 +148,9 @@ function GridOverflowRenderer:render()
     end
 end
 
+---@param x number
+---@param y number
+---@return ItemStack?
 function GridOverflowRenderer:findStackDataUnderMouse(x, y)
     local overflow = self.containerGrid.overflow
     if #overflow == 0 then return end
@@ -154,7 +160,7 @@ function GridOverflowRenderer:findStackDataUnderMouse(x, y)
     local yi = 1
 
     for _, stack in ipairs(overflow) do
-        local yPos = yPositions[yi]
+        local yPos = yPositions[yi] or 0
         if x >= xPos and x < xPos + OPT.CELL_SIZE and y >= yPos and y < yPos + OPT.CELL_SIZE then
             return stack
         end

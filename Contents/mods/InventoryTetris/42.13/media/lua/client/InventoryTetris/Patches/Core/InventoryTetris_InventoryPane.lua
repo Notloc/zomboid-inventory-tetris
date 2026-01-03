@@ -13,7 +13,6 @@ local ControllerDragAndDrop = require("InventoryTetris/System/ControllerDragAndD
 local OPT = require("InventoryTetris/Settings")
 local Version = require("Notloc/Versioning/Version")
 local ItemGridContainerUI = require("InventoryTetris/UI/Container/ItemGridContainerUI")
-local TetrisWindowManager = require("InventoryTetris/UI/Windows/TetrisWindowManager")
 local InventoryTetris = require("InventoryTetris/InventoryTetris")
 
 -- I use on game boot because I want to make sure other mods have loaded before I patch this in
@@ -24,8 +23,6 @@ Events.OnGameBoot.Add(function()
         og_createChildren(self)
 
         self.gridContainerUis = {}
-
-        self.tetrisWindowManager = TetrisWindowManager:new(self, self.player)
 
         self.hscroll = ISScrollBar:new(self, false)
         self.hscroll:initialise()
@@ -375,8 +372,12 @@ Events.OnGameBoot.Add(function()
 
     local og_onMouseWheel = ISInventoryPane.onMouseWheel
     function ISInventoryPane:onMouseWheel(del)
-        if self.inventoryPage.isCollapsed then return false; end
-        if self.inventoryPage:isCycleContainerKeyDown() then return false; end
+        ---@type ISInventoryPage?
+        local invPage = self.parent
+        if not invPage then return false end
+
+        if invPage.isCollapsed then return false; end
+        if invPage:isCycleContainerKeyDown() then return false; end
 
         local sideScrollKeyDown = false
 
@@ -403,15 +404,7 @@ Events.OnGameBoot.Add(function()
         ISInventoryTransferAction.globalTetrisRules = false
     end
 
-    function ISInventoryPane:getChildWindows()
-        if self.tetrisWindowManager then
-            return self.tetrisWindowManager.childWindows
-        end
-        return {}
-    end
-
-
-
+    
     local og_canPutIn = ISInventoryPane.canPutIn
     function ISInventoryPane:canPutIn()
         ControllerDragAndDrop.currentPlayer = self.player
@@ -464,7 +457,10 @@ Events.OnGameBoot.Add(function()
 
 
     function ISInventoryPane:findSelectedControllerItem()
+        ---@type ISInventoryPage?
         local inv = self.parent
+        if not inv then return nil end
+
         if not inv.joyfocus then return nil end
 
         local selection = inv.controllerNode:getLeafChild()

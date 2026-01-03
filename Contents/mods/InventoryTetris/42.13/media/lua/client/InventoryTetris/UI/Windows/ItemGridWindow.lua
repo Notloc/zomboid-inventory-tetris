@@ -33,8 +33,8 @@ function ItemGridWindow.getTopWindow()
     return ItemGridWindow._globalInstances[#ItemGridWindow._globalInstances];
 end
 
----@param x integer
----@param y integer
+---@param x number
+---@param y number
 ---@param inventory ItemContainer
 ---@param inventoryPane ISInventoryPane
 ---@param playerNum integer
@@ -172,6 +172,7 @@ function ItemGridWindow:createChildren()
     self.closeButton:setImage(self.closebutton);
     self:addChild(self.closeButton);
 
+    -- TODO: delete this, being used as a layout anchor
     self.pinButton = ISButton:new(self.width - closeBtnSize - 3, 0, closeBtnSize, closeBtnSize, "", self, ItemGridWindow.setPinned);
     self.pinButton.anchorRight = true;
     self.pinButton.anchorLeft = false;

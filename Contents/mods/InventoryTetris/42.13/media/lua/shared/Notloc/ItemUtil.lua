@@ -219,7 +219,6 @@ function ItemUtil.gatherItems(playerNum, itemType, count)
         local sourceContainer = itemAndSource[2]
         local destinationContainer = playerInv
         local transferAction = ISInventoryTransferAction:new(playerObj, item, sourceContainer, destinationContainer)
-        transferAction.preventMerge = true
         ISTimedActionQueue.add(transferAction)
     end
     return true

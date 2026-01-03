@@ -4,7 +4,6 @@ local ItemUtil = require("Notloc/ItemUtil")
 Events.OnGameBoot.Add(function()
     local og_findInInventoryMultiSprite = ISMoveableSpriteProps.findInInventoryMultiSprite
 
-    ---@diagnostic disable-next-line: duplicate-set-field
     function ISMoveableSpriteProps:findInInventoryMultiSprite( _character, _spriteName )
         -- Ask the original before doing our own search
         local item, inv = og_findInInventoryMultiSprite(self, _character, _spriteName)
@@ -22,6 +21,7 @@ Events.OnGameBoot.Add(function()
                     isDone = true;
                     return
                 end
+                ---@cast item Moveable
                 if instanceof(item, "Moveable") and item:getCustomNameFull() then
                     if item:getCustomNameFull() == _spriteName then
                         retItem = item;
@@ -30,6 +30,7 @@ Events.OnGameBoot.Add(function()
                         return
                     end
                 end
+                ---@cast item InventoryItem
             end);
 
             if retItem and retInv then
@@ -54,11 +55,13 @@ Events.OnGameBoot.Add(function()
                                     if instanceof(item, "Moveable") and self.customItem and (item:getFullType() == self.customItem) and (item:getName() == self.name) then
                                         return item, "floor";
                                     end
+                                    ---@cast item Moveable
                                     if item and instanceof(item, "Moveable") and item:getCustomNameFull() then
                                         if item:getCustomNameFull() == _spriteName then
                                             return item, "floor";
                                         end
                                     end
+                                    ---@cast item InventoryItem
                                 end
                             end
                         end

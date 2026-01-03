@@ -6,7 +6,6 @@ Events.OnGameStart.Add(function()
     local og_doTrapMenu = ISTrapMenu.doTrapMenu;
     Events.OnFillWorldObjectContextMenu.Remove(og_doTrapMenu);
 
-    ---@diagnostic disable-next-line: duplicate-set-field
     ISTrapMenu.doTrapMenu = function(player, context, worldobjects, test)
         og_doTrapMenu(player, context, worldobjects, test);
         local playerObj = getSpecificPlayer(player);
@@ -27,6 +26,7 @@ Events.OnGameStart.Add(function()
                 local items = {}
 
                 ItemUtil.forEachItemOnPlayer(playerObj, function(vItem)
+                    ---@cast vItem Food
                     if instanceof(vItem, "Food") and (vItem:getHungerChange() <= -0.05 or vItem:getType() == "Worm") and not vItem:isCooked() and
                             not alreadyAddedItems[vItem:getName()] and not vItem:haveExtraItems() and
                             (vItem:getCustomMenuOption() ~= "Drink") then

@@ -1,6 +1,7 @@
 -- Split rendering into a separate file because of how much code it is
 
 local TetrisItemData = require("InventoryTetris/Data/TetrisItemData")
+local TetrisContainerData = require("InventoryTetris/Data/TetrisContainerData")
 local TetrisItemCategory = require("InventoryTetris/Data/TetrisItemCategory")
 local TetrisEvents = require("InventoryTetris/Events")
 local ItemStack = require("InventoryTetris/Model/ItemStack")
@@ -22,6 +23,8 @@ local POISON_TEXTURE = ScalableGridTextures.POISON_TEXTURE
 
 local MEDIA_CHECKMARK_TEX = getTexture("media/ui/Tick_Mark-10.png")
 local COLD_TEX = getTexture("media/textures/InventoryTetris/Cold.png")
+
+local ENABLED_TAINTED = true
 
 ---@class(partial) ItemGridUI : ISPanel
 ---@field grid ItemGrid
@@ -60,19 +63,13 @@ end
 -- When hover a stack over a stack that has an interaction handler, color the hovered stack with this color (or the interaction handler's color if it has one)
 ItemGridUI.GENERIC_ACTION_COLOR = {0, 0.7, 1}
 
+---@type ColorArray
 local containerItemHoverColor = {1, 1, 0}
+---@type ColorArray
 local invalidItemHoverColor = {1, 0, 0}
+---@type ColorArray
 local stackableColor = {0.4, 0.6, 0.6}
 
--- TODO: Get rid of this
----@param cols number[]
----@param brightness number?
-local function unpackColors(cols, brightness)
-    if not brightness then
-        brightness = 1
-    end
-    return cols[1] * brightness, cols[2] * brightness, cols[3] * brightness
-end
 
 local OPT = require("InventoryTetris/Settings")
 
@@ -106,7 +103,7 @@ end
 
 ---@alias ColorProviderFunction fun(draggedStack: ItemStack, hoveredStack: ItemStack, dragInv: ItemContainer, hoverInv: ItemContainer, playerNum: integer): number, number, number
 
----@type table<TetrisItemCategory|string, table<TetrisItemCategory, number[]|ColorProviderFunction>>
+---@type table<TetrisItemCategory|string, table<TetrisItemCategory, ColorArray|ColorProviderFunction>>
 local StackHoverColorsByCategories = {
     ["any"] = {
         [TetrisItemCategory.CONTAINER] = determineContainerHoverColor
@@ -145,14 +142,15 @@ function ItemGridUI:getColorForStackHover(draggedStack, hoveredStack, dragInv, h
     end
 
     if not colorProvider then
-        return unpackColors(invalidItemHoverColor)
+        return invalidItemHoverColor[1], invalidItemHoverColor[2], invalidItemHoverColor[3]
     end
 
     if type(colorProvider) == "function" then
         ---@cast colorProvider ColorProviderFunction
         return colorProvider(draggedStack, hoveredStack, dragInv, hoverInv, self.playerNum)
     else
-        return unpackColors(colorProvider)
+        ---@cast colorProvider ColorArray
+        return colorProvider[1], colorProvider[2], colorProvider[3]
     end
 end
 
@@ -180,20 +178,6 @@ function ItemGridUI:findGridStackUnderMouse(mouseX, mouseY)
     local gridX = math.floor(mouseX / effectiveCellSize)
     local gridY = math.floor(mouseY / effectiveCellSize)
     return self.grid:getStack(gridX, gridY, self.playerNum)
-end
-
----@param stack ItemStack
----@return ItemContainer?
-function ItemGridUI:getValidContainerFromStack(stack)
-    if not stack or stack.count > 1 then
-        return nil
-    end
-    local item = ItemStack.getFrontItem(stack, self.grid.inventory)
-    if not item or not item:IsInventoryContainer() then
-        return nil
-    end
-    ---@cast item InventoryContainer
-    return item:getInventory()
 end
 
 function ItemGridUI:render()
@@ -331,12 +315,11 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
 
     local isNotPopup = not self.containerUi.isPopup
     if isNotPopup then
-        -- TODO: FIX THIS! This sucks. I hate that I wrote this.
-        ---@diagnostic disable-next-line: need-check-nil
-        yCorrection = self:getY() + self.parent:getY() + self.parent.parent:getY() + self.parent.parent.parent:getY() - self.inventoryPane:getYScroll()
-        
-        yCullBottom = -self.inventoryPane:getYScroll() - yCorrection
-        yCullTop = yCullBottom + self.inventoryPane:getHeight()
+        local invPane = self.inventoryPane
+        local yScroll = invPane:getYScroll()
+        yCorrection = self:getAbsoluteY() - invPane:getAbsoluteY() - yScroll
+        yCullBottom = -yScroll - yCorrection
+        yCullTop = yCullBottom + invPane.height
     end
 
     local bgTex = ITEM_BG_TEXTURE[OPT.SCALE] or SEAMLESS_ITEM_BG_TEX
@@ -352,14 +335,20 @@ function ItemGridUI:renderStackLoop(inventory, stacks, alphaMult, searchSession)
         local stack = stacks[i]
         local item = stack._frontItem or ItemStack.getFrontItem(stack, inventory)
         local itemId = stack._frontItemId
+
         if item then
             local x, y = stack.x, stack.y
             if x and y then
                 local itemType = stack.itemType
                 local category = stack.category
 
-                ---@cast item InventoryContainer
-                local isSquished = category == TetrisItemCategory.CONTAINER and TetrisItemData.isSquishable(item) and item:getItemContainer():isEmpty()
+                local isSquished = false
+                if category == TetrisItemCategory.CONTAINER then
+                    ---@cast item InventoryContainer
+                    local container = item:getItemContainer()
+                    local isSquishable = not TetrisContainerData.getContainerDefinition(container).isRigid
+                    isSquished = isSquishable and container:isEmpty()
+                end
                 ---@cast item InventoryItem
 
                 local fType = not isSquished and itemType or TetrisItemData._squishedIdCache[itemType] or TetrisItemData._getSquishedId(itemType)
@@ -480,7 +469,7 @@ function ItemGridUI:renderDragItemPreview()
 
     -- Hovering another stack
     if ItemStack.canAddItem(hoveredStack, item) then
-        self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, unpackColors(stackableColor))
+        self:_renderPlacementPreview(hoveredStack.x, hoveredStack.y, w, h, stackableColor[1], stackableColor[2], stackableColor[3])
         self:_renderControllerDrag(0.8)
         return
     end
@@ -581,8 +570,13 @@ local goodColor = {r=0, g=1,b=1}
 local midColor = {r=1,g=1,b=0}
 local badColor = {r=1,g=0,b=0}
 
+---@class ColorArray
+---@field [1] number r
+---@field [2] number g
+---@field [3] number b
+
 ---@param value number
----@return number[]
+---@return ColorArray
 local function triLerpColors(value)
     if value < 0 then value = 0; end
     if value > 100 then value = 100; end
@@ -615,9 +609,11 @@ local cosTheta = math.cos(math.rad(90))
 local floor = math.floor
 local ceil = math.ceil
 
--- TODO: Make these customizable
+local neutralColor = 0.65
+
+-- TODO: Make these customizable.
 -- Color code the items by category
-local neutral = 0.65
+---@type table<TetrisItemCategory, ColorArray>
 local colorsByCategory = {
     [TetrisItemCategory.MELEE] = {0.825, 0.1, 0.6},
     [TetrisItemCategory.RANGED] = {0.65, 0.05, 0.05},
@@ -625,14 +621,14 @@ local colorsByCategory = {
     [TetrisItemCategory.MAGAZINE] = {0.85, 0.5, 0.05},
     [TetrisItemCategory.ATTACHMENT] = {0.9, 0.5, 0.3},
     [TetrisItemCategory.FOOD] = {0.05, 0.65, 0.15},
-    [TetrisItemCategory.CLOTHING] = {neutral, neutral, neutral},
+    [TetrisItemCategory.CLOTHING] = {neutralColor, neutralColor, neutralColor},
     [TetrisItemCategory.CONTAINER] = {0.65, 0.6, 0.4},
     [TetrisItemCategory.HEALING] = {0.1, 0.95, 1},
     [TetrisItemCategory.BOOK] = {0.3, 0, 0.5},
     [TetrisItemCategory.ENTERTAINMENT] = {0.3, 0, 0.5},
     [TetrisItemCategory.KEY] = {0.5, 0.5, 0.5},
-    [TetrisItemCategory.MISC] = {neutral, neutral, neutral},
-    [TetrisItemCategory.SEED] = {neutral, neutral, neutral},
+    [TetrisItemCategory.MISC] = {neutralColor, neutralColor, neutralColor},
+    [TetrisItemCategory.SEED] = {neutralColor, neutralColor, neutralColor},
     [TetrisItemCategory.MOVEABLE] = {0.7, 0.7, 0.7},
     [TetrisItemCategory.CORPSEANIMAL] = {0.7, 0.7, 0.7}
 }
@@ -668,6 +664,7 @@ local itemTypeDataCache = {}
 ---@field maxUses integer
 ---@field hasAmmo boolean
 ---@field isLiterature boolean
+---@field isUninteresting boolean
 
 ---@param item InventoryItem
 ---@param itemType string
@@ -680,6 +677,7 @@ local function getItemTypeData(item, itemType)
     local maxUses = isDrainable and item:getMaxUses() or -1
     local hasAmmo = item:getMaxAmmo() > 0
     local isLiterature = instanceof(item, "Literature")
+    local isUninteresting = isLiterature and item:hasTag(ItemTag.UNINTERESTING) or false
 
     local data = {
         isFood = isFood,
@@ -688,7 +686,8 @@ local function getItemTypeData(item, itemType)
         isDrainable = isDrainable,
         maxUses = maxUses,
         hasAmmo = hasAmmo,
-        isLiterature = isLiterature
+        isLiterature = isLiterature,
+        isUninteresting = isUninteresting
     }
     itemTypeDataCache[itemType] = data
     return data
@@ -857,8 +856,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
     local Bleach = Fluid.Bleach
     local TaintedWater = Fluid.TaintedWater
 
-    ---@diagnostic disable-next-line: undefined-field
-    local enableTainted = getSandboxOptions():getOptionByName("EnableTaintedWaterText"):getValue()
+    local enableTainted = ENABLED_TAINTED
 
     ---@diagnostic disable-next-line: assign-type-mismatch
     ---@type Texture
@@ -922,6 +920,8 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
 
             ---@cast item Food
             local hungerPercent = itemTypeData.isFood and (item:getHungerChange() / item:getBaseHunger()) or 1
+            ---@cast item InventoryItem
+            
             ---@cast item DrainableComboItem
             local drainPercent = itemTypeData.isDrainable and (item:getCurrentUses() / itemTypeData.maxUses) or 1
             ---@cast item InventoryItem
@@ -940,6 +940,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                     if hotPercent > 1 then hotPercent = 1 end
                     javaObject:DrawTextureScaledColor(NO_TEX, x, y, totalWidth, totalHeight, 1, 0.0, 0.0, alphaMult * hotPercent)
                 end
+                ---@cast item InventoryItem
             end
             -- END BACKGROUND EFFECTS
 
@@ -1221,6 +1222,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 if itemInstanceData.showPoison or playerObj:isKnownPoison(item) or (enableTainted and item:isTainted()) then
                     javaObject:DrawTextureColor(poisonTex, x+1, y+totalHeight - poisonTexH-1, 0.55, 1, 0.3, 1);
                 end
+                ---@cast item InventoryItem
 
             elseif drainPercent < 1.0 then
                 local barX = x + totalWidth - 3
@@ -1265,7 +1267,7 @@ function ItemGridUI._bulkRenderGridStacks(drawingContext, renderInstructions, in
                 end
                 javaObject:DrawTextRight(stackFont, text, brX, brY, 1, 1, 1, alphaMult)
 
-            elseif itemTypeData.isLiterature and ItemGridUI._showLiteratureCheckmark(playerObj, item) then
+            elseif itemTypeData.isLiterature and not itemTypeData.isUninteresting and ItemGridUI._showLiteratureCheckmark(playerObj, item) then
                 -- bottom right
                 local x2 = x + CELL_SIZE*w - w - 16
                 local y2 = y + CELL_SIZE*h - h - 16
@@ -1308,5 +1310,10 @@ function ItemGridUI._renderHiddenStack(drawingContext, playerObj, stack, item, x
     drawingContext:drawTextureCenteredAndSquare(HIDDEN_ITEM, x2, y2, size, alphaMult, 1,1,1);
     drawingContext:drawRectBorder(x, y, w * CELL_SIZE - w + 1, h * CELL_SIZE - h + 1, alphaMult, 0.55, 0.55, 0.55)
 end
+
+Events.OnGameStart.Add(function()
+    ---@diagnostic disable-next-line: undefined-field
+    ENABLED_TAINTED = getSandboxOptions():getOptionByName("EnableTaintedWaterText"):getValue()
+end)
 
 return ItemGridUI

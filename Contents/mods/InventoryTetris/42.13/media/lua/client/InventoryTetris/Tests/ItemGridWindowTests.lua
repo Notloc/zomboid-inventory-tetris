@@ -23,10 +23,15 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Window Tests", f
     local firstGrid = 1
 
     function Tests.test_createWindowManager()
-        local windowManager = TetrisWindowManager:new(getPlayerInventory(0).inventoryPane, playerNum)
+        local invPage = getPlayerInventory(0)
+        if not invPage then
+            error("No inv?")
+        end
+
+        local windowManager = TetrisWindowManager:new(invPage, playerNum)
         TestUtils.assert(windowManager ~= nil)
 
-        TestUtils.assert(windowManager.inventoryPane == getPlayerInventory(0).inventoryPane)
+        TestUtils.assert(windowManager.inventoryPane == invPage.inventoryPane)
         TestUtils.assert(windowManager.playerNum == playerNum)
         TestUtils.assert(TetrisWindowManager._instances[windowManager] == true)
 
@@ -34,8 +39,12 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Window Tests", f
     end
 
     function Tests.test_windowClosesOnDeath()
-        ---@type TetrisWindowManager
-        local windowManager = getPlayerInventory(0).inventoryPane.tetrisWindowManager
+        local invPage = getPlayerInventory(0)
+        if not invPage then
+            error("No inv?")
+        end
+
+        local windowManager = invPage.inventoryPane.tetrisWindowManager
         TestUtils.assert(windowManager ~= nil)
 
         local player = getSpecificPlayer(0)
@@ -67,13 +76,18 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Window Tests", f
     end
 
     function Tests.test_closingParentWindowDoesNotOrphanChildWindow()
+        local invPage = getPlayerInventory(0)
+        if not invPage then
+            error("No inv?")
+        end
+    
         local window = nil;
         local innerWindow = nil;
         
         return AsyncTest:new()
             :next(function()
                 ---@type TetrisWindowManager
-                local windowManager = getPlayerInventory(0).inventoryPane.tetrisWindowManager
+                local windowManager = invPage.inventoryPane.tetrisWindowManager
                 TestUtils.assert(windowManager ~= nil)
 
                 local containerGrid = TestHelper.createContainerGrid_5x5();
@@ -117,11 +131,16 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Window Tests", f
     end
 
     function Tests.test_windowsNotVisibleInTheInventoryGetClosed()
+        local invPage = getPlayerInventory(0)
+        if not invPage then
+            error("No inv?")
+        end
+    
         local window = nil;
         local innerWindow = nil;
 
         ---@type TetrisWindowManager
-        local windowManager = getPlayerInventory(0).inventoryPane.tetrisWindowManager
+        local windowManager = invPage.inventoryPane.tetrisWindowManager
         TestUtils.assert(windowManager ~= nil)
 
         local containerGrid = TestHelper.createContainerGrid_5x5();
@@ -157,6 +176,11 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Window Tests", f
     end
 
     function Tests.test_windowClosesIfItsParentNoLongerContainsIt()
+        local invPage = getPlayerInventory(0)
+        if not invPage then
+            error("No inv?")
+        end
+    
         local window = nil;
         local innerWindow = nil;
         local innerInnerWindow = nil;
@@ -164,7 +188,7 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid Window Tests", f
         local rootContainer = TestHelper.createContainerGrid_5x5().inventory;
 
         ---@type TetrisWindowManager
-        local windowManager = getPlayerInventory(0).inventoryPane.tetrisWindowManager
+        local windowManager = invPage.inventoryPane.tetrisWindowManager
         TestUtils.assert(windowManager ~= nil)
 
         local containerGrid = TestHelper.createContainerGrid_5x5();

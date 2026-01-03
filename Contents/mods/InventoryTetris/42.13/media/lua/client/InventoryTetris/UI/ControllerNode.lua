@@ -4,6 +4,11 @@
 ---@field doSimpleFocusHighlight fun(self: ControllerNode) : ControllerNode
 ---@field setJoypadDownHandler fun(self: ControllerNode, handler: fun(self: ISUIElement, button: integer): boolean) : ControllerNode
 ---@field setJoypadDirHandler fun(self: ControllerNode, handler: fun(self: ISUIElement, dx: integer, dy: integer, joypadData: JoypadData): boolean) : ControllerNode
+---@field setChildrenNodeProvider fun(self: ControllerNode, provider: fun(): ControllerNode[]) : ControllerNode
+---@field setGainJoypadFocusHandler fun(self: ControllerNode, handler: fun()) : ControllerNode
+---@field setSelectedChild fun(self: ControllerNode, childNode: ControllerNode) : ControllerNode
+---@field focusContextMenu fun(self: ControllerNode, playerNum: integer, menu: ISContextMenu)
+---@field FOCUS_COLOR RGBA
 local ControllerNode = require("Notloc/UI/ControllerNode") -- From EquipmentUI
 
 function ControllerNode.ensureVisible(uiElement)

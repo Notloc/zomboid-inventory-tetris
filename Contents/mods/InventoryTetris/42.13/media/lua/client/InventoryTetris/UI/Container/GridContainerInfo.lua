@@ -20,6 +20,7 @@ local mediumFont = UIFont.Medium
 
 ---@class GridContainerInfo : ISUIElement
 ---@field containerUi ItemGridContainerUI
+---@field controllerNode ControllerNode
 local GridContainerInfo = ISUIElement:derive("GridContainerInfo")
 
 ---@param containerUi ItemGridContainerUI
@@ -41,6 +42,9 @@ function GridContainerInfo:createChildren()
         :setJoypadDownHandler(self.controllerNodeOnJoypadDown)
 end
 
+---@param weight number
+---@param capacity number
+---@return number, number, number
 local function getWeightColor(weight, capacity)
     local ratio = weight / capacity
     if ratio <= 1.0 then
@@ -61,9 +65,9 @@ function GridContainerInfo:prerender()
     local inv = containerUi.inventory
     local scale = OPT.CONTAINER_INFO_SCALE
 
-    local r,g,b = 1,1,1
+    local r,g,b = 1.0,1.0,1.0
     if containerUi.item then
-        r,g,b = ItemGridUI.getItemColor(containerUi.item, 0.5)
+        r,g,b = ItemGridUI.getItemColor(containerUi.item)
     end
 
     local offsetX = (ICON_SIZE*0.5 + ICON_PADDING_X) * scale
@@ -73,7 +77,10 @@ function GridContainerInfo:prerender()
     local topIconY = 3 * scale
 
     local gridUis = containerUi.gridUis[inv]
-    local containerDef = gridUis[1].grid.containerDefinition
+    local gridUi = gridUis and gridUis[1]
+    if not gridUi then return end
+
+    local containerDef = gridUi.grid.containerDefinition
     local category = TetrisContainerData.getSingleValidCategory(containerDef)
     if category then
         local icon = TetrisItemCategory.getCategoryIcon(category)

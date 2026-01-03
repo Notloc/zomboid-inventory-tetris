@@ -124,12 +124,12 @@ end
 
 TetrisDevTool.writeText = writeText;
 
----@param context ISContextMenu
----@param item InventoryItem
+---@param context ISContextMenu?
+---@param item InventoryItem?
 ---@param container ItemContainer?
 ---@param containerUi ItemGridContainerUI?
 function TetrisDevTool.insertDebugOptions(context, item, container, containerUi)
-    if not TetrisDevTool.isDebugEnabled() then
+    if not TetrisDevTool.isDebugEnabled() or not context then
         return;
     end
 
@@ -373,7 +373,7 @@ function TetrisDevTool.openEditItem(item)
     editWindow.dragHandle = dragHandle;
 
     ---@diagnostic disable-next-line: duplicate-set-field
-    editWindow.render = function(self)
+    function editWindow:render()
         ISPanel.render(self);
         self:setWidth(math.max(itemRenderer:getWidth() + 20, 350))
         self:setHeight(math.max(itemRenderer:getHeight() + 180, 280))

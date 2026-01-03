@@ -1,23 +1,24 @@
 local ItemGridWindow = require("InventoryTetris/UI/Windows/ItemGridWindow")
 
 ---@class TetrisWindowManager
+---@field inventoryPage ISInventoryPage
 ---@field inventoryPane ISInventoryPane
----@field playerNum number
+---@field playerNum integer
 ---@field childWindows table[]
----@field openWindows table[]
+---@field openWindows ISUIElement[]
 local TetrisWindowManager = {}
 
 TetrisWindowManager._instances = {}
 
----@param inventoryPane table
----@param playerNum number
+---@param inventoryPage ISInventoryPage
+---@param playerNum integer
 ---@return TetrisWindowManager
-function TetrisWindowManager:new(inventoryPane, playerNum)
-    local o = {}
-    setmetatable(o, self)
+function TetrisWindowManager:new(inventoryPage, playerNum)
+    local o = setmetatable({}, self)
     self.__index = self
 
-    o.inventoryPane = inventoryPane
+    o.inventoryPage = inventoryPage
+    o.inventoryPane = inventoryPage.inventoryPane
     o.playerNum = playerNum
     o.childWindows = {}
     o.openWindows = {}
@@ -25,14 +26,6 @@ function TetrisWindowManager:new(inventoryPane, playerNum)
 
     TetrisWindowManager._instances[o] = true
     return o
-end
-
-function TetrisWindowManager:getInventoryPage()
-    local inventoryPage = getPlayerInventory(self.playerNum)
-    if inventoryPage.inventoryPane ~= self.inventoryPane then
-        inventoryPage = getPlayerLoot(self.playerNum)
-    end
-    return inventoryPage
 end
 
 function TetrisWindowManager:hasOpenWindows()
@@ -52,12 +45,15 @@ function TetrisWindowManager:nextWindow()
     self.controllerWindowIndex = self.controllerWindowIndex + 1
     if self.controllerWindowIndex > #self.openWindows then
         self.controllerWindowIndex = 1
-        local inventoryPage = self:getInventoryPage()
+        local inventoryPage = self.inventoryPage
         setJoypadFocus(self.playerNum, inventoryPage)
         inventoryPage:bringToTop()
     else
         setJoypadFocus(self.playerNum, self.openWindows[self.controllerWindowIndex])
-        self.openWindows[self.controllerWindowIndex]:bringToTop()
+        local window = self.openWindows[self.controllerWindowIndex]
+        if window then
+            window:bringToTop()
+        end
     end
 end
 
@@ -72,12 +68,15 @@ function TetrisWindowManager:previousWindow()
 
     local newSelection = self.openWindows[self.controllerWindowIndex]
     if newSelection == current then
-        local inventoryPage = self:getInventoryPage()
+        local inventoryPage = self.inventoryPage
         setJoypadFocus(self.playerNum, inventoryPage)
         inventoryPage:bringToTop()
     else
         setJoypadFocus(self.playerNum, self.openWindows[self.controllerWindowIndex])
-        self.openWindows[self.controllerWindowIndex]:bringToTop()
+        local window = self.openWindows[self.controllerWindowIndex]
+        if window then
+            window:bringToTop()
+        end
     end
 end
 

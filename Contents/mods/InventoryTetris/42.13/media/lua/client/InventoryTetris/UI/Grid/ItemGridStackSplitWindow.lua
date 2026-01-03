@@ -3,17 +3,30 @@ local ItemContainerGrid = require("InventoryTetris/Model/ItemContainerGrid")
 local OPT = require("InventoryTetris/Settings")
 
 ---@class ItemGridStackSplitWindow : ISCollapsableWindow
+---@field public grid ItemGrid
+---@field public vanillaStack VanillaStack
+---@field public targetX integer
+---@field public targetY integer
+---@field public isRotated boolean
+---@field public playerNum integer
 local ItemGridStackSplitWindow = ISCollapsableWindow:derive("ItemGridStackSplitWindow");
+ItemGridStackSplitWindow.__index = ItemGridStackSplitWindow
 
+---@param grid ItemGrid
+---@param vanillaStack VanillaStack
+---@param x integer
+---@param y integer
+---@param r boolean
+---@param playerNum integer
 function ItemGridStackSplitWindow:new(grid, vanillaStack, x, y, r, playerNum)
     local scale = OPT.SCALE
     if scale < 1 then
         scale = 1
     end
 
+    ---@type ItemGridStackSplitWindow
     local o = ISCollapsableWindow:new(0, 0, 275 * scale, 75 + 50 * scale)
     setmetatable(o, self)
-    self.__index = self
 
     o.grid = grid
     o.vanillaStack = vanillaStack
@@ -81,10 +94,16 @@ function ItemGridStackSplitWindow:onOK()
     local targetY = self.targetY
     local isRotated = self.isRotated
 
-    local dragInventory = vanillaStack.items[1]:getContainer()
+    local frontItem = vanillaStack.items[1]
+    if not frontItem then
+        self:close()
+        return
+    end
+
+    local dragInventory = frontItem:getContainer()
     local isSameInventory = self.grid.inventory == dragInventory
     if isSameInventory then
-        local gridStack = self.grid:findStackByItem(vanillaStack.items[1])
+        local gridStack = self.grid:findStackByItem(frontItem)
         if gridStack and self.grid:willStackOverlapSelf(gridStack, targetX, targetY, isRotated) then
             self:close()
             return
@@ -99,7 +118,7 @@ function ItemGridStackSplitWindow:onOK()
         local containerGrid = ItemContainerGrid.GetOrCreate(self.grid.inventory, self.playerNum)
         for i=2, count+1 do
             local item = vanillaStack.items[i]
-            if self.grid:canAddItemAt(item, targetX, targetY, isRotated) and containerGrid:removeItem(item) then
+            if item and self.grid:canAddItemAt(item, targetX, targetY, isRotated) and containerGrid:removeItem(item) then
                 self.grid:insertItem(item, targetX, targetY, isRotated)
             else
                 break
@@ -107,9 +126,12 @@ function ItemGridStackSplitWindow:onOK()
         end
     else
         for i=2, count+1 do
-            local action = ISInventoryTransferAction:new(playerObj, vanillaStack.items[i], dragInventory, self.grid.inventory)
-            action:setTetrisTarget(targetX, targetY, self.grid.gridIndex, isRotated, self.grid.secondaryTarget)
-            ISTimedActionQueue.add(action)
+            local item = vanillaStack.items[i]
+            if item then
+                local action = ISInventoryTransferAction:new(playerObj, item, dragInventory, self.grid.inventory)
+                action:setTetrisTarget(targetX, targetY, self.grid.gridIndex, isRotated, self.grid.secondaryTarget)
+                ISTimedActionQueue.add(action)
+            end
         end
     end
 

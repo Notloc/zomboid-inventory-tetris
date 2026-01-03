@@ -60,6 +60,10 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
         local containerGridUi = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
         local containerGrid = containerGridUi.containerGrid
         local gridUi = containerGridUi.gridUis[containerGridUi.inventory][1]
+        if not gridUi then
+            error("Grid UI not found")
+        end
+
         local grid = gridUi.grid
 
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
@@ -85,6 +89,10 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
         local containerGridUi = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
         local containerGrid = containerGridUi.containerGrid
         local gridUi = containerGridUi.gridUis[containerGridUi.inventory][1]
+        if not gridUi then
+            error("Grid UI not found")
+        end
+
         local grid = gridUi.grid
 
         local item = TestHelper.createItem_1x1(containerGrid.inventory)
@@ -113,6 +121,10 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
         local containerGridUi = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
         local containerGrid = containerGridUi.containerGrid
         local gridUi = containerGridUi.gridUis[containerGridUi.inventory][1]
+        if not gridUi then
+            error("Grid UI not found")
+        end
+
         local grid = gridUi.grid
 
         local item = TestHelper.createItem_1x1_stackable(containerGrid.inventory)
@@ -146,11 +158,18 @@ TestFramework.registerTestModule("Inventory Tetris", "Item Grid UI Tests", funct
         local containerGridUi1 = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
         local containerGrid1 = containerGridUi1.containerGrid
         local gridUi1 = containerGridUi1.gridUis[containerGridUi1.inventory][1]
+        if not gridUi1 then
+            error("Grid UI not found")
+        end
+
         local grid1 = gridUi1.grid
 
         local containerGridUi2 = createContainerGridUi(TestHelper.createContainerGrid_5x5().inventory)
         local containerGrid2 = containerGridUi2.containerGrid
         local gridUi2 = containerGridUi2.gridUis[containerGridUi2.inventory][1]
+        if not gridUi2 then
+            error("Grid UI not found")
+        end
 
         local item = TestHelper.createItem_1x1(containerGrid1.inventory)
         TestUtils.assert(containerGrid1:insertItem(item, 0, 0, firstGrid, false))

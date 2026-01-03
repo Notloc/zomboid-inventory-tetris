@@ -32,7 +32,7 @@ ItemGrid.__index = ItemGrid
 local PROX_INV_TYPE = "proxInv"
 
 ---@param containerGrid ItemContainerGrid
----@param gridIndex number
+---@param gridIndex integer
 ---@param inventory ItemContainer
 ---@param containerDefinition ContainerGridDefinition|TetrisPocketDefinition
 ---@param gridDefinition GridDefinition
@@ -75,7 +75,7 @@ end
 
 ---@param x number
 ---@param y number
----@param playerNum number
+---@param playerNum integer
 ---@return ItemStack?
 function ItemGrid:getStack(x, y, playerNum)
     local stack = nil
@@ -379,6 +379,40 @@ function ItemGrid:canAddItem(item, isRotated)
     end
 
     local w, h = TetrisItemData.getItemSize(item, isRotated)
+    for x=0,self.width-w do
+        for y=0,self.height-h do
+            if self:_isAreaFree(x, y, w, h) then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+---@param item InventoryItem
+---@return boolean
+function ItemGrid:canAddItemEitherOrientation(item)
+    if self.isFloor then
+        return true;
+    end
+
+    for _, stack in ipairs(self.persistentData.stacks) do
+        if ItemStack.canAddItem(stack, item) then
+            return true
+        end
+    end
+
+    local w, h = TetrisItemData.getItemSize(item, false)
+    for x=0,self.width-w do
+        for y=0,self.height-h do
+            if self:_isAreaFree(x, y, w, h) then
+                return true
+            end
+        end
+    end
+
+    w, h = TetrisItemData.getItemSize(item, true)
     for x=0,self.width-w do
         for y=0,self.height-h do
             if self:_isAreaFree(x, y, w, h) then

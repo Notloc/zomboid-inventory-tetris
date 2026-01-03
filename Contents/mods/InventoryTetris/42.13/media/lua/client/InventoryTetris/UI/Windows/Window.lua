@@ -14,12 +14,7 @@ require("defines")
 ---@field resizeimage Texture
 ---@field invbasic Texture
 ---@field closebutton Texture
----@field collapsebutton Texture
----@field pinbutton Texture
 ---@field highlightColors table
----@field pin boolean
----@field isCollapsed boolean
----@field collapseCounter integer
 ---@field title string
 ---@field titleFont UIFont
 ---@field titleFontHgt integer
@@ -46,14 +41,9 @@ function Window:new(x, y, width, height, title, playerNum)
     o.resizeimage = getTexture("media/ui/Panel_StatusBar_Resize.png");
     o.invbasic = getTexture("media/ui/Icon_InventoryBasic.png");
     o.closebutton = getTexture("media/ui/Dialog_Titlebar_CloseIcon.png");
-    o.collapsebutton = getTexture("media/ui/Panel_Icon_Collapse.png");
-    o.pinbutton = getTexture("media/ui/Panel_Icon_Pin.png");
 
     o.highlightColors = {r=0.98,g=0.56,b=0.11};
 
-    o.pin = true;
-    o.isCollapsed = false;
-    o.collapseCounter = 0;
 	o.title = title
 	o.titleFont = UIFont.Small
 	o.titleFontHgt = getTextManager():getFontHeight(o.titleFont)
@@ -98,25 +88,12 @@ function Window:createChildren()
     self.closeButton.backgroundColorMouseOver.a = 0;
     self.closeButton:setImage(self.closebutton);
     self:addChild(self.closeButton);
-
-    self.pinButton = ISButton:new(self.width - closeBtnSize - 3, 0, closeBtnSize, closeBtnSize, "", self, Window.setPinned);
-    self.pinButton.anchorRight = true;
-    self.pinButton.anchorLeft = false;
-
-    self.pinButton:initialise();
-    self.pinButton.borderColor.a = 0.0;
-    self.pinButton.backgroundColor.a = 0;
-    self.pinButton.backgroundColorMouseOver.a = 0;
 end
 
 function Window:prerender()
     local titleBarHeight = self:titleBarHeight()
 
     local height = self:getHeight();
-    if self.isCollapsed then
-        height = titleBarHeight;
-    end
-
 	self:drawRect(0, 0, self:getWidth(), height, self.backgroundColor.a, self.backgroundColor.r, self.backgroundColor.g, self.backgroundColor.b);
     self:drawTextureScaled(self.titlebarbkg, 2, 1, self:getWidth() - 4, titleBarHeight - 2, 1, 1, 1, 1);
     self:drawRectBorder(0, 0, self:getWidth(), titleBarHeight, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
@@ -140,12 +117,7 @@ function Window:close()
 end
 
 function Window:render()
-	local titleBarHeight = self:titleBarHeight()
-    local height = self:getHeight();
-    if self.isCollapsed then
-        height = titleBarHeight
-    end
-
+	local height = self:getHeight();
     self:drawRectBorder(0, 0, self:getWidth(), height, self.borderColor.a, self.borderColor.r, self.borderColor.g, self.borderColor.b);
 end
 

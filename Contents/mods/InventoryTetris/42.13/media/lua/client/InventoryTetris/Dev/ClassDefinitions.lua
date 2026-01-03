@@ -8,6 +8,12 @@
 ---@field width integer
 ---@field height integer
 
+---@class RGBA
+---@field r number
+---@field g number
+---@field b number
+---@field a number
+
 ---@class ISMouseDrag
 ---@field dragging any
 
@@ -29,7 +35,10 @@
 
 ---@alias VanillaStack umbrella.ContextMenuItemStack 
 
-
+-- From EquipmentUI
+---@class (partial) ISUIElement
+---@field public drawTextureCenteredAndSquare fun(self: ISUIElement, texture: Texture, x: number, y: number, targetSizePixels: number, alpha: number, r: number, g: number, b: number)
+---@field public isMouseOverAnyUI fun(): boolean
 
 -- Declare some built-in functions that do exist, but normally don't in lua 5.1
 ---@class string

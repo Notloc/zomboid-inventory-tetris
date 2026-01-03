@@ -17,6 +17,7 @@ Events.OnGameBoot.Add(function()
             local itemCount = container:getItems():size() - 1
             for i = 0, itemCount do
                 local item = items:get(i)
+                ---@cast item Moveable
                 if instanceof(item, "Moveable") and item:getWorldSprite() then
                     if (item:getWorldSprite() == _spriteName) then
                         return item;

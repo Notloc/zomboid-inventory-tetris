@@ -64,8 +64,8 @@ function DragItemRenderer:render()
 
     local shadowOffset = math.floor(OPT.SCALE + 0.5)
 
-    local instructions = {{stack, item, xPos, yPos, itemW, itemH, 1, DragAndDrop.isDraggedItemRotated(), false, true}}
-    ItemGridUI._bulkRenderGridStacks(self, instructions, 1, playerObj)
+    ItemGridUI._renderSingleGridStack(self, playerObj, stack, item, xPos, yPos, itemW, itemH, 1, DragAndDrop.isDraggedItemRotated())
+
     if stacks and #stacks > 1 then
         local text = "+"..tostring(#stacks - 1)
         self:drawText(text, xPos + itemW * OPT.CELL_SIZE + shadowOffset, yPos + shadowOffset, 0, 0, 0, 1, UIFont.Small)

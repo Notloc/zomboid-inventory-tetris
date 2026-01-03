@@ -1,10 +1,12 @@
 ---@class Timer
 ---@field public prefix string
+---@field public decimals integer
 ---@field public startTime_ns number
 ---@field private lastStep_ns number|nil
+---@field private smoothedTimeTable table<string, number>
 local Timer = {}
 
----@param prefix string
+---@param prefix string?
 ---@return Timer
 function Timer:new(prefix)
     local o = {}
@@ -16,7 +18,11 @@ function Timer:new(prefix)
     end
 
     o.prefix = prefix
+    o.silent = false
+    o.decimals = 2
     o.startTime_ns = GameTime.getServerTime()
+
+    o.smoothedTimeTable = {}
 
     ---@cast o Timer
     return o
@@ -28,6 +34,7 @@ function Timer:start()
 end
 
 ---@param message string|nil
+---@return number
 function Timer:stop(message)
     local compareTime_ns = self.lastStep_ns and self.lastStep_ns or self.startTime_ns
     local now_ns = GameTime.getServerTime()
@@ -35,9 +42,17 @@ function Timer:stop(message)
 
     local elapsed_ms = elapsed_ns / 1000000
     
-    -- Format to 2 decimal
-    local elapsed = string.format("%.2f", elapsed_ms)
+    -- If a key is provided, smooth the time over multiple calls
+    if message then
+        local prev = self.smoothedTimeTable[message] or elapsed_ms
+        local smoothFactor = 0.05
+        local smoothed = (prev * (1 - smoothFactor)) + (elapsed_ms * smoothFactor)
+        self.smoothedTimeTable[message] = smoothed
+        elapsed_ms = smoothed
+    end
 
+    local decimalsF = "%." .. tostring(self.decimals) .. "f"
+    local elapsed = string.format(decimalsF, elapsed_ms)
     local prefix = self.prefix and self.prefix or ""
     if message then
         print(prefix .. message .. ": " .. tostring(elapsed) .. "ms")
@@ -45,7 +60,10 @@ function Timer:stop(message)
         print(prefix .. ": " .. tostring(elapsed) .. "ms")
     end
 
+    -- Grab time again to avoid counting print time in next step
     self.lastStep_ns = GameTime.getServerTime()
+
+    return elapsed_ms
 end
 
 return Timer

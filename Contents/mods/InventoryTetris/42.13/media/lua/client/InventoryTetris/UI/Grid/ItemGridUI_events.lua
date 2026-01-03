@@ -60,8 +60,12 @@ local function isMultiSelectDown()
     return action == "multi"
 end
 
+---@param x number
+---@param y number
+---@param targetStack ItemStack?
+---@return boolean
 function ItemGridUI:onMouseDown(x, y, targetStack)
-	if self.playerNum ~= 0 then return end
+	if self.playerNum ~= 0 then return false end
 	getSpecificPlayer(self.playerNum):nullifyAiming();
 
     if isMultiSelectDown() then
@@ -71,6 +75,9 @@ function ItemGridUI:onMouseDown(x, y, targetStack)
     end
 
     targetStack = targetStack or self:findGridStackUnderMouse(x, y)
+    if not targetStack then
+        return true
+    end
 
     local selectedStacks = self:isStackSelected(targetStack) and self:getSelectedStacks(targetStack) or {targetStack}
     if selectedStacks then
@@ -81,8 +88,12 @@ function ItemGridUI:onMouseDown(x, y, targetStack)
 	return true;
 end
 
+---@param x number
+---@param y number
+---@param gridStack ItemStack? TODO: Remove this and refactor to a proper service method
+---@return boolean
 function ItemGridUI:onMouseUp(x, y, gridStack)
-	if self.playerNum ~= 0 then return end
+	if self.playerNum ~= 0 then return false end
 
     if self.isMultiDragging then
         self:endMultiDrag(x, y)
@@ -105,6 +116,8 @@ function ItemGridUI:onMouseUp(x, y, gridStack)
 	return true;
 end
 
+---@param x number
+---@param y number
 function ItemGridUI:onMouseUpOutside(x, y)
     if self.playerNum ~= 0 then return end
 
@@ -147,6 +160,9 @@ function ItemGridUI:cancelDragDropItem()
     end
 end
 
+---@param x number
+---@param y number
+---@param gridStack ItemStack? TODO: Remove this and refactor to a proper service method
 function ItemGridUI:onRightMouseUp(x, y, gridStack)
     if self.playerNum ~= 0 then return end
 
@@ -167,12 +183,16 @@ function ItemGridUI:onRightMouseUp(x, y, gridStack)
     return true;
 end
 
+---@param x number
+---@param y number
 function ItemGridUI:onMouseDoubleClick(x, y)
     if self.playerNum ~= 0 then return end
     if isMultiSelectDown() then return end
     self:handleDoubleClick(x, y)
 end
 
+---@param dx number
+---@param dy number
 function ItemGridUI:onMouseMove(dx, dy)
     if self.playerNum ~= 0 then return end
     DragAndDrop.startDrag(self)
@@ -181,22 +201,28 @@ function ItemGridUI:onMouseMove(dx, dy)
     end
 end
 
+---@param dx number
+---@param dy number
 function ItemGridUI:onMouseMoveOutside(dx, dy)
     if self.playerNum ~= 0 then return end
     DragAndDrop.startDrag(self)
 end
 
+---@param x number
+---@param y number
+---@param item InventoryItem
+---@param isRotated boolean?
 function ItemGridUI.covertItemAndLocalMouseToGridPosition(x, y, item, isRotated)
-    if item then
-        local w, h = TetrisItemData.getItemSize(item, isRotated)
-        x = x - OPT.CELL_SIZE * w / 2 + OPT.CELL_SIZE / 2
-        y = y - OPT.CELL_SIZE * h / 2 + OPT.CELL_SIZE / 2
-    end
-
+    local w, h = TetrisItemData.getItemSize(item, isRotated)
+    x = x - OPT.CELL_SIZE * w / 2 + OPT.CELL_SIZE / 2
+    y = y - OPT.CELL_SIZE * h / 2 + OPT.CELL_SIZE / 2
     return ItemGridUI.mousePositionToGridPosition(x, y)
 end
 
 -- Rounds a mouse position to the nearest grid position, for the top left corner of the item
+---@param x number
+---@param y number
+---@return integer, integer
 function ItemGridUI.mousePositionToGridPosition(x, y)
     local effectiveCellSize = OPT.CELL_SIZE - 1
     local gridX = math.floor(x / effectiveCellSize)
@@ -204,12 +230,17 @@ function ItemGridUI.mousePositionToGridPosition(x, y)
     return gridX, gridY
 end
 
+---@param gridX integer
+---@param gridY integer
+---@return number, number
 function ItemGridUI:gridPositionToScreenPosition(gridX, gridY)
     local effectiveCellSize = OPT.CELL_SIZE - 1
     local lX, lY = gridX * effectiveCellSize, gridY * effectiveCellSize
     return lX + self:getAbsoluteX(), lY + self:getAbsoluteY()
 end
 
+---@param mouseX number
+---@param mouseY number
 function ItemGridUI:handleDragAndDrop(mouseX, mouseY)
     local vanillaStacks = DragAndDrop.getDraggedStacks()
     if not vanillaStacks then return end
@@ -222,10 +253,13 @@ function ItemGridUI:handleDragAndDrop(mouseX, mouseY)
     end
 end
 
+---@param vanillaStacks VanillaStack[]
+---@param mouseX number
+---@param mouseY number
 function ItemGridUI:handleDragAndDrop_multi(vanillaStacks, mouseX, mouseY)
     local playerObj = getSpecificPlayer(self.playerNum)
 
-    local hoveredX, hoveredY = ItemGridUI.covertItemAndLocalMouseToGridPosition(mouseX, mouseY)
+    local hoveredX, hoveredY = ItemGridUI.mousePositionToGridPosition(mouseX, mouseY)
     local hoveredStack = self.grid:getStack(hoveredX, hoveredY, self.playerNum)
     local hoveredItem = hoveredStack and ItemStack.getFrontItem(hoveredStack, self.grid.inventory)
 
@@ -246,7 +280,7 @@ function ItemGridUI:handleDragAndDrop_multi(vanillaStacks, mouseX, mouseY)
     -- Handle dropping on grid space
     for _, vanillaStack in ipairs(vanillaStacks) do
         local testItem = vanillaStack.items[1]
-        if self.grid:canAddItem(testItem) then
+        if testItem and self.grid:canAddItemEitherOrientation(testItem) then
             local isSameInv = testItem:getContainer() == self.grid.inventory
             if isSameInv then
                 -- Move to different grid in same container
@@ -272,30 +306,52 @@ function ItemGridUI:handleDragAndDrop_multi(vanillaStacks, mouseX, mouseY)
     end
 end
 
+---@param vanillaStack VanillaStack
+---@param mouseX number
+---@param mouseY number
 function ItemGridUI:handleDragAndDrop_single(vanillaStack, mouseX, mouseY)
     local dragItem = vanillaStack.items[1]
     if dragItem then
         local gridX, gridY = ItemGridUI.covertItemAndLocalMouseToGridPosition(mouseX, mouseY, dragItem, DragAndDrop.isDraggedItemRotated())
-        local hoveredX, hoveredY = ItemGridUI.covertItemAndLocalMouseToGridPosition(mouseX, mouseY)
+        local hoveredX, hoveredY = ItemGridUI.mousePositionToGridPosition(mouseX, mouseY)
         local hoveredStack = self.grid:getStack(hoveredX, hoveredY, self.playerNum)
         self:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hoveredStack)
     end
 end
 
+---@param stack ItemStack?
+---@return ItemContainer?
+function ItemGridUI:getValidContainerFromStack(stack)
+    if not stack or stack.count > 1 then
+        return nil
+    end
+    local item = ItemStack.getFrontItem(stack, self.grid.inventory)
+    if not item or not item:IsInventoryContainer() then
+        return nil
+    end
+    ---@cast item InventoryContainer
+    return item:getInventory()
+end
+
 ---@param vanillaStack VanillaStack
----@param gridX number
----@param gridY number
----@param hoveredStack ItemStack
+---@param gridX integer
+---@param gridY integer
+---@param hoveredStack ItemStack?
 function ItemGridUI:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hoveredStack)
     local dragItem = vanillaStack.items[1]
+    if not dragItem then return end
+
     local dragInventory = dragItem:getContainer()
-    if not dragInventory then return end -- Not sure how this would happen, but it's been reported once or twice
+    if not dragInventory then return end
 
     local dragContainerGrid = ItemContainerGrid.GetOrCreate(dragInventory, self.playerNum)
     local gridStack, otherGrid = dragContainerGrid:findGridStackByVanillaStack(vanillaStack)
+    if not gridStack or not otherGrid then return end -- Did the item get removed while dragging?
 
+    local grid = self.grid
     local isSameInventory = self.grid.inventory == dragInventory
-    local isSameGrid = self.grid == otherGrid
+    local isSameGrid = grid == otherGrid
+
 
     if isSameInventory or self:canPutIn(dragItem) then     
         if isStackSplitDown() then
@@ -303,7 +359,7 @@ function ItemGridUI:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hovere
             return
         end
 
-        luautils.walkToContainer(self.grid.inventory, self.playerNum)
+        luautils.walkToContainer(grid.inventory, self.playerNum)
 
         local isSameStack = hoveredStack and gridStack == hoveredStack
 
@@ -319,8 +375,8 @@ function ItemGridUI:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hovere
         end
 
         if hoveredStack and not isSameStack then
-            local targetStack = ItemStack.convertStackToVanillaStackList(hoveredStack, self.grid.inventory, self.inventoryPane)[1]
-            TetrisEvents.OnStackDroppedOnStack:trigger(vanillaStack, dragInventory, targetStack, self.grid.inventory, self.playerNum)
+            local targetStack = ItemStack.convertStackToVanillaStackList(hoveredStack, grid.inventory, self.inventoryPane)[1]
+            TetrisEvents.OnStackDroppedOnStack:trigger(vanillaStack, dragInventory, targetStack, grid.inventory, self.playerNum)
             return
         end
 
@@ -330,20 +386,22 @@ function ItemGridUI:handleDragAndDrop_generic(vanillaStack, gridX, gridY, hovere
         end
 
         if isSameGrid then
-            self.grid:moveStack(gridStack, gridX, gridY, self:_isDragItemRotated())
+            grid:moveStack(gridStack, gridX, gridY, self:_isDragItemRotated())
         else
             self:handleSameContainerDifferentGrid(vanillaStack, gridX, gridY, otherGrid)
         end
     end
 end
 
+---@param vanillaStack VanillaStack
+---@param gridX integer
+---@param gridY integer
+---@param otherGrid ItemGrid
 function ItemGridUI:handleSameContainerDifferentGrid(vanillaStack, gridX, gridY, otherGrid)
     for i=2, #vanillaStack.items do
         local item = vanillaStack.items[i]
         if self.grid:insertItem(item, gridX, gridY, self:_isDragItemRotated()) then
-            if otherGrid then
-                otherGrid:removeItem(item)
-            end
+            otherGrid:removeItem(item)
             if item:isEquipped() then
                 ISInventoryPaneContextMenu.unequipItem(item, self.playerNum)
             end
@@ -351,11 +409,14 @@ function ItemGridUI:handleSameContainerDifferentGrid(vanillaStack, gridX, gridY,
     end
 end
 
+---@return boolean
 function ItemGridUI:_isDragItemRotated()
     local isJoyPad = JoypadState.players[self.playerNum+1] ~= nil
     return isJoyPad and ControllerDragAndDrop.isDraggedItemRotated(self.playerNum) or DragAndDrop.isDraggedItemRotated()
 end
 
+---@param item InventoryItem
+---@return boolean
 function ItemGridUI:canPutIn(item)
     local ogInventory = self.inventoryPane.inventory
     self.inventoryPane.inventory = self.grid.inventory -- In case we're a popup displaying a different inventory
@@ -364,6 +425,8 @@ function ItemGridUI:canPutIn(item)
     return canPutIn --TODO: item type restrictions and anti-TARDIS stacking
 end
 
+---@param vanillaStack VanillaStack
+---@param container ItemContainer
 function ItemGridUI:handleDropOnContainer(vanillaStack, container)
     if isClient() then -- Prevent MP duping
         if container:getContainingItem() then
@@ -375,7 +438,7 @@ function ItemGridUI:handleDropOnContainer(vanillaStack, container)
 
     local frontItem = vanillaStack.items[1]
     local containerDef = TetrisContainerData.getContainerDefinition(container)
-    if not TetrisValidation.validateInsert(container, containerDef, frontItem) then
+    if not frontItem or not TetrisValidation.validateInsert(container, containerDef, frontItem) then
         return
     end
 
@@ -391,11 +454,21 @@ function ItemGridUI:handleDropOnContainer(vanillaStack, container)
     end
 end
 
+--- We dropped a stack onto empty grid space in a different container
+---@param vanillaStack VanillaStack
+---@param gridX integer
+---@param gridY integer
 function ItemGridUI:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
     local frontItem = vanillaStack.items[1]
-    if frontItem:IsInventoryContainer() and frontItem:getInventory() == self.grid.inventory then
+    if not frontItem then return end
+    
+    ---@cast frontItem InventoryContainer
+    -- Prevent placing a container into itself
+    local isTargetSelf = frontItem:IsInventoryContainer() and frontItem:getInventory() == self.grid.inventory
+    if isTargetSelf then
         return
     end
+    ---@cast frontItem InventoryItem
 
     if not self.grid:doesItemFit(frontItem, gridX, gridY, self:_isDragItemRotated()) then
         return
@@ -417,12 +490,19 @@ function ItemGridUI:handleDragAndDropTransfer(vanillaStack, gridX, gridY)
     end
 end
 
+---@param vanillaStack VanillaStack
+---@param targetStack ItemStack
 function ItemGridUI:handleDropOnStack(vanillaStack, targetStack)
-    -- Prevent placing a container inside itself
     local frontItem = vanillaStack.items[1]
-    if frontItem:IsInventoryContainer() and frontItem:getInventory() == self.grid.inventory then
+    if not frontItem then return end
+
+    ---@cast frontItem InventoryContainer
+    -- Prevent placing a container into itself
+    local isTargetSelf = frontItem:IsInventoryContainer() and frontItem:getInventory() == self.grid.inventory
+    if isTargetSelf then
         return
     end
+    ---@cast frontItem InventoryItem
 
     local isSameContainer = frontItem:getContainer() == self.grid.inventory
     if isSameContainer then
@@ -432,12 +512,13 @@ function ItemGridUI:handleDropOnStack(vanillaStack, targetStack)
     end
 end
 
+---@param vanillaStack VanillaStack
+---@param targetStack ItemStack
 function ItemGridUI:handleDropOnStackSameContainer(vanillaStack, targetStack)
     local frontItem = vanillaStack.items[1]
     local fromStack, fromGrid = self.containerGrid:findStackByItem(frontItem)
 
     if not fromStack or not fromGrid then
-        self:sameContainerDifferentGrid(vanillaStack, targetStack.x, targetStack.y, nil)
         return
     end
 
@@ -451,6 +532,8 @@ function ItemGridUI:handleDropOnStackSameContainer(vanillaStack, targetStack)
     end
 end
 
+---@param vanillaStack VanillaStack
+---@param targetStack ItemStack
 function ItemGridUI:handleDropOnStackDifferentContainer(vanillaStack, targetStack)
     for i=2, #vanillaStack.items do
         local item = vanillaStack.items[i]
@@ -464,14 +547,19 @@ function ItemGridUI:handleDropOnStackDifferentContainer(vanillaStack, targetStac
     end
 end
 
+---@param vanillaStack VanillaStack
+---@param targetX integer
+---@param targetY integer
 function ItemGridUI:openSplitStack(vanillaStack, targetX, targetY)
-    if not vanillaStack or vanillaStack.count-1 < 2 then return end
-    local dragInventory = vanillaStack.items[1]:getContainer()
+    local frontItem = vanillaStack.items[1]
+    if not frontItem then return end
+
+    local dragInventory = frontItem:getContainer()
     if not dragInventory then return end
 
     local isSameInventory = self.grid.inventory == dragInventory
     if isSameInventory then
-        local gridStack = self.grid:findStackByItem(vanillaStack.items[1])
+        local gridStack = self.grid:findStackByItem(frontItem)
         if gridStack and self.grid:willStackOverlapSelf(gridStack, targetX, targetY, self:_isDragItemRotated()) then
             return
         end
@@ -489,7 +577,9 @@ function ItemGridUI:openSplitStack(vanillaStack, targetX, targetY)
 end
 
 
-
+---@param x number
+---@param y number
+---@param gridStack ItemStack? TODO: Remove this and refactor to a proper service method
 function ItemGridUI:handleClick(x, y, gridStack)
     DragAndDrop.endDrag()
 
@@ -511,6 +601,8 @@ function ItemGridUI:handleClick(x, y, gridStack)
     end
 end
 
+---@param gridStack ItemStack
+---@param action string
 function ItemGridUI:doAction(gridStack, action)
     if action == "interact" then
         self:interact(gridStack)
@@ -528,19 +620,26 @@ function ItemGridUI:doAction(gridStack, action)
     end
 end
 
+---@param gridStack ItemStack
 function ItemGridUI:drop(gridStack)
     local items = ItemStack.getAllItems(gridStack, self.grid.inventory)
     ISInventoryPaneContextMenu.onDropItems(items, self.playerNum)
 end
 
+---@param gridStack ItemStack
 function ItemGridUI:quickMoveItems(gridStack)
+    local playerObj = getSpecificPlayer(self.playerNum)
     local invPage = nil;
-    if not self.grid.inventory:isInCharacterInventory(getSpecificPlayer(self.playerNum)) then
+    if not self.grid.inventory:isInCharacterInventory(playerObj) then
         invPage = getPlayerInventory(self.playerNum)
+        if not invPage then return end
+
         local targetContainers = ItemGridUI.getOrderedBackpacks(invPage)
         self:quickMoveItemToContainer(gridStack, targetContainers)
     else
         invPage = getPlayerLoot(self.playerNum)
+        if not invPage then return end
+
         local targetContainers = { invPage.inventoryPane.inventory }
         self:quickMoveItemToContainer(gridStack, targetContainers)
     end
@@ -550,6 +649,8 @@ function ItemGridUI:quickMoveItems(gridStack)
     invPage.collapseCounter = 0;
 end
 
+---@param gridStack ItemStack
+---@param targetContainers ItemContainer[]
 function ItemGridUI:quickMoveItemToContainer(gridStack, targetContainers)
     local playerObj = getSpecificPlayer(self.playerNum)
     local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
@@ -574,6 +675,7 @@ function ItemGridUI:quickMoveItemToContainer(gridStack, targetContainers)
     end
 end
 
+---@param item InventoryItem
 function ItemGridUI:quickEquipItem(item)
     if item:IsClothing() then
         self:wearClothes(item)
@@ -582,10 +684,12 @@ function ItemGridUI:quickEquipItem(item)
     self:equipItem(item)
 end
 
+---@param item InventoryItem
 function ItemGridUI:wearClothes(item)
     ISInventoryPaneContextMenu.wearItem(item, self.playerNum)
 end
 
+---@param item InventoryItem
 function ItemGridUI:equipItem(item)
     if not ItemUtil.canEquipItem(item) then return end
 
@@ -609,6 +713,9 @@ function ItemGridUI:equipItem(item)
     end
 end
 
+---@param x number
+---@param y number
+---@param gridStack ItemStack? TODO: Remove this and refactor to a proper service method
 function ItemGridUI:handleDoubleClick(x, y, gridStack)
     DragAndDrop.endDrag()
 
@@ -621,6 +728,7 @@ function ItemGridUI:handleDoubleClick(x, y, gridStack)
 end
 
 -- Mirrors the vanilla behavior of double clicking an item in the inventory with a few exceptions
+---@param gridStack ItemStack
 function ItemGridUI:interact(gridStack)
     local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
     if not item then return end
@@ -657,6 +765,7 @@ function ItemGridUI:interact(gridStack)
     end
 end
 
+---@param gridStack ItemStack
 function ItemGridUI:contextualAction(gridStack)
     local item = ItemStack.getFrontItem(gridStack, self.grid.inventory)
     if not item then return end
@@ -682,6 +791,8 @@ function ItemGridUI:contextualAction(gridStack)
     end
 end
 
+---@param playerObj IsoPlayer
+---@param item InventoryItem
 function ItemGridUI:unequipIfNeeded(playerObj, item)
     -- Formality for clothes, we skip hands because items in your hands are already in your hands... Why would it take time to drop them?
     if item:isEquipped() and not playerObj:isPrimaryHandItem(item) and not playerObj:isSecondaryHandItem(item) then
@@ -689,7 +800,7 @@ function ItemGridUI:unequipIfNeeded(playerObj, item)
     end
 end
 
-
+---@param key integer
 local function rotateDraggedItem(key)
     if key == getCore():getKey("tetris_rotate_item") then
         if DragAndDrop.isDragging() then
@@ -702,6 +813,13 @@ end
 
 Events.OnKeyStartPressed.Add(rotateDraggedItem)
 
+---@param uiContext ISUIElement
+---@param x number
+---@param y number
+---@param item InventoryItem
+---@param inventoryPane ISInventoryPane
+---@param playerNum integer
+---@return ISContextMenu?
 function ItemGridUI.openItemContextMenu(uiContext, x, y, item, inventoryPane, playerNum)
     local container = item:getContainer()
     local isInInv = container and container:isInCharacterInventory(getSpecificPlayer(playerNum))
@@ -713,6 +831,14 @@ function ItemGridUI.openItemContextMenu(uiContext, x, y, item, inventoryPane, pl
     return menu
 end
 
+---@param uiContext ISUIElement
+---@param x number
+---@param y number
+---@param gridStack ItemStack
+---@param inventory ItemContainer
+---@param inventoryPane ISInventoryPane
+---@param playerNum integer
+---@return ISContextMenu?
 function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, inventoryPane, playerNum)
     local item = ItemStack.getFrontItem(gridStack, inventory)
     if not item then return end
@@ -728,6 +854,14 @@ function ItemGridUI.openStackContextMenu(uiContext, x, y, gridStack, inventory, 
     return menu
 end
 
+---@param uiContext ISUIElement
+---@param x number
+---@param y number
+---@param vanillaStacks VanillaStack[]|VanillaStack
+---@param inventory ItemContainer
+---@param inventoryPane ISInventoryPane
+---@param playerNum integer
+---@return ISContextMenu?
 function ItemGridUI.openContextMenuForVanillaStacks(uiContext, x, y, vanillaStacks, inventory, inventoryPane, playerNum)
     if not vanillaStacks then return end
     local item;
@@ -736,6 +870,7 @@ function ItemGridUI.openContextMenuForVanillaStacks(uiContext, x, y, vanillaStac
         item = vanillaStacks[1].items[1]
     elseif vanillaStacks.items then
         item = vanillaStacks.items[1]
+        vanillaStacks = { vanillaStacks } -- TODO: can we simplify the passed in param?
     end
     if not item then return end
 
@@ -749,6 +884,7 @@ function ItemGridUI.openContextMenuForVanillaStacks(uiContext, x, y, vanillaStac
     return menu
 end
 
+---@return InventoryItem?
 function ItemGridUI:getControllerSelectedItem()
     local stack = self.grid:getStack(self.selectedX, self.selectedY, self.playerNum)
     if stack then
@@ -757,6 +893,10 @@ function ItemGridUI:getControllerSelectedItem()
     return nil
 end
 
+---@param dx integer
+---@param dy integer
+---@param joypadData JoypadData
+---@return boolean moved
 function ItemGridUI:controllerNodeOnJoypadDir(dx, dy, joypadData)
     local xSelected = self.selectedX
     local ySelected = self.selectedY
@@ -784,8 +924,6 @@ function ItemGridUI:controllerNodeOnJoypadDir(dx, dy, joypadData)
         ySelected = originY + h
     end
 
-    self:accelerateDpadMovement(dx, dy, joypadData)
-
     if xSelected < 0 then
         return false
     end
@@ -809,34 +947,8 @@ function ItemGridUI:controllerNodeOnJoypadDir(dx, dy, joypadData)
     return true
 end
 
--- Make the Dpad repeat movement faster
--- DISABLED for now
-function ItemGridUI:accelerateDpadMovement(dx, dy, joypadData)
-    if true then return end
-
-    local dtSkip = 2500 -- Hook this up mod options
-    local dtKey = nil
-
-    if dx == -1 then
-        dtKey = "dtleft"
-    elseif dx == 1 then
-        dtKey = "dtright"
-    elseif dy == -1 then
-        dtKey = "dtup"
-    elseif dy == 1 then
-        dtKey = "dtdown"
-    end
-
-    if not dtKey then
-        return
-    end
-
-    local dtDown = joypadData.controller[dtKey]
-    if not dtDown or dtDown < dtSkip then
-        joypadData.controller[dtKey] = dtSkip
-    end
-end
-
+---@param button integer
+---@return boolean handled
 function ItemGridUI:controllerNodeOnJoypadDown(button)
     if ControllerDragAndDrop.isDragging(self.playerNum) then
         -- Rotate item
@@ -906,6 +1018,8 @@ function ItemGridUI:controllerNodeOnJoypadDown(button)
     return false
 end
 
+---@param inventoryPage ISInventoryPage
+---@return ItemContainer[]
 function ItemGridUI.getOrderedBackpacks(inventoryPage)
     local orderedBackpacks = {}
 
@@ -929,6 +1043,8 @@ function ItemGridUI.getOrderedBackpacks(inventoryPage)
     return orderedBackpacks
 end
 
+---@param mouseX number
+---@param mouseY number
 function ItemGridUI:startMultiDrag(mouseX, mouseY)
     local gridX, gridY = self.mousePositionToGridPosition(mouseX, mouseY)
 
@@ -940,6 +1056,8 @@ function ItemGridUI:startMultiDrag(mouseX, mouseY)
     self.readyToMultiDrag = true
 end
 
+---@param mouseX number
+---@param mouseY number
 function ItemGridUI:updateMultiDrag(mouseX, mouseY)
     if not self.isMultiDragging then
         local dx = mouseX - self.multiDragStartMouseX
@@ -966,6 +1084,8 @@ function ItemGridUI:updateMultiDrag(mouseX, mouseY)
     end
 end
 
+---@param mouseX number
+---@param mouseY number
 function ItemGridUI:endMultiDrag(mouseX, mouseY)
     self:updateMultiDrag(mouseX, mouseY)
 
@@ -980,10 +1100,14 @@ function ItemGridUI:endMultiDrag(mouseX, mouseY)
     self.readyToMultiDrag = false
 end
 
+---@param stack ItemStack
+---@return boolean
 function ItemGridUI:isStackSelected(stack)
     return self._selectedStacks and self._selectedStacks[stack]
 end
 
+---@param mouseX number
+---@param mouseY number
 function ItemGridUI:toggleStackSelection(mouseX, mouseY)
     local gridX, gridY = self.mousePositionToGridPosition(mouseX, mouseY)
     local stack = self.grid:getStack(gridX, gridY, self.playerNum)
@@ -1003,6 +1127,8 @@ function ItemGridUI:_cleanSelectedStacks()
     end
 end
 
+---@param frontStack ItemStack?
+---@return ItemStack[]
 function ItemGridUI:getSelectedStacks(frontStack)
     self:_cleanSelectedStacks()
 
@@ -1020,6 +1146,7 @@ function ItemGridUI:clearSelectedStacks()
     self._selectedStacks = {}
 end
 
+---@return VanillaStack[]
 function ItemGridUI:createVanillaStackListFromSelection()
     local stacks = self:getSelectedStacks()
     return ItemStack.convertStacksToVanillaStackList(stacks, self.grid.inventory, self.inventoryPane)

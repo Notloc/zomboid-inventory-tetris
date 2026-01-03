@@ -25,18 +25,22 @@ local NPC_INV_TEXTURE = instanceItem("Base.Spiffo"):getTex()
 local BLACK = {r=0, g=0, b=0, a=1}
 local FONT_HEIGHT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 
+local PROX_INV_TYPE = "local"
+
 ---@class ItemGridContainerUI : ISPanel
 ---@field item InventoryItem|nil
 ---@field inventory ItemContainer
 ---@field inventoryPane table
 ---@field playerNum integer
 ---@field player IsoPlayer
----@field gridUis ItemGridUI[][]
+---@field gridUis table<ItemContainer, ItemGridUI[]>
 ---@field containerGrid ItemContainerGrid
 ---@field invTexture Texture
 ---@field isPlayerInventory boolean
 ---@field isOnPlayer boolean
 ---@field showTitle boolean
+---@field isPopup boolean
+---@field controllerNode ControllerNode
 local ItemGridContainerUI = ISPanel:derive("ItemGridContainerUI")
 
 ---@param inventory ItemContainer
@@ -73,14 +77,16 @@ function ItemGridContainerUI:new(inventory, inventoryPane, playerNum, containerD
     return o
 end
 
+---@param inventory ItemContainer
 function ItemGridContainerUI:doSpecialInventoryIcons(inventory)
     if instanceof(inventory:getParent(), "IsoNpcPlayer") then
         self.invTexture = NPC_INV_TEXTURE
-    elseif inventory:getType() == "proxInv" then
+    elseif inventory:getType() == PROX_INV_TYPE then
         self.invTexture = PROX_INV_TEXTURE
     end
 end
 
+---@param inventory ItemContainer
 function ItemGridContainerUI:getInventoryName(inventory)
     if not self.titleText then
         if self.item then
@@ -89,7 +95,9 @@ function ItemGridContainerUI:getInventoryName(inventory)
             local desc = self.player:getDescriptor()
             self.titleText = getText("IGUI_InventoryName", desc:getForename(), desc:getSurname())
         elseif instanceof(inventory:getParent(), "IsoNpcPlayer") then
-            local desc = inventory:getParent():getDescriptor()
+            ---@type IsoGameCharacter
+            local npc = inventory:getParent()
+            local desc = npc:getDescriptor()
             self.titleText = getText("IGUI_InventoryName", desc:getForename(), desc:getSurname())
         else
             self.titleText = getTextOrNull("IGUI_ContainerTitle_" .. inventory:getType()) or "Container"
@@ -99,6 +107,7 @@ function ItemGridContainerUI:getInventoryName(inventory)
     return self.titleText
 end
 
+---@param container ItemContainer
 function ItemGridContainerUI:updateContainerTexture(container)
     local item = container:getContainingItem()
     local isPlayerInv = container == self.player:getInventory()
@@ -117,6 +126,7 @@ end
 ItemGridContainerUI.movableItemCache = {}
 
 ---@param inventory ItemContainer
+---@return Texture|nil
 function ItemGridContainerUI.getWorldTexture(inventory)
     local parent = inventory:getParent()
     if not parent then
@@ -239,14 +249,18 @@ function ItemGridContainerUI:createGridRenderer(gridUis, target)
     return gridRenderer
 end
 
+---@param gridScale number
 function ItemGridContainerUI:onApplyGridScale(gridScale)
     self:applyScales(gridScale, OPT.CONTAINER_INFO_SCALE)
 end
 
+---@param infoScale number
 function ItemGridContainerUI:onApplyContainerInfoScale(infoScale)
     self:applyScales(OPT.SCALE, infoScale)
 end
 
+---@param gridScale number
+---@param infoScale number
 function ItemGridContainerUI:applyScales(gridScale, infoScale)
     local lineHeight = FONT_HEIGHT_SMALL
     local titleOffset = self.showTitle and lineHeight + (TITLE_Y_PADDING * 2) - 5 or 1
@@ -349,8 +363,8 @@ end
 -- Positions the grids so they are nicely spaced out
 -- Returns the size of all the grids plus the spacing
 function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale, containerDef)
-    local xOffset = 0
-    local yOffset = 0
+    local xOffset = 0.0
+    local yOffset = 0.0
 
     -- Space out the grids
     local gridSpacing = 6 * scale
@@ -401,11 +415,11 @@ function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale, containerD
     end
 
     -- Find the largest row
-    local widestRow = 0
+    local widestRow = 0.0
 
     local rowWidths = {}
     for y, gridUis in pairs(gridUisByY) do
-        local totalWidth = 0
+        local totalWidth = 0.0
         for _, gridUi in ipairs(gridUis) do
             totalWidth = totalWidth + gridUi:getWidth() + gridSpacing
         end
@@ -430,10 +444,10 @@ function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale, containerD
 
 
     -- Find the tallest column
-    local tallestColumn = 0
+    local tallestColumn = 0.0
     local columnHeights = {}
     for x, gridUis in pairs(gridUisByX) do
-        local totalHeight = 0
+        local totalHeight = 0.0
         for _, gridUi in ipairs(gridUis) do
             totalHeight = totalHeight + gridUi:getHeight() + gridSpacing
         end
@@ -447,7 +461,7 @@ function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale, containerD
     -- Column widths
     local columnWidths = {}
     for x, gridUis in pairs(gridUisByX) do
-        local columnWidth = 0
+        local columnWidth = 0.0
         for _, gridUi in ipairs(gridUis) do
             if gridUi:getWidth() > columnWidth then
                 columnWidth = gridUi:getWidth()
@@ -456,8 +470,8 @@ function ItemGridContainerUI:updateItemGridPositions(_gridUis, scale, containerD
         columnWidths[x] = columnWidth
     end
 
-    local maxX = 0
-    local maxY = 0
+    local maxX = 0.0
+    local maxY = 0.0
 
     local mode = containerDef.centerMode
     if mode == "horizontal" or mode == nil then 
@@ -562,7 +576,7 @@ function ItemGridContainerUI:renderTitle(text, xOffset, yOffset, paddingX, paddi
     return xOffset + textW + paddingX*2
 end
 
-function ItemGridContainerUI:onCollapseButtonClick(button)
+function ItemGridContainerUI:onCollapseButtonClick()
     self.isGridCollapsed = not self.isGridCollapsed
 
     if self.isGridCollapsed then
@@ -575,7 +589,8 @@ function ItemGridContainerUI:onCollapseButtonClick(button)
     self.inventoryPane:refreshContainer()
 end
 
-
+---@param x number
+---@param y number
 function ItemGridContainerUI:onMouseDoubleClick(x, y)
     if self.infoRenderer:isMouseOver() then
         self.infoRenderer:onMouseDoubleClick(self.infoRenderer:getMouseX(), self.infoRenderer:getMouseY())
@@ -591,6 +606,8 @@ function ItemGridContainerUI:onMouseDoubleClick(x, y)
     self.overflowRenderer:onMouseDoubleClick(self.overflowRenderer:getMouseX(), self.overflowRenderer:getMouseY())
 end
 
+---@param x number
+---@param y number
 function ItemGridContainerUI:onRightMouseUp(x, y)
     if not self.isPlayerInventory then
         return
@@ -617,6 +634,9 @@ function ItemGridContainerUI:didClickOnPocketPreview(x,y)
     return false
 end
 
+---@param x number
+---@param y number
+---@return ItemGridUI?
 function ItemGridContainerUI:findGridUiUnderMouse(x, y)
     for _, renderer in pairs(self.multiGridRenderer.renderers) do
         if renderer:isMouseOver(x, y) then
@@ -630,6 +650,7 @@ function ItemGridContainerUI:findGridUiUnderMouse(x, y)
     return nil
 end
 
+-- TODO: Convert to ItemBodyLocations
 -- For render sorting
 ItemGridContainerUI.itemSlotPriority = {
     "Neck",

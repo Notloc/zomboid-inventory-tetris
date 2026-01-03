@@ -120,7 +120,7 @@ function TetrisContainerService.recalculateContainerData()
 end
 
 ---@param containerDef ContainerGridDefinition
----@return string|nil
+---@return TetrisItemCategory|nil
 function TetrisContainerService.getSingleValidCategory(containerDef)
     local validCategories = TetrisContainerService._getValidCategories(containerDef)
     if not validCategories then
